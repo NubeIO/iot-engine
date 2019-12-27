@@ -7,7 +7,7 @@ import io.reactivex.Single;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.sql.pojos.KeyPojo;
+import com.nubeiot.core.sql.pojos.DMLPojo;
 import com.nubeiot.core.sql.service.workflow.SQLStep.CreateOrUpdateStep;
 import com.nubeiot.core.sql.validation.OperationValidator;
 
@@ -24,13 +24,12 @@ import lombok.experimental.SuperBuilder;
 public final class CreationStep extends AbstractSQLStep implements CreateOrUpdateStep {
 
     @Setter
-    private BiConsumer<EventAction, KeyPojo> onSuccess;
+    private BiConsumer<EventAction, DMLPojo> onSuccess;
 
     @Override
-    public Single<KeyPojo> execute(@NonNull RequestData reqData, @NonNull OperationValidator validator) {
-        final Single<KeyPojo> result = validator.validate(reqData, null)
-                                                .flatMap(pojo -> queryExecutor().insertReturningPrimary(pojo, reqData)
-                                                                                .flatMap(pk -> lookup(pojo, pk)));
+    public Single<DMLPojo> execute(@NonNull RequestData reqData, @NonNull OperationValidator validator) {
+        final Single<DMLPojo> result = queryExecutor().insertReturningPrimary(reqData, validator)
+                                                      .flatMap(pojo -> lookup((DMLPojo) pojo));
         if (Objects.nonNull(onSuccess)) {
             return result.doOnSuccess(keyPojo -> onSuccess.accept(action(), keyPojo));
         }

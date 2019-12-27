@@ -99,7 +99,8 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                  .prePersist(initPrePersistWorkflow())
                                  .persist(initCreationStep())
                                  .postAsyncPersist(initPostAsyncPersistWorkflow())
-                                 .transformer((req, res) -> transformer().afterCreate(res.key(), res.pojo(), req))
+                                 .transformer(
+                                     (req, res) -> transformer().afterCreate(res.primaryKey(), res.dbEntity(), req))
                                  .build()
                                  .execute(requestData);
     }
@@ -114,7 +115,8 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                  .prePersist(initPrePersistWorkflow())
                                  .persist(initModificationStep(EventAction.UPDATE))
                                  .postAsyncPersist(initPostAsyncPersistWorkflow())
-                                 .transformer((req, res) -> transformer().afterUpdate(res.key(), res.pojo(), req))
+                                 .transformer(
+                                     (req, res) -> transformer().afterUpdate(res.primaryKey(), res.dbEntity(), req))
                                  .build()
                                  .execute(requestData);
     }
@@ -129,7 +131,8 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                  .prePersist(initPrePersistWorkflow())
                                  .persist(initModificationStep(EventAction.PATCH))
                                  .postAsyncPersist(initPostAsyncPersistWorkflow())
-                                 .transformer((req, re) -> transformer().afterPatch(re.key(), re.pojo(), req))
+                                 .transformer(
+                                     (req, re) -> transformer().afterPatch(re.primaryKey(), re.dbEntity(), req))
                                  .build()
                                  .execute(requestData);
     }
@@ -144,7 +147,7 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                  .prePersist(initPrePersistWorkflow())
                                  .persist(initDeletionStep())
                                  .postAsyncPersist(initPostAsyncPersistWorkflow())
-                                 .transformer((req, re) -> transformer().afterDelete(re.pojo(), req))
+                                 .transformer((req, re) -> transformer().afterDelete(re.dbEntity(), req))
                                  .build()
                                  .execute(requestData);
     }

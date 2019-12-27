@@ -5,7 +5,7 @@ import io.reactivex.Single;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.sql.pojos.KeyPojo;
+import com.nubeiot.core.sql.pojos.DMLPojo;
 import com.nubeiot.core.sql.query.EntityQueryExecutor;
 import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.core.workflow.Workflow;
@@ -51,7 +51,7 @@ public interface SQLStep extends Workflow {
          * @return the single
          * @since 1.0.0
          */
-        Single<KeyPojo> execute(@NonNull RequestData reqData, @NonNull OperationValidator validator);
+        Single<DMLPojo> execute(@NonNull RequestData reqData, @NonNull OperationValidator validator);
 
     }
 
@@ -88,18 +88,18 @@ public interface SQLStep extends Workflow {
         /**
          * Lookup created or modified entity by primary key
          *
-         * @param request    Request pojo
-         * @param primaryKey primary key
+         * @param dmlPojo Request pojo with primary key
          * @return wrapper pojo
+         * @see DMLPojo
          * @since 1.0.0
          */
-        default Single<KeyPojo> lookup(VertxPojo request, @NonNull Object primaryKey) {
-            return queryExecutor().lookupByPrimaryKey(primaryKey)
-                                  .map(pojo -> KeyPojo.builder()
-                                                      .request(request)
-                                                      .key(primaryKey)
-                                                      .pojo((VertxPojo) pojo)
-                                                      .build());
+        default Single<DMLPojo> lookup(@NonNull DMLPojo dmlPojo) {
+            return queryExecutor().lookupByPrimaryKey(dmlPojo.primaryKey())
+                                  .map(p -> DMLPojo.builder()
+                                                   .request(dmlPojo.request())
+                                                   .primaryKey(dmlPojo.primaryKey())
+                                                   .dbEntity((VertxPojo) p)
+                                                   .build());
         }
 
     }

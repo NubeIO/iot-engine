@@ -117,14 +117,14 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
     protected CreationStep initCreationStep() {
         return super.initCreationStep()
                     .onSuccess((action, kv) -> syncPointValue((PointValueData) kv.request(), action,
-                                                              (PointValueData) kv.pojo()));
+                                                              (PointValueData) kv.dbEntity()));
     }
 
     @Override
     protected ModificationStep initModificationStep(EventAction action) {
         return super.initModificationStep(action)
                     .onSuccess((reqData, act, output) -> syncPointValue(context().parseFromRequest(reqData.body()), act,
-                                                                        (PointValueData) output.pojo()));
+                                                                        (PointValueData) output.dbEntity()));
     }
 
     private void syncPointValue(@NonNull PointValueData prev, @NonNull EventAction action,

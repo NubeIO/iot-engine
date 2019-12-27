@@ -21,12 +21,12 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.pojos.CompositePojo;
+import com.nubeiot.core.sql.pojos.DMLPojo;
 import com.nubeiot.core.sql.service.marker.EntityReferences;
 import com.nubeiot.core.sql.service.marker.ReferencingEntityMarker;
 import com.nubeiot.core.sql.validation.OperationValidator;
@@ -122,42 +122,47 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
     }
 
     @Override
-    public Single<?> insertReturningPrimary(@NonNull CP pojo, @NonNull RequestData reqData) {
-        final VertxPojo src = pojo.safeGetOther(resource.singularKeyName(), resource.modelClass());
-        final Object sKey = Optional.ofNullable(src)
-                                    .map(r -> getKey(r.toJson(), resource))
-                                    .orElse(resource.getKey(reqData)
-                                                    .orElse(getKey(
-                                                        JsonData.safeGet(reqData.body(), resource.singularKeyName(),
-                                                                         JsonObject.class), resource)));
-        final Object cKey = context.parseKey(reqData);
-        if (Objects.isNull(src)) {
-            if (Objects.isNull(sKey)) {
-                throw new IllegalArgumentException("Missing " + resource.singularKeyName() + " data");
+    public @NonNull Single<DMLPojo> insertReturningPrimary(@NonNull RequestData reqData,
+                                                           @NonNull OperationValidator validator) {
+        return validator.validate(reqData, null).map(pojo -> (CP) pojo).flatMap(pojo -> {
+            final VertxPojo src = pojo.safeGetOther(resource.singularKeyName(), resource.modelClass());
+            final Object sKey = Optional.ofNullable(src)
+                                        .map(r -> getKey(r.toJson(), resource))
+                                        .orElse(resource.getKey(reqData)
+                                                        .orElse(getKey(
+                                                            JsonData.safeGet(reqData.body(), resource.singularKeyName(),
+                                                                             JsonObject.class), resource)));
+            final Object cKey = context.parseKey(reqData);
+            if (Objects.isNull(src)) {
+                if (Objects.isNull(sKey)) {
+                    throw new IllegalArgumentException("Missing " + resource.singularKeyName() + " data");
+                }
+                final JsonObject filter = reqData.filter();
+                return isExist(cKey, sKey, filter).filter(p -> Objects.isNull(p.prop(context.requestKeyName())))
+                                                  .switchIfEmpty(Single.error(base.alreadyExisted(
+                                                      base.msg(filter, references.getFields().keySet()))))
+                                                  .onErrorResumeNext(EntityQueryExecutor::sneakyThrowDBError)
+                                                  .map(k -> AuditDecorator.addCreationAudit(reqData, base, pojo))
+                                                  .flatMap(p -> ((Single) dao(base).insertReturningPrimary(p)).map(
+                                                      k -> DMLPojo.builder().request(p).primaryKey(k).build()));
             }
-            final JsonObject filter = reqData.filter();
-            return isExist(cKey, sKey, filter).filter(p -> Objects.isNull(p.prop(context.requestKeyName())))
-                                              .switchIfEmpty(Single.error(base.alreadyExisted(
-                                                  base.msg(filter, references.getFields().keySet()))))
-                                              .onErrorResumeNext(EntityQueryExecutor::sneakyThrowDBError)
-                                              .map(k -> AuditDecorator.addCreationAudit(reqData, base, pojo))
-                                              .flatMap(p -> (Single) dao(base).insertReturningPrimary(pojo));
-        }
-        final Maybe<Boolean> isExist = fetchExists(queryBuilder().exist(context, cKey));
-        final String sKeyN = resource.requestKeyName();
-        return isExist.flatMapSingle(b -> lookupByPrimaryKey(resource, sKey))
-                      .filter(Optional::isPresent)
-                      .flatMap(o -> Maybe.error(resource.alreadyExisted(Strings.kvMsg(sKeyN, sKey))))
-                      .switchIfEmpty(Single.just(AuditDecorator.addCreationAudit(reqData, resource, src))
-                                           .flatMap(p -> doInsertReturnKey(resource, p, sKey)))
-                      .map(k -> AuditDecorator.addCreationAudit(reqData, base,
-                                                                pojo.with(references.getFields().get(resource), k)))
-                      .flatMap(p -> doInsertReturnKey(base, p, getKey(p.toJson(), base)));
+            final Maybe<Boolean> isExist = fetchExists(queryBuilder().exist(context, cKey));
+            final String sKeyN = resource.requestKeyName();
+            return isExist.flatMapSingle(b -> lookupByPrimaryKey(resource, sKey))
+                          .filter(Optional::isPresent)
+                          .flatMap(o -> Maybe.error(resource.alreadyExisted(Strings.kvMsg(sKeyN, sKey))))
+                          .switchIfEmpty(Single.just(AuditDecorator.addCreationAudit(reqData, resource, src))
+                                               .flatMap(p -> doInsertReturnKey(resource, p, sKey)))
+                          .map(k -> AuditDecorator.addCreationAudit(reqData, base,
+                                                                    pojo.with(references.getFields().get(resource), k)))
+                          .flatMap(p -> doInsertReturnKey(base, p, getKey(p.toJson(), base)).map(
+                              k -> DMLPojo.builder().request(p).primaryKey(k).build()));
+        });
     }
 
     @Override
-    public Single<?> modifyReturningPrimary(@NonNull RequestData req, @NonNull EventAction action,
-                                            @NonNull OperationValidator validator) {
+    public @NonNull Single<DMLPojo> modifyReturningPrimary(@NonNull RequestData req,
+                                                           @NonNull OperationValidator validator) {
         return findOneByKey(req).flatMap(db -> validator.validate(req, db))
                                 .map(p -> (CP) p)
                                 .flatMap(p -> Optional.ofNullable(p.getOther(resource.singularKeyName()))
@@ -166,7 +171,12 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
                                                           AuditDecorator.addModifiedAudit(req, resource, r)))
                                                       .orElse(Single.just(p))
                                                       .map(r -> p))
-                                .flatMap(p -> dao(base).update(AuditDecorator.addModifiedAudit(req, base, (CP) p)));
+                                .flatMap(p -> {
+                                    final CP cp = AuditDecorator.addModifiedAudit(req, base, (CP) p);
+                                    final Object pk = cp.prop(base.jsonKeyName());
+                                    return ((Single<Integer>) dao(base).update(cp)).map(
+                                        i -> DMLPojo.builder().request(cp).primaryKey(pk).build());
+                                });
     }
 
     @Override

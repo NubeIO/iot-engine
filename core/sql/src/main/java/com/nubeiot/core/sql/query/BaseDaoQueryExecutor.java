@@ -18,10 +18,10 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
+import com.nubeiot.core.sql.pojos.DMLPojo;
 import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.core.utils.Strings;
 
@@ -59,32 +59,35 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQuer
     }
 
     @Override
-    public Single<?> insertReturningPrimary(@NonNull VertxPojo pojo, @NonNull RequestData reqData) {
-        final @NonNull Optional<?> opt = Optional.ofNullable(pojo.toJson().getValue(metadata.jsonKeyName()))
-                                                 .map(k -> metadata.parseKey(k.toString()));
+    public @NonNull Single<DMLPojo> insertReturningPrimary(@NonNull RequestData reqData,
+                                                           @NonNull OperationValidator validator) {
         final VertxDAO dao = entityHandler().dao(metadata.daoClass());
-        return opt.map(key -> fetchExists(queryBuilder().exist(metadata, key)).map(b -> key))
-                  .orElse(Maybe.empty())
-                  .flatMap(k -> Maybe.error(metadata.alreadyExisted(Strings.kvMsg(metadata.requestKeyName(), k))))
-                  .switchIfEmpty(Single.just((P) AuditDecorator.addCreationAudit(reqData, metadata, pojo)))
-                  .flatMap(entity -> opt.isPresent()
-                                     ? ((Single<Integer>) dao.insert(entity)).map(i -> opt.get())
-                                     : (Single<?>) dao.insertReturningPrimary(entity));
+        return validator.validate(reqData, null).flatMap(pojo -> {
+            final Optional<Object> opt = Optional.ofNullable(pojo.toJson().getValue(metadata.jsonKeyName()))
+                                                 .map(k -> metadata.parseKey(k.toString()));
+            return opt.map(key -> fetchExists(queryBuilder().exist(metadata, key)).map(b -> key))
+                      .orElse(Maybe.empty())
+                      .flatMap(k -> Maybe.error(metadata.alreadyExisted(Strings.kvMsg(metadata.requestKeyName(), k))))
+                      .switchIfEmpty(Single.just((P) AuditDecorator.addCreationAudit(reqData, metadata, pojo)))
+                      .flatMap(entity -> opt.isPresent()
+                                         ? ((Single<Integer>) dao.insert(entity)).map(i -> opt.get())
+                                         : (Single<?>) dao.insertReturningPrimary(entity))
+                      .map(key -> DMLPojo.builder().request(pojo).primaryKey(key).build());
+        });
     }
 
     @Override
-    public Single<?> modifyReturningPrimary(@NonNull RequestData reqData, @NonNull EventAction action,
-                                            @NonNull OperationValidator validator) {
+    public @NonNull Single<DMLPojo> modifyReturningPrimary(@NonNull RequestData reqData,
+                                                           @NonNull OperationValidator validator) {
         final Object pk = metadata.parseKey(reqData);
         final VertxDAO dao = entityHandler().dao(metadata.daoClass());
         //TODO validate unique keys
         return findOneByKey(reqData).flatMap(db -> validator.validate(reqData, db).map(p -> new SimpleEntry<>(db, p)))
-                                    .map(pojo -> AuditDecorator.addModifiedAudit(reqData, metadata, pojo.getKey(),
-                                                                                 pojo.getValue()))
-                                    .flatMap(p -> (Single<Integer>) dao.update(p))
-                                    .filter(i -> i > 0)
+                                    .map(entry -> AuditDecorator.addModifiedAudit(reqData, metadata, entry.getKey(),
+                                                                                  entry.getValue()))
+                                    .flatMapMaybe(p -> ((Single<Integer>) dao.update(p)).filter(i -> i > 0).map(r -> p))
                                     .switchIfEmpty(Single.error(metadata.notFound(pk)))
-                                    .map(i -> pk);
+                                    .map(p -> DMLPojo.builder().request(p).primaryKey(pk).build());
     }
 
     @Override
@@ -94,7 +97,7 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQuer
         return findOneByKey(reqData).flatMap(dbPojo -> isAbleToDelete(dbPojo, metadata, this::pojoKeyMsg))
                                     .flatMap(dbPojo -> validator.validate(reqData, dbPojo))
                                     .flatMapMaybe(
-                                        pj -> ((Single<Integer>) dao.deleteById(pk)).filter(r -> r > 0).map(r -> pj))
+                                        p -> ((Single<Integer>) dao.deleteById(pk)).filter(r -> r > 0).map(r -> p))
                                     .switchIfEmpty(
                                         EntityQueryExecutor.unableDelete(Strings.kvMsg(metadata.requestKeyName(), pk)));
     }

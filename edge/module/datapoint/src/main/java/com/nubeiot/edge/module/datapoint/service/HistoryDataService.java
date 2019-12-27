@@ -65,13 +65,14 @@ public final class HistoryDataService extends AbstractOneToManyEntityService<Poi
 
     @Override
     protected CreationStep initCreationStep() {
-        return super.initCreationStep().onSuccess((action, keyPojo) -> putIntoCache((PointHistoryData) keyPojo.pojo()));
+        return super.initCreationStep()
+                    .onSuccess((action, keyPojo) -> putIntoCache((PointHistoryData) keyPojo.dbEntity()));
     }
 
     @Override
     protected ModificationStep initModificationStep(EventAction action) {
         return super.initModificationStep(action)
-                    .onSuccess((reqData, event, keyPojo) -> putIntoCache((PointHistoryData) keyPojo.pojo()));
+                    .onSuccess((reqData, event, keyPojo) -> putIntoCache((PointHistoryData) keyPojo.dbEntity()));
     }
 
     @Override

@@ -18,7 +18,6 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.Sort;
-import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.HiddenException.ImplementationError;
 import com.nubeiot.core.exceptions.NubeException;
@@ -26,6 +25,7 @@ import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
+import com.nubeiot.core.sql.pojos.DMLPojo;
 import com.nubeiot.core.sql.validation.OperationValidator;
 
 import lombok.NonNull;
@@ -145,24 +145,26 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
     /**
      * Create new resource then return {@code primary key}
      *
-     * @param pojo        new resource
      * @param requestData request data
-     * @return primary key
+     * @param validator   creation validator
+     * @return DML pojo
+     * @see DMLPojo
      * @since 1.0.0
      */
-    @NonNull Single<?> insertReturningPrimary(@NonNull P pojo, @NonNull RequestData requestData);
+    @NonNull Single<DMLPojo> insertReturningPrimary(@NonNull RequestData requestData,
+                                                    @NonNull OperationValidator validator);
 
     /**
      * Do update data on both {@code UPDATE} or {@code PATCH} action
      *
      * @param requestData Request data
-     * @param action      Event action
      * @param validator   modification validator
-     * @return primary key
+     * @return DML pojo
+     * @see DMLPojo
      * @since 1.0.0
      */
-    @NonNull Single<?> modifyReturningPrimary(@NonNull RequestData requestData, @NonNull EventAction action,
-                                              @NonNull OperationValidator validator);
+    @NonNull Single<DMLPojo> modifyReturningPrimary(@NonNull RequestData requestData,
+                                                    @NonNull OperationValidator validator);
 
     /**
      * Do delete data by primary

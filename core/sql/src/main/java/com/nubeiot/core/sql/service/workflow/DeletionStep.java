@@ -8,7 +8,7 @@ import io.reactivex.Single;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.sql.pojos.KeyPojo;
+import com.nubeiot.core.sql.pojos.DMLPojo;
 import com.nubeiot.core.sql.service.workflow.SQLStep.DMLStep;
 import com.nubeiot.core.sql.validation.OperationValidator;
 
@@ -25,12 +25,12 @@ import lombok.experimental.SuperBuilder;
 public final class DeletionStep extends AbstractSQLStep implements DMLStep {
 
     @Setter
-    private BiConsumer<EventAction, KeyPojo> onSuccess;
+    private BiConsumer<EventAction, DMLPojo> onSuccess;
 
     @Override
-    public Single<KeyPojo> execute(@NonNull RequestData reqData, @NonNull OperationValidator validator) {
-        final Single<KeyPojo> result = queryExecutor().deleteOneByKey(reqData, validator)
-                                                      .map(p -> KeyPojo.builder().pojo((VertxPojo) p).build());
+    public Single<DMLPojo> execute(@NonNull RequestData reqData, @NonNull OperationValidator validator) {
+        final Single<DMLPojo> result = queryExecutor().deleteOneByKey(reqData, validator)
+                                                      .map(p -> DMLPojo.builder().dbEntity((VertxPojo) p).build());
         if (Objects.nonNull(onSuccess)) {
             return result.doOnSuccess(keyPojo -> onSuccess.accept(action(), keyPojo));
         }
