@@ -15,7 +15,7 @@ public final class JobEntityService extends AbstractEntityService<JobEntity, Job
     @Getter
     private QuartzSchedulerContext schedulerContext;
 
-    public JobEntityService(@NonNull EntityHandler entityHandler, @NonNull QuartzSchedulerContext schedulerContext) {
+    JobEntityService(@NonNull EntityHandler entityHandler, @NonNull QuartzSchedulerContext schedulerContext) {
         super(entityHandler);
         this.schedulerContext = schedulerContext;
     }

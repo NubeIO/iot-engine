@@ -3,6 +3,7 @@ package com.nubeiot.edge.module.scheduler.service;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.jooq.OrderField;
 
@@ -145,10 +146,17 @@ public interface SchedulerMetadata extends MetadataIndex {
         @Override
         public TriggerEntity onPatching(@NonNull TriggerEntity dbData, RequestData reqData)
             throws IllegalArgumentException {
-            final TriggerModel trigger = TriggerConverter.convert(dbData);
-            final JsonObject body = reqData.body().copy();
-            body.remove(requestKeyName());
-            return parseFromEntity(JsonPojo.merge(dbData, TriggerConverter.convert(trigger.toJson().mergeIn(body))));
+            final TriggerModel dbTrigger = TriggerConverter.convert(dbData);
+            final JsonObject reqBody = reqData.body().copy();
+            final JsonObject b = Optional.ofNullable(reqBody.getJsonObject("detail", null))
+                                         .map(d -> d.put("type", reqBody.getString("type")))
+                                         .orElse(reqBody);
+            final TriggerEntity convert = TriggerConverter.convert(dbTrigger.toJson().mergeIn(b))
+                                                          .setGroup(reqBody.getString("group"))
+                                                          .setName(reqBody.getString("name"))
+                                                          .setId(dbData.getId());
+            final JsonObject detail = convert.getDetail().copy();
+            return parseFromEntity(JsonPojo.merge(dbData, convert).put("detail", detail));
         }
 
     }

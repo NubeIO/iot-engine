@@ -15,6 +15,8 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
+import com.nubeiot.core.enums.Status;
+import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.http.ExpectedResponse;
 import com.nubeiot.core.sql.pojos.JsonPojo;
@@ -30,12 +32,13 @@ public class EdgeSchedulerCreationTest extends EdgeSchedulerVerticleTest {
     @Test
     public void test_create_trigger_success(TestContext context) {
         final JsonObject body = MockSchedulerEntityHandler.TRIGGER_2.toJson();
-        System.out.println(body);
         final RequestData reqData = RequestData.builder().body(body).build();
-        final JsonObject expected = new JsonObject(
-            "{\"action\":\"CREATE\",\"resource\":{\"id\":5,\"group\":\"group1\",\"name\":\"trigger2\"," +
-            "\"type\":\"CRON\",\"detail\":{\"expression\":\"1 1 1 ? * MON *\",\"timezone\":\"Australia/Sydney\"}," +
-            "\"thread\":\"1 1 1 ? * MON *::Australia/Sydney\"},\"status\":\"SUCCESS\"}");
+        final JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
+                                                    .put("status", Status.SUCCESS)
+                                                    .put("resource", new JsonObject(
+                                                        "{\"id\":5,\"group\":\"group1\",\"name\":\"trigger2\"," +
+                                                        "\"type\":\"CRON\",\"detail\":{\"expression\":\"1 1 1 ? * " +
+                                                        "MON *\",\"timezone\":\"Australia/Sydney\"}}"));
         assertRestByClient(context, HttpMethod.POST, "/api/s/trigger", reqData, 201, expected);
     }
 
@@ -62,7 +65,8 @@ public class EdgeSchedulerCreationTest extends EdgeSchedulerVerticleTest {
     @Test
     @Repeat(3)
     public void test_create_invalid_job(TestContext context) {
-        final JsonObject job = MockSchedulerEntityHandler.JOB_2.toJson().put("name", "invalid_directly")
+        final JsonObject job = MockSchedulerEntityHandler.JOB_2.toJson()
+                                                               .put("name", "invalid_directly")
                                                                .put("process", (String) null);
         final RequestData reqData = RequestData.builder().body(job).build();
         final JsonObject expected = new JsonObject().put("code", ErrorCode.INVALID_ARGUMENT)
@@ -131,7 +135,7 @@ public class EdgeSchedulerCreationTest extends EdgeSchedulerVerticleTest {
             JsonObject expected = new JsonObject(
                 "{\"action\":\"CREATE\",\"resource\":{\"id\":3,\"enabled\":true,\"trigger\":{\"id\":4," +
                 "\"group\":\"group2\",\"name\":\"trigger4\",\"type\":\"CRON\",\"detail\":{\"expression\":\"0 0 0 ? * " +
-                "TUE *\",\"timezone\":\"Australia/Sydney\"},\"thread\":\"0 0 0 ? * TUE *::Australia/Sydney\"}," +
+                "TUE *\",\"timezone\":\"Australia/Sydney\"}}," +
                 "\"job\":{\"id\":3,\"group\":\"group1\",\"name\":\"job2\",\"type\":\"EVENT_JOB\"," +
                 "\"forward_if_failure\":true,\"detail\":{\"process\":{\"address\":\"scheduler.1\"," +
                 "\"pattern\":\"REQUEST_RESPONSE\",\"action\":\"CREATE\"},\"callback\":{\"address\":\"scheduler.2\"," +
@@ -159,7 +163,7 @@ public class EdgeSchedulerCreationTest extends EdgeSchedulerVerticleTest {
         final JsonObject expected = new JsonObject(
             "{\"action\":\"CREATE\",\"resource\":{\"id\":3,\"enabled\":true,\"trigger\":{\"id\":4,\"group\":" +
             "\"group2\",\"name\":\"trigger4\",\"type\":\"CRON\",\"detail\":{\"expression\":\"0 0 0 ? * TUE *\"," +
-            "\"timezone\":\"Australia/Sydney\"},\"thread\":\"0 0 0 ? * TUE *::Australia/Sydney\"}," +
+            "\"timezone\":\"Australia/Sydney\"}}," +
             "\"job\":{\"id\":3,\"group\":\"group1\",\"name\":\"job2\",\"type\":\"EVENT_JOB\"," +
             "\"forward_if_failure\":true,\"detail\":{\"process\":{\"address\":\"scheduler.1\"," +
             "\"pattern\":\"REQUEST_RESPONSE\",\"action\":\"CREATE\"},\"callback\":{\"address\":\"scheduler.2\"," +
@@ -194,7 +198,8 @@ public class EdgeSchedulerCreationTest extends EdgeSchedulerVerticleTest {
     public void test_create_invalid_job_by_trigger(TestContext context) {
         final JsonObject expected = new JsonObject().put("code", ErrorCode.INVALID_ARGUMENT)
                                                     .put("message", "Job detail cannot be null");
-        final JsonObject job = MockSchedulerEntityHandler.JOB_2.toJson().put("name", "invalid_by_trigger")
+        final JsonObject job = MockSchedulerEntityHandler.JOB_2.toJson()
+                                                               .put("name", "invalid_by_trigger")
                                                                .put("process", (String) null);
         final JsonObject body = JsonPojo.from(new JobTriggerComposite().setEnabled(true)).toJson().put("job", job);
         final RequestData reqData = RequestData.builder().body(body).build();

@@ -1,5 +1,12 @@
 package com.nubeiot.edge.module.scheduler.service;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.service.AbstractEntityService;
 import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata.TriggerEntityMetadata;
@@ -15,8 +22,7 @@ public final class TriggerEntityService extends AbstractEntityService<TriggerEnt
     @Getter
     private QuartzSchedulerContext schedulerContext;
 
-    public TriggerEntityService(@NonNull EntityHandler entityHandler,
-                                @NonNull QuartzSchedulerContext schedulerContext) {
+    TriggerEntityService(@NonNull EntityHandler entityHandler, @NonNull QuartzSchedulerContext schedulerContext) {
         super(entityHandler);
         this.schedulerContext = schedulerContext;
     }
@@ -24,6 +30,14 @@ public final class TriggerEntityService extends AbstractEntityService<TriggerEnt
     @Override
     public TriggerEntityMetadata context() {
         return TriggerEntityMetadata.INSTANCE;
+    }
+
+    @Override
+    public Set<String> ignoreFields(@NonNull RequestData requestData) {
+        return Stream.of(super.ignoreFields(requestData),
+                         Collections.singletonList(context().table().getJsonField(context().table().THREAD)))
+                     .flatMap(Collection::stream)
+                     .collect(Collectors.toSet());
     }
 
 }

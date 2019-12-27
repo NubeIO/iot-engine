@@ -12,7 +12,6 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.event.EventbusClient;
-import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.sql.AbstractEntityHandler;
 import com.nubeiot.core.sql.SchemaHandler;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
@@ -73,16 +72,6 @@ class SchedulerEntityHandler extends AbstractEntityHandler
                             .action(EventAction.CREATE)
                             .payload(SchedulerRequestData.create(job, trigger).toJson())
                             .build();
-    }
-
-    private ReplyEventHandler replyHandler(DeliveryEvent event) {
-        return ReplyEventHandler.builder()
-                                .system("EDGE_SCHEDULER")
-                                .address(event.getAddress())
-                                .action(event.getAction())
-                                .success(msg -> logger.info(msg.toJson()))
-                                .error(error -> logger.error(error.toJson()))
-                                .build();
     }
 
 }
