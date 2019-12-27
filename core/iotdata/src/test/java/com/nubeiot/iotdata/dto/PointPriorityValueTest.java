@@ -50,6 +50,13 @@ public class PointPriorityValueTest {
     }
 
     @Test
+    public void test_get_do_not_add_value_when_data_is_null() throws JSONException {
+        final PointPriorityValue pointPriorityValue = pv.add(1, null);
+        JsonHelper.assertJson(new JsonObject("{\"2\":3.5,\"16\":8.0,\"9\":9.0,\"10\":10.5}"),
+                              pointPriorityValue.toJson());
+    }
+
+    @Test
     public void test_get_next_highest_value_with_highest_is_null() {
         final PointValue highestValue = pv.add(1, null).findHighestValue();
         Assert.assertEquals(2, highestValue.getPriority());

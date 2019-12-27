@@ -523,7 +523,11 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull PointValueData onPatching(@NonNull PointValueData dbData, @NonNull RequestData reqData)
             throws IllegalArgumentException {
-            final PointValueData pvData = parseFromRequest(JsonPojo.merge(dbData, parseFromRequest(reqData.body())));
+            PointValueData reqPointValueData = parseFromRequest(reqData.body());
+            PointValueData request = UUIDKeyEntity.super.parseFromRequest(JsonPojo.merge(dbData, reqPointValueData));
+            // Set nullable value when we want
+            request.setValue(reqPointValueData.getValue());
+            final PointValueData pvData = parseFromRequest(request.toJson());
             final PointValue highestValue = pvData.getPriorityValues().findHighestValue();
             pvData.setPriority(highestValue.getPriority()).setValue(highestValue.getValue());
             return pvData;

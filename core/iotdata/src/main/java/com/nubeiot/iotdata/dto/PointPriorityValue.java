@@ -64,7 +64,13 @@ public final class PointPriorityValue implements JsonData, IoTNotion {
     }
 
     public PointPriorityValue add(int priority, Double value) {
-        this.val.put(validateAndGet(priority), value);
+        if (value == null) {
+            if (this.val.get(priority) != null) {
+                this.val.remove(priority);
+            }
+        } else {
+            this.val.put(validateAndGet(priority), value);
+        }
         return this;
     }
 
@@ -145,7 +151,6 @@ public final class PointPriorityValue implements JsonData, IoTNotion {
     public String toString() {
         return toJson().encode();
     }
-
 
     @Getter
     public static final class PointValue implements JsonData {
