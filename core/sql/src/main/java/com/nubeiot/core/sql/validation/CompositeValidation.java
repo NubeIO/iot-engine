@@ -61,7 +61,7 @@ public interface CompositeValidation<P extends VertxPojo, C extends CompositePoj
     default <PP extends P> @NonNull PP onUpdating(@NonNull P dbData, RequestData reqData)
         throws IllegalArgumentException {
         C request = (C) context().parseFromRequest(reqData.body());
-        validateSubMetadata((C) dbData, request,
+        validateSubEntities((C) dbData, request,
                             (metadata, requestData, pojo) -> metadata.onUpdating(pojo, requestData));
         return (PP) request;
     }
@@ -70,7 +70,7 @@ public interface CompositeValidation<P extends VertxPojo, C extends CompositePoj
     default <PP extends P> @NonNull PP onPatching(@NonNull P dbData, RequestData reqData)
         throws IllegalArgumentException {
         C request = (C) context().parseFromEntity(JsonPojo.merge(dbData, context().parseFromRequest(reqData.body())));
-        validateSubMetadata((C) dbData, request,
+        validateSubEntities((C) dbData, request,
                             (metadata, requestData, pojo) -> metadata.onPatching(pojo, requestData));
         return (PP) request;
     }
@@ -99,15 +99,16 @@ public interface CompositeValidation<P extends VertxPojo, C extends CompositePoj
     }
 
     /**
-     * Validate sub entity metadata.
+     * Validate and re-update child {@code  entity} by current composite entity.
      *
      * @param dbData    the db data
      * @param request   the request
      * @param validator the validator
      * @throws NubeException if catching any invalid value
+     * @see CompositeMetadata#subItems()
      * @since 1.0.0
      */
-    default void validateSubMetadata(@NonNull C dbData, @NonNull C request,
+    default void validateSubEntities(@NonNull C dbData, @NonNull C request,
                                      Function3<EntityMetadata, RequestData, VertxPojo, VertxPojo> validator) {
         for (EntityMetadata metadata : ((List<EntityMetadata>) context().subItems())) {
             String key = metadata.singularKeyName();
@@ -116,8 +117,8 @@ public interface CompositeValidation<P extends VertxPojo, C extends CompositePoj
                 continue;
             }
             try {
-                validator.apply(metadata, RequestData.builder().body(sub.toJson()).build(),
-                                dbData.safeGetOther(key, metadata.modelClass()));
+                request.put(key, validator.apply(metadata, RequestData.builder().body(sub.toJson()).build(),
+                                                 dbData.safeGetOther(key, metadata.modelClass())));
             } catch (Exception e) {
                 throw NubeExceptionConverter.from(e);
             }
