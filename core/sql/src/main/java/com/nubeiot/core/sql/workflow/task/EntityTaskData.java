@@ -1,4 +1,4 @@
-package com.nubeiot.core.sql.service.task;
+package com.nubeiot.core.sql.workflow.task;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 

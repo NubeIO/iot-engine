@@ -14,11 +14,11 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.GroupEntityTransformer;
 import com.nubeiot.core.sql.pojos.CompositePojo;
 import com.nubeiot.core.sql.service.marker.GroupReferencingEntityMarker;
-import com.nubeiot.core.sql.service.workflow.CreationStep;
-import com.nubeiot.core.sql.service.workflow.DeletionStep;
-import com.nubeiot.core.sql.service.workflow.GetOneStep;
-import com.nubeiot.core.sql.service.workflow.ModificationStep;
 import com.nubeiot.core.sql.validation.OperationValidator;
+import com.nubeiot.core.sql.workflow.step.CreationStep;
+import com.nubeiot.core.sql.workflow.step.DeletionStep;
+import com.nubeiot.core.sql.workflow.step.GetOneStep;
+import com.nubeiot.core.sql.workflow.step.ModificationStep;
 
 import lombok.NonNull;
 
@@ -56,6 +56,12 @@ public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends 
         return this;
     }
 
+    @Override
+    protected OperationValidator initCreationValidator() {
+        return OperationValidator.create(
+            (req, pojo) -> groupQuery().checkReferenceExistence(req).map(b -> contextGroup().onCreating(req)));
+    }
+
     /**
      * @return group reference marker
      * @see GroupReferencingEntityMarker
@@ -63,12 +69,6 @@ public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends 
     @Override
     public GroupReferencingEntityMarker marker() {
         return this;
-    }
-
-    @Override
-    protected OperationValidator initCreationValidator() {
-        return OperationValidator.create(
-            (req, pojo) -> groupQuery().checkReferenceExistence(req).map(b -> contextGroup().onCreating(req)));
     }
 
     @Override

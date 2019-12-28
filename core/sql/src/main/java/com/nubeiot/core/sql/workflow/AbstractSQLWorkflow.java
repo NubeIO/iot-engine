@@ -1,4 +1,4 @@
-package com.nubeiot.core.sql.service.workflow;
+package com.nubeiot.core.sql.workflow;
 
 import java.util.function.Function;
 
@@ -8,8 +8,8 @@ import io.reactivex.Single;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityMetadata;
-import com.nubeiot.core.sql.service.task.EntityTaskData;
 import com.nubeiot.core.sql.validation.OperationValidator;
+import com.nubeiot.core.sql.workflow.task.EntityTaskData;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -30,19 +30,21 @@ abstract class AbstractSQLWorkflow implements SQLWorkflow {
     @NonNull
     private final OperationValidator validator;
     @NonNull
-    private final EntityTaskWorkflow.BlockingEntityTaskWorkflow prePersist;
+    private final EntityTaskExecuter.BlockingEntityTaskExecuter preExecute;
     @NonNull
-    private final EntityTaskWorkflow.AsyncEntityTaskWorkflow postAsyncPersist;
+    private final EntityTaskExecuter.BlockingEntityTaskExecuter postExecute;
+    @NonNull
+    private final EntityTaskExecuter.AsyncEntityTaskExecuter asyncPostExecute;
 
-    Single<VertxPojo> executeBlockingTask(RequestData req, VertxPojo p) {
-        return prePersist().execute(success(req, p)).switchIfEmpty(Single.just(p));
+    Single<VertxPojo> afterValidation(@NonNull RequestData req, @NonNull VertxPojo pojo) {
+        return preExecute().execute(initSuccessData(req, pojo)).switchIfEmpty(Single.just(pojo));
     }
 
-    EntityTaskData<VertxPojo> success(@NonNull RequestData reqData, @NonNull VertxPojo pojo) {
+    EntityTaskData<VertxPojo> initSuccessData(@NonNull RequestData reqData, @NonNull VertxPojo pojo) {
         return taskData(reqData, pojo, null);
     }
 
-    EntityTaskData<VertxPojo> error(@NonNull RequestData reqData, @NonNull Throwable err) {
+    EntityTaskData<VertxPojo> initErrorData(@NonNull RequestData reqData, @NonNull Throwable err) {
         return taskData(reqData, null, err);
     }
 

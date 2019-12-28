@@ -3,8 +3,8 @@ package com.nubeiot.edge.module.datapoint.task.sync;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.sql.service.task.EntityTask;
-import com.nubeiot.core.sql.service.task.EntityTaskContext;
+import com.nubeiot.core.sql.workflow.task.EntityTask;
+import com.nubeiot.core.sql.workflow.task.EntityTaskContext;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;
 
 public interface SyncTask<T extends EntityTaskContext, P extends VertxPojo> extends EntityTask<T, P, JsonObject> {

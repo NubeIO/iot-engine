@@ -1,4 +1,4 @@
-package com.nubeiot.core.sql.service.task;
+package com.nubeiot.core.sql.workflow.task;
 
 import java.util.function.Function;
 
@@ -10,8 +10,23 @@ import com.nubeiot.core.workflow.TaskDefinitionContext;
 
 import lombok.NonNull;
 
+/**
+ * Represents Entity task definition context.
+ *
+ * @param <T> Type of {@code Transporter}
+ * @see Transporter
+ * @see TaskDefinitionContext
+ * @since 1.0.0
+ */
 public interface EntityTaskContext<T extends Transporter> extends TaskDefinitionContext<T> {
 
+    /**
+     * Defines entity handler.
+     *
+     * @return the entity handler
+     * @see EntityHandler
+     * @since 1.0.0
+     */
     @NonNull EntityHandler handler();
 
     @Override

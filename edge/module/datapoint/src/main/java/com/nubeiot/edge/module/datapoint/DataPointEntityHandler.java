@@ -31,9 +31,9 @@ import com.nubeiot.core.sql.SchemaHandler;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.sql.decorator.EntitySyncHandler;
-import com.nubeiot.core.sql.service.task.EntityTaskData;
+import com.nubeiot.core.sql.workflow.EntityTaskExecuter.AsyncEntityTaskExecuter;
+import com.nubeiot.core.sql.workflow.task.EntityTaskData;
 import com.nubeiot.core.utils.Functions;
-import com.nubeiot.core.workflow.TaskExecuter;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.task.sync.SyncServiceFactory;
 import com.nubeiot.iotdata.dto.Protocol;
@@ -189,17 +189,15 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
         return r -> logger.info("Inserted {} record(s) in {}", r, pojoClass.getSimpleName());
     }
 
-    private void syncData(EventAction action, Edge edge) {
+    private void syncData(@NonNull EventAction action, @NonNull Edge edge) {
         SyncServiceFactory.getInitialTask(this, sharedData(DATA_SYNC_CFG))
-                          .ifPresent(task -> TaskExecuter.asyncExecute(task, getTaskData(action, edge)));
-    }
-
-    private EntityTaskData<Edge> getTaskData(EventAction action, Edge edge) {
-        return EntityTaskData.<Edge>builder().originReqAction(action)
-                                             .originReqData(RequestData.builder().build())
-                                             .metadata(EdgeMetadata.INSTANCE)
-                                             .data(edge)
-                                             .build();
+                          .map(AsyncEntityTaskExecuter::create)
+                          .ifPresent(wf -> wf.execute(EntityTaskData.builder()
+                                                                    .originReqAction(action)
+                                                                    .originReqData(RequestData.builder().build())
+                                                                    .metadata(EdgeMetadata.INSTANCE)
+                                                                    .data(edge)
+                                                                    .build()));
     }
 
 }

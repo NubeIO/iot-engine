@@ -17,15 +17,15 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.query.EntityQueryExecutor;
-import com.nubeiot.core.sql.service.task.EntityTask;
 import com.nubeiot.core.sql.validation.EntityValidation;
+import com.nubeiot.core.sql.workflow.task.EntityTask;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 /**
  * Entity Service Delegate wraps actual {@code entity service} in case it cannot {@code extends} directly default {@code
- * entity service}*
+ * entity service}**
  *
  * @param <P> Type of {@code VertxPojo}
  * @param <M> Type of {@code EntityMetadata}
@@ -70,6 +70,11 @@ public abstract class EntityServiceDelegate<P extends VertxPojo, M extends Entit
     @Override
     public Optional<? extends EntityTask> prePersistTask() {
         return unwrap().prePersistTask();
+    }
+
+    @Override
+    public Optional<? extends EntityTask> postPersistTask() {
+        return unwrap().postPersistTask();
     }
 
     @Override

@@ -46,19 +46,19 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
 
     @Test
     public void test_create_without_unit(TestContext context) {
-        JsonObject expected = new JsonObject().put("code", ErrorCode.INVALID_ARGUMENT)
-                                              .put("message", "Point measure unit is mandatory");
+        final JsonObject expected = new JsonObject().put("code", ErrorCode.INVALID_ARGUMENT)
+                                                    .put("message", "Point measure unit is mandatory");
         final UUID id = UUID.randomUUID();
         final Point p1 = new Point().setId(id).setCode("TET_01");
-        RequestData req = RequestData.builder().body(JsonPojo.from(p1).toJson()).build();
+        final RequestData req = RequestData.builder().body(JsonPojo.from(p1).toJson()).build();
         asserter(context, false, expected, PointService.class.getName(), EventAction.CREATE, req);
     }
 
     @Test
     public void test_create_with_non_exist_edge(TestContext context) {
         final UUID id = UUID.randomUUID();
-        JsonObject expected = new JsonObject().put("code", ErrorCode.NOT_FOUND)
-                                              .put("message", "Not found resource with edge_id=" + id);
+        final JsonObject expected = new JsonObject().put("code", ErrorCode.NOT_FOUND)
+                                                    .put("message", "Not found resource with edge_id=" + id);
         final Point p1 = new Point().setId(id).setCode("TET_01").setEdge(id);
         RequestData req = RequestData.builder()
                                      .body(JsonPojo.from(p1)

@@ -3,7 +3,7 @@ package com.nubeiot.edge.module.datapoint.task.remote;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.sql.EntityHandler;
-import com.nubeiot.core.sql.service.task.EntityTaskContext;
+import com.nubeiot.core.sql.workflow.task.EntityTaskContext;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

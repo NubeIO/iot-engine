@@ -12,7 +12,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.DesiredException;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntitySyncHandler;
-import com.nubeiot.core.sql.service.task.EntityTaskData;
+import com.nubeiot.core.sql.workflow.task.EntityTaskData;
 import com.nubeiot.edge.module.datapoint.cache.DataCacheInitializer;
 import com.nubeiot.edge.module.datapoint.model.ditto.IDittoModel;
 

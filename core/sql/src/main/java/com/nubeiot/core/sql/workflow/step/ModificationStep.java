@@ -1,4 +1,4 @@
-package com.nubeiot.core.sql.service.workflow;
+package com.nubeiot.core.sql.workflow.step;
 
 import java.util.Objects;
 
@@ -7,8 +7,8 @@ import io.reactivex.Single;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.pojos.DMLPojo;
-import com.nubeiot.core.sql.service.workflow.SQLStep.CreateOrUpdateStep;
 import com.nubeiot.core.sql.validation.OperationValidator;
+import com.nubeiot.core.sql.workflow.step.SQLStep.CreateOrUpdateStep;
 import com.nubeiot.core.utils.Functions.TripleConsumer;
 
 import lombok.Getter;

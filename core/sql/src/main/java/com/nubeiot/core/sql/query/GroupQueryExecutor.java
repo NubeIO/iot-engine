@@ -1,6 +1,5 @@
 package com.nubeiot.core.sql.query;
 
-import java.util.Objects;
 import java.util.Optional;
 
 import org.jooq.UpdatableRecord;
@@ -78,19 +77,14 @@ public interface GroupQueryExecutor<P extends VertxPojo, CP extends CompositePoj
     default Single<Boolean> checkGroupExistence(@NonNull RequestData reqData) {
         final EntityReferences references = marker().groupReferences();
         final JsonObject body = reqData.body();
-        return Observable.fromIterable(references.getFields().entrySet())
-                         .filter(Objects::nonNull)
-                         .flatMapSingle(entry -> {
-                             EntityMetadata m = entry.getKey();
-                             Optional key = Optional.ofNullable(body.getJsonObject(m.singularKeyName()))
-                                                    .flatMap(b -> Optional.ofNullable(b.getValue(m.jsonKeyName()))
-                                                                          .map(Object::toString)
-                                                                          .map(m::parseKey));
-                             return !key.isPresent()
-                                    ? Single.just(true)
-                                    : fetchExists(queryBuilder().exist(m, key.get())).switchIfEmpty(
-                                        Single.error(m.notFound(key.get())));
-                         })
+        return Observable.fromIterable(references.getFields().keySet())
+                         .flatMapSingle(m -> Optional.ofNullable(body.getJsonObject(m.singularKeyName()))
+                                                     .flatMap(b -> Optional.ofNullable(b.getValue(m.jsonKeyName()))
+                                                                           .map(Object::toString)
+                                                                           .map(m::parseKey))
+                                                     .map(k -> fetchExists(queryBuilder().exist(m, k)).switchIfEmpty(
+                                                         Single.error(m.notFound(k))))
+                                                     .orElseGet(() -> Single.just(true)))
                          .all(aBoolean -> aBoolean);
     }
 

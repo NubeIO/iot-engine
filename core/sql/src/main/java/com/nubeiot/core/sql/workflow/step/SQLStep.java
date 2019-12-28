@@ -1,4 +1,4 @@
-package com.nubeiot.core.sql.service.workflow;
+package com.nubeiot.core.sql.workflow.step;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
@@ -15,6 +15,8 @@ import lombok.NonNull;
 /**
  * Represents a direct execution step into database
  *
+ * @see DMLStep
+ * @see DQLStep
  * @since 1.0.0
  */
 public interface SQLStep extends Workflow {
@@ -44,11 +46,14 @@ public interface SQLStep extends Workflow {
     interface DMLStep extends SQLStep {
 
         /**
-         * Execute single.
+         * Execute {@code SQL manipulate command} based on given {@code request data} and {@code validator}.
          *
          * @param reqData   the req data
          * @param validator the validator
-         * @return the single
+         * @return DML pojo in Single
+         * @see RequestData
+         * @see OperationValidator
+         * @see DMLPojo
          * @since 1.0.0
          */
         Single<DMLPojo> execute(@NonNull RequestData reqData, @NonNull OperationValidator validator);
@@ -59,17 +64,19 @@ public interface SQLStep extends Workflow {
     /**
      * Represents a {@code DQL} step
      *
-     * @param <T> Type of {@code parameter}
+     * @param <T> Type of {@code Result}
      * @since 1.0.0
      */
     interface DQLStep<T> extends SQLStep {
 
         /**
-         * Query single.
+         * Do {@code SQL Query} based on given {@code request data} and {@code validator}.
          *
          * @param reqData   the req data
          * @param validator the validator
-         * @return the single
+         * @return result in Single
+         * @see RequestData
+         * @see OperationValidator
          * @since 1.0.0
          */
         Single<T> query(@NonNull RequestData reqData, @NonNull OperationValidator validator);

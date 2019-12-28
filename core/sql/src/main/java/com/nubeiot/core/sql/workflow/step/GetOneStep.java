@@ -1,11 +1,11 @@
-package com.nubeiot.core.sql.service.workflow;
+package com.nubeiot.core.sql.workflow.step;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
 
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.sql.service.workflow.SQLStep.DQLStep;
 import com.nubeiot.core.sql.validation.OperationValidator;
+import com.nubeiot.core.sql.workflow.step.SQLStep.DQLStep;
 
 import lombok.Getter;
 import lombok.NonNull;

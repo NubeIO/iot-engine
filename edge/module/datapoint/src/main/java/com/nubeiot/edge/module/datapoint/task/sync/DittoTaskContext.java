@@ -9,7 +9,7 @@ import com.nubeiot.core.dto.EnumType.AbstractEnumType;
 import com.nubeiot.core.http.base.HttpUtils;
 import com.nubeiot.core.http.client.HttpClientDelegate;
 import com.nubeiot.core.sql.EntityHandler;
-import com.nubeiot.core.sql.service.task.EntityTaskContext;
+import com.nubeiot.core.sql.workflow.task.EntityTaskContext;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 
 import lombok.NonNull;

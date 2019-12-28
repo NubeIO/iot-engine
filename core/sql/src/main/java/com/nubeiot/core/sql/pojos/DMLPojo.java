@@ -4,10 +4,11 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 /**
- * Represents for {@code  DML  pojo}.
+ * Represents for {@code DML pojo}.
  *
  * @since 1.0.0
  */
@@ -28,5 +29,9 @@ public final class DMLPojo {
      * Database entity
      */
     private final VertxPojo dbEntity;
+
+    public static DMLPojo clone(@NonNull DMLPojo dmlPojo, @NonNull VertxPojo dbEntity) {
+        return DMLPojo.builder().request(dmlPojo.request()).primaryKey(dmlPojo.primaryKey()).dbEntity(dbEntity).build();
+    }
 
 }

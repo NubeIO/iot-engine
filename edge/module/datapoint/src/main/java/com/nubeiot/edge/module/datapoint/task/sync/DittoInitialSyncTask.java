@@ -4,7 +4,7 @@ import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.sql.service.task.EntityTaskData;
+import com.nubeiot.core.sql.workflow.task.EntityTaskData;
 import com.nubeiot.edge.module.datapoint.model.ditto.DittoEdge;
 import com.nubeiot.edge.module.datapoint.task.sync.SyncTask.InitialSyncTask;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;

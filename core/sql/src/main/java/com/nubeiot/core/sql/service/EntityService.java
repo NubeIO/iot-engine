@@ -14,8 +14,8 @@ import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.query.EntityQueryExecutor;
-import com.nubeiot.core.sql.service.task.EntityTask;
 import com.nubeiot.core.sql.validation.EntityValidation;
+import com.nubeiot.core.sql.workflow.task.EntityTask;
 
 import lombok.NonNull;
 
@@ -73,9 +73,9 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
     @NonNull EntityTransformer transformer();
 
     /**
-     * Defines {@code task} is run before the entity manager persist operation is actually executed
+     * Defines {@code blocking pre-task} is run before the entity manager do query or persist
      *
-     * @return post task
+     * @return pre blocking task
      * @see EntityTask
      * @since 1.0.0
      */
@@ -84,9 +84,20 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
     }
 
     /**
-     * Defines {@code async task} is run after the entity manager persist operation is actually executed
+     * Defines {@code blocking post-task} is run after the entity manager do query or persist
      *
-     * @return post task
+     * @return post blocking task
+     * @see EntityTask
+     * @since 1.0.0
+     */
+    default Optional<? extends EntityTask> postPersistTask() {
+        return Optional.empty();
+    }
+
+    /**
+     * Defines {@code async post-task} is run after the entity manager do query or persist
+     *
+     * @return post async task
      * @see EntityTask
      * @since 1.0.0
      */

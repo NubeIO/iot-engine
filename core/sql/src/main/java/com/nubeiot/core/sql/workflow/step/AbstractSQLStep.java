@@ -1,4 +1,4 @@
-package com.nubeiot.core.sql.service.workflow;
+package com.nubeiot.core.sql.workflow.step;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.query.EntityQueryExecutor;
