@@ -22,6 +22,7 @@ import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
@@ -102,7 +103,9 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
         if (Objects.nonNull(reqData.filter()) && reqData.filter().getBoolean(Filters.TEMP_AUDIT, false)) {
             reqData.filter().remove(Filters.AUDIT);
         }
-        return super.doTransform(action, pojo, reqData, converter, PointPriorityValue.priorityValueTransform());
+        JsonObject result = converter.apply(pojo, reqData);
+        PointPriorityValue.priorityValueTransform().apply(result);
+        return EntityTransformer.fullResponse(action, result);
     }
 
     @Override

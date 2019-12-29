@@ -91,9 +91,9 @@ public class PointDataServiceTest extends BaseDataPointServiceTest {
         controller().fire(event, EventbusHelper.replyAsserter(context, body -> {
             JsonObject data = new JsonObject(
                 "{\"point\":\"" + PrimaryKey.P_GPIO_TEMP + "\",\"value\":24,\"priority\":5," +
-                "\"priority_values\":{\"1\":\"null\",\"2\":\"null\",\"3\":\"null\",\"4\":\"null\",\"5\":24," +
-                "\"6\":\"null\",\"7\":\"null\",\"8\":\"null\",\"9\":\"null\",\"10\":\"null\",\"11\":\"null\"," +
-                "\"12\":\"null\",\"13\":\"null\",\"14\":\"null\",\"15\":\"null\",\"16\":\"null\"}}");
+                "\"priority_values\":{\"1\":null,\"2\":null,\"3\":null,\"4\":null,\"5\":24,\"6\":null,\"7\":null," +
+                "\"8\":null,\"9\":null,\"10\":null,\"11\":null,\"12\":null,\"13\":null,\"14\":null,\"15\":null," +
+                "\"16\":null}}");
             JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
                                                   .put("status", Status.SUCCESS)
                                                   .put("resource", data);
@@ -105,9 +105,8 @@ public class PointDataServiceTest extends BaseDataPointServiceTest {
     public void test_get_point_data(TestContext context) {
         JsonObject expected = new JsonObject(
             "{\"priority\":8,\"value\":10,\"point\":\"" + PrimaryKey.P_GPIO_HUMIDITY + "\"," +
-            "\"priority_values\":{\"1\":\"null\",\"2\":\"null\",\"3\":\"null\",\"4\":\"null\",\"5\":10,\"6\":9," +
-            "\"7\":\"null\",\"8\":10,\"9\":\"null\",\"10\":\"null\",\"11\":\"null\",\"12\":\"null\",\"13\":\"null\"," +
-            "\"14\":\"null\",\"15\":\"null\",\"16\":\"null\"}}");
+            "\"priority_values\":{\"1\":null,\"2\":null,\"3\":null,\"4\":null,\"5\":10,\"6\":9,\"7\":null,\"8\":10," +
+            "\"9\":null,\"10\":null,\"11\":null,\"12\":null,\"13\":null,\"14\":null,\"15\":null,\"16\":null}}");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString()))
                                      .build();
@@ -183,11 +182,10 @@ public class PointDataServiceTest extends BaseDataPointServiceTest {
             latch.countDown();
             JsonObject data = new JsonObject(
                 "{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":24,\"priority\":5," +
-                "\"priority_values\":{\"1\":\"null\",\"2\":\"null\",\"3\":\"null\",\"4\":\"null\",\"5\":24," +
-                "\"6\":\"null\",\"7\":\"null\",\"8\":\"null\",\"9\":\"null\",\"10\":\"null\",\"11\":\"null\"," +
-                "\"12\":\"null\",\"13\":\"null\",\"14\":\"null\",\"15\":\"null\",\"16\":\"null\"}," +
-                "\"time_audit\":{\"created_by\":\"UNDEFINED\",\"revision\":1},\"sync_audit\":{\"status\":\"INITIAL\"," +
-                "\"data\":{\"message\":\"Not yet synced new resource\"}}}");
+                "\"priority_values\":{\"1\":null,\"2\":null,\"3\":null,\"4\":null,\"5\":24,\"6\":null,\"7\":null," +
+                "\"8\":null,\"9\":null,\"10\":null,\"11\":null,\"12\":null,\"13\":null,\"14\":null,\"15\":null," +
+                "\"16\":null},\"time_audit\":{\"created_by\":\"UNDEFINED\",\"revision\":1}," +
+                "\"sync_audit\":{\"status\":\"INITIAL\",\"data\":{\"message\":\"Not yet synced new resource\"}}}");
             JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
                                                   .put("status", Status.SUCCESS)
                                                   .put("resource", data);
@@ -196,17 +194,17 @@ public class PointDataServiceTest extends BaseDataPointServiceTest {
         latch.await(TestHelper.TEST_TIMEOUT_SEC / 3, TimeUnit.SECONDS);
         DeliveryEvent event2 = createPointEvent(EventAction.PATCH,
                                                 new PointValueData().setPoint(PrimaryKey.P_BACNET_SWITCH)
-                                                                    .setPriority(9).setValue(null), true);
+                                                                    .setPriority(9)
+                                                                    .setValue(null), true);
         controller().fire(event2, EventbusHelper.replyAsserter(context, body -> {
             latch.countDown();
             JsonObject data = new JsonObject(
                 "{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":24,\"priority\":5," +
-                "\"priority_values\":{\"1\":\"null\",\"2\":\"null\",\"3\":\"null\",\"4\":\"null\",\"5\":24," +
-                "\"6\":\"null\",\"7\":\"null\",\"8\":\"null\",\"9\":\"null\",\"10\":\"null\",\"11\":\"null\"," +
-                "\"12\":\"null\",\"13\":\"null\",\"14\":\"null\",\"15\":\"null\",\"16\":\"null\"}," +
-                "\"time_audit\":{\"created_by\":\"UNDEFINED\",\"last_modified_by\":\"UNDEFINED\",\"revision\":2}," +
-                "\"sync_audit\":{\"status\":\"INITIAL\",\"data\":{\"message\":\"Not yet synced modified resource with" +
-                " record revision 2\"}}}");
+                "\"priority_values\":{\"1\":null,\"2\":null,\"3\":null,\"4\":null,\"5\":24,\"6\":null,\"7\":null," +
+                "\"8\":null,\"9\":null,\"10\":null,\"11\":null,\"12\":null,\"13\":null,\"14\":null,\"15\":null," +
+                "\"16\":null},\"time_audit\":{\"created_by\":\"UNDEFINED\",\"last_modified_by\":\"UNDEFINED\"," +
+                "\"revision\":2},\"sync_audit\":{\"status\":\"INITIAL\",\"data\":{\"message\":\"Not yet synced " +
+                "modified resource with record revision 2\"}}}");
             JsonObject expected = new JsonObject().put("action", EventAction.PATCH)
                                                   .put("status", Status.SUCCESS)
                                                   .put("resource", data);

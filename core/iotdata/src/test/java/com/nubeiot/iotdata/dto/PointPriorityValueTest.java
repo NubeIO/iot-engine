@@ -23,7 +23,9 @@ public class PointPriorityValueTest {
 
     @Test
     public void test_serialize() throws JSONException {
-        JsonHelper.assertJson(new JsonObject("{\"2\":3.5,\"16\":8.0,\"9\":9.0,\"10\":10.5}"), pv.toJson());
+        JsonHelper.assertJson(new JsonObject("{\"1\":null,\"2\":3.5,\"3\":null,\"4\":null,\"5\":null,\"6\":null," +
+                                             "\"7\":null,\"8\":null,\"9\":9.0,\"10\":10.5,\"11\":null,\"12\":null," +
+                                             "\"13\":null,\"14\":null,\"15\":null,\"16\":8.0}"), pv.toJson());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -52,7 +54,9 @@ public class PointPriorityValueTest {
     @Test
     public void test_get_do_not_add_value_when_data_is_null() throws JSONException {
         final PointPriorityValue pointPriorityValue = pv.add(1, null);
-        JsonHelper.assertJson(new JsonObject("{\"2\":3.5,\"16\":8.0,\"9\":9.0,\"10\":10.5}"),
+        JsonHelper.assertJson(new JsonObject("{\"1\":null,\"2\":3.5,\"3\":null,\"4\":null,\"5\":null,\"6\":null," +
+                                             "\"7\":null,\"8\":null,\"9\":9.0,\"10\":10.5,\"11\":null,\"12\":null," +
+                                             "\"13\":null,\"14\":null,\"15\":null,\"16\":8.0}"),
                               pointPriorityValue.toJson());
     }
 
@@ -89,8 +93,9 @@ public class PointPriorityValueTest {
     public void test_merge() throws Throwable {
         final PointPriorityValue merge = JsonData.merge(pv.toJson(), new JsonObject(
             "{\"9\":55,\"10\":14, \"11\":null,\"12\":\"444.5\"}"), PointPriorityValue.class);
-        JsonHelper.assertJson(new JsonObject("{\"2\":3.5,\"16\":8.0,\"9\":55.0,\"10\":14.0,\"11\":null,\"12\":444.5}"),
-                              merge.toJson());
+        JsonHelper.assertJson(new JsonObject("{\"1\":null,\"2\":3.5,\"3\":null,\"4\":null,\"5\":null,\"6\":null," +
+                                             "\"7\":null,\"8\":null,\"9\":55.0,\"10\":14.0,\"11\":null,\"12\":444.5," +
+                                             "\"13\":null,\"14\":null,\"15\":null,\"16\":8.0}"), merge.toJson());
     }
 
 }

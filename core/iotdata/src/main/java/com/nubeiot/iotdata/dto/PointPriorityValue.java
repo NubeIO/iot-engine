@@ -13,7 +13,6 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.utils.Functions;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 /**
@@ -22,7 +21,6 @@ import lombok.NonNull;
  * @see <a href="https://project-haystack.org/tag/writeLevel">HayStack Write Level</a>
  * @see <a href="https://store.chipkin.com/articles/bacnet-what-is-a-bacnet-priority-array/">BACNet priority array</a>
  */
-@NoArgsConstructor
 public final class PointPriorityValue implements JsonData, IoTNotion {
 
     public static final int DEFAULT_PRIORITY = 16;
@@ -31,6 +29,12 @@ public final class PointPriorityValue implements JsonData, IoTNotion {
     public static final int MAX_PRIORITY = 17;
     private static final String INVALID_VALUE = "Value must be number";
     private final SortedMap<Integer, Double> val = new TreeMap<>();
+
+    public PointPriorityValue() {
+        for (int i = PointPriorityValue.MIN_PRIORITY; i < PointPriorityValue.MAX_PRIORITY; i++) {
+            this.val.put(i, null);
+        }
+    }
 
     @JsonCreator
     PointPriorityValue(Map<Object, Object> map) {
@@ -63,15 +67,16 @@ public final class PointPriorityValue implements JsonData, IoTNotion {
         return add(priority, (double) value);
     }
 
-    public PointPriorityValue add(int priority, Double value) {
-        if (value == null) {
-            if (this.val.get(priority) != null) {
-                this.val.remove(priority);
+    public static Function<JsonObject, JsonObject> priorityValueTransform() {
+        return result -> {
+            JsonObject priorityValues = result.getJsonObject("priority_values");
+            for (int i = PointPriorityValue.MIN_PRIORITY; i < PointPriorityValue.MAX_PRIORITY; i++) {
+                if (!priorityValues.containsKey(String.valueOf(i))) {
+                    priorityValues.put(String.valueOf(i), (Double) null);
+                }
             }
-        } else {
-            this.val.put(validateAndGet(priority), value);
-        }
-        return this;
+            return result;
+        };
     }
 
     public Double get() {
@@ -104,16 +109,13 @@ public final class PointPriorityValue implements JsonData, IoTNotion {
                   .orElse(new PointValue(DEFAULT_PRIORITY, null));
     }
 
-    public static Function<JsonObject, JsonObject> priorityValueTransform() {
-        return result -> {
-            JsonObject priorityValues = result.getJsonObject("priority_values");
-            for (int i = PointPriorityValue.MIN_PRIORITY; i < PointPriorityValue.MAX_PRIORITY; i++) {
-                if (!priorityValues.containsKey(String.valueOf(i))) {
-                    priorityValues.put(String.valueOf(i), "null");
-                }
-            }
-            return result;
-        };
+    public PointPriorityValue add(int priority, Double value) {
+        if (value == null) {
+            this.val.put(priority, null);
+        } else {
+            this.val.put(validateAndGet(priority), value);
+        }
+        return this;
     }
 
     @Override
