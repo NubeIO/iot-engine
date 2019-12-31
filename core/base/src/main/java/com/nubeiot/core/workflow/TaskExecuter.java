@@ -28,15 +28,18 @@ public interface TaskExecuter<T extends Task> {
      * @param task          the task
      * @param executionData the execution data
      * @return the maybe
+     * @see Task
+     * @see TaskDefinitionContext
+     * @see TaskExecutionContext
      * @since 1.0.0
      */
-    static <TDC extends TaskDefinitionContext, TED extends TaskExecutionData, R, T extends Task<TDC, TED, R>> Maybe<R> execute(
+    static <TDC extends TaskDefinitionContext, TED extends TaskExecutionContext, R, T extends Task<TDC, TED, R>> Maybe<R> execute(
         T task, TED executionData) {
         final Maybe<R> execution = task.isExecutable(executionData)
                                        .filter(b -> b)
                                        .flatMap(b -> task.execute(executionData));
-        if (task.definition().isConcurrent()) {
-            return ExecutorHelpers.blocking(task.definition().vertx(), execution);
+        if (task.definitionContext().isConcurrent()) {
+            return ExecutorHelpers.blocking(task.definitionContext().vertx(), execution);
         }
         return execution;
     }
@@ -64,11 +67,11 @@ public interface TaskExecuter<T extends Task> {
          *
          * @param taskData the task data
          * @return result in maybe
-         * @see TaskExecuter#execute(Task, TaskExecutionData)
+         * @see TaskExecuter#execute(Task, TaskExecutionContext)
          * @since 1.0.0
          */
         @SuppressWarnings("unchecked")
-        default Maybe<OUTPUT> execute(@NonNull TaskExecutionData<INPUT> taskData) {
+        default Maybe<OUTPUT> execute(@NonNull TaskExecutionContext<INPUT> taskData) {
             if (Objects.isNull(task())) {
                 return Maybe.empty();
             }
@@ -94,7 +97,7 @@ public interface TaskExecuter<T extends Task> {
          * @since 1.0.0
          */
         @SuppressWarnings("unchecked")
-        default void execute(@NonNull TaskExecutionData<INPUT> taskData) {
+        default void execute(@NonNull TaskExecutionContext<INPUT> taskData) {
             if (Objects.isNull(task())) {
                 return;
             }

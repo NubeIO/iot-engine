@@ -6,8 +6,6 @@ import com.fasterxml.jackson.databind.InjectableValues.Std;
 import com.nubeiot.core.cache.CacheInitializer;
 import com.nubeiot.core.cache.ClassGraphCache;
 import com.nubeiot.core.sql.EntityHandler;
-import com.nubeiot.core.sql.EntityMetadata;
-import com.nubeiot.edge.module.datapoint.model.ditto.IDittoModel;
 import com.nubeiot.edge.module.datapoint.scheduler.DataJobDefinition;
 
 import lombok.NonNull;
@@ -18,14 +16,11 @@ public final class DataCacheInitializer implements CacheInitializer<DataCacheIni
     public static final String HISTORIES_DATA_CACHE = "HISTORIES_DATA_CACHE";
     public static final String PROTOCOL_DISPATCHER_CACHE = "PROTOCOL_DISPATCHER_CACHE";
     public static final String JOB_CONFIG_CACHE = "JOB_CONFIG_CACHE";
-    public static final String SYNC_CONFIG_CACHE = "SYNC_CONFIG_CACHE";
 
     @Override
     public DataCacheInitializer init(@NonNull EntityHandler context) {
         final ClassGraphCache<String, DataJobDefinition> jobDefinitionCache = new ClassGraphCache<>();
         DataJobDefinition.MAPPER.setInjectableValues(new Std().addValue(JOB_CONFIG_CACHE, jobDefinitionCache));
-        addBlockingCache(context, SYNC_CONFIG_CACHE,
-                         () -> new ClassGraphCache<EntityMetadata, IDittoModel>().register(IDittoModel::find));
         addBlockingCache(context, JOB_CONFIG_CACHE, () -> jobDefinitionCache.register(DataJobDefinition::find));
         addBlockingCache(context, HISTORIES_DATA_CACHE, PointHistoryCache::new);
         addBlockingCache(context, PROTOCOL_DISPATCHER_CACHE, () -> ProtocolDispatcherCache.init(context));

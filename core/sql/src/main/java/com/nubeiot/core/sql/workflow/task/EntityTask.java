@@ -9,12 +9,13 @@ import com.nubeiot.core.workflow.Task;
  *
  * @param <DC> Type of {@code EntityTaskContext}
  * @param <P>  Type of {@code VertxPojo}
- * @param <R>  Type of {@code result}
+ * @param <R>  Type of {@code Result}
  * @see Task
- * @see EntityTaskContext
- * @see EntityTaskData
+ * @see EntityDefinitionContext
+ * @see EntityRuntimeContext
  * @since 1.0.0
  */
-public interface EntityTask<DC extends EntityTaskContext, P extends VertxPojo, R> extends Task<DC, EntityTaskData<P>, R> {
+public interface EntityTask<DC extends EntityDefinitionContext, P extends VertxPojo, R>
+    extends Task<DC, EntityRuntimeContext<P>, R> {
 
 }

@@ -2,7 +2,6 @@ package com.nubeiot.edge.module.datapoint.service;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -20,6 +19,7 @@ import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractGroupEntityService;
 import com.nubeiot.core.sql.service.marker.EntityReferences;
 import com.nubeiot.core.sql.service.marker.ReferencingEntityMarker;
+import com.nubeiot.core.sql.workflow.task.EntityTask;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
@@ -75,8 +75,8 @@ public final class PointService
     }
 
     @Override
-    public Optional<PointReferencedService> postPersistTask() {
-        return Optional.of(new PointReferencedService(entityHandler()));
+    public EntityTask postPersistTask() {
+        return new PointReferencedService(entityHandler());
     }
 
     @Override

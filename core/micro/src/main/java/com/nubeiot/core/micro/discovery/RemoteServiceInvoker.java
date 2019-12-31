@@ -2,11 +2,11 @@ package com.nubeiot.core.micro.discovery;
 
 import io.reactivex.Single;
 
+import com.nubeiot.core.component.EventClientProxy;
 import com.nubeiot.core.dto.DataTransferObject.Headers;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.exceptions.ServiceNotFoundException;
 
 import lombok.NonNull;
@@ -16,7 +16,7 @@ import lombok.NonNull;
  *
  * @see <a href="https://en.wikipedia.org/wiki/Remote_procedure_call">Remote procedure call</a>
  */
-public interface RemoteServiceInvoker {
+public interface RemoteServiceInvoker extends EventClientProxy {
 
     static String requestBy(@NonNull String serviceName) {
         return "service/" + serviceName;
@@ -34,13 +34,6 @@ public interface RemoteServiceInvoker {
     String requester();
 
     /**
-     * Event client
-     *
-     * @return event client
-     */
-    @NonNull EventbusClient eventClient();
-
-    /**
      * Defines remote service label that is used in case making  an intuitive error message
      *
      * @return remote service label. Default: {@code Remote service}
@@ -56,7 +49,7 @@ public interface RemoteServiceInvoker {
     }
 
     default Single<EventMessage> invoke(@NonNull String address, @NonNull EventMessage message) {
-        return eventClient().request(address, message).onErrorReturn(t -> {
+        return transporter().request(address, message).onErrorReturn(t -> {
             throw new ServiceNotFoundException(notFoundMessage(serviceLabel()), t);
         });
     }

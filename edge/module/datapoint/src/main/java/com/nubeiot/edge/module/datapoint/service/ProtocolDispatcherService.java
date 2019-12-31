@@ -2,7 +2,6 @@ package com.nubeiot.edge.module.datapoint.service;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.Set;
 
 import io.reactivex.Single;
@@ -18,8 +17,8 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractEntityService;
+import com.nubeiot.core.sql.workflow.task.EntityTask;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.ProtocolDispatcherMetadata;
-import com.nubeiot.edge.module.datapoint.task.remote.ProtocolDispatcherTask;
 import com.nubeiot.iotdata.edge.model.tables.pojos.ProtocolDispatcher;
 
 import lombok.NonNull;
@@ -38,8 +37,8 @@ public final class ProtocolDispatcherService
     }
 
     @Override
-    public Optional<ProtocolDispatcherTask> prePersistTask() {
-        return Optional.empty();
+    public EntityTask prePersistTask() {
+        return null;
     }
 
     public Set<EventMethodDefinition> definitions() {

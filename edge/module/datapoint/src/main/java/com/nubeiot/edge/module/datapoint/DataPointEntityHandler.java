@@ -31,10 +31,9 @@ import com.nubeiot.core.sql.SchemaHandler;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.sql.decorator.EntitySyncHandler;
-import com.nubeiot.core.sql.workflow.task.EntityTaskData;
+import com.nubeiot.core.sql.workflow.task.EntityRuntimeContext;
 import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter.AsyncEntityTaskExecuter;
 import com.nubeiot.core.utils.Functions;
-import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.task.sync.SyncServiceFactory;
 import com.nubeiot.iotdata.dto.Protocol;
 import com.nubeiot.iotdata.edge.model.Keys;
@@ -84,9 +83,9 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
         addSharedData(EDGE_ID, edge.getId().toString());
         addSharedData(CUSTOMER_CODE, edge.getCustomerCode());
         addSharedData(SITE_CODE, edge.getSiteCode());
-        addSharedData(DATA_SYNC_CFG,
-                      DataSyncConfig.update(edge.getMetadata().getJsonObject(DataSyncConfig.NAME, new JsonObject()),
-                                            "1.0.0", edge.getId()));
+        addSharedData(DATA_SYNC_CFG, DataPointConfig.DataSyncConfig.update(
+            edge.getMetadata().getJsonObject(DataPointConfig.DataSyncConfig.NAME, new JsonObject()), "1.0.0",
+            edge.getId()));
         return edge;
     }
 
@@ -103,9 +102,8 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
         final @NonNull Edge edge = EdgeMetadata.INSTANCE.onCreating(RequestData.builder().body(obj).build());
         JsonObject syncCfg = SharedDataDelegate.removeLocalDataValue(vertx(), getSharedKey(), DATA_SYNC_CFG);
         //TODO fix hard-code version
-        syncCfg = new JsonObject().put(DataSyncConfig.NAME,
-                                       DataSyncConfig.update(Optional.ofNullable(syncCfg).orElse(new JsonObject()),
-                                                             "1.0.0", edge.getId()));
+        syncCfg = new JsonObject().put(DataPointConfig.DataSyncConfig.NAME, DataPointConfig.DataSyncConfig.update(
+            Optional.ofNullable(syncCfg).orElse(new JsonObject()), "1.0.0", edge.getId()));
         return edge.setMetadata(
             syncCfg.mergeIn(Optional.ofNullable(edge.getMetadata()).orElse(new JsonObject()), true));
     }
@@ -192,12 +190,12 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
     private void syncData(@NonNull EventAction action, @NonNull Edge edge) {
         SyncServiceFactory.getInitialTask(this, sharedData(DATA_SYNC_CFG))
                           .map(AsyncEntityTaskExecuter::create)
-                          .ifPresent(wf -> wf.execute(EntityTaskData.builder()
-                                                                    .originReqAction(action)
-                                                                    .originReqData(RequestData.builder().build())
-                                                                    .metadata(EdgeMetadata.INSTANCE)
-                                                                    .data(edge)
-                                                                    .build()));
+                          .ifPresent(wf -> wf.execute(EntityRuntimeContext.builder()
+                                                                          .originReqAction(action)
+                                                                          .originReqData(RequestData.builder().build())
+                                                                          .metadata(EdgeMetadata.INSTANCE)
+                                                                          .data(edge)
+                                                                          .build()));
     }
 
 }

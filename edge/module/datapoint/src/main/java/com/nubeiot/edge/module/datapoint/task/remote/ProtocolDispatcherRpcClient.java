@@ -18,7 +18,7 @@ final class ProtocolDispatcherRpcClient implements RemoteServiceInvoker {
     }
 
     @Override
-    public @NonNull EventbusClient eventClient() {
+    public @NonNull EventbusClient transporter() {
         return client;
     }
 

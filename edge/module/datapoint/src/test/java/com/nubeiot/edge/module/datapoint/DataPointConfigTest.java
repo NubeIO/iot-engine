@@ -16,7 +16,6 @@ import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.http.client.HttpClientConfig;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.BuiltinData;
-import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.policy.CleanupPolicy;
 import com.nubeiot.edge.module.datapoint.policy.NewestCleanupPolicy;
@@ -40,15 +39,15 @@ public class DataPointConfigTest {
             "\"timezone\":\"Australia/Sydney\"}}]}");
         final JsonObject def = DataPointConfig.def().toJson();
         JsonObject builtin = JsonData.tryParse(def.remove(BuiltinData.NAME)).toJson();
-        JsonObject dataSync = JsonData.tryParse(def.remove(DataSyncConfig.NAME)).toJson();
+        JsonObject dataSync = JsonData.tryParse(def.remove(DataPointConfig.DataSyncConfig.NAME)).toJson();
         JsonHelper.assertJson(expected, def);
         JsonHelper.assertJson(BuiltinData.def().toJson(), builtin, JSONCompareMode.LENIENT);
-        JsonHelper.assertJson(DataSyncConfig.def().toJson(), dataSync);
+        JsonHelper.assertJson(DataPointConfig.DataSyncConfig.def().toJson(), dataSync);
         final DataPointConfig from = IConfig.from(expected, DataPointConfig.class);
         JsonHelper.assertJson(expected, from.toJson());
         final DataPointConfig cp = IConfig.fromClasspath("config.json", DataPointConfig.class);
         expected.put(BuiltinData.NAME, builtin);
-        expected.put(DataSyncConfig.NAME, dataSync);
+        expected.put(DataPointConfig.DataSyncConfig.NAME, dataSync);
         JsonHelper.assertJson(expected, cp.toJson(), JSONCompareMode.LENIENT);
         System.out.println(cp.toJson().encodePrettily());
     }
@@ -84,7 +83,8 @@ public class DataPointConfigTest {
                                         .toJson().put(EdgeMetadata.INSTANCE.singularKeyName(), MockData.EDGE.toJson());
         final HostInfo hostInfo = HostInfo.builder().host("abc").port(80).build();
         final HttpClientConfig httpCfg = HttpClientConfig.create("edge.datapoint", hostInfo);
-        final DataSyncConfig syncConfig = new DataSyncConfig("XXX", true, null, httpCfg.toJson());
+        final DataPointConfig.DataSyncConfig syncConfig = new DataPointConfig.DataSyncConfig("XXX", true, null,
+                                                                                             httpCfg.toJson());
         final DataPointConfig config = new DataPointConfig();
         config.setBuiltinData(JsonData.from(builtin, BuiltinData.class));
         config.setDataSyncConfig(syncConfig);
