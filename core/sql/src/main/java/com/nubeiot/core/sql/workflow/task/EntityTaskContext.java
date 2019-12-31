@@ -27,11 +27,11 @@ public interface EntityTaskContext<T extends Transporter> extends TaskDefinition
      * @see EntityHandler
      * @since 1.0.0
      */
-    @NonNull EntityHandler handler();
+    @NonNull EntityHandler entityHandler();
 
     @Override
     default @NonNull Vertx vertx() {
-        return handler().vertx();
+        return entityHandler().vertx();
     }
 
     @Override
@@ -41,7 +41,7 @@ public interface EntityTaskContext<T extends Transporter> extends TaskDefinition
 
     @Override
     default <D> D getSharedDataValue(String dataKey) {
-        return handler().sharedData(dataKey);
+        return entityHandler().sharedData(dataKey);
     }
 
     @Override

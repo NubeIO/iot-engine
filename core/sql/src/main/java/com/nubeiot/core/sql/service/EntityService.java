@@ -27,8 +27,6 @@ import lombok.NonNull;
  * @see EventListener
  * @see VertxPojo
  * @see EntityMetadata
- * @see EntityValidation
- * @see EntityTransformer
  * @since 1.0.0
  */
 //TODO Missing `BATCH` Creation/Modification/Deletion
@@ -39,6 +37,7 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
      * Defines {@code CURD} actions
      *
      * @return set of default CRUD action
+     * @since 1.0.0
      */
     @NonNull
     default Collection<EventAction> getAvailableEvents() {

@@ -20,7 +20,7 @@ import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.http.EntityHttpService;
-import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
+import com.nubeiot.core.sql.service.AbstractReferencingEntityService;
 import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.core.sql.workflow.step.CreationStep;
 import com.nubeiot.core.sql.workflow.step.ModificationStep;
@@ -36,7 +36,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
 
 import lombok.NonNull;
 
-public final class HistoryDataService extends AbstractOneToManyEntityService<PointHistoryData, HistoryDataMetadata>
+public final class HistoryDataService extends AbstractReferencingEntityService<PointHistoryData, HistoryDataMetadata>
     implements PointExtension, DataPointService<PointHistoryData, HistoryDataMetadata> {
 
     public HistoryDataService(@NonNull EntityHandler entityHandler) {

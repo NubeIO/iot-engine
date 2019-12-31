@@ -29,13 +29,13 @@ public interface GroupEntityService<P extends VertxPojo, M extends EntityMetadat
     extends BaseEntityService<M>, GroupReferencingEntityMarker {
 
     /**
-     * Declares context group pojo.
+     * Declares group context metadata.
      *
-     * @return context group pojo
-     * @see CompositePojo
+     * @return group context metadata
+     * @see CompositeMetadata
      * @since 1.0.0
      */
-    @NonNull CM contextGroup();
+    @NonNull CM groupContext();
 
     /**
      * Declares group query executor.
@@ -45,8 +45,8 @@ public interface GroupEntityService<P extends VertxPojo, M extends EntityMetadat
      * @since 1.0.0
      */
     @SuppressWarnings("unchecked")
-    default GroupQueryExecutor<P, CP> groupQuery() {
-        return GroupQueryExecutor.create(entityHandler(), context(), contextGroup(), this);
+    default GroupQueryExecutor<CP> groupQuery() {
+        return GroupQueryExecutor.create(entityHandler(), context(), groupContext(), this);
     }
 
     /**

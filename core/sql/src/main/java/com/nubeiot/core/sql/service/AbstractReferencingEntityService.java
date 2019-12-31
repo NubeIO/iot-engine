@@ -6,24 +6,25 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
-import com.nubeiot.core.sql.decorator.ReferenceEntityTransformer;
-import com.nubeiot.core.sql.query.ReferenceQueryExecutor;
+import com.nubeiot.core.sql.decorator.ReferencingEntityTransformer;
+import com.nubeiot.core.sql.query.ReferencingQueryExecutor;
 import com.nubeiot.core.sql.service.marker.ReferencingEntityMarker;
 import com.nubeiot.core.sql.validation.OperationValidator;
 
 import lombok.NonNull;
 
 /**
- * Abstract service to implement {@code CRUD} listeners for the {@code one-to-many entity}.
+ * Abstract service to implement {@code CRUD} listeners for the {@code database entity} has a {@code many-to-one}
+ * relationship.
  *
  * @param <P> Type of {@code VertxPojo}
  * @param <M> Type of {@code EntityMetadata}
- * @see OneToManyEntityService
- * @see ReferenceEntityTransformer
+ * @see ReferencingEntityService
+ * @see ReferencingEntityTransformer
  * @since 1.0.0
  */
-public abstract class AbstractOneToManyEntityService<P extends VertxPojo, M extends EntityMetadata>
-    extends HasReferenceEntityService<P, M> implements OneToManyEntityService<P, M>, ReferenceEntityTransformer {
+public abstract class AbstractReferencingEntityService<P extends VertxPojo, M extends EntityMetadata>
+    extends HasReferenceEntityService<P, M> implements ReferencingEntityService<P, M>, ReferencingEntityTransformer {
 
     /**
      * Instantiates a new Abstract one to many entity service.
@@ -31,17 +32,17 @@ public abstract class AbstractOneToManyEntityService<P extends VertxPojo, M exte
      * @param entityHandler the entity handler
      * @since 1.0.0
      */
-    public AbstractOneToManyEntityService(@NonNull EntityHandler entityHandler) {
+    public AbstractReferencingEntityService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
     }
 
     @Override
-    public @NonNull ReferenceQueryExecutor<P> queryExecutor() {
-        return OneToManyEntityService.super.queryExecutor();
+    public @NonNull ReferencingQueryExecutor<P> queryExecutor() {
+        return ReferencingEntityService.super.queryExecutor();
     }
 
     @Override
-    public @NonNull ReferenceEntityTransformer transformer() {
+    public @NonNull ReferencingEntityTransformer transformer() {
         return this;
     }
 

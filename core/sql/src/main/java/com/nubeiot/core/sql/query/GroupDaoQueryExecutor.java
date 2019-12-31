@@ -21,7 +21,7 @@ import lombok.NonNull;
 
 final class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>,
                                      CP extends CompositePojo<P, CP>>
-    extends BaseDaoQueryExecutor<CP> implements GroupQueryExecutor<P, CP> {
+    extends BaseDaoQueryExecutor<CP> implements GroupQueryExecutor<CP> {
 
     private final CompositeMetadata<K, P, R, D, CP> groupMetadata;
     private final GroupReferencingEntityMarker marker;

@@ -13,12 +13,13 @@ import lombok.NonNull;
 /**
  * The interface Group entity transformer.
  *
- * @see ReferenceEntityTransformer
+ * @see ReferencingEntityTransformer
  * @since 1.0.0
  */
-public interface GroupEntityTransformer extends ReferenceEntityTransformer {
+public interface GroupEntityTransformer extends ReferencingEntityTransformer {
 
     /**
+     * @return group reference marker
      * @see GroupReferencingEntityMarker
      * @since 1.0.0
      */
@@ -32,7 +33,7 @@ public interface GroupEntityTransformer extends ReferenceEntityTransformer {
      */
     @Override
     default Set<String> ignoreFields(@NonNull RequestData requestData) {
-        return Stream.of(ReferenceEntityTransformer.super.ignoreFields(requestData), marker().ignoreFields())
+        return Stream.of(ReferencingEntityTransformer.super.ignoreFields(requestData), marker().ignoreFields())
                      .flatMap(Collection::stream)
                      .collect(Collectors.toSet());
     }
@@ -45,7 +46,7 @@ public interface GroupEntityTransformer extends ReferenceEntityTransformer {
      * @since 1.0.0
      */
     default Set<String> showGroupFields(@NonNull RequestData requestData) {
-        return ReferenceEntityTransformer.super.ignoreFields(requestData);
+        return ReferencingEntityTransformer.super.ignoreFields(requestData);
     }
 
 }

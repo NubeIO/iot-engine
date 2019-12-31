@@ -2,6 +2,7 @@ package com.nubeiot.edge.module.datapoint.service;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -18,10 +19,8 @@ import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractGroupEntityService;
 import com.nubeiot.core.sql.service.marker.EntityReferences;
-import com.nubeiot.core.sql.service.marker.ReferencedEntityMarker;
 import com.nubeiot.core.sql.service.marker.ReferencingEntityMarker;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.HistorySettingMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
@@ -38,7 +37,7 @@ import lombok.NonNull;
 
 public final class PointService
     extends AbstractGroupEntityService<Point, PointMetadata, PointComposite, PointCompositeMetadata>
-    implements DataPointService<Point, PointMetadata>, ReferencedEntityMarker {
+    implements DataPointService<Point, PointMetadata> {
 
     public PointService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
@@ -50,7 +49,7 @@ public final class PointService
     }
 
     @Override
-    public PointCompositeMetadata contextGroup() {
+    public PointCompositeMetadata groupContext() {
         return PointCompositeMetadata.INSTANCE;
     }
 
@@ -76,8 +75,8 @@ public final class PointService
     }
 
     @Override
-    public @NonNull EntityReferences referencingEntities() {
-        return new EntityReferences().add(HistorySettingMetadata.INSTANCE);
+    public Optional<PointReferencedService> postPersistTask() {
+        return Optional.of(new PointReferencedService(entityHandler()));
     }
 
     @Override
@@ -107,10 +106,11 @@ public final class PointService
 
     @Override
     public Set<EventMethodDefinition> definitions() {
-        return Stream.concat(DataPointService.super.definitions().stream(),
-                             EntityHttpService.createDefinitions(getAvailableEvents(), PointMetadata.INSTANCE,
-                                                                 EdgeMetadata.INSTANCE, NetworkMetadata.INSTANCE)
-                                              .stream()).collect(Collectors.toSet());
+        return Stream.of(DataPointService.super.definitions(),
+                         EntityHttpService.createDefinitions(getAvailableEvents(), PointMetadata.INSTANCE,
+                                                             EdgeMetadata.INSTANCE, NetworkMetadata.INSTANCE))
+                     .flatMap(Collection::stream)
+                     .collect(Collectors.toSet());
     }
 
     @Override

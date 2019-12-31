@@ -39,7 +39,7 @@ import lombok.NonNull;
  */
 public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends EntityMetadata,
                                                     CP extends CompositePojo<P, CP>, CM extends CompositeMetadata>
-    extends AbstractOneToManyEntityService<P, M> implements GroupEntityService<P, M, CP, CM>, GroupEntityTransformer {
+    extends AbstractReferencingEntityService<P, M> implements GroupEntityService<P, M, CP, CM>, GroupEntityTransformer {
 
     /**
      * Instantiates a new Abstract group entity service.
@@ -59,13 +59,9 @@ public abstract class AbstractGroupEntityService<P extends VertxPojo, M extends 
     @Override
     protected OperationValidator initCreationValidator() {
         return OperationValidator.create(
-            (req, pojo) -> groupQuery().checkReferenceExistence(req).map(b -> contextGroup().onCreating(req)));
+            (req, pojo) -> groupQuery().checkReferenceExistence(req).map(b -> groupContext().onCreating(req)));
     }
 
-    /**
-     * @return group reference marker
-     * @see GroupReferencingEntityMarker
-     */
     @Override
     public GroupReferencingEntityMarker marker() {
         return this;

@@ -19,12 +19,13 @@ import com.nubeiot.core.sql.service.marker.ReferencingEntityMarker;
 import lombok.NonNull;
 
 /**
- * Represents for a {@code sql executor} do {@code DML} or {@code DQL} on {@code has reference entity}
+ * Represents for a {@code SQL executor} do {@code DML} or {@code DQL} on the {@code database entity} has the
+ * relationship to another entity.
  *
- * @param <P> Vertx pojo
+ * @param <P> Type of {@code VertxPojo}
  * @since 1.0.0
  */
-public interface ReferenceQueryExecutor<P extends VertxPojo> extends SimpleQueryExecutor<P> {
+public interface ReferencingQueryExecutor<P extends VertxPojo> extends SimpleQueryExecutor<P> {
 
     /**
      * Create reference query executor.
@@ -34,16 +35,18 @@ public interface ReferenceQueryExecutor<P extends VertxPojo> extends SimpleQuery
      * @param <R>      Type of {@code UpdatableRecord}
      * @param <D>      Type of {@code VertxDAO}
      * @param handler  the entity handler
-     * @param metadata the metadata
+     * @param metadata the entity metadata
      * @param marker   the reference entity marker
      * @return the reference query executor
      * @see EntityHandler
+     * @see EntityMetadata
+     * @see ReferencingEntityMarker
      * @since 1.0.0
      */
-    static <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> ReferenceQueryExecutor create(
+    static <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> ReferencingQueryExecutor create(
         @NonNull EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata,
         @NonNull ReferencingEntityMarker marker) {
-        return new ReferenceDaoQueryExecutor<>(handler, metadata, marker);
+        return new ReferencingDaoQueryExecutor<>(handler, metadata, marker);
     }
 
     /**
@@ -56,7 +59,8 @@ public interface ReferenceQueryExecutor<P extends VertxPojo> extends SimpleQuery
     @NonNull ReferencingEntityMarker marker();
 
     /**
-     * Verify {@code entity} whether exists or not.
+     * Verify the {@code referenced entities} by {@link ReferencingEntityMarker#referencedEntities()} whether exists or
+     * not.
      *
      * @param reqData the request data
      * @return error single if not found any {@code reference entity}, otherwise {@code true} single

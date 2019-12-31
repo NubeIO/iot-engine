@@ -18,14 +18,14 @@ import com.nubeiot.core.sql.validation.EntityValidation;
 import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.core.sql.workflow.DefaultDMLWorkflow;
 import com.nubeiot.core.sql.workflow.DefaultDQLWorkflow;
-import com.nubeiot.core.sql.workflow.EntityTaskExecuter;
-import com.nubeiot.core.sql.workflow.EntityTaskExecuter.AsyncEntityTaskExecuter;
-import com.nubeiot.core.sql.workflow.EntityTaskExecuter.BlockingEntityTaskExecuter;
 import com.nubeiot.core.sql.workflow.step.CreationStep;
 import com.nubeiot.core.sql.workflow.step.DeletionStep;
 import com.nubeiot.core.sql.workflow.step.GetManyStep;
 import com.nubeiot.core.sql.workflow.step.GetOneStep;
 import com.nubeiot.core.sql.workflow.step.ModificationStep;
+import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter;
+import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter.AsyncEntityTaskExecuter;
+import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter.BlockingEntityTaskExecuter;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +51,6 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
     public EntityHandler entityHandler() { return entityHandler; }
 
     @Override
-    @SuppressWarnings("unchecked")
     public @NonNull SimpleQueryExecutor<P> queryExecutor() {
         return SimpleQueryExecutor.create(entityHandler(), context());
     }
@@ -68,10 +67,10 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                                       .metadata(context())
                                                       .normalize(this::onReadingManyResource)
                                                       .validator(initGetOneValidator())
-                                                      .preExecute(initPreTaskExecuter())
+                                                      .preExecuter(initPreTaskExecuter())
                                                       .sqlStep(initGetManyStep())
-                                                      .postExecute(initPostPersistExecuter())
-                                                      .asyncPostExecute(initPostAsyncPersistExecuter())
+                                                      .postExecuter(initPostPersistExecuter())
+                                                      .asyncPostExecuter(initPostAsyncPersistExecuter())
                                                       .transformer((req, res) -> transformer().onMany(res))
                                                       .build()
                                                       .run(requestData);
@@ -83,10 +82,10 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                               .metadata(context())
                                               .normalize(this::onReadingOneResource)
                                               .validator(initGetOneValidator())
-                                              .preExecute(initPreTaskExecuter())
+                                              .preExecuter(initPreTaskExecuter())
                                               .sqlStep(initGetOneStep())
-                                              .postExecute(initPostPersistExecuter())
-                                              .asyncPostExecute(initPostAsyncPersistExecuter())
+                                              .postExecuter(initPostPersistExecuter())
+                                              .asyncPostExecuter(initPostAsyncPersistExecuter())
                                               .transformer((req, res) -> transformer().afterGet(res, req))
                                               .build()
                                               .run(requestData);
@@ -99,10 +98,10 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                  .metadata(context())
                                  .normalize(this::onCreatingOneResource)
                                  .validator(initCreationValidator())
-                                 .preExecute(initPreTaskExecuter())
+                                 .preExecuter(initPreTaskExecuter())
                                  .sqlStep(initCreationStep())
-                                 .postExecute(initPostPersistExecuter())
-                                 .asyncPostExecute(initPostAsyncPersistExecuter())
+                                 .postExecuter(initPostPersistExecuter())
+                                 .asyncPostExecuter(initPostAsyncPersistExecuter())
                                  .transformer((r, p) -> transformer().afterCreate(p.primaryKey(), p.dbEntity(), r))
                                  .build()
                                  .run(requestData);
@@ -115,10 +114,10 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                  .metadata(context())
                                  .normalize(this::onModifyingOneResource)
                                  .validator(initUpdateValidator())
-                                 .preExecute(initPreTaskExecuter())
+                                 .preExecuter(initPreTaskExecuter())
                                  .sqlStep(initModificationStep(EventAction.UPDATE))
-                                 .postExecute(initPostPersistExecuter())
-                                 .asyncPostExecute(initPostAsyncPersistExecuter())
+                                 .postExecuter(initPostPersistExecuter())
+                                 .asyncPostExecuter(initPostAsyncPersistExecuter())
                                  .transformer((r, p) -> transformer().afterUpdate(p.primaryKey(), p.dbEntity(), r))
                                  .build()
                                  .run(requestData);
@@ -131,10 +130,10 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                  .metadata(context())
                                  .normalize(this::onModifyingOneResource)
                                  .validator(initPatchValidator())
-                                 .preExecute(initPreTaskExecuter())
+                                 .preExecuter(initPreTaskExecuter())
                                  .sqlStep(initModificationStep(EventAction.PATCH))
-                                 .postExecute(initPostPersistExecuter())
-                                 .asyncPostExecute(initPostAsyncPersistExecuter())
+                                 .postExecuter(initPostPersistExecuter())
+                                 .asyncPostExecuter(initPostAsyncPersistExecuter())
                                  .transformer((r, p) -> transformer().afterPatch(p.primaryKey(), p.dbEntity(), r))
                                  .build()
                                  .run(requestData);
@@ -147,10 +146,10 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                  .metadata(context())
                                  .normalize(this::onModifyingOneResource)
                                  .validator(initDeletionValidator())
-                                 .preExecute(initPreTaskExecuter())
+                                 .preExecuter(initPreTaskExecuter())
                                  .sqlStep(initDeletionStep())
-                                 .postExecute(initPostPersistExecuter())
-                                 .asyncPostExecute(initPostAsyncPersistExecuter())
+                                 .postExecuter(initPostPersistExecuter())
+                                 .asyncPostExecuter(initPostAsyncPersistExecuter())
                                  .transformer((req, re) -> transformer().afterDelete(re.dbEntity(), req))
                                  .build()
                                  .run(requestData);
@@ -181,7 +180,7 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
         return GetManyStep.builder()
                           .action(EventAction.GET_LIST)
                           .queryExecutor(queryExecutor())
-                          .transformFunction(transformer()::onEach)
+                          .onEach(transformer()::onEach)
                           .build();
     }
 

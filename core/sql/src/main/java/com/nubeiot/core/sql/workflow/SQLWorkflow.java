@@ -9,9 +9,10 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.validation.OperationValidator;
-import com.nubeiot.core.sql.workflow.EntityTaskExecuter.AsyncEntityTaskExecuter;
-import com.nubeiot.core.sql.workflow.EntityTaskExecuter.BlockingEntityTaskExecuter;
 import com.nubeiot.core.sql.workflow.step.SQLStep;
+import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter;
+import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter.AsyncEntityTaskExecuter;
+import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter.BlockingEntityTaskExecuter;
 import com.nubeiot.core.workflow.Workflow;
 
 import lombok.NonNull;
@@ -64,7 +65,7 @@ public interface SQLWorkflow extends Workflow {
      * @see BlockingEntityTaskExecuter
      * @since 1.0.0
      */
-    @NonNull EntityTaskExecuter.BlockingEntityTaskExecuter preExecute();
+    @NonNull EntityTaskExecuter.BlockingEntityTaskExecuter preExecuter();
 
     /**
      * Declares {@code SQL step} for interacting with database.
@@ -84,7 +85,7 @@ public interface SQLWorkflow extends Workflow {
      * @see BlockingEntityTaskExecuter
      * @since 1.0.0
      */
-    @NonNull EntityTaskExecuter.BlockingEntityTaskExecuter postExecute();
+    @NonNull EntityTaskExecuter.BlockingEntityTaskExecuter postExecuter();
 
     /**
      * Declares {@code async post-task} that is called after {@code executing SQL}.
@@ -96,7 +97,7 @@ public interface SQLWorkflow extends Workflow {
      * @see AsyncEntityTaskExecuter
      * @since 1.0.0
      */
-    @NonNull EntityTaskExecuter.AsyncEntityTaskExecuter asyncPostExecute();
+    @NonNull EntityTaskExecuter.AsyncEntityTaskExecuter asyncPostExecuter();
 
     /**
      * Kick off workflow.

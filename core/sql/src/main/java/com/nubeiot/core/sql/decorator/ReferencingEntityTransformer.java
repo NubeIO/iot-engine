@@ -18,7 +18,7 @@ import lombok.NonNull;
  * @see EntityTransformer
  * @since 1.0.0
  */
-public interface ReferenceEntityTransformer extends EntityTransformer {
+public interface ReferencingEntityTransformer extends EntityTransformer {
 
     /**
      * Declares {@code has reference} marker.

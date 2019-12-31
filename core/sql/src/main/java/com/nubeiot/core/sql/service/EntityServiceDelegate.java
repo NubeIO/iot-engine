@@ -24,14 +24,14 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Entity Service Delegate wraps actual {@code entity service} in case it cannot {@code extends} directly default {@code
- * entity service}**
+ * Represents a service delegate that wraps an actual {@code entity service} in case of it cannot {@code extends}
+ * directly default {@code entity service}.
  *
  * @param <P> Type of {@code VertxPojo}
  * @param <M> Type of {@code EntityMetadata}
  * @param <S> Type of {@code EntityService}
  * @see EntityService
- * @see OneToManyEntityService
+ * @see ReferencingEntityService
  * @see GroupEntityService
  * @see ManyToManyEntityService
  * @since 1.0.0

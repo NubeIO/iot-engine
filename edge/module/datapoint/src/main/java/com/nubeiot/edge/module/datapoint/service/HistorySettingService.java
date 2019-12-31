@@ -12,7 +12,7 @@ import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.http.EntityHttpService;
-import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
+import com.nubeiot.core.sql.service.AbstractReferencingEntityService;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistorySettingMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
 import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
@@ -20,7 +20,8 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.HistorySetting;
 
 import lombok.NonNull;
 
-public final class HistorySettingService extends AbstractOneToManyEntityService<HistorySetting, HistorySettingMetadata>
+public final class HistorySettingService
+    extends AbstractReferencingEntityService<HistorySetting, HistorySettingMetadata>
     implements PointExtension, DataPointService<HistorySetting, HistorySettingMetadata> {
 
     public HistorySettingService(@NonNull EntityHandler entityHandler) {

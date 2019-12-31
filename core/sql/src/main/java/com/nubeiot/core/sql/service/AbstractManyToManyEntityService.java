@@ -18,7 +18,8 @@ import com.nubeiot.core.sql.validation.OperationValidator;
 import lombok.NonNull;
 
 /**
- * Abstract service to implement {@code CRUD} listeners for the {@code many-to-many entity}.
+ * Abstract service to implement {@code CRUD} listeners for the {@code database entity} has a {@code many-to-many}
+ * relationship.
  *
  * @param <P> Type of {@code CompositePojo}
  * @param <M> Type of {@code CompositeMetadata}

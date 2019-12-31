@@ -25,9 +25,6 @@ public interface ManyToManyEntityService<CP extends CompositePojo, CM extends Co
     extends SimpleEntityService<CP, CM>, ManyToManyMarker {
 
     /**
-     * Represents physical database entity
-     *
-     * @return physical entity metadata
      * @apiNote It represents for a joining table in {@code many-to-many} relationship
      */
     @Override
@@ -37,12 +34,13 @@ public interface ManyToManyEntityService<CP extends CompositePojo, CM extends Co
      * Composite validation
      *
      * @return composite validation
+     * @see CompositeValidation
      */
     @Override
     @NonNull CompositeValidation validation();
 
     /**
-     * @return many to many entity transformer
+     * @return many-to-many entity transformer
      * @see ManyToManyEntityTransformer
      */
     @Override

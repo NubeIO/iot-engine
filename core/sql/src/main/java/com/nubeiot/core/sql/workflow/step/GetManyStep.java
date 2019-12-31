@@ -9,26 +9,26 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.validation.OperationValidator;
-import com.nubeiot.core.sql.workflow.step.SQLStep.DQLStep;
+import com.nubeiot.core.sql.workflow.step.SQLBatchStep.DQLBatchStep;
 
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;
 
-@Getter
 @SuperBuilder
 @Accessors(fluent = true)
 @SuppressWarnings("unchecked")
-public final class GetManyStep extends AbstractSQLStep implements DQLStep<JsonArray> {
+public final class GetManyStep extends AbstractSQLStep implements DQLBatchStep {
 
+    @Getter
     @NonNull
-    private final BiFunction<VertxPojo, RequestData, Single<JsonObject>> transformFunction;
+    private BiFunction<VertxPojo, RequestData, Single<JsonObject>> onEach;
 
     @Override
     public Single<JsonArray> query(@NonNull RequestData reqData, @NonNull OperationValidator validator) {
         return queryExecutor().findMany(reqData)
-                              .flatMapSingle(pojo -> transformFunction.apply((VertxPojo) pojo, reqData))
+                              .flatMapSingle(pojo -> onEach().apply((VertxPojo) pojo, reqData))
                               .collect(JsonArray::new, (array, obj) -> ((JsonArray) array).add(obj));
     }
 

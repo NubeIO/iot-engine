@@ -10,17 +10,17 @@ import com.nubeiot.core.sql.service.marker.TransitiveReferenceMarker;
 import lombok.NonNull;
 
 /**
- * Abstract service to implement {@code CRUD} listeners for the {@code one-to-many entity} with {@code transitive
+ * Abstract service to implement {@code CRUD} listeners for the {@code many-to-one entity} with {@code transitive
  * resource}.
  *
  * @param <P> Type of {@code VertxPojo}
  * @param <M> Type of {@code EntityMetadata}
  * @see TransitiveReferenceMarker
- * @see AbstractOneToManyEntityService
+ * @see AbstractReferencingEntityService
  * @since 1.0.0
  */
 public abstract class AbstractTransitiveEntityService<P extends VertxPojo, M extends EntityMetadata>
-    extends AbstractOneToManyEntityService<P, M> implements TransitiveReferenceMarker {
+    extends AbstractReferencingEntityService<P, M> implements TransitiveReferenceMarker {
 
     /**
      * Instantiates a new Abstract one to many entity service.

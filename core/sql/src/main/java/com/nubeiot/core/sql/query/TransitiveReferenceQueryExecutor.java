@@ -17,7 +17,7 @@ import lombok.NonNull;
  * @param <P> Type of {@code VertxPojo}
  * @since 1.0.0
  */
-public interface TransitiveReferenceQueryExecutor<P extends VertxPojo> extends ReferenceQueryExecutor<P> {
+public interface TransitiveReferenceQueryExecutor<P extends VertxPojo> extends ReferencingQueryExecutor<P> {
 
     /**
      * Create transitive reference query executor.

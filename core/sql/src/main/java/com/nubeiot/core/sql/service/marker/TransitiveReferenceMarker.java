@@ -13,9 +13,9 @@ import lombok.RequiredArgsConstructor;
  * <p>
  * {@code Transitive reference entity} represents for a case:
  * <ul>
- *  <li>Table A has <i>reference field</i> to Table B</li>
- *  <li>Table B has <i>reference field</i> to Table C</li>
- *  <li>Table A has <b>transitive reference</b> to Table C</li>
+ *  <li>Table A has a <i>reference field</i> to Table B</li>
+ *  <li>Table B has a <i>reference field</i> to Table C</li>
+ *  <li>Table A has the <b>transitive reference</b> to Table C</li>
  * </ul>
  *
  * @see ReferencingEntityMarker

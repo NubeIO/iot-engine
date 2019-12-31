@@ -65,7 +65,7 @@ public final class ProtocolDispatcherTask implements EntityTask<ProtocolTaskCont
                                                .body(taskData.getData().toJson())
                                                .headers(taskData.getOriginReqData().headers())
                                                .build();
-        final EventbusClient client = definition().handler().eventClient();
+        final EventbusClient client = definition().entityHandler().eventClient();
         final EventAction action = taskData.getOriginReqAction();
         final Single<EventMessage> invoker = new ProtocolDispatcherRpcClient(client).invoke(address, action, reqData);
         return invoker.flatMap(msg -> msg.isError()
@@ -76,7 +76,7 @@ public final class ProtocolDispatcherTask implements EntityTask<ProtocolTaskCont
 
     @SuppressWarnings("unchecked")
     private Maybe<ProtocolDispatcher> fromCache(@NonNull EntityTaskData<VertxPojo> taskData) {
-        final ProtocolDispatcherCache cache = definition().handler()
+        final ProtocolDispatcherCache cache = definition().entityHandler()
                                                           .sharedData(DataCacheInitializer.PROTOCOL_DISPATCHER_CACHE);
         final Protocol protocol = taskData.getMetadata() instanceof HasProtocol
                                   ? ((HasProtocol) taskData.getMetadata()).getProtocol(taskData.getData())

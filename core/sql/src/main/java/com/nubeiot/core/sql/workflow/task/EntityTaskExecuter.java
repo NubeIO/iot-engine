@@ -1,8 +1,7 @@
-package com.nubeiot.core.sql.workflow;
+package com.nubeiot.core.sql.workflow.task;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 
-import com.nubeiot.core.sql.workflow.task.EntityTask;
 import com.nubeiot.core.workflow.TaskExecuter;
 
 import lombok.NonNull;

@@ -39,6 +39,12 @@ public final class RequestData extends AbstractDTO {
         this.sort = sort;
     }
 
+    public static Builder builder() { return new Builder(); }
+
+    public static RequestData from(@NonNull EventMessage msg) {
+        return builder().body(msg.getData()).build();
+    }
+
     public boolean hasAudit() {
         return Optional.ofNullable(this.filter()).map(o -> o.containsKey(Filters.AUDIT)).orElse(false);
     }
@@ -49,12 +55,6 @@ public final class RequestData extends AbstractDTO {
             return JsonData.MAPPER.convertValue(this, JsonObject.class);
         }
         return JsonData.MAPPER.convertValue(this, JsonObject.class).put("sort", sort.toJson());
-    }
-
-    public static Builder builder() { return new Builder(); }
-
-    public static RequestData from(@NonNull EventMessage msg) {
-        return builder().body(msg.getData()).build();
     }
 
     public static class Builder {
@@ -134,6 +134,11 @@ public final class RequestData extends AbstractDTO {
          * For {@code sort}
          */
         public static final String SORT = "_sort";
+
+        /**
+         * For {@code include}
+         */
+        public static final String INCLUDE = "_incl";
 
     }
 

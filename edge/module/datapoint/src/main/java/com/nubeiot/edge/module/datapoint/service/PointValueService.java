@@ -23,10 +23,9 @@ import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
-import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.pojos.JsonPojo;
-import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
+import com.nubeiot.core.sql.service.AbstractReferencingEntityService;
 import com.nubeiot.core.sql.workflow.step.CreationStep;
 import com.nubeiot.core.sql.workflow.step.ModificationStep;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
@@ -40,7 +39,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
 
 import lombok.NonNull;
 
-public final class PointValueService extends AbstractOneToManyEntityService<PointValueData, PointValueMetadata>
+public final class PointValueService extends AbstractReferencingEntityService<PointValueData, PointValueMetadata>
     implements DataPointService<PointValueData, PointValueMetadata>, PointExtension {
 
     public PointValueService(@NonNull EntityHandler entityHandler) {
@@ -109,8 +108,7 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
         if (Objects.nonNull(reqData.filter()) && reqData.filter().getBoolean(Filters.TEMP_AUDIT, false)) {
             reqData.filter().remove(Filters.AUDIT);
         }
-        JsonObject result = converter.apply(pojo, reqData);
-        return EntityTransformer.fullResponse(action, result);
+        return super.doTransform(action, key, pojo, reqData, converter);
     }
 
     @Override

@@ -35,7 +35,7 @@ abstract class AbstractDittoTask<D extends VertxPojo> implements SyncTask<DittoT
     }
 
     final Maybe<JsonObject> doSyncOnSuccess(EntityMetadata metadata, String endpoint, JsonObject reqBody, D pojo) {
-        EntitySyncHandler syncHandler = (EntitySyncHandler) definition().handler();
+        EntitySyncHandler syncHandler = (EntitySyncHandler) definition().entityHandler();
         final DittoTaskContext ctx = definition();
         final RequestData reqData = RequestData.builder().headers(ctx.createRequestHeader()).body(reqBody).build();
         return ctx.transporter()

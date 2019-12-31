@@ -28,11 +28,11 @@ public final class DefaultDMLWorkflow extends AbstractSQLWorkflow implements DML
     public Single<JsonObject> run(@NonNull RequestData requestData) {
         final RequestData reqData = normalize().apply(requestData);
         return sqlStep().execute(reqData, validator().andThen(this::afterValidation))
-                        .flatMap(dmlPojo -> postExecute().execute(initSuccessData(reqData, dmlPojo.dbEntity()))
-                                                         .map(pojo -> DMLPojo.clone(dmlPojo, pojo))
-                                                         .switchIfEmpty(Single.just(dmlPojo)))
-                        .doOnSuccess(db -> asyncPostExecute().execute(initSuccessData(reqData, db.dbEntity())))
-                        .doOnError(err -> asyncPostExecute().execute(initErrorData(reqData, err)))
+                        .flatMap(dmlPojo -> postExecuter().execute(initSuccessData(reqData, dmlPojo.dbEntity()))
+                                                          .map(pojo -> DMLPojo.clone(dmlPojo, pojo))
+                                                          .switchIfEmpty(Single.just(dmlPojo)))
+                        .doOnSuccess(db -> asyncPostExecuter().execute(initSuccessData(reqData, db.dbEntity())))
+                        .doOnError(err -> asyncPostExecuter().execute(initErrorData(reqData, err)))
                         .flatMap(pojo -> transformer().apply(reqData, pojo));
     }
 

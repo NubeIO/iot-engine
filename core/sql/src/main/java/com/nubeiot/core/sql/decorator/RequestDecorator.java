@@ -5,7 +5,7 @@ import com.nubeiot.core.dto.RequestData;
 import lombok.NonNull;
 
 /**
- * Represents decorator that make up {@code request data} depends on {@code entity resource}
+ * Represents a decorator that make up {@code request data} depends on {@code entity resource}
  *
  * @since 1.0.0
  */

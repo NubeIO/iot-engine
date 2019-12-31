@@ -114,7 +114,7 @@ public interface MockEntityService {
     }
 
 
-    final class BookService extends AbstractOneToManyEntityService<Book, BookMetadata> {
+    final class BookService extends AbstractReferencingEntityService<Book, BookMetadata> {
 
         BookService(@NonNull AbstractEntityHandler entityHandler) {
             super(entityHandler);

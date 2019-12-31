@@ -29,7 +29,7 @@ final class DittoSyncTask extends AbstractDittoTask<VertxPojo> {
         final EventAction action = executionData.getOriginReqAction();
         return Single.just(
             action == EventAction.GET_LIST || action == EventAction.GET_ONE || action == EventAction.REMOVE ||
-            !(definition().handler() instanceof EntitySyncHandler));
+            !(definition().entityHandler() instanceof EntitySyncHandler));
     }
 
     @Override

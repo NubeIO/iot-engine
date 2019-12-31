@@ -10,6 +10,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.core.sql.workflow.task.EntityTaskData;
+import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -30,14 +31,14 @@ abstract class AbstractSQLWorkflow implements SQLWorkflow {
     @NonNull
     private final OperationValidator validator;
     @NonNull
-    private final EntityTaskExecuter.BlockingEntityTaskExecuter preExecute;
+    private final EntityTaskExecuter.BlockingEntityTaskExecuter preExecuter;
     @NonNull
-    private final EntityTaskExecuter.BlockingEntityTaskExecuter postExecute;
+    private final EntityTaskExecuter.BlockingEntityTaskExecuter postExecuter;
     @NonNull
-    private final EntityTaskExecuter.AsyncEntityTaskExecuter asyncPostExecute;
+    private final EntityTaskExecuter.AsyncEntityTaskExecuter asyncPostExecuter;
 
     Single<VertxPojo> afterValidation(@NonNull RequestData req, @NonNull VertxPojo pojo) {
-        return preExecute().execute(initSuccessData(req, pojo)).switchIfEmpty(Single.just(pojo));
+        return preExecuter().execute(initSuccessData(req, pojo)).switchIfEmpty(Single.just(pojo));
     }
 
     EntityTaskData<VertxPojo> initSuccessData(@NonNull RequestData reqData, @NonNull VertxPojo pojo) {

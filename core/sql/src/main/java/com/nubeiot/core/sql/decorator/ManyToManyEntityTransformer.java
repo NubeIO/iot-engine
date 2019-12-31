@@ -13,7 +13,7 @@ import lombok.NonNull;
 /**
  * Represents for Many to many entity transformer.
  *
- * @see ReferenceEntityTransformer
+ * @see ReferencingEntityTransformer
  * @since 1.0.0
  */
 public interface ManyToManyEntityTransformer extends EntityTransformer {

@@ -12,25 +12,24 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.workflow.task.EntityTaskContext;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.experimental.Accessors;
 
+@Accessors(fluent = true)
 final class DittoTaskContext extends AbstractEnumType implements EntityTaskContext<HttpClientDelegate> {
 
     static final String TYPE = "DITTO";
     @NonNull
-    private final EntityHandler handler;
+    @Getter
+    private final EntityHandler entityHandler;
     @NonNull
     private final DataSyncConfig syncConfig;
 
-    DittoTaskContext(EntityHandler handler, DataSyncConfig syncConfig) {
+    DittoTaskContext(@NonNull EntityHandler entityHandler, DataSyncConfig syncConfig) {
         super(TYPE);
-        this.handler = handler;
+        this.entityHandler = entityHandler;
         this.syncConfig = syncConfig;
-    }
-
-    @Override
-    public final @NonNull EntityHandler handler() {
-        return handler;
     }
 
     @Override

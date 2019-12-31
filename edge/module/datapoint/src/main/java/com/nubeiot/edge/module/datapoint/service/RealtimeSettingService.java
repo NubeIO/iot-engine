@@ -12,7 +12,7 @@ import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.http.EntityHttpService;
-import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
+import com.nubeiot.core.sql.service.AbstractReferencingEntityService;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.RealtimeSettingMetadata;
 import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
@@ -21,7 +21,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.RealtimeSetting;
 import lombok.NonNull;
 
 public final class RealtimeSettingService
-    extends AbstractOneToManyEntityService<RealtimeSetting, RealtimeSettingMetadata>
+    extends AbstractReferencingEntityService<RealtimeSetting, RealtimeSettingMetadata>
     implements PointExtension, DataPointService<RealtimeSetting, RealtimeSettingMetadata> {
 
     public RealtimeSettingService(@NonNull EntityHandler entityHandler) {

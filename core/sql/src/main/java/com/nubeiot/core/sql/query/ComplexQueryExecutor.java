@@ -18,13 +18,13 @@ import lombok.NonNull;
  * Represents an executor that do complex query with {@code join} or {@code group by}
  *
  * @param <CP> Type of {@code CompositePojo}
- * @see ReferenceQueryExecutor
+ * @see ReferencingQueryExecutor
  * @see JDBCQueryExecutor
  * @see RXQueryExecutor
  * @since 1.0.0
  */
 public interface ComplexQueryExecutor<CP extends CompositePojo>
-    extends ReferenceQueryExecutor<CP>, JDBCQueryExecutor<Single<?>>, RXQueryExecutor {
+    extends ReferencingQueryExecutor<CP>, JDBCQueryExecutor<Single<?>>, RXQueryExecutor {
 
     /**
      * Create complex query executor.
