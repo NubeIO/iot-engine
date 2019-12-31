@@ -1,10 +1,10 @@
 package com.nubeiot.core.sql.workflow.task;
 
+import java.util.Objects;
+
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 
 import com.nubeiot.core.workflow.TaskExecuter;
-
-import lombok.NonNull;
 
 /**
  * Represents {@code Entity Task} executer.
@@ -44,8 +44,8 @@ public interface EntityTaskExecuter extends TaskExecuter<EntityTask> {
          * @return blocking-executer
          * @since 1.0.0
          */
-        static BlockingEntityTaskExecuter create(@NonNull EntityTask task) {
-            return () -> task;
+        static BlockingEntityTaskExecuter create(EntityTask task) {
+            return Objects.isNull(task) ? NONE : () -> task;
         }
 
     }
@@ -70,8 +70,8 @@ public interface EntityTaskExecuter extends TaskExecuter<EntityTask> {
          * @return async-executer
          * @since 1.0.0
          */
-        static AsyncEntityTaskExecuter create(@NonNull EntityTask task) {
-            return () -> task;
+        static AsyncEntityTaskExecuter create(EntityTask task) {
+            return Objects.isNull(task) ? NONE : () -> task;
         }
 
     }

@@ -1,5 +1,6 @@
 package com.nubeiot.core.sql.validation;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
@@ -8,26 +9,29 @@ import io.reactivex.Single;
 
 import com.nubeiot.core.dto.RequestData;
 
-import lombok.Builder;
-import lombok.Getter;
+import lombok.AccessLevel;
 import lombok.NonNull;
-import lombok.Setter;
-import lombok.experimental.Accessors;
+import lombok.RequiredArgsConstructor;
 
-@Getter
-@Accessors(fluent = true)
-@Builder(builderClassName = "Builder")
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 class DefaultOperationValidator implements OperationValidator {
 
     @NonNull
-    private final BiFunction<RequestData, VertxPojo, Single<VertxPojo>> validate;
-    @Setter
-    private BiFunction<RequestData, VertxPojo, Single<VertxPojo>> andThen;
+    private final BiFunction<RequestData, VertxPojo, Single<VertxPojo>> validation;
+    private OperationValidator andThen;
 
     @Override
     public Single<VertxPojo> validate(@NonNull RequestData reqData, VertxPojo dbEntity) {
-        return validate.apply(reqData, dbEntity)
-                       .flatMap(p -> Optional.ofNullable(andThen).map(f -> f.apply(reqData, p)).orElse(Single.just(p)));
+        return validation.apply(reqData, dbEntity)
+                         .flatMap(p -> Optional.ofNullable(andThen)
+                                               .map(validator -> validator.validate(reqData, p))
+                                               .orElse(Single.just(p)));
+    }
+
+    @Override
+    public @NonNull OperationValidator andThen(OperationValidator andThen) {
+        this.andThen = Objects.isNull(this.andThen) ? andThen : this.andThen.andThen(andThen);
+        return this;
     }
 
 }

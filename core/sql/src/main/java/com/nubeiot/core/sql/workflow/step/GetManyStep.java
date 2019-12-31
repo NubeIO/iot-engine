@@ -9,7 +9,6 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.validation.OperationValidator;
-import com.nubeiot.core.sql.workflow.step.SQLBatchStep.DQLBatchStep;
 
 import lombok.Getter;
 import lombok.NonNull;

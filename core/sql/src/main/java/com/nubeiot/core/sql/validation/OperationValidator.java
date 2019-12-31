@@ -21,13 +21,13 @@ public interface OperationValidator {
     /**
      * Create operation validator.
      *
-     * @param validate the validate
+     * @param validation the validation function
      * @return the operation validator
      * @since 1.0.0
      */
     @NonNull
-    static OperationValidator create(BiFunction<RequestData, VertxPojo, Single<VertxPojo>> validate) {
-        return DefaultOperationValidator.builder().validate(validate).build();
+    static OperationValidator create(@NonNull BiFunction<RequestData, VertxPojo, Single<VertxPojo>> validation) {
+        return new DefaultOperationValidator(validation);
     }
 
     /**
@@ -41,12 +41,14 @@ public interface OperationValidator {
     @NonNull Single<VertxPojo> validate(@NonNull RequestData reqData, VertxPojo dbEntity);
 
     /**
-     * Defines action after validating
+     * Defines action after validating.
+     * <p>
+     * It can be used to inject an extra validator such as the permission validation on each record step, etc
      *
-     * @param andThen post validation action
+     * @param andThen extra validator
      * @return a reference to this, so the API can be used fluently
      * @since 1.0.0
      */
-    @NonNull OperationValidator andThen(BiFunction<RequestData, VertxPojo, Single<VertxPojo>> andThen);
+    @NonNull OperationValidator andThen(OperationValidator andThen);
 
 }

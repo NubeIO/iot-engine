@@ -1,7 +1,6 @@
 package com.nubeiot.core.sql.service;
 
 import java.util.Collection;
-import java.util.Optional;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
@@ -68,17 +67,17 @@ public abstract class EntityServiceDelegate<P extends VertxPojo, M extends Entit
     }
 
     @Override
-    public Optional<? extends EntityTask> prePersistTask() {
+    public EntityTask prePersistTask() {
         return unwrap().prePersistTask();
     }
 
     @Override
-    public Optional<? extends EntityTask> postPersistTask() {
+    public EntityTask postPersistTask() {
         return unwrap().postPersistTask();
     }
 
     @Override
-    public Optional<? extends EntityTask> postPersistAsyncTask() {
+    public EntityTask postPersistAsyncTask() {
         return unwrap().postPersistAsyncTask();
     }
 

@@ -1,11 +1,11 @@
 package com.nubeiot.core.sql.workflow;
 
-import com.nubeiot.core.sql.workflow.step.SQLStep.DMLStep;
+import com.nubeiot.core.sql.workflow.step.DMLStep;
 
 import lombok.NonNull;
 
 /**
- * DML workflow is used for adding (inserting), deleting, and modifying (updating) data in a database
+ * DML workflow is used for adding (inserting), modifying (updating), and deleting data into database.
  *
  * @see SQLWorkflow
  * @since 1.0.0

@@ -9,8 +9,11 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.validation.OperationValidator;
-import com.nubeiot.core.sql.workflow.task.EntityTaskData;
+import com.nubeiot.core.sql.workflow.task.EntityRuntimeContext;
+import com.nubeiot.core.sql.workflow.task.EntityTask;
 import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter;
+import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter.AsyncEntityTaskExecuter;
+import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter.BlockingEntityTaskExecuter;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -37,26 +40,47 @@ abstract class AbstractSQLWorkflow implements SQLWorkflow {
     @NonNull
     private final EntityTaskExecuter.AsyncEntityTaskExecuter asyncPostExecuter;
 
-    Single<VertxPojo> afterValidation(@NonNull RequestData req, @NonNull VertxPojo pojo) {
-        return preExecuter().execute(initSuccessData(req, pojo)).switchIfEmpty(Single.just(pojo));
+    @NonNull OperationValidator afterValidation() {
+        return OperationValidator.create(
+            (req, pojo) -> preExecuter().execute(initSuccessData(req, pojo)).switchIfEmpty(Single.just(pojo)));
     }
 
-    EntityTaskData<VertxPojo> initSuccessData(@NonNull RequestData reqData, @NonNull VertxPojo pojo) {
+    @NonNull EntityRuntimeContext<VertxPojo> initSuccessData(@NonNull RequestData reqData, @NonNull VertxPojo pojo) {
         return taskData(reqData, pojo, null);
     }
 
-    EntityTaskData<VertxPojo> initErrorData(@NonNull RequestData reqData, @NonNull Throwable err) {
+    @NonNull EntityRuntimeContext<VertxPojo> initErrorData(@NonNull RequestData reqData, @NonNull Throwable err) {
         return taskData(reqData, null, err);
     }
 
-    EntityTaskData<VertxPojo> taskData(@NonNull RequestData reqData, VertxPojo pojo, Throwable t) {
-        return EntityTaskData.builder()
-                             .originReqData(reqData)
-                             .originReqAction(action())
-                             .metadata(metadata())
-                             .data(pojo)
-                             .throwable(t)
-                             .build();
+    @NonNull EntityRuntimeContext<VertxPojo> taskData(@NonNull RequestData reqData, VertxPojo pojo, Throwable t) {
+        return EntityRuntimeContext.builder()
+                                   .originReqData(reqData)
+                                   .originReqAction(action())
+                                   .metadata(metadata())
+                                   .data(pojo)
+                                   .throwable(t)
+                                   .build();
+    }
+
+    static abstract class AbstractSQLWorkflowBuilder<C extends AbstractSQLWorkflow,
+                                                        B extends AbstractSQLWorkflowBuilder<C, B>> {
+
+        public B preTask(EntityTask preTask) {
+            this.preExecuter = BlockingEntityTaskExecuter.create(preTask);
+            return self();
+        }
+
+        public B postTask(EntityTask postTask) {
+            this.postExecuter = BlockingEntityTaskExecuter.create(postTask);
+            return self();
+        }
+
+        public B asyncPostTask(EntityTask asyncPostTask) {
+            this.asyncPostExecuter = AsyncEntityTaskExecuter.create(asyncPostTask);
+            return self();
+        }
+
     }
 
 }

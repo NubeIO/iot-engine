@@ -29,6 +29,14 @@ public interface ActionMethodMapping extends Supplier<Map<EventAction, HttpMetho
      * @see #defaultDMLMap()
      */
     ActionMethodMapping DML_MAP = ActionMethodMapping.create(defaultDMLMap());
+
+    /**
+     * Default mapping for common {@code BATCH_CREATE | BATCH_UPDATE | BATCH_DELETE} operations
+     *
+     * @see #defaultBatchDMLMap()
+     */
+    ActionMethodMapping BATCH_DML_MAP = ActionMethodMapping.create(defaultBatchDMLMap());
+
     /**
      * Default mapping for reading {@code GET | GET_LIST} operations
      *
@@ -74,6 +82,15 @@ public interface ActionMethodMapping extends Supplier<Map<EventAction, HttpMetho
         Map<EventAction, HttpMethod> map = new HashMap<>();
         map.put(EventAction.GET_LIST, HttpMethod.GET);
         map.put(EventAction.GET_ONE, HttpMethod.GET);
+        return map;
+    }
+
+    static Map<EventAction, HttpMethod> defaultBatchDMLMap() {
+        Map<EventAction, HttpMethod> map = new HashMap<>();
+        map.put(EventAction.BATCH_CREATE, HttpMethod.POST);
+        map.put(EventAction.BATCH_UPDATE, HttpMethod.PUT);
+        map.put(EventAction.BATCH_PATCH, HttpMethod.PATCH);
+        map.put(EventAction.BATCH_DELETE, HttpMethod.DELETE);
         return map;
     }
 

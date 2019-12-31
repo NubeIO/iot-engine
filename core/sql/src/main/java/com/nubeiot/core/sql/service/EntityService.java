@@ -1,7 +1,6 @@
 package com.nubeiot.core.sql.service;
 
 import java.util.Collection;
-import java.util.Optional;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
@@ -78,8 +77,8 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
      * @see EntityTask
      * @since 1.0.0
      */
-    default Optional<? extends EntityTask> prePersistTask() {
-        return Optional.empty();
+    default EntityTask prePersistTask() {
+        return null;
     }
 
     /**
@@ -89,8 +88,8 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
      * @see EntityTask
      * @since 1.0.0
      */
-    default Optional<? extends EntityTask> postPersistTask() {
-        return Optional.empty();
+    default EntityTask postPersistTask() {
+        return null;
     }
 
     /**
@@ -100,8 +99,8 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
      * @see EntityTask
      * @since 1.0.0
      */
-    default Optional<? extends EntityTask> postPersistAsyncTask() {
-        return Optional.empty();
+    default EntityTask postPersistAsyncTask() {
+        return null;
     }
 
     /**

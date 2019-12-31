@@ -35,7 +35,7 @@ public interface EntityTransformer {
     Set<String> AUDIT_FIELDS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("time_audit", "sync_audit")));
 
     /**
-     * Construct {@code CUD Response} that includes full resource
+     * Construct a success {@code CUD response} that includes full resource.
      *
      * @param action Event action
      * @param result Result data

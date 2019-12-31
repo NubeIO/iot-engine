@@ -5,7 +5,6 @@ import io.reactivex.Single;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.validation.OperationValidator;
-import com.nubeiot.core.sql.workflow.step.SQLStep.DQLStep;
 
 import lombok.Getter;
 import lombok.NonNull;
