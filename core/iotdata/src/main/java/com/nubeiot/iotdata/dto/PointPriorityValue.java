@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.function.Function;
 
 import io.vertx.core.json.JsonObject;
 
@@ -13,6 +12,7 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.utils.Functions;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 /**
@@ -21,20 +21,15 @@ import lombok.NonNull;
  * @see <a href="https://project-haystack.org/tag/writeLevel">HayStack Write Level</a>
  * @see <a href="https://store.chipkin.com/articles/bacnet-what-is-a-bacnet-priority-array/">BACNet priority array</a>
  */
+@NoArgsConstructor
 public final class PointPriorityValue implements JsonData, IoTNotion {
 
     public static final int DEFAULT_PRIORITY = 16;
-    private static final String INVALID_PRIORITY = "Priority is only in range [1, 17]";
     public static final int MIN_PRIORITY = 1;
     public static final int MAX_PRIORITY = 17;
+    private static final String INVALID_PRIORITY = "Priority is only in range [1, 17]";
     private static final String INVALID_VALUE = "Value must be number";
-    private final SortedMap<Integer, Double> val = new TreeMap<>();
-
-    public PointPriorityValue() {
-        for (int i = PointPriorityValue.MIN_PRIORITY; i < PointPriorityValue.MAX_PRIORITY; i++) {
-            this.val.put(i, null);
-        }
-    }
+    private final SortedMap<Integer, Double> val = init();
 
     @JsonCreator
     PointPriorityValue(Map<Object, Object> map) {
@@ -42,6 +37,14 @@ public final class PointPriorityValue implements JsonData, IoTNotion {
                       .stream()
                       .collect(TreeMap::new, (m, entry) -> m.put(validateAndGetKey(entry.getKey()),
                                                                  validateAndGetValue(entry.getValue())), Map::putAll));
+    }
+
+    private static SortedMap<Integer, Double> init() {
+        final SortedMap<Integer, Double> val = new TreeMap<>();
+        for (int i = PointPriorityValue.MIN_PRIORITY; i < PointPriorityValue.MAX_PRIORITY; i++) {
+            val.put(i, null);
+        }
+        return val;
     }
 
     private static boolean isValid(int priority) {
@@ -65,18 +68,6 @@ public final class PointPriorityValue implements JsonData, IoTNotion {
 
     public PointPriorityValue add(int priority, int value) {
         return add(priority, (double) value);
-    }
-
-    public static Function<JsonObject, JsonObject> priorityValueTransform() {
-        return result -> {
-            JsonObject priorityValues = result.getJsonObject("priority_values");
-            for (int i = PointPriorityValue.MIN_PRIORITY; i < PointPriorityValue.MAX_PRIORITY; i++) {
-                if (!priorityValues.containsKey(String.valueOf(i))) {
-                    priorityValues.put(String.valueOf(i), (Double) null);
-                }
-            }
-            return result;
-        };
     }
 
     public Double get() {

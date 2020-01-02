@@ -14,6 +14,7 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.RequestData.Filters;
 import com.nubeiot.core.event.EventAction;
@@ -32,7 +33,6 @@ import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointValueMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.RealtimeDataMetadata;
 import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
-import com.nubeiot.iotdata.dto.PointPriorityValue;
 import com.nubeiot.iotdata.dto.PointPriorityValue.PointValue;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointRealtimeData;
@@ -93,8 +93,14 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
 
     @NonNull
     public Single<JsonObject> afterGet(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
-        return Single.just(JsonPojo.from(pojo).toJson(ignoreFields(requestData)))
-                     .map(result -> PointPriorityValue.priorityValueTransform().apply(result));
+        return Single.just(JsonPojo.from(pojo).toJson(JsonData.MAPPER, ignoreFields(requestData)));
+    }
+
+    @Override
+    public @NonNull Single<JsonObject> afterPatch(@NonNull Object key, @NonNull VertxPojo pojo,
+                                                  @NonNull RequestData reqData) {
+        return Single.just(doTransform(EventAction.PATCH, key, pojo, reqData,
+                                       (p, r) -> JsonPojo.from(pojo).toJson(JsonData.MAPPER, ignoreFields(reqData))));
     }
 
     @Override
@@ -104,7 +110,6 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
             reqData.filter().remove(Filters.AUDIT);
         }
         JsonObject result = converter.apply(pojo, reqData);
-        PointPriorityValue.priorityValueTransform().apply(result);
         return EntityTransformer.fullResponse(action, result);
     }
 
