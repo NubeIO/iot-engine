@@ -37,7 +37,9 @@ public class PointPriorityValueTest {
     public void test_deserialize() throws JSONException {
         PointPriorityValue from = JsonData.from("{\"2\":3.5,\"16\":8.0,\"9\":9.0,\"10\":10.5}",
                                                 PointPriorityValue.class);
-        JsonHelper.assertJson(new JsonObject("{\"2\":3.5,\"16\":8.0,\"9\":9.0,\"10\":10.5}"), from.toJson());
+        JsonHelper.assertJson(new JsonObject("{\"1\":null,\"2\":3.5,\"3\":null,\"4\":null,\"5\":null,\"6\":null," +
+                                             "\"7\":null,\"8\":null,\"9\":9.0,\"10\":10.5,\"11\":null,\"12\":null," +
+                                             "\"13\":null,\"14\":null,\"15\":null,\"16\":8.0}"), from.toJson());
         Assert.assertEquals(pv, from);
         Double aDouble = from.get(9);
         Double expected = 9.0d;

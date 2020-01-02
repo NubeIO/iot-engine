@@ -1,5 +1,7 @@
 package com.nubeiot.edge.module.datapoint.service;
 
+import static com.nubeiot.core.sql.decorator.EntityTransformer.AUDIT_FIELDS;
+
 import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
@@ -8,6 +10,7 @@ import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.TestHelper.EventbusHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.DeliveryEvent;
@@ -127,7 +130,7 @@ public class PointHistoryRTDataServiceTest extends BaseDataPointServiceTest {
         final DeliveryEvent event = PointDataServiceTest.createPointEvent(action, pv, false);
         final Async async = context.async();
         controller().fire(event, EventbusHelper.replyAsserter(context, body -> {
-            JsonObject result = JsonPojo.from(output).toJson();
+            JsonObject result = JsonPojo.from(output).toJson(JsonData.MAPPER, AUDIT_FIELDS);
             JsonObject expected = new JsonObject().put("action", event.getAction())
                                                   .put("status", Status.SUCCESS).put("resource", result);
             JsonHelper.assertJson(context, async, expected, body.getJsonObject("data"));

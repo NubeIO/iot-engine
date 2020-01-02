@@ -101,11 +101,7 @@ public final class PointPriorityValue implements JsonData, IoTNotion {
     }
 
     public PointPriorityValue add(int priority, Double value) {
-        if (value == null) {
-            this.val.put(priority, null);
-        } else {
-            this.val.put(validateAndGet(priority), value);
-        }
+        this.val.put(validateAndGet(priority), value);
         return this;
     }
 
