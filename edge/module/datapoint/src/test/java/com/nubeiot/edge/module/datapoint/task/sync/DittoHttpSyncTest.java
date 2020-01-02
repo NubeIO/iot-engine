@@ -130,8 +130,11 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
         RequestData req = RequestData.builder()
                                      .body(JsonPojo.from(new PointValueData().setPriority(5).setValue(24d)).toJson())
                                      .build();
-        JsonObject data = new JsonObject("{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":24.0," +
-                                         "\"priority\":5,\"priority_values\":{\"5\":24.0}}");
+        JsonObject data = new JsonObject("{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":24," +
+                                         "\"priority\":5,\"priority_values\":{\"1\":null,\"2\":null," +
+                                         "\"3\":null,\"4\":null,\"5\":24,\"6\":null,\"7\":null," +
+                                         "\"8\":null,\"9\":null,\"10\":null,\"11\":null," +
+                                         "\"12\":null,\"13\":null,\"14\":null,\"15\":null," + "\"16\":null}}");
         final Consumer<ResponseData> after = r -> {
             try {
                 latch.countDown();
@@ -155,12 +158,14 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
         RequestData req1 = RequestData.builder()
                                       .body(JsonPojo.from(new PointValueData().setPriority(9).setValue(29d)).toJson())
                                       .build();
-        JsonObject data1 = new JsonObject("{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":24.0," +
-                                          "\"priority\":5,\"priority_values\":{\"5\":24.0,\"9\":29.0}," +
-                                          "\"time_audit\":{\"created_time\":\"\"," +
-                                          "\"created_by\":\"UNDEFINED\",\"last_modified_time\":\"\"," +
-                                          "\"last_modified_by\":\"UNDEFINED\",\"revision\":2}," +
-                                          "\"sync_audit\":{\"status\":\"INITIAL\"," +
+        JsonObject data1 = new JsonObject("{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":24," +
+                                          "\"priority\":5,\"priority_values\":{\"1\":null,\"2\":null," +
+                                          "\"3\":null,\"4\":null,\"5\":24,\"6\":null,\"7\":null," +
+                                          "\"8\":null,\"9\":29,\"10\":null,\"11\":null,\"12\":null," +
+                                          "\"13\":null,\"14\":null,\"15\":null,\"16\":null}," +
+                                          "\"time_audit\":{\"created_time\":\"\",\"created_by\":\"UNDEFINED\"," +
+                                          "\"last_modified_time\":\"\",\"last_modified_by\":\"UNDEFINED\"," +
+                                          "\"revision\":2},\"sync_audit\":{\"status\":\"INITIAL\"," +
                                           "\"data\":{\"message\":\"Not yet synced modified resource with record " +
                                           "revision 2\"}}}");
         assertRestByClient(context, HttpMethod.PATCH,

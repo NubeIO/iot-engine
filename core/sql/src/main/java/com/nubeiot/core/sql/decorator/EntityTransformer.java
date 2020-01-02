@@ -212,7 +212,7 @@ public interface EntityTransformer {
     default Single<JsonObject> afterDelete(@NonNull VertxPojo pojo, @NonNull RequestData reqData) {
         return Single.just(doTransform(EventAction.REMOVE, pojo, reqData,
                                        (p, r) -> JsonPojo.from(p).toJson(JsonData.MAPPER, ignoreFields(reqData)),
-                                       JsonObject::new));
+                                       (Supplier<JsonObject>) JsonObject::new));
     }
 
     /**

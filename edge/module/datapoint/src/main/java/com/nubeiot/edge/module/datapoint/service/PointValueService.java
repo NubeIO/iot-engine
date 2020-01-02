@@ -11,8 +11,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.RequestData.Filters;
 import com.nubeiot.core.event.EventAction;
@@ -21,7 +23,9 @@ import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.http.EntityHttpService;
+import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
 import com.nubeiot.core.sql.service.workflow.CreationStep;
 import com.nubeiot.core.sql.service.workflow.ModificationStep;
@@ -87,13 +91,26 @@ public final class PointValueService extends AbstractOneToManyEntityService<Poin
         return Stream.concat(DataPointService.super.definitions().stream(), Stream.of(d)).collect(Collectors.toSet());
     }
 
+    @NonNull
+    public Single<JsonObject> afterGet(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+        return Single.just(JsonPojo.from(pojo).toJson(JsonData.MAPPER, ignoreFields(requestData)));
+    }
+
+    @Override
+    public @NonNull Single<JsonObject> afterPatch(@NonNull Object key, @NonNull VertxPojo pojo,
+                                                  @NonNull RequestData reqData) {
+        return Single.just(doTransform(EventAction.PATCH, key, pojo, reqData,
+                                       (p, r) -> JsonPojo.from(pojo).toJson(JsonData.MAPPER, ignoreFields(reqData))));
+    }
+
     @Override
     public JsonObject doTransform(EventAction action, Object key, VertxPojo pojo, RequestData reqData,
                                   BiFunction<VertxPojo, RequestData, JsonObject> converter) {
         if (Objects.nonNull(reqData.filter()) && reqData.filter().getBoolean(Filters.TEMP_AUDIT, false)) {
             reqData.filter().remove(Filters.AUDIT);
         }
-        return super.doTransform(action, key, pojo, reqData, converter);
+        JsonObject result = converter.apply(pojo, reqData);
+        return EntityTransformer.fullResponse(action, result);
     }
 
     @Override

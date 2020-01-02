@@ -25,11 +25,11 @@ import lombok.NonNull;
 public final class PointPriorityValue implements JsonData, IoTNotion {
 
     public static final int DEFAULT_PRIORITY = 16;
+    public static final int MIN_PRIORITY = 1;
+    public static final int MAX_PRIORITY = 17;
     private static final String INVALID_PRIORITY = "Priority is only in range [1, 17]";
-    private static final int MIN_PRIORITY = 1;
-    private static final int MAX_PRIORITY = 17;
     private static final String INVALID_VALUE = "Value must be number";
-    private final SortedMap<Integer, Double> val = new TreeMap<>();
+    private final SortedMap<Integer, Double> val = init();
 
     @JsonCreator
     PointPriorityValue(Map<Object, Object> map) {
@@ -37,6 +37,14 @@ public final class PointPriorityValue implements JsonData, IoTNotion {
                       .stream()
                       .collect(TreeMap::new, (m, entry) -> m.put(validateAndGetKey(entry.getKey()),
                                                                  validateAndGetValue(entry.getValue())), Map::putAll));
+    }
+
+    private static SortedMap<Integer, Double> init() {
+        final SortedMap<Integer, Double> val = new TreeMap<>();
+        for (int i = PointPriorityValue.MIN_PRIORITY; i < PointPriorityValue.MAX_PRIORITY; i++) {
+            val.put(i, null);
+        }
+        return val;
     }
 
     private static boolean isValid(int priority) {
@@ -60,11 +68,6 @@ public final class PointPriorityValue implements JsonData, IoTNotion {
 
     public PointPriorityValue add(int priority, int value) {
         return add(priority, (double) value);
-    }
-
-    public PointPriorityValue add(int priority, Double value) {
-        this.val.put(validateAndGet(priority), value);
-        return this;
     }
 
     public Double get() {
@@ -95,6 +98,11 @@ public final class PointPriorityValue implements JsonData, IoTNotion {
                   .findFirst()
                   .map(entry -> new PointValue(entry.getKey(), entry.getValue()))
                   .orElse(new PointValue(DEFAULT_PRIORITY, null));
+    }
+
+    public PointPriorityValue add(int priority, Double value) {
+        this.val.put(validateAndGet(priority), value);
+        return this;
     }
 
     @Override
@@ -132,7 +140,6 @@ public final class PointPriorityValue implements JsonData, IoTNotion {
     public String toString() {
         return toJson().encode();
     }
-
 
     @Getter
     public static final class PointValue implements JsonData {
