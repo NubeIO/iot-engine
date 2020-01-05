@@ -8,7 +8,9 @@ import java.util.stream.Collectors;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Maybe;
+import io.reactivex.Observable;
 import io.reactivex.Single;
+import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.RequestData.Filters;
@@ -23,10 +25,10 @@ import com.nubeiot.core.sql.workflow.task.EntityRuntimeContext;
 import com.nubeiot.core.sql.workflow.task.EntityTask;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistorySettingMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointValueMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.RealtimeSettingMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.TagPointMetadata;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -34,8 +36,8 @@ import lombok.experimental.Accessors;
 
 @Accessors(fluent = true)
 public final class PointReferencedService
-    implements ReferencedEntityService<Point, PointMetadata, PointComposite, PointCompositeMetadata>,
-               OneToOneEntityMarker, EntityTask<EntityDefinitionContext, PointComposite, PointComposite> {
+    implements ReferencedEntityService<PointCompositeMetadata>, OneToOneEntityMarker,
+               EntityTask<EntityDefinitionContext, PointComposite, PointComposite> {
 
     @Getter
     private final EntityDefinitionContext definitionContext;
@@ -45,23 +47,21 @@ public final class PointReferencedService
     }
 
     @Override
-    public PointCompositeMetadata referencedContext() {
-        return PointCompositeMetadata.INSTANCE;
-    }
-
-    @Override
     public @NonNull EntityHandler entityHandler() {
         return definitionContext.entityHandler();
     }
 
     @Override
-    public PointMetadata context() {
-        return PointMetadata.INSTANCE;
+    public PointCompositeMetadata context() {
+        return PointCompositeMetadata.INSTANCE;
     }
 
     @Override
     public @NonNull EntityReferences dependantEntities() {
-        return new EntityReferences().add(PointValueMetadata.INSTANCE).add(HistorySettingMetadata.INSTANCE);
+        return new EntityReferences().add(PointValueMetadata.INSTANCE)
+                                     .add(HistorySettingMetadata.INSTANCE)
+                                     .add(RealtimeSettingMetadata.INSTANCE)
+                                     .add(TagPointMetadata.INSTANCE);
     }
 
     @Override
@@ -89,12 +89,43 @@ public final class PointReferencedService
 
     @Override
     public @NonNull Maybe<PointComposite> execute(@NonNull EntityRuntimeContext<PointComposite> executionContext) {
-        return Maybe.just(executionContext.getData());
+        return executionContext.getOriginReqAction() == EventAction.GET_ONE
+               ? onGet(executionContext)
+               : onCreate(executionContext);
     }
 
     @Override
     public @NonNull Predicate<EntityMetadata> allowCreation() {
         return metadata -> PointValueMetadata.INSTANCE == metadata;
+    }
+
+    private Maybe<PointComposite> onCreate(@NonNull EntityRuntimeContext<PointComposite> executionContext) {
+        return Maybe.just(executionContext.getData());
+    }
+
+    private Maybe<PointComposite> onGet(@NonNull EntityRuntimeContext<PointComposite> executionContext) {
+        final RequestData reqData = executionContext.getOriginReqData();
+        final Set<String> requestEntities = Arrays.stream(reqData.filter().getString(Filters.INCLUDE, "").split(","))
+                                                  .collect(Collectors.toSet());
+        return Observable.fromIterable(dependantEntities().getFields().keySet())
+                         .filter(metadata -> requestEntities.contains(metadata.singularKeyName()))
+                         .flatMapMaybe(metadata -> find(metadata, executionContext.getData()))
+                         .reduce((p1, p2) -> p2);
+    }
+
+    private Maybe<PointComposite> find(@NonNull EntityMetadata metadata, @NonNull PointComposite point) {
+        if (allowCreation().test(metadata)) {
+            return referencedQuery(metadata).findOneByKey(
+                RequestData.builder().body(new JsonObject().put("point_id", point.getId().toString())).build())
+                                            .map(r -> point.put(metadata.singularKeyName(), r))
+                                            .onErrorReturn(t -> point)
+                                            .toMaybe();
+        }
+        return referencedQuery(metadata).findMany(
+            RequestData.builder().filter(new JsonObject().put("point", point.getId().toString())).build())
+                                        .toList()
+                                        .filter(l -> !l.isEmpty())
+                                        .map(l -> point.put(metadata.pluralKeyName(), l));
     }
 
 }

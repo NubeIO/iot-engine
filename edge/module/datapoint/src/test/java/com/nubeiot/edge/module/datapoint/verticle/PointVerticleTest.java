@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.junit.Test;
 
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 
@@ -16,6 +17,7 @@ import com.nubeiot.edge.module.datapoint.BaseDataPointVerticleTest;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
+import com.nubeiot.iotdata.unit.DataTypeCategory.Temperature;
 
 public class PointVerticleTest extends BaseDataPointVerticleTest {
 
@@ -79,6 +81,19 @@ public class PointVerticleTest extends BaseDataPointVerticleTest {
                                                "\"," + "\"enabled\":true,\"protocol\":\"BACNET\",\"kind\":\"INPUT\"," +
                                                "\"type\":\"DIGITAL\",\"precision\":3,\"offset\":0," +
                                                "\"unit\":{\"type\":\"bool\",\"category\":\"ALL\"}}")));
+    }
+
+    @Test
+    public void test_get_point_incl_tags_200(TestContext context) {
+        final JsonObject point = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_TEMP)).toJson();
+        point.remove("measure_unit");
+        point.put("unit", Temperature.CELSIUS.toJson());
+        point.put("tags", new JsonArray(
+            "[{\"id\":1,\"tag_name\":\"sensor\",\"point\":\"1efaf662-1333-48d1-a60f-8fc60f259f0e\"," +
+            "\"tag_value\":\"temp\"},{\"id\":2,\"tag_name\":\"source\"," +
+            "\"point\":\"1efaf662-1333-48d1-a60f-8fc60f259f0e\",\"tag_value\":\"droplet\"}]"));
+        assertRestByClient(context, HttpMethod.GET, "/api/s/point/" + PrimaryKey.P_GPIO_TEMP + "?_incl=tag,data", 200,
+                           point);
     }
 
 }

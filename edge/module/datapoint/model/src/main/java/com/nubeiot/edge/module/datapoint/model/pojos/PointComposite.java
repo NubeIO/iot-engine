@@ -1,9 +1,5 @@
 package com.nubeiot.edge.module.datapoint.model.pojos;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.sql.pojos.CompositePojo;
@@ -11,16 +7,15 @@ import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.experimental.Accessors;
 
+@Accessors(fluent = true)
 public final class PointComposite extends Point implements CompositePojo<Point, PointComposite> {
 
-    private final Map<String, VertxPojo> other = new HashMap<>();
-
-    @Override
-    public @NonNull Map<String, VertxPojo> other() {
-        return other;
-    }
+    @Getter
+    private final ExtensionPojo extension = new ExtensionPojo();
 
     @Override
     public PointComposite wrap(@NonNull Point pojo) {
@@ -30,11 +25,11 @@ public final class PointComposite extends Point implements CompositePojo<Point, 
 
     @Override
     public JsonObject toJson() {
-        return super.toJson().mergeIn(otherToJson(), true);
+        return super.toJson().mergeIn(extensionToJson(), true);
     }
 
     public PointComposite addMeasureUnit(MeasureUnit unit) {
-        this.other.put(MeasureUnitMetadata.INSTANCE.singularKeyName(), unit);
+        this.put(MeasureUnitMetadata.INSTANCE.singularKeyName(), unit);
         return this;
     }
 
