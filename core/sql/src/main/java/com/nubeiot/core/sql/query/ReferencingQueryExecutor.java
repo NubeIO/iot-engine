@@ -7,7 +7,6 @@ import org.jooq.UpdatableRecord;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.reactivex.Observable;
 import io.reactivex.Single;
 
 import com.nubeiot.core.dto.RequestData;
@@ -68,7 +67,7 @@ public interface ReferencingQueryExecutor<P extends VertxPojo> extends SimpleQue
      */
     default Single<Boolean> checkReferenceExistence(@NonNull RequestData reqData) {
         final EntityReferences references = marker().referencedEntities();
-        return Observable.fromIterable(references.getFields().entrySet()).flatMapSingle(entry -> {
+        return references.toObservable().flatMapSingle(entry -> {
             final EntityMetadata meta = entry.getKey();
             final Object key = findReferenceKey(reqData, meta, entry.getValue());
             return Objects.isNull(key)

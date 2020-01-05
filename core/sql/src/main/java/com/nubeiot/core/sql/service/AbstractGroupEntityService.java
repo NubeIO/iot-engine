@@ -85,8 +85,7 @@ public abstract class AbstractGroupEntityService<M extends EntityMetadata, CP ex
     }
 
     private Stream<Entry<EntityMetadata, String>> refFields() {
-        return Stream.concat(marker().referencedEntities().getFields().entrySet().stream(),
-                             marker().groupReferences().getFields().entrySet().stream());
+        return Stream.concat(marker().referencedEntities().stream(), marker().groupReferences().stream());
     }
 
 }

@@ -9,16 +9,18 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.reactivex.Observable;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.exceptions.HiddenException.ImplementationError;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.utils.Strings;
 
-import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
 /**
  * Represents mapping between {@code json field} and {@code resource field}.
@@ -33,11 +35,38 @@ import lombok.RequiredArgsConstructor;
  *
  * @since 1.0.0
  */
-@Getter
-@RequiredArgsConstructor
+@NoArgsConstructor
 public final class EntityReferences {
 
     private final Map<EntityMetadata, String> fields = new LinkedHashMap<>();
+
+    @NonNull
+    public Set<EntityMetadata> keys() {
+        return fields.keySet();
+    }
+
+    @NonNull
+    public Stream<Entry<EntityMetadata, String>> stream() {
+        return fields.entrySet().stream();
+    }
+
+    @NonNull
+    public Observable<Entry<EntityMetadata, String>> toObservable() {
+        return Observable.fromIterable(fields.entrySet());
+    }
+
+    @NonNull
+    public String get(@NonNull EntityMetadata metadata) {
+        if (fields.containsKey(metadata)) {
+            return fields.get(metadata);
+        }
+        throw new ImplementationError(ErrorCode.NOT_FOUND, "Unexpected metadata");
+    }
+
+    @NonNull
+    public boolean contains(@NonNull EntityMetadata metadata) {
+        return fields.containsKey(metadata);
+    }
 
     /**
      * Add entity reference.

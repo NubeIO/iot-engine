@@ -1,13 +1,21 @@
 package com.nubeiot.core.sql.service.marker;
 
-import java.util.function.Predicate;
-
-import com.nubeiot.core.sql.EntityMetadata;
-
 import lombok.NonNull;
 
-public interface OneToOneEntityMarker {
+/**
+ * Represents for an {@code database entity} marker.
+ *
+ * @since 1.0.0
+ */
+public interface OneToOneEntityMarker extends ReferencedEntityMarker {
 
-    @NonNull Predicate<EntityMetadata> allowCreation();
+    /**
+     * Defines the {@code dependant entities} in {@code one-to-one} relationship of this {@code resource entity}
+     *
+     * @return dependant entities
+     * @see EntityReferences
+     * @since 1.0.0
+     */
+    @NonNull EntityReferences dependantEntities();
 
 }

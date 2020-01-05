@@ -84,16 +84,18 @@ public class PointVerticleTest extends BaseDataPointVerticleTest {
     }
 
     @Test
-    public void test_get_point_incl_tags_200(TestContext context) {
+    public void test_get_point_incl_tags_and_his_setting_200(TestContext context) {
         final JsonObject point = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_TEMP)).toJson();
         point.remove("measure_unit");
         point.put("unit", Temperature.CELSIUS.toJson());
+        point.put("history_setting",
+                  new JsonObject("{\"point\":\"" + PrimaryKey.P_GPIO_TEMP + "\",\"type\":\"COV\",\"tolerance\":1.0}"));
         point.put("tags", new JsonArray(
-            "[{\"id\":1,\"tag_name\":\"sensor\",\"point\":\"1efaf662-1333-48d1-a60f-8fc60f259f0e\"," +
-            "\"tag_value\":\"temp\"},{\"id\":2,\"tag_name\":\"source\"," +
-            "\"point\":\"1efaf662-1333-48d1-a60f-8fc60f259f0e\",\"tag_value\":\"droplet\"}]"));
-        assertRestByClient(context, HttpMethod.GET, "/api/s/point/" + PrimaryKey.P_GPIO_TEMP + "?_incl=tag,data", 200,
-                           point);
+            "[{\"id\":1,\"tag_name\":\"sensor\",\"point\":\"" + PrimaryKey.P_GPIO_TEMP + "\"," +
+            "\"tag_value\":\"temp\"},{\"id\":2,\"tag_name\":\"source\",\"point\":\"" + PrimaryKey.P_GPIO_TEMP +
+            "\",\"tag_value\":\"droplet\"}]"));
+        assertRestByClient(context, HttpMethod.GET,
+                           "/api/s/point/" + PrimaryKey.P_GPIO_TEMP + "?_incl=tag,history_setting", 200, point);
     }
 
 }

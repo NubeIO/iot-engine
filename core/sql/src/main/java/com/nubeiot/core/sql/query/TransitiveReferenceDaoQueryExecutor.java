@@ -78,7 +78,7 @@ final class TransitiveReferenceDaoQueryExecutor<K, P extends VertxPojo, R extend
     public Single<Boolean> checkReferenceExistence(@NonNull RequestData reqData) {
         final EntityReferences references = marker().referencedEntities();
         final QueryBuilder queryBuilder = queryBuilder();
-        return Observable.fromIterable(references.getFields().entrySet()).flatMapSingle(entry -> {
+        return references.toObservable().flatMapSingle(entry -> {
             final EntityMetadata refMeta = entry.getKey();
             final String refField = entry.getValue();
             final Object key = findReferenceKey(reqData, refMeta, refField);
@@ -95,11 +95,12 @@ final class TransitiveReferenceDaoQueryExecutor<K, P extends VertxPojo, R extend
 
     private Single<Boolean> checkTransitiveExistence(@NonNull RequestData reqData, @NonNull EntityMetadata reference,
                                                      @NonNull Object referenceKey,
-                                                     @NonNull TransitiveEntity transitiveEntity) {
+                                                     @NonNull TransitiveEntity transitive) {
         final QueryBuilder queryBuilder = queryBuilder();
-        final EntityMetadata context = transitiveEntity.getContext();
+        final EntityMetadata context = transitive.getContext();
         final String refField = context.equals(reference) ? reference.jsonKeyName() : reference.requestKeyName();
-        return Observable.fromIterable(transitiveEntity.getReferences().getFields().entrySet())
+        return transitive.getReferences()
+                         .toObservable()
                          .flatMap(ent -> Optional.ofNullable(findReferenceKey(reqData, ent.getKey(), ent.getValue()))
                                                  .map(tk -> Observable.just(new SimpleEntry<>(ent.getValue(), tk)))
                                                  .orElseGet(Observable::empty))

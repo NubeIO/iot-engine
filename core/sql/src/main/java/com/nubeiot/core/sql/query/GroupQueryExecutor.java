@@ -79,7 +79,7 @@ public interface GroupQueryExecutor<CP extends CompositePojo> extends Referencin
     default Single<Boolean> checkGroupExistence(@NonNull RequestData reqData) {
         final EntityReferences references = marker().groupReferences();
         final JsonObject body = reqData.body();
-        return Observable.fromIterable(references.getFields().keySet())
+        return Observable.fromIterable(references.keys())
                          .flatMapSingle(m -> Optional.ofNullable(body.getJsonObject(m.singularKeyName()))
                                                      .flatMap(b -> Optional.ofNullable(b.getValue(m.jsonKeyName()))
                                                                            .map(Object::toString)

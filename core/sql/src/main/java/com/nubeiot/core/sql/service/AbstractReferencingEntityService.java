@@ -58,18 +58,14 @@ public abstract class AbstractReferencingEntityService<P extends VertxPojo, M ex
 
     @Override
     public @NonNull RequestData onCreatingOneResource(@NonNull RequestData requestData) {
-        return recomputeRequestData(requestData, convertKey(requestData, marker().referencedEntities()
-                                                                                 .getFields()
-                                                                                 .entrySet()
-                                                                                 .stream()));
+        return recomputeRequestData(requestData, convertKey(requestData, marker().referencedEntities().stream()));
     }
 
     @Override
     @NonNull
     public RequestData onModifyingOneResource(@NonNull RequestData requestData) {
         final JsonObject extra = convertKey(requestData, context());
-        final JsonObject refExtra = convertKey(requestData,
-                                               marker().referencedEntities().getFields().entrySet().stream());
+        final JsonObject refExtra = convertKey(requestData, marker().referencedEntities().stream());
         return recomputeRequestData(requestData, extra.mergeIn(refExtra, true));
     }
 
