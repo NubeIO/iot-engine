@@ -33,6 +33,7 @@ import com.nubeiot.edge.module.datapoint.model.pojos.EdgeDeviceComposite;
 import com.nubeiot.edge.module.datapoint.model.pojos.HasProtocol;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointThingComposite;
+import com.nubeiot.iotdata.dto.HistorySettingType;
 import com.nubeiot.iotdata.dto.PointPriorityValue;
 import com.nubeiot.iotdata.dto.PointPriorityValue.PointValue;
 import com.nubeiot.iotdata.dto.Protocol;
@@ -304,6 +305,37 @@ public interface DataPointIndex extends MetadataIndex {
             return "history_setting";
         }
 
+        @Override
+        public @NonNull HistorySetting onCreating(@NonNull RequestData reqData) throws IllegalArgumentException {
+            return validate(reqData.body());
+        }
+
+        @Override
+        public @NonNull HistorySetting onPatching(@NonNull HistorySetting dbData, @NonNull RequestData reqData)
+            throws IllegalArgumentException {
+            return validate(JsonPojo.merge(dbData, parseFromRequest(reqData.body())));
+        }
+
+        @NonNull
+        private HistorySetting validate(JsonObject request) {
+            final HistorySetting setting = parseFromRequest(request);
+            Objects.requireNonNull(setting.getType(), "History setting type is mandatory. One of: " +
+                                                      Arrays.asList(HistorySettingType.COV.type(),
+                                                                    HistorySettingType.PERIOD.type()));
+            if (HistorySettingType.COV.equals(setting.getType())) {
+                Objects.requireNonNull(setting.getTolerance(), "History setting tolerance is mandatory");
+                if (setting.getTolerance() < 0) {
+                    throw new IllegalArgumentException("History setting tolerance must be positive number");
+                }
+                setting.setSchedule(null);
+            }
+            if (HistorySettingType.PERIOD.equals(setting.getType())) {
+                Objects.requireNonNull(setting.getSchedule(), "History setting schedule is mandatory");
+                setting.setTolerance(null);
+            }
+            return setting;
+        }
+
     }
 
 
@@ -494,16 +526,6 @@ public interface DataPointIndex extends MetadataIndex {
         public final @NonNull Class<PointValueDataDao> daoClass() { return PointValueDataDao.class; }
 
         @Override
-        public @NonNull PointValueData parseFromRequest(@NonNull JsonObject request) throws IllegalArgumentException {
-            PointValueData pojo = UUIDKeyEntity.super.parseFromRequest(request);
-            pojo.setPriority(Optional.ofNullable(pojo.getPriority()).orElse(PointPriorityValue.DEFAULT_PRIORITY));
-            pojo.setPriorityValues(Optional.ofNullable(pojo.getPriorityValues())
-                                           .orElse(new PointPriorityValue())
-                                           .add(pojo.getPriority(), pojo.getValue()));
-            return pojo;
-        }
-
-        @Override
         public @NonNull String requestKeyName() {
             return PointMetadata.INSTANCE.requestKeyName();
         }
@@ -519,14 +541,36 @@ public interface DataPointIndex extends MetadataIndex {
         }
 
         @Override
+        public @NonNull PointValueData parseFromRequest(@NonNull JsonObject request) throws IllegalArgumentException {
+            final PointValueData pv = UUIDKeyEntity.super.parseFromRequest(request);
+            return pv.setPriority(Optional.ofNullable(pv.getPriority()).orElse(PointPriorityValue.DEFAULT_PRIORITY));
+        }
+
+        @Override
+        public @NonNull PointValueData onCreating(@NonNull RequestData reqData) throws IllegalArgumentException {
+            final PointValueData pojo = parseFromRequest(reqData.body());
+            return pojo.setPriorityValues(Optional.ofNullable(pojo.getPriorityValues())
+                                                  .orElse(new PointPriorityValue())
+                                                  .add(pojo.getPriority(), pojo.getValue()));
+        }
+
+        @Override
         public @NonNull PointValueData onPatching(@NonNull PointValueData dbData, @NonNull RequestData reqData)
             throws IllegalArgumentException {
-            final PointValueData request = parseFromRequest(reqData.body());
-            final PointValueData pvData = UUIDKeyEntity.super.parseFromRequest(JsonPojo.merge(dbData, request))
-                                                             .setValue(request.getValue());
-            final PointValue highestValue = pvData.getPriorityValues().findHighestValue();
-            pvData.setPriority(highestValue.getPriority()).setValue(highestValue.getValue());
-            return pvData;
+            final PointValueData pvData = parseFromRequest(reqData.body());
+            final JsonObject priorities = Optional.ofNullable(pvData.getPriorityValues())
+                                                  .map(PointPriorityValue::toJson)
+                                                  .orElse(new JsonObject())
+                                                  .put(pvData.getPriority().toString(), pvData.getValue());
+            final PointPriorityValue merged = JsonData.merge(dbData.getPriorityValues().toJson(), priorities,
+                                                             PointPriorityValue.class);
+            final PointValue highestValue = merged.findHighestValue();
+            return new PointValueData().setPoint(dbData.getPoint())
+                                       .setPriority(highestValue.getPriority())
+                                       .setValue(highestValue.getValue())
+                                       .setPriorityValues(merged)
+                                       .setTimeAudit(dbData.getTimeAudit())
+                                       .setSyncAudit(dbData.getSyncAudit());
         }
 
     }

@@ -78,7 +78,7 @@ public class PointVerticleTest extends BaseDataPointVerticleTest {
                                            .put("resource", new JsonObject(
                                                "{\"id\":\"" + uuid + "\",\"code\":\"New One\",\"edge\":\"" +
                                                PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.BACNET_NETWORK +
-                                               "\"," + "\"enabled\":true,\"protocol\":\"BACNET\",\"kind\":\"INPUT\"," +
+                                               "\",\"enabled\":true,\"protocol\":\"BACNET\",\"kind\":\"INPUT\"," +
                                                "\"type\":\"DIGITAL\",\"precision\":3,\"offset\":0," +
                                                "\"unit\":{\"type\":\"bool\",\"category\":\"ALL\"}}")));
     }
@@ -88,8 +88,8 @@ public class PointVerticleTest extends BaseDataPointVerticleTest {
         final JsonObject point = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_TEMP)).toJson();
         point.remove("measure_unit");
         point.put("unit", Temperature.CELSIUS.toJson());
-        point.put("history_setting",
-                  new JsonObject("{\"point\":\"" + PrimaryKey.P_GPIO_TEMP + "\",\"type\":\"COV\",\"tolerance\":1.0}"));
+        point.put("history_setting", new JsonObject(
+            "{\"point\":\"" + PrimaryKey.P_GPIO_TEMP + "\",\"type\":\"COV\",\"tolerance\":1.0,\"enabled\":false}"));
         point.put("tags", new JsonArray(
             "[{\"id\":1,\"tag_name\":\"sensor\",\"point\":\"" + PrimaryKey.P_GPIO_TEMP + "\"," +
             "\"tag_value\":\"temp\"},{\"id\":2,\"tag_name\":\"source\",\"point\":\"" + PrimaryKey.P_GPIO_TEMP +

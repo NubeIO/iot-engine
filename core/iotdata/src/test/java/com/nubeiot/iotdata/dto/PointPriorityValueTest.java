@@ -25,7 +25,8 @@ public class PointPriorityValueTest {
     public void test_serialize() throws JSONException {
         JsonHelper.assertJson(new JsonObject("{\"1\":null,\"2\":3.5,\"3\":null,\"4\":null,\"5\":null,\"6\":null," +
                                              "\"7\":null,\"8\":null,\"9\":9.0,\"10\":10.5,\"11\":null,\"12\":null," +
-                                             "\"13\":null,\"14\":null,\"15\":null,\"16\":8.0}"), pv.toJson());
+                                             "\"13\":null,\"14\":null,\"15\":null,\"16\":8.0,\"17\":null}"),
+                              pv.toJson());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -39,7 +40,8 @@ public class PointPriorityValueTest {
                                                 PointPriorityValue.class);
         JsonHelper.assertJson(new JsonObject("{\"1\":null,\"2\":3.5,\"3\":null,\"4\":null,\"5\":null,\"6\":null," +
                                              "\"7\":null,\"8\":null,\"9\":9.0,\"10\":10.5,\"11\":null,\"12\":null," +
-                                             "\"13\":null,\"14\":null,\"15\":null,\"16\":8.0}"), from.toJson());
+                                             "\"13\":null,\"14\":null,\"15\":null,\"16\":8.0,\"17\":null}"),
+                              from.toJson());
         Assert.assertEquals(pv, from);
         Double aDouble = from.get(9);
         Double expected = 9.0d;
@@ -58,7 +60,7 @@ public class PointPriorityValueTest {
         final PointPriorityValue pointPriorityValue = pv.add(1, null);
         JsonHelper.assertJson(new JsonObject("{\"1\":null,\"2\":3.5,\"3\":null,\"4\":null,\"5\":null,\"6\":null," +
                                              "\"7\":null,\"8\":null,\"9\":9.0,\"10\":10.5,\"11\":null,\"12\":null," +
-                                             "\"13\":null,\"14\":null,\"15\":null,\"16\":8.0}"),
+                                             "\"13\":null,\"14\":null,\"15\":null,\"16\":8.0,\"17\":null}"),
                               pointPriorityValue.toJson());
     }
 
@@ -97,7 +99,8 @@ public class PointPriorityValueTest {
             "{\"9\":55,\"10\":14, \"11\":null,\"12\":\"444.5\"}"), PointPriorityValue.class);
         JsonHelper.assertJson(new JsonObject("{\"1\":null,\"2\":3.5,\"3\":null,\"4\":null,\"5\":null,\"6\":null," +
                                              "\"7\":null,\"8\":null,\"9\":55.0,\"10\":14.0,\"11\":null,\"12\":444.5," +
-                                             "\"13\":null,\"14\":null,\"15\":null,\"16\":8.0}"), merge.toJson());
+                                             "\"13\":null,\"14\":null,\"15\":null,\"16\":8.0,\"17\":null}"),
+                              merge.toJson());
     }
 
 }

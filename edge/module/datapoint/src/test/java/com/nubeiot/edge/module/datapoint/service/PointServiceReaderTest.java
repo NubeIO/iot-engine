@@ -167,7 +167,7 @@ public class PointServiceReaderTest extends BaseDataPointServiceTest {
     @Test
     public void test_get_history_setting(TestContext context) {
         JsonObject expected = new JsonObject(
-            "{\"tolerance\":1.0,\"type\":\"COV\",\"point\":\"" + PrimaryKey.P_GPIO_TEMP + "\"}");
+            "{\"tolerance\":1.0,\"type\":\"COV\",\"point\":\"" + PrimaryKey.P_GPIO_TEMP + "\",\"enabled\":false}");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("point_id", PrimaryKey.P_GPIO_TEMP.toString()))
                                      .build();

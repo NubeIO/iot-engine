@@ -85,13 +85,10 @@ public final class HistoryDataService extends AbstractReferencingEntityService<P
 
     private Single<PointHistoryData> isAbleToInsertByCov(@NonNull PointHistoryData his) {
         final UUID point = his.getPoint();
-        return getHistorySetting(point).filter(this::isTolerance)
-                                       .flatMap(s -> getLastHistory(point).map(p -> validateCOV(his, p, s)))
-                                       .switchIfEmpty(Single.just(true))
-                                       .filter(b -> b)
-                                       .switchIfEmpty(Single.error(new DesiredException(
-                                           "COV of point " + his.getPoint() + " doesn't meet setting requirement")))
-                                       .map(b -> his);
+        return getHistorySetting(point).filter(HistorySetting::getEnabled)
+                                       .filter(this::isTolerance)
+                                       .flatMap(s -> getLastHistory(point).map(last -> checkCovExcess(his, last, s)))
+                                       .switchIfEmpty(Single.just(his));
     }
 
     private Maybe<PointHistoryData> getLastHistory(@NonNull UUID point) {
@@ -111,8 +108,14 @@ public final class HistoryDataService extends AbstractReferencingEntityService<P
                               .doOnSuccess(history -> cache.add(point, history));
     }
 
-    private boolean validateCOV(PointHistoryData his, PointHistoryData p, HistorySetting s) {
-        return s.getTolerance().compareTo(Math.abs(his.getValue() - p.getValue())) < 0;
+    private PointHistoryData checkCovExcess(@NonNull PointHistoryData his, @NonNull PointHistoryData last,
+                                            @NonNull HistorySetting s) {
+        if (Double.compare(Math.abs(his.getValue() - last.getValue()), s.getTolerance()) > 0) {
+            return his;
+        }
+        throw new DesiredException(
+            "COV of point " + his.getPoint() + " is " + his.getValue() + " that doesn't exceed setting " +
+            s.getTolerance());
     }
 
     private boolean isTolerance(HistorySetting s) {

@@ -7,9 +7,11 @@ import java.util.Set;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
+import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.pojos.JsonPojo;
@@ -35,7 +37,7 @@ public final class RealtimeSettingService
 
     @Override
     public @NonNull Collection<EventAction> getAvailableEvents() {
-        return Arrays.asList(EventAction.GET_ONE, EventAction.CREATE, EventAction.PATCH, EventAction.REMOVE);
+        return Arrays.asList(EventAction.GET_ONE, EventAction.CREATE_OR_UPDATE, EventAction.REMOVE);
     }
 
     @Override
@@ -45,9 +47,16 @@ public final class RealtimeSettingService
 
     @EventContractor(action = EventAction.CREATE_OR_UPDATE, returnType = Single.class)
     public Single<JsonObject> createOrUpdate(RequestData reqData) {
-        final RealtimeSetting data = context().onCreating(reqData);
-        final RequestData creationData = PointExtension.createRequestData(reqData, JsonPojo.from(data).toJson());
-        return create(creationData).onErrorResumeNext(patch(PointExtension.createRequestData(reqData, data.toJson())));
+        final RealtimeSetting data = context().parseFromRequest(reqData.body());
+        final RequestData patch = PointExtension.createRequestData(reqData, JsonPojo.from(data)
+                                                                                    .toJson(JsonData.MAPPER,
+                                                                                            AUDIT_FIELDS));
+        return patch(patch).onErrorResumeNext(t -> {
+            if (t instanceof NotFoundException) {
+                return create(PointExtension.createRequestData(reqData, JsonPojo.from(data).toJson()));
+            }
+            return Single.error(t);
+        });
     }
 
 }

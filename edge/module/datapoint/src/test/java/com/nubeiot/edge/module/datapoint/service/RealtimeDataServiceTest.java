@@ -11,28 +11,15 @@ import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.edge.module.datapoint.BaseDataPointServiceTest;
-import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 import com.nubeiot.iotdata.dto.PointPriorityValue;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
 
-public class RealtimeDataServiceTest extends BaseDataPointServiceTest {
-
-    private PointValueData firstValue;
+public class RealtimeDataServiceTest extends AbstractPointDataServiceTest {
 
     @Override
-    protected void setup(TestContext context) {
-        super.setup(context);
-        firstValue = new PointValueData().setPriority(5).setValue(28d).setPoint(PrimaryKey.P_GPIO_TEMP);
-        PointValueServiceTest.createPointValue(controller(), context, EventAction.CREATE, firstValue,
-                                               new PointValueData(firstValue).setPriorityValues(
-                                                   new PointPriorityValue().add(5, 28)));
-    }
-
-    @Override
-    protected JsonObject testData() {
-        return MockData.data_Point_Setting_Tag();
+    protected String settingAddress() {
+        return RealtimeSettingService.class.getName();
     }
 
     @Test

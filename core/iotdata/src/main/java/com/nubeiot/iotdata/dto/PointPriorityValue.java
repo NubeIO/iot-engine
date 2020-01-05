@@ -20,12 +20,22 @@ import lombok.NonNull;
  *
  * @see <a href="https://project-haystack.org/tag/writeLevel">HayStack Write Level</a>
  * @see <a href="https://store.chipkin.com/articles/bacnet-what-is-a-bacnet-priority-array/">BACNet priority array</a>
+ * @since 1.0.0
  */
 @NoArgsConstructor
 public final class PointPriorityValue implements JsonData, IoTNotion {
 
+    /**
+     * The constant DEFAULT_PRIORITY.
+     */
     public static final int DEFAULT_PRIORITY = 16;
+    /**
+     * The constant MIN_PRIORITY.
+     */
     public static final int MIN_PRIORITY = 1;
+    /**
+     * The constant MAX_PRIORITY.
+     */
     public static final int MAX_PRIORITY = 17;
     private static final String INVALID_PRIORITY = "Priority is only in range [1, 17]";
     private static final String INVALID_VALUE = "Value must be number";
@@ -33,15 +43,13 @@ public final class PointPriorityValue implements JsonData, IoTNotion {
 
     @JsonCreator
     PointPriorityValue(Map<Object, Object> map) {
-        val.putAll(map.entrySet()
-                      .stream()
-                      .collect(TreeMap::new, (m, entry) -> m.put(validateAndGetKey(entry.getKey()),
+        val.putAll(map.entrySet().stream().collect(TreeMap::new, (m, entry) -> m.put(validateAndGetKey(entry.getKey()),
                                                                  validateAndGetValue(entry.getValue())), Map::putAll));
     }
 
     private static SortedMap<Integer, Double> init() {
         final SortedMap<Integer, Double> val = new TreeMap<>();
-        for (int i = PointPriorityValue.MIN_PRIORITY; i < PointPriorityValue.MAX_PRIORITY; i++) {
+        for (int i = PointPriorityValue.MIN_PRIORITY; i <= PointPriorityValue.MAX_PRIORITY; i++) {
             val.put(i, null);
         }
         return val;
@@ -58,39 +66,80 @@ public final class PointPriorityValue implements JsonData, IoTNotion {
         throw new IllegalArgumentException(INVALID_PRIORITY);
     }
 
+    /**
+     * Add point priority value with {@link #DEFAULT_PRIORITY}.
+     *
+     * @param value the value
+     * @return a reference to this, so the API can be used fluently
+     * @since 1.0.0
+     */
     public PointPriorityValue add(int value) {
         return add((double) value);
     }
 
+    /**
+     * Add point priority value with {@link #DEFAULT_PRIORITY}.
+     *
+     * @param value the value
+     * @return a reference to this, so the API can be used fluently
+     * @since 1.0.0
+     */
     public PointPriorityValue add(Double value) {
         return add(DEFAULT_PRIORITY, value);
     }
 
+    /**
+     * Add point priority value.
+     *
+     * @param priority the priority
+     * @param value    the value
+     * @return a reference to this, so the API can be used fluently
+     * @since 1.0.0
+     */
     public PointPriorityValue add(int priority, int value) {
         return add(priority, (double) value);
     }
 
+    /**
+     * Add point priority value.
+     *
+     * @param priority the priority
+     * @param value    the value
+     * @return a reference to this, so the API can be used fluently
+     * @since 1.0.0
+     */
+    public PointPriorityValue add(int priority, Double value) {
+        this.val.put(validateAndGet(priority), value);
+        return this;
+    }
+
+    /**
+     * Get value by {@link #DEFAULT_PRIORITY}.
+     *
+     * @return the value
+     * @since 1.0.0
+     */
     public Double get() {
         return get(DEFAULT_PRIORITY);
     }
 
+    /**
+     * Get value by given priority.
+     *
+     * @param priority the priority
+     * @return the double
+     * @since 1.0.0
+     */
     public Double get(int priority) {
         return val.get(validateAndGet(priority));
     }
 
-    private int validateAndGetKey(@NonNull Object priority) {
-        return validateAndGet(Functions.getOrThrow(() -> Functions.toInt().apply(priority.toString()),
-                                                   () -> new IllegalArgumentException(INVALID_PRIORITY)));
-    }
-
-    private Double validateAndGetValue(Object value) {
-        if (Objects.isNull(value)) {
-            return null;
-        }
-        return Functions.getOrThrow(() -> Functions.toDouble().apply(value.toString()),
-                                    () -> new IllegalArgumentException(INVALID_VALUE));
-    }
-
+    /**
+     * Find highest value point value.
+     *
+     * @return the highest point value
+     * @since 1.0.0
+     */
     public PointValue findHighestValue() {
         return val.entrySet()
                   .stream()
@@ -98,11 +147,6 @@ public final class PointPriorityValue implements JsonData, IoTNotion {
                   .findFirst()
                   .map(entry -> new PointValue(entry.getKey(), entry.getValue()))
                   .orElse(new PointValue(DEFAULT_PRIORITY, null));
-    }
-
-    public PointPriorityValue add(int priority, Double value) {
-        this.val.put(validateAndGet(priority), value);
-        return this;
     }
 
     @Override
@@ -141,17 +185,49 @@ public final class PointPriorityValue implements JsonData, IoTNotion {
         return toJson().encode();
     }
 
+    private int validateAndGetKey(@NonNull Object priority) {
+        return validateAndGet(Functions.getOrThrow(() -> Functions.toInt().apply(priority.toString()),
+                                                   () -> new IllegalArgumentException(INVALID_PRIORITY)));
+    }
+
+    private Double validateAndGetValue(Object value) {
+        if (Objects.isNull(value)) {
+            return null;
+        }
+        return Functions.getOrThrow(() -> Functions.toDouble().apply(value.toString()),
+                                    () -> new IllegalArgumentException(INVALID_VALUE));
+    }
+
+    /**
+     * Represents for Point value.
+     *
+     * @since 1.0.0
+     */
     @Getter
     public static final class PointValue implements JsonData {
 
         private final int priority;
         private final Double value;
 
+        /**
+         * Instantiates a new Point value.
+         *
+         * @param priority the priority
+         * @param value    the value
+         * @since 1.0.0
+         */
         public PointValue(int priority, Double value) {
             this.priority = validateAndGet(priority);
             this.value = value;
         }
 
+        /**
+         * From json point value.
+         *
+         * @param json the json
+         * @return the point value
+         * @since 1.0.0
+         */
         public PointValue fromJson(JsonObject json) {
             return new PointValue(json.getInteger("priority", DEFAULT_PRIORITY), json.getDouble("value"));
         }

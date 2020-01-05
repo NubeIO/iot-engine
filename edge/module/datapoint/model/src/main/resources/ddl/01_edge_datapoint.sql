@@ -251,6 +251,7 @@ CREATE TABLE IF NOT EXISTS REALTIME_SETTING (
 CREATE TABLE IF NOT EXISTS SCHEDULE_SETTING ( 
 	ID                   uuid   NOT NULL,
 	POINT                uuid   NOT NULL,
+	ENABLED              boolean  DEFAULT FALSE NOT NULL,
 	RECURRING            boolean  DEFAULT TRUE NOT NULL,
 	NAME                 varchar(63)  NOT NULL,
 	COLOR                varchar(15)  DEFAULT '#FFFFFF' NOT NULL,
@@ -267,6 +268,7 @@ CREATE INDEX IDX_FK_SCHEDULE_POINT ON SCHEDULE_SETTING ( POINT );
 
 CREATE TABLE IF NOT EXISTS HISTORY_SETTING ( 
 	POINT                uuid   NOT NULL,
+	ENABLED              boolean  DEFAULT TRUE NOT NULL,
 	HISTORY_SETTING_TYPE varchar(15)   ,
 	SCHEDULE             varchar(127)   ,
 	TOLERANCE            double   ,

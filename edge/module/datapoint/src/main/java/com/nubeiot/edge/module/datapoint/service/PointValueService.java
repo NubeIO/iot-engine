@@ -18,6 +18,7 @@ import com.nubeiot.core.dto.RequestData.Filters;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.pojos.JsonPojo;
@@ -119,9 +120,16 @@ public final class PointValueService extends AbstractReferencingEntityService<Po
 
     @EventContractor(action = EventAction.CREATE_OR_UPDATE, returnType = Single.class)
     public Single<JsonObject> createOrUpdate(RequestData reqData) {
-        final PointValueData data = context().onCreating(reqData);
-        final RequestData creationData = PointExtension.createRequestData(reqData, JsonPojo.from(data).toJson());
-        return create(creationData).onErrorResumeNext(patch(PointExtension.createRequestData(reqData, data.toJson())));
+        final PointValueData data = context().parseFromRequest(reqData.body());
+        final RequestData patch = PointExtension.createRequestData(reqData, JsonPojo.from(data)
+                                                                                    .toJson(JsonData.MAPPER,
+                                                                                            AUDIT_FIELDS));
+        return patch(patch).onErrorResumeNext(t -> {
+            if (t instanceof NotFoundException) {
+                return create(PointExtension.createRequestData(reqData, JsonPojo.from(data).toJson()));
+            }
+            return Single.error(t);
+        });
     }
 
     private void syncPointValue(@NonNull PointValueData prev, @NonNull EventAction action,
@@ -136,17 +144,20 @@ public final class PointValueService extends AbstractReferencingEntityService<Po
 
     private void createRealtimeData(@NonNull PointValueData pv, @NonNull PointValue requestValue,
                                     @NonNull OffsetDateTime createdTime) {
-        final JsonObject rtValue = RealtimeDataMetadata.simpleValue(requestValue.getValue(),
-                                                                    requestValue.getPriority());
+        final Double value = Optional.ofNullable(requestValue.getValue()).orElse(pv.getValue());
+        final int priority = Objects.isNull(requestValue.getValue()) ? pv.getPriority() : requestValue.getPriority();
+        final JsonObject rtValue = RealtimeDataMetadata.simpleValue(value, priority);
         send(RealtimeDataService.class,
              new PointRealtimeData().setPoint(pv.getPoint()).setValue(rtValue).setTime(createdTime).toJson());
     }
 
     private void createHistoryData(@NonNull PointValueData pv, @NonNull PointValue requestValue,
                                    @NonNull OffsetDateTime createdTime) {
+        final Double value = Optional.ofNullable(requestValue.getValue()).orElse(pv.getValue());
+        final int priority = Objects.isNull(requestValue.getValue()) ? pv.getPriority() : requestValue.getPriority();
         send(HistoryDataService.class, new PointHistoryData().setPoint(pv.getPoint())
-                                                             .setValue(requestValue.getValue())
-                                                             .setPriority(requestValue.getPriority())
+                                                             .setValue(value)
+                                                             .setPriority(priority)
                                                              .setTime(createdTime)
                                                              .toJson());
     }

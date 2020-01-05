@@ -49,11 +49,16 @@ public class PointValueServiceTest extends BaseDataPointServiceTest {
 
     static void createPointValue(@NonNull EventbusClient client, @NonNull TestContext context,
                                  @NonNull EventAction action, @NonNull PointValueData pv,
-                                 @NonNull PointValueData output) {
-        final DeliveryEvent event = PointValueServiceTest.createPointEvent(pv, false);
+                                 @NonNull PointValueData response) {
+        createPointValue(client, context, action, response, PointValueServiceTest.createPointEvent(pv, false));
+    }
+
+    private static void createPointValue(@NonNull EventbusClient client, @NonNull TestContext context,
+                                         @NonNull EventAction action, @NonNull PointValueData response,
+                                         @NonNull DeliveryEvent event) {
         final Async async = context.async();
         client.fire(event, EventbusHelper.replyAsserter(context, body -> {
-            JsonObject result = JsonPojo.from(output).toJson(JsonData.MAPPER, AUDIT_FIELDS);
+            JsonObject result = JsonPojo.from(response).toJson(JsonData.MAPPER, AUDIT_FIELDS);
             JsonObject expected = new JsonObject().put("action", action)
                                                   .put("status", Status.SUCCESS)
                                                   .put("resource", result);
@@ -92,6 +97,18 @@ public class PointValueServiceTest extends BaseDataPointServiceTest {
     }
 
     @Test
+    public void test_get_point_data(TestContext context) {
+        JsonObject expected = new JsonObject(
+            "{\"priority\":5,\"value\":10,\"point\":\"" + PrimaryKey.P_GPIO_HUMIDITY + "\",\"priority_values\":" +
+            "{\"1\":null,\"2\":null,\"3\":null,\"4\":null,\"5\":10,\"6\":9,\"7\":null,\"8\":10,\"9\":null," +
+            "\"10\":null,\"11\":null,\"12\":null,\"13\":null,\"14\":null,\"15\":null,\"16\":null,\"17\":null}}");
+        RequestData req = RequestData.builder()
+                                     .body(new JsonObject().put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString()))
+                                     .build();
+        asserter(context, true, expected, PointValueService.class.getName(), EventAction.GET_ONE, req);
+    }
+
+    @Test
     public void test_create_or_update_pv_but_point_not_found(TestContext context) {
         final UUID uuid = UUID.randomUUID();
         JsonObject expected = new JsonObject().put("code", ErrorCode.NOT_FOUND)
@@ -108,13 +125,13 @@ public class PointValueServiceTest extends BaseDataPointServiceTest {
         v.getPriorityValues().add(2, 15);
         final JsonObject expected = new JsonObject().put("action", EventAction.PATCH)
                                                     .put("status", Status.SUCCESS)
-                                                    .put("resource", JsonPojo.from(v).toJson());
+                                                    .put("resource",
+                                                         JsonPojo.from(v).toJson(JsonData.MAPPER, AUDIT_FIELDS));
         final JsonObject body = new JsonObject().put("value", 15.0)
                                                 .put("priority", 2)
                                                 .put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString());
         RequestData req = RequestData.builder().body(body).build();
-        asserter(context, true, expected, PointValueService.class.getName(), EventAction.CREATE_OR_UPDATE, req,
-                 JSONCompareMode.LENIENT);
+        asserter(context, true, expected, PointValueService.class.getName(), EventAction.CREATE_OR_UPDATE, req);
     }
 
     @Test
@@ -127,7 +144,7 @@ public class PointValueServiceTest extends BaseDataPointServiceTest {
                 "{\"point\":\"" + PrimaryKey.P_GPIO_TEMP + "\",\"value\":24,\"priority\":5," +
                 "\"priority_values\":{\"1\":null,\"2\":null,\"3\":null,\"4\":null,\"5\":24,\"6\":null,\"7\":null," +
                 "\"8\":null,\"9\":null,\"10\":null,\"11\":null,\"12\":null,\"13\":null,\"14\":null,\"15\":null," +
-                "\"16\":null}}");
+                "\"16\":null,\"17\":null}}");
             JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
                                                   .put("status", Status.SUCCESS)
                                                   .put("resource", data);
@@ -136,33 +153,35 @@ public class PointValueServiceTest extends BaseDataPointServiceTest {
     }
 
     @Test
-    public void test_get_point_data(TestContext context) {
-        JsonObject expected = new JsonObject(
-            "{\"priority\":8,\"value\":10,\"point\":\"" + PrimaryKey.P_GPIO_HUMIDITY + "\"," +
-            "\"priority_values\":{\"1\":null,\"2\":null,\"3\":null,\"4\":null,\"5\":10,\"6\":9,\"7\":null,\"8\":10," +
-            "\"9\":null,\"10\":null,\"11\":null,\"12\":null,\"13\":null,\"14\":null,\"15\":null,\"16\":null}}");
-        RequestData req = RequestData.builder()
-                                     .body(new JsonObject().put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString()))
-                                     .build();
-        asserter(context, true, expected, PointValueService.class.getName(), EventAction.GET_ONE, req);
+    public void test_create_or_update_pv_with_null_value(TestContext context) {
+        final PointValueData v = MockData.searchData(PrimaryKey.P_BACNET_TEMP).setPriority(9).setValue(27.5);
+        v.getPriorityValues().add(3, null);
+        final JsonObject expected = new JsonObject().put("action", EventAction.PATCH)
+                                                    .put("status", Status.SUCCESS)
+                                                    .put("resource",
+                                                         JsonPojo.from(v).toJson(JsonData.MAPPER, AUDIT_FIELDS));
+        final JsonObject body = new JsonObject().put("value", (Double) null)
+                                                .put("priority", 3)
+                                                .put("point_id", PrimaryKey.P_BACNET_TEMP.toString());
+        final RequestData req = RequestData.builder().body(body).build();
+        asserter(context, true, expected, PointValueService.class.getName(), EventAction.CREATE_OR_UPDATE, req);
     }
 
     @Test
     public void test_create_or_update_pv_and_assert_audit(TestContext context) throws InterruptedException {
         DeliveryEvent event = createPointEvent(
             new PointValueData().setPoint(PrimaryKey.P_BACNET_SWITCH).setPriority(5).setValue(24d), true);
-        CountDownLatch latch = new CountDownLatch(1);
-        Async async = context.async(1);
+        CountDownLatch latch = new CountDownLatch(2);
+        Async async = context.async(2);
         controller().fire(event, EventbusHelper.replyAsserter(context, body -> {
             latch.countDown();
             JsonObject data = new JsonObject(
                 "{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":24,\"priority\":5," +
                 "\"priority_values\":{\"1\":null,\"2\":null,\"3\":null,\"4\":null,\"5\":24,\"6\":null,\"7\":null," +
                 "\"8\":null,\"9\":null,\"10\":null,\"11\":null,\"12\":null,\"13\":null,\"14\":null,\"15\":null," +
-                "\"16\":null},\"time_audit\":{\"created_by\":\"UNDEFINED\",\"revision\":1}," +
+                "\"16\":null,\"17\":null},\"time_audit\":{\"created_by\":\"UNDEFINED\",\"revision\":1}," +
                 "\"sync_audit\":{\"status\":\"INITIAL\",\"data\":{\"message\":\"Not yet synced new resource\"}}}");
-            JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
-                                                  .put("status", Status.SUCCESS)
+            JsonObject expected = new JsonObject().put("action", EventAction.CREATE).put("status", Status.SUCCESS)
                                                   .put("resource", data);
             JsonHelper.assertJson(context, async, expected, body.getJsonObject("data"), JSONCompareMode.LENIENT);
         }));

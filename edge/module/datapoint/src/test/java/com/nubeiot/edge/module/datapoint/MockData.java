@@ -109,12 +109,11 @@ public final class MockData {
     }
 
     private static List<RealtimeSetting> rtSettings() {
-        return Collections.singletonList(new RealtimeSetting().setPoint(PrimaryKey.P_GPIO_TEMP).setEnabled(true));
+        return Collections.singletonList(new RealtimeSetting().setPoint(PrimaryKey.P_GPIO_TEMP).setEnabled(false));
     }
 
     private static List<PointValueData> pointData() {
-        return Arrays.asList(new PointValueData().setPoint(PrimaryKey.P_GPIO_HUMIDITY)
-                                                 .setPriority(8)
+        return Arrays.asList(new PointValueData().setPoint(PrimaryKey.P_GPIO_HUMIDITY).setPriority(5)
                                                  .setValue(10d)
                                                  .setPriorityValues(
                                                      new PointPriorityValue().add(5, 10).add(6, 9).add(8, 10)),
@@ -124,10 +123,10 @@ public final class MockData {
                                                  .setPriorityValues(
                                                      new PointPriorityValue().add(3, 24d).add(9, 27.5).add(17, 25.5)),
                              new PointValueData().setPoint(PrimaryKey.P_BACNET_FAN)
-                                                 .setPriority(7)
-                                                 .setValue(260d)
+                                                 .setPriority(2)
+                                                 .setValue(240d)
                                                  .setPriorityValues(
-                                                     new PointPriorityValue().add(5, 240d).add(7, 260d).add(17, 250)));
+                                                     new PointPriorityValue().add(2, 240d).add(7, 260d).add(16, 250)));
     }
 
     private static List<PointHistoryData> historyData() {
@@ -158,11 +157,14 @@ public final class MockData {
     }
 
     private static List<HistorySetting> historySettings() {
-        return Arrays.asList(
-            new HistorySetting().setPoint(PrimaryKey.P_GPIO_TEMP).setType(HistorySettingType.COV).setTolerance(1d),
-            new HistorySetting().setPoint(PrimaryKey.P_BACNET_FAN)
-                                .setType(HistorySettingType.PERIOD)
-                                .setSchedule("xyz"));
+        return Arrays.asList(new HistorySetting().setPoint(PrimaryKey.P_GPIO_TEMP)
+                                                 .setEnabled(false)
+                                                 .setType(HistorySettingType.COV)
+                                                 .setTolerance(1d),
+                             new HistorySetting().setPoint(PrimaryKey.P_BACNET_FAN)
+                                                 .setEnabled(false)
+                                                 .setType(HistorySettingType.PERIOD)
+                                                 .setSchedule("xyz"));
     }
 
     private static List<PointTag> tags() {
@@ -193,13 +195,15 @@ public final class MockData {
     }
 
     private static List<Device> devices() {
-        return Arrays.asList(
-            new Device().setId(PrimaryKey.DEVICE_DROPLET).setCode("DROPLET_01").setProtocol(Protocol.WIRE)
-                        .setManufacturer("NubeIO")
-                        .setType(DeviceType.DROPLET),
-            new Device().setId(PrimaryKey.DEVICE_HVAC).setCode("HVAC_XYZ").setProtocol(Protocol.BACNET)
-                        .setManufacturer("Lennox")
-                        .setType(DeviceType.HVAC));
+        return Arrays.asList(new Device().setId(PrimaryKey.DEVICE_DROPLET)
+                                         .setCode("DROPLET_01")
+                                         .setProtocol(Protocol.WIRE)
+                                         .setManufacturer("NubeIO")
+                                         .setType(DeviceType.DROPLET), new Device().setId(PrimaryKey.DEVICE_HVAC)
+                                                                                   .setCode("HVAC_XYZ")
+                                                                                   .setProtocol(Protocol.BACNET)
+                                                                                   .setManufacturer("Lennox")
+                                                                                   .setType(DeviceType.HVAC));
     }
 
     private static List<Point> points() {

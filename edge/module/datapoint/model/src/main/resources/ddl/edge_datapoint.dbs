@@ -116,6 +116,9 @@
 		</table>
 		<table name="HISTORY_SETTING" >
 			<column name="POINT" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
+			<column name="ENABLED" type="boolean" jt="16" mandatory="y" >
+				<defo>TRUE</defo>
+			</column>
 			<column name="HISTORY_SETTING_TYPE" type="varchar" length="15" decimal="0" jt="12" />
 			<column name="SCHEDULE" type="varchar" length="127" decimal="0" jt="12" />
 			<column name="TOLERANCE" type="double" length="17" decimal="0" jt="8" />
@@ -413,6 +416,9 @@ Thing with type is SENSOR is attached to only one Point. It will be validated by
 		<table name="SCHEDULE_SETTING" >
 			<column name="ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="POINT" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
+			<column name="ENABLED" type="boolean" jt="16" mandatory="y" >
+				<defo>FALSE</defo>
+			</column>
 			<column name="RECURRING" type="boolean" length="1" decimal="0" jt="16" mandatory="y" >
 				<defo>TRUE</defo>
 			</column>
@@ -506,12 +512,9 @@ Thing with type is SENSOR is attached to only one Point. It will be validated by
 	</schema>
 	<connector name="H2" database="H2" driver_class="org.h2.Driver" driver_jar="h2-1.4.197.jar" driver_desc="File" host="localhost" port="0" instance="/data/projects/nubeio/iot-engine/edge/module/datapoint/model/src/main/resources/ddl/edge_datapoint" />
 	<layout name="Default Layout" id="Layout_4a6ba2c" show_relation="columns" >
-		<entity schema="edge_datapoint.PUBLIC" name="SCHEDULE_SETTING" color="C7F4BE" x="48" y="80" />
 		<entity schema="edge_datapoint.PUBLIC" name="POINT_HISTORY_DATA" color="C7F4BE" x="48" y="336" />
 		<entity schema="edge_datapoint.PUBLIC" name="POINT_REALTIME_DATA" color="C7F4BE" x="48" y="528" />
-		<entity schema="edge_datapoint.PUBLIC" name="REALTIME_SETTING" color="C7F4BE" x="64" y="704" />
 		<entity schema="edge_datapoint.PUBLIC" name="POINT_VALUE_DATA" color="C7F4BE" x="240" y="784" />
-		<entity schema="edge_datapoint.PUBLIC" name="HISTORY_SETTING" color="C7F4BE" x="432" y="784" />
 		<entity schema="edge_datapoint.PUBLIC" name="PROTOCOL_DISPATCHER" color="FFFFCC" x="1344" y="80" />
 		<entity schema="edge_datapoint.PUBLIC" name="SYNC_DISPATCHER" color="FFFFCC" x="1344" y="368" />
 		<entity schema="edge_datapoint.PUBLIC" name="MEASURE_UNIT" color="FFCCE6" x="704" y="576" />
@@ -524,6 +527,9 @@ Thing with type is SENSOR is attached to only one Point. It will be validated by
 		<entity schema="edge_datapoint.PUBLIC" name="NETWORK" color="BEBEF4" x="976" y="320" />
 		<entity schema="edge_datapoint.PUBLIC" name="EDGE" color="BEBEF4" x="704" y="112" />
 		<entity schema="edge_datapoint.PUBLIC" name="POINT" color="C7F4BE" x="400" y="304" />
+		<entity schema="edge_datapoint.PUBLIC" name="HISTORY_SETTING" color="C7F4BE" x="432" y="784" />
+		<entity schema="edge_datapoint.PUBLIC" name="REALTIME_SETTING" color="C7F4BE" x="64" y="704" />
+		<entity schema="edge_datapoint.PUBLIC" name="SCHEDULE_SETTING" color="C7F4BE" x="48" y="80" />
 		<group name="SYSTEM" color="FFFFCC" >
 			<entity schema="edge_datapoint.PUBLIC" name="PROTOCOL_DISPATCHER" />
 			<entity schema="edge_datapoint.PUBLIC" name="SYNC_DISPATCHER" />

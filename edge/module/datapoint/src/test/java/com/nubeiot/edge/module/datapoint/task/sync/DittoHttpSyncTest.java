@@ -131,10 +131,10 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
                                      .body(JsonPojo.from(new PointValueData().setPriority(5).setValue(24d)).toJson())
                                      .build();
         JsonObject data = new JsonObject("{\"point\":\"" + PrimaryKey.P_BACNET_SWITCH + "\",\"value\":24," +
-                                         "\"priority\":5,\"priority_values\":{\"1\":null,\"2\":null," +
-                                         "\"3\":null,\"4\":null,\"5\":24,\"6\":null,\"7\":null," +
-                                         "\"8\":null,\"9\":null,\"10\":null,\"11\":null," +
-                                         "\"12\":null,\"13\":null,\"14\":null,\"15\":null," + "\"16\":null}}");
+                                         "\"priority\":5,\"priority_values\":{\"1\":null,\"2\":null,\"3\":null," +
+                                         "\"4\":null,\"5\":24,\"6\":null,\"7\":null,\"8\":null,\"9\":null," +
+                                         "\"10\":null,\"11\":null,\"12\":null,\"13\":null,\"14\":null,\"15\":null," +
+                                         "\"16\":null,\"17\":null}}");
         final Consumer<ResponseData> after = r -> {
             try {
                 latch.countDown();
@@ -145,7 +145,8 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
                 TestHelper.testComplete(async);
             }
         };
-        final ExpectedResponse resp = ExpectedResponse.builder().code(200)
+        final ExpectedResponse resp = ExpectedResponse.builder()
+                                                      .code(200)
                                                       .expected(new JsonObject().put("action", EventAction.CREATE)
                                                                                 .put("status", Status.SUCCESS)
                                                                                 .put("resource", data))
@@ -161,7 +162,7 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
                                           "\"priority\":5,\"priority_values\":{\"1\":null,\"2\":null," +
                                           "\"3\":null,\"4\":null,\"5\":24,\"6\":null,\"7\":null," +
                                           "\"8\":null,\"9\":29,\"10\":null,\"11\":null,\"12\":null," +
-                                          "\"13\":null,\"14\":null,\"15\":null,\"16\":null}," +
+                                          "\"13\":null,\"14\":null,\"15\":null,\"16\":null,\"17\":null}," +
                                           "\"time_audit\":{\"created_time\":\"\",\"created_by\":\"UNDEFINED\"," +
                                           "\"last_modified_time\":\"\",\"last_modified_by\":\"UNDEFINED\"," +
                                           "\"revision\":2},\"sync_audit\":{\"status\":\"INITIAL\"," +
@@ -178,9 +179,9 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
                                                                  IGNORE.apply("resource.sync_audit.last_success_time"),
                                                                  IGNORE.apply(
                                                                      "resource.sync_audit.last_success_message" +
-                                                                        ".time_audit.created_time"))
-                                           .after(after)
-                                           .build());
+                                                                     ".time_audit.created_time"))
+                                                 .after(after)
+                                                 .build());
     }
 
 }
