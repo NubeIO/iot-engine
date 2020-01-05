@@ -1,7 +1,5 @@
 package com.nubeiot.core.sql.service;
 
-import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-
 import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.GroupEntityTransformer;
@@ -14,7 +12,6 @@ import lombok.NonNull;
 /**
  * Represents for {@code Group Entity} service based on eventbus listener.
  *
- * @param <P>  Type of {@code VertxPojo}
  * @param <M>  Type of {@code EntityMetadata}
  * @param <CP> Type of {@code CompositePojo}
  * @param <CM> Type of {@code CompositeMetadata}
@@ -24,9 +21,8 @@ import lombok.NonNull;
  * @see GroupReferencingEntityMarker
  * @since 1.0.0
  */
-public interface GroupEntityService<P extends VertxPojo, M extends EntityMetadata, CP extends CompositePojo<P, CP>,
-                                       CM extends CompositeMetadata>
-    extends BaseEntityService<M>, GroupReferencingEntityMarker {
+public interface GroupEntityService<M extends EntityMetadata, CP extends CompositePojo, CM extends CompositeMetadata>
+    extends SimpleEntityService<CP, CM>, GroupReferencingEntityMarker {
 
     /**
      * Declares group context metadata.
@@ -35,7 +31,17 @@ public interface GroupEntityService<P extends VertxPojo, M extends EntityMetadat
      * @see CompositeMetadata
      * @since 1.0.0
      */
-    @NonNull CM groupContext();
+    @Override
+    @NonNull CM context();
+
+    /**
+     * Declares raw context metadata.
+     *
+     * @return raw context metadata
+     * @see EntityMetadata
+     * @since 1.0.0
+     */
+    @NonNull M rawContext();
 
     /**
      * Declares group query executor.
@@ -44,9 +50,10 @@ public interface GroupEntityService<P extends VertxPojo, M extends EntityMetadat
      * @see GroupQueryExecutor
      * @since 1.0.0
      */
+    @Override
     @SuppressWarnings("unchecked")
-    default GroupQueryExecutor<CP> groupQuery() {
-        return GroupQueryExecutor.create(entityHandler(), context(), groupContext(), this);
+    default @NonNull GroupQueryExecutor<CP> queryExecutor() {
+        return GroupQueryExecutor.create(entityHandler(), rawContext(), context(), this);
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.nubeiot.core.sql.validation;
 
+import java.util.Optional;
+
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
@@ -90,13 +92,14 @@ public interface EntityValidation<P extends VertxPojo> {
     default <PP extends P> PP onPatching(@NonNull P dbData, @NonNull RequestData reqData)
         throws IllegalArgumentException {
         final JsonObject body = reqData.body().copy();
-        body.put(context().jsonKeyName(),
-                 JsonData.checkAndConvert(context().parseKey(body.remove(context().requestKeyName()).toString())));
+        final Object key = Optional.ofNullable(body.remove(context().requestKeyName()))
+                                   .orElse(body.remove(context().jsonKeyName()));
+        body.put(context().jsonKeyName(), JsonData.checkAndConvert(context().parseKey(Strings.toString(key))));
         return (PP) context().parseFromRequest(JsonPojo.merge(dbData, body));
     }
 
     /**
-     * On deleting pp.
+     * Validate when deleting resource.
      *
      * @param <PP>    Type of {@code VertxPojo}
      * @param dbData  the db data

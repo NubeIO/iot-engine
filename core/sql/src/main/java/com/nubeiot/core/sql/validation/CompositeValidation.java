@@ -99,7 +99,7 @@ public interface CompositeValidation<P extends VertxPojo, C extends CompositePoj
     }
 
     /**
-     * Validate and re-update child {@code  entity} by current composite entity.
+     * Validate and re-update children {@code entities} by current composite entity.
      *
      * @param dbData    the db data
      * @param request   the request
@@ -111,7 +111,7 @@ public interface CompositeValidation<P extends VertxPojo, C extends CompositePoj
     default void validateSubEntities(@NonNull C dbData, @NonNull C request,
                                      Function3<EntityMetadata, RequestData, VertxPojo, VertxPojo> validator) {
         for (EntityMetadata metadata : ((List<EntityMetadata>) context().subItems())) {
-            String key = metadata.singularKeyName();
+            final String key = metadata.singularKeyName();
             final VertxPojo sub = request.getOther(key);
             if (Objects.isNull(sub)) {
                 continue;

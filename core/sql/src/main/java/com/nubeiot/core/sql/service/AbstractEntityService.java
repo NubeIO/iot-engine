@@ -69,7 +69,7 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
                                       .sqlStep(initGetManyStep())
                                       .postTask(postPersistTask())
                                       .asyncPostTask(postPersistAsyncTask())
-                                      .transformer((req, res) -> transformer().onMany(res))
+                                      .transformer((req, res) -> transformer().afterList(res))
                                       .build()
                                       .run(requestData);
     }
@@ -163,7 +163,7 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
         return GetManyStep.builder()
                           .action(EventAction.GET_LIST)
                           .queryExecutor(queryExecutor())
-                          .onEach(transformer()::onEach)
+                          .onEach(transformer()::afterEach)
                           .build();
     }
 

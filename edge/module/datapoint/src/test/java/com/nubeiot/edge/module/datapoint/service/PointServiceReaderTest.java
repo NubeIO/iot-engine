@@ -30,8 +30,9 @@ public class PointServiceReaderTest extends BaseDataPointServiceTest {
                                       .toJson()
                                       .put("unit", Temperature.CELSIUS.toJson());
         expected.remove("measure_unit");
-        RequestData req = RequestData.builder().body(new JsonObject().put("edge_id", PrimaryKey.EDGE.toString())
-                                                                     .put("point_id", PrimaryKey.P_GPIO_TEMP.toString()))
+        RequestData req = RequestData.builder()
+                                     .body(new JsonObject().put("edge_id", PrimaryKey.EDGE.toString())
+                                                           .put("point_id", PrimaryKey.P_GPIO_TEMP.toString()))
                                      .build();
         asserter(context, true, expected, PointService.class.getName(), EventAction.GET_ONE, req);
     }
@@ -54,7 +55,7 @@ public class PointServiceReaderTest extends BaseDataPointServiceTest {
         final JsonObject p1 = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_HUMIDITY)).toJson();
         final JsonObject p2 = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_TEMP)).toJson();
         final JsonObject expected = new JsonObject().put("points", new JsonArray().add(p1).add(p2));
-        RequestData req = RequestData.builder().body(new JsonObject().put("network_id", "default")).build();
+        final RequestData req = RequestData.builder().body(new JsonObject().put("network_id", "default")).build();
         asserter(context, true, expected, PointService.class.getName(), EventAction.GET_LIST, req,
                  JSONCompareMode.LENIENT);
     }
@@ -90,9 +91,10 @@ public class PointServiceReaderTest extends BaseDataPointServiceTest {
                                       .toJson()
                                       .put("unit", Base.PERCENTAGE.toJson());
         expected.remove("measure_unit");
-        RequestData req = RequestData.builder().body(
-            new JsonObject().put("edge_id", PrimaryKey.EDGE.toString()).put("network_id", "default")
-                            .put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString()))
+        RequestData req = RequestData.builder()
+                                     .body(new JsonObject().put("edge_id", PrimaryKey.EDGE.toString())
+                                                           .put("network_id", "default")
+                                                           .put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString()))
                                      .build();
         asserter(context, true, expected, PointService.class.getName(), EventAction.GET_ONE, req);
     }
@@ -103,10 +105,10 @@ public class PointServiceReaderTest extends BaseDataPointServiceTest {
                                       .toJson()
                                       .put("unit", Temperature.CELSIUS.toJson());
         expected.remove("measure_unit");
-        RequestData req = RequestData.builder().body(new JsonObject().put("edge_id", PrimaryKey.EDGE.toString())
-                                                                     .put("network_id",
-                                                                          PrimaryKey.BACNET_NETWORK.toString())
-                                                                     .put("point_id", PrimaryKey.P_BACNET_TEMP.toString()))
+        RequestData req = RequestData.builder()
+                                     .body(new JsonObject().put("edge_id", PrimaryKey.EDGE.toString())
+                                                           .put("network_id", PrimaryKey.BACNET_NETWORK.toString())
+                                                           .put("point_id", PrimaryKey.P_BACNET_TEMP.toString()))
                                      .build();
         asserter(context, true, expected, PointService.class.getName(), EventAction.GET_ONE, req);
     }
@@ -115,9 +117,10 @@ public class PointServiceReaderTest extends BaseDataPointServiceTest {
     public void test_get_point_by_edge_and_another_network_not_found(TestContext context) {
         JsonObject expected = new JsonObject("{\"code\":\"NOT_FOUND\",\"message\":\"Not found resource with point_id=" +
                                              PrimaryKey.P_BACNET_FAN.toString() + "\"}");
-        RequestData req = RequestData.builder().body(new JsonObject().put("edge_id", PrimaryKey.EDGE.toString())
-                                                                     .put("network_id", "default")
-                                                                     .put("point_id", PrimaryKey.P_BACNET_FAN.toString()))
+        RequestData req = RequestData.builder()
+                                     .body(new JsonObject().put("edge_id", PrimaryKey.EDGE.toString())
+                                                           .put("network_id", "default")
+                                                           .put("point_id", PrimaryKey.P_BACNET_FAN.toString()))
                                      .build();
         asserter(context, false, expected, PointService.class.getName(), EventAction.GET_ONE, req);
     }

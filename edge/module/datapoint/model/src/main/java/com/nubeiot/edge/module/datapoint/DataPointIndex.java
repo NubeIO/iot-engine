@@ -416,8 +416,8 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public Point onCreating(RequestData reqData) throws IllegalArgumentException {
             final Point point = UUIDKeyEntity.super.onCreating(reqData);
-            Objects.requireNonNull(point.getEdge(), "Missing device");
-            Strings.requireNotBlank(point.getMeasureUnit(), "Missing point measure unit");
+            Objects.requireNonNull(point.getEdge(), "Point must be assigned to Edge");
+            Strings.requireNotBlank(point.getMeasureUnit(), "Point measure unit is mandatory");
             return point.setId(Optional.ofNullable(point.getId()).orElseGet(UUID::randomUUID));
         }
 
@@ -441,10 +441,15 @@ public interface DataPointIndex extends MetadataIndex {
         public final @NonNull Class<PointComposite> modelClass() { return PointComposite.class; }
 
         @Override
-        public final @NonNull JsonTable<PointRecord> table() { return Tables.POINT; }
+        public final @NonNull com.nubeiot.iotdata.edge.model.tables.Point table() { return Tables.POINT; }
 
         @Override
         public final @NonNull Class<PointDao> daoClass() { return PointDao.class; }
+
+        @Override
+        public @NonNull String requestKeyName() {
+            return PointMetadata.INSTANCE.requestKeyName();
+        }
 
         @Override
         public @NonNull Class<Point> rawClass() {
@@ -516,11 +521,9 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull PointValueData onPatching(@NonNull PointValueData dbData, @NonNull RequestData reqData)
             throws IllegalArgumentException {
-            PointValueData reqPointValueData = parseFromRequest(reqData.body());
-            PointValueData request = UUIDKeyEntity.super.parseFromRequest(JsonPojo.merge(dbData, reqPointValueData));
-            // Set nullable value when we want
-            request.setValue(reqPointValueData.getValue());
-            final PointValueData pvData = parseFromRequest(request.toJson());
+            final PointValueData request = parseFromRequest(reqData.body());
+            final PointValueData pvData = UUIDKeyEntity.super.parseFromRequest(JsonPojo.merge(dbData, request))
+                                                             .setValue(request.getValue());
             final PointValue highestValue = pvData.getPriorityValues().findHighestValue();
             pvData.setPriority(highestValue.getPriority()).setValue(highestValue.getValue());
             return pvData;

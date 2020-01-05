@@ -67,7 +67,7 @@ abstract class JobTriggerCompositeService
     }
 
     @Override
-    public @NonNull Single<JsonObject> onEach(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+    public @NonNull Single<JsonObject> afterEach(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
         return Single.just(JsonPojo.from(pojo)
                                    .toJson(Stream.concat(ignoreFields(requestData).stream(),
                                                          Stream.of(reference().singularKeyName()))

@@ -29,28 +29,27 @@ import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
 import com.nubeiot.edge.module.datapoint.service.EdgeService.EdgeExtension;
 import com.nubeiot.edge.module.datapoint.service.NetworkService.NetworkExtension;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 import com.nubeiot.iotdata.unit.DataType;
 import com.nubeiot.iotdata.unit.UnitAlias;
 
 import lombok.NonNull;
 
 public final class PointService
-    extends AbstractGroupEntityService<Point, PointMetadata, PointComposite, PointCompositeMetadata>
-    implements DataPointService<Point, PointMetadata> {
+    extends AbstractGroupEntityService<PointMetadata, PointComposite, PointCompositeMetadata>
+    implements DataPointService<PointComposite, PointCompositeMetadata> {
 
     public PointService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
     }
 
     @Override
-    public PointMetadata context() {
-        return PointMetadata.INSTANCE;
+    public PointCompositeMetadata context() {
+        return PointCompositeMetadata.INSTANCE;
     }
 
     @Override
-    public PointCompositeMetadata groupContext() {
-        return PointCompositeMetadata.INSTANCE;
+    public PointMetadata rawContext() {
+        return PointMetadata.INSTANCE;
     }
 
     @Override
@@ -80,7 +79,14 @@ public final class PointService
     }
 
     @Override
-    public Single<JsonObject> onEach(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+    protected RequestData recomputeRequestData(RequestData reqData, JsonObject extra) {
+        EdgeExtension.optimizeReqData(entityHandler(), reqData, context().table().getJsonField(context().table().EDGE));
+        NetworkExtension.optimizeAlias(entityHandler(), reqData);
+        return super.recomputeRequestData(reqData, extra);
+    }
+
+    @Override
+    public Single<JsonObject> afterEach(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
         return Single.just(JsonPojo.from(pojo).toJson(showGroupFields(requestData)));
     }
 
@@ -107,21 +113,14 @@ public final class PointService
     @Override
     public Set<EventMethodDefinition> definitions() {
         return Stream.of(DataPointService.super.definitions(),
-                         EntityHttpService.createDefinitions(getAvailableEvents(), PointMetadata.INSTANCE,
-                                                             EdgeMetadata.INSTANCE, NetworkMetadata.INSTANCE))
+                         EntityHttpService.createDefinitions(getAvailableEvents(), context(), EdgeMetadata.INSTANCE,
+                                                             NetworkMetadata.INSTANCE))
                      .flatMap(Collection::stream)
                      .collect(Collectors.toSet());
     }
 
-    @Override
-    protected RequestData recomputeRequestData(RequestData reqData, JsonObject extra) {
-        EdgeExtension.optimizeReqData(entityHandler(), reqData, context().table().getJsonField(context().table().EDGE));
-        NetworkExtension.optimizeAlias(entityHandler(), reqData);
-        return super.recomputeRequestData(reqData, extra);
-    }
-
     private JsonObject convertResource(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
-        PointComposite p = (PointComposite) pojo;
+        final PointComposite p = (PointComposite) pojo;
         final UnitAlias unitAlias = p.getUnitAlias();
         final JsonObject unit = p.safeGetOther(MeasureUnitMetadata.INSTANCE.singularKeyName(), MeasureUnit.class)
                                  .toJson();

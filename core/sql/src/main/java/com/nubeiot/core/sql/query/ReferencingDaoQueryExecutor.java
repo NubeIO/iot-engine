@@ -19,14 +19,12 @@ import com.nubeiot.core.sql.service.marker.ReferencingEntityMarker;
 
 import lombok.NonNull;
 
-final class ReferencingDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P
-                                                                                                                    ,
-                                                                                                                    K>>
-    extends SimpleDaoQueryExecutor<K, P, R, D> implements ReferencingQueryExecutor<P> {
+final class ReferencingDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>, DAO extends VertxDAO<R, P, K>>
+    extends SimpleDaoQueryExecutor<K, P, R, DAO> implements ReferencingQueryExecutor<P> {
 
     private final ReferencingEntityMarker marker;
 
-    ReferencingDaoQueryExecutor(@NonNull EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata,
+    ReferencingDaoQueryExecutor(@NonNull EntityHandler handler, @NonNull EntityMetadata<K, P, R, DAO> metadata,
                                 @NonNull ReferencingEntityMarker marker) {
         super(handler, metadata);
         this.marker = marker;
