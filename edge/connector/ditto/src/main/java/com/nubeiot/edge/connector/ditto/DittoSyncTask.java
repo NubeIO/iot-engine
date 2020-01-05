@@ -26,9 +26,9 @@ public final class DittoSyncTask extends AbstractDittoTask<VertxPojo> {
     @Override
     public @NonNull Single<Boolean> isExecutable(@NonNull EntityRuntimeContext<VertxPojo> executionContext) {
         final EventAction action = executionContext.getOriginReqAction();
-        return Single.just(
-            action == EventAction.GET_LIST || action == EventAction.GET_ONE || action == EventAction.REMOVE ||
-            !(definitionContext().entityHandler() instanceof EntitySyncHandler));
+        return Single.just(definitionContext().entityHandler() instanceof EntitySyncHandler &&
+                           !(action == EventAction.GET_LIST || action == EventAction.GET_ONE ||
+                             action == EventAction.REMOVE));
     }
 
     @Override
