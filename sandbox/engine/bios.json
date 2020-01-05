@@ -181,7 +181,7 @@
                   {
                     "point": "3bea3c91-850d-4409-b594-8ffb5aa6b8a0",
                     "value": 10.0,
-                    "priority": 8,
+                    "priority": 5,
                     "priority_values": {
                       "5": 10.0,
                       "6": 9.0,
@@ -200,12 +200,12 @@
                   },
                   {
                     "point": "6997056d-4c1b-4d30-b205-969432f72a93",
-                    "value": 260.0,
-                    "priority": 7,
+                    "value": 240.0,
+                    "priority": 2,
                     "priority_values": {
-                      "5": 240.0,
+                      "2": 240.0,
                       "7": 260.0,
-                      "17": 250.0
+                      "16": 250.0
                     }
                   }
                 ],
@@ -467,7 +467,7 @@
                 "rt_setting": [
                   {
                     "point": "1efaf662-1333-48d1-a60f-8fc60f259f0e",
-                    "enabled": true
+                    "enabled": false
                   }
                 ],
                 "tag": [
@@ -580,11 +580,13 @@
                 "history_setting": [
                   {
                     "point": "1efaf662-1333-48d1-a60f-8fc60f259f0e",
+                    "enabled": false,
                     "type": "COV",
                     "tolerance": 1.0
                   },
                   {
                     "point": "6997056d-4c1b-4d30-b205-969432f72a93",
+                    "enabled": false,
                     "type": "PERIOD",
                     "schedule": "xyz"
                   }
