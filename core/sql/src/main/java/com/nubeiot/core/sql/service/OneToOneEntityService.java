@@ -11,11 +11,12 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.CompositePojo;
+import com.nubeiot.core.sql.service.marker.OneToOneEntityMarker;
 
 import lombok.NonNull;
 
 public interface OneToOneEntityService<CP extends CompositePojo, CM extends CompositeMetadata>
-    extends ReferencedEntityService<CP, CM> {
+    extends ReferencedEntityService<CP, CM>, OneToOneEntityMarker {
 
     @SuppressWarnings("unchecked")
     default MaybeSource<CP> doGet(@NonNull CP pojo, @NonNull Object key, Entry<EntityMetadata, String> entry) {
@@ -31,7 +32,7 @@ public interface OneToOneEntityService<CP extends CompositePojo, CM extends Comp
         return RequestData.builder().body(new JsonObject().put(referenceKey, JsonData.checkAndConvert(key))).build();
     }
 
-    default Maybe<CP> onCreate(@NonNull CP pojo) {
+    default Maybe<CP> onCreate(@NonNull RequestData requestData, @NonNull CP pojo) {
         return Maybe.just(pojo);
     }
 

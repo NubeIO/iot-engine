@@ -3,17 +3,17 @@ package com.nubeiot.edge.module.datapoint.service;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+import io.reactivex.Single;
+import io.vertx.core.json.JsonObject;
+
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.http.base.Urls;
-import com.nubeiot.core.http.base.event.ActionMethodMapping;
+import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
-import com.nubeiot.core.sql.http.EntityHttpService;
+import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractReferencingEntityService;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.RealtimeSettingMetadata;
 import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
 import com.nubeiot.iotdata.edge.model.tables.pojos.RealtimeSetting;
@@ -40,10 +40,14 @@ public final class RealtimeSettingService
 
     @Override
     public Set<EventMethodDefinition> definitions() {
-        final EventMethodDefinition d = EventMethodDefinition.create(
-            Urls.combinePath(EntityHttpService.toCapturePath(PointMetadata.INSTANCE), servicePath()),
-            ActionMethodMapping.byCRUD(getAvailableEvents()));
-        return Stream.concat(DataPointService.super.definitions().stream(), Stream.of(d)).collect(Collectors.toSet());
+        return PointExtension.oneToOneDefinitions(getAvailableEvents(), this::servicePath, context()::requestKeyName);
+    }
+
+    @EventContractor(action = EventAction.CREATE_OR_UPDATE, returnType = Single.class)
+    public Single<JsonObject> createOrUpdate(RequestData reqData) {
+        final RealtimeSetting data = context().onCreating(reqData);
+        final RequestData creationData = PointExtension.createRequestData(reqData, JsonPojo.from(data).toJson());
+        return create(creationData).onErrorResumeNext(patch(PointExtension.createRequestData(reqData, data.toJson())));
     }
 
 }

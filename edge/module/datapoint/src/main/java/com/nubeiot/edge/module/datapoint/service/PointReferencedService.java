@@ -96,7 +96,7 @@ public final class PointReferencedService
 
     //TODO Must implement Database Transaction to finish it
     private Maybe<PointComposite> onCreate(@NonNull EntityRuntimeContext<PointComposite> executionContext) {
-        return oneToOneService.onCreate(executionContext.getData());
+        return oneToOneService.onCreate(executionContext.getOriginReqData(), executionContext.getData());
     }
 
     private Maybe<PointComposite> onGet(@NonNull EntityRuntimeContext<PointComposite> executionContext) {
