@@ -159,7 +159,6 @@ public interface EntityHttpService {
      * @param available              the available
      * @param resourceKeyName        the resource key name
      * @param resourceRequestKeyName the resource request key name
-     * @param onlyCombine            the only combine
      * @param references             the references
      * @return the set
      * @since 1.0.0
@@ -167,7 +166,23 @@ public interface EntityHttpService {
     static Set<EventMethodDefinition> createDefinitions(@NonNull ActionMethodMapping available,
                                                         @NonNull Supplier<String> resourceKeyName,
                                                         @NonNull Supplier<String> resourceRequestKeyName,
-                                                        boolean onlyCombine, EntityMetadata... references) {
+                                                        EntityMetadata... references) {
+        return createDefinitions(available, resourceKeyName, resourceRequestKeyName, false, references);
+    }
+
+    /**
+     * Create definitions set.
+     *
+     * @param available              the available
+     * @param resourceKeyName        the resource key name
+     * @param resourceRequestKeyName the resource request key name
+     * @param onlyCombine            the only combine
+     * @param references             the references
+     * @return the set
+     * @since 1.0.0
+     */
+    static Set<EventMethodDefinition> createDefinitions(@NonNull ActionMethodMapping available, @NonNull Supplier<String> resourceKeyName,
+                                                        @NonNull Supplier<String> resourceRequestKeyName, boolean onlyCombine, EntityMetadata... references) {
         final List<String> servicePaths = Stream.of(references)
                                                 .filter(Objects::nonNull)
                                                 .map(EntityHttpService::toCapturePath)
@@ -178,8 +193,7 @@ public interface EntityHttpService {
             stream = Stream.concat(servicePaths.stream().map(path -> Urls.combinePath(path, resourceKeyName.get())),
                                    stream);
         }
-        return stream.map(path -> EventMethodDefinition.create(path, resourceRequestKeyName.get(), available))
-                     .collect(Collectors.toSet());
+        return stream.map(path -> EventMethodDefinition.create(path, resourceRequestKeyName.get(), available)).collect(Collectors.toSet());
     }
 
     /**
@@ -190,7 +204,7 @@ public interface EntityHttpService {
      * @since 1.0.0
      */
     static String toCapturePath(@NonNull EntityMetadata metadata) {
-        return Urls.capturePath(metadata.singularKeyName(), metadata.requestKeyName());
+        return Urls.capturePath(Urls.toPathWithLC(metadata.singularKeyName()), metadata.requestKeyName());
     }
 
 }

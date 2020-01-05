@@ -87,7 +87,7 @@ public final class EventMethodDefinition implements JsonData {
      * @param servicePath Origin service path that represents for manipulating {@code resource} in default {@code
      *                    HTTPMethod} list
      * @param paramPath   Parameter path for manipulating {@code resource}
-     * @return new instance of {@link EventMethodDefinition}
+     * @return new instance
      * @implNote {@code paramPath} will be append after {@code servicePath}. For example:
      *     <ul>
      *     <li>{@code servicePath}: {@code /client/:clientId/product}</li>
@@ -106,7 +106,7 @@ public final class EventMethodDefinition implements JsonData {
      *                       HTTPMethod} list
      * @param paramPath      Parameter path for manipulating {@code resource}
      * @param useRequestData Whether use {@link RequestData} in parameter in {@link EventListener} or not
-     * @return new instance of {@link EventMethodDefinition}
+     * @return new instance
      * @implNote {@code paramPath} will be append after {@code servicePath}. For example:
      *     <ul>
      *     <li>{@code servicePath}: {@code /client/:clientId/product}</li>
@@ -120,11 +120,12 @@ public final class EventMethodDefinition implements JsonData {
     /**
      * Create definition with given {@code ActionMethodMapping}.
      * <p>
-     * It is appropriate to handle {@code singleton resource} with no key or {@code action job}, e.g: {@code translate}
+     * It is appropriate to handle {@code singleton resource} with no key or {@code action job}, e.g: {@code
+     * /translate}
      *
      * @param servicePath Origin service path that represents for manipulating {@code resource} or {@code action job}
      * @param mapping     Mapping between {@code EventAction} and {@code HTTPMethod}
-     * @return new instance of {@link EventMethodDefinition}
+     * @return new instance
      * @see ActionMethodMapping
      */
     public static EventMethodDefinition create(String servicePath, @NonNull ActionMethodMapping mapping) {
@@ -138,7 +139,7 @@ public final class EventMethodDefinition implements JsonData {
      *
      * @param servicePath Origin service path that represents for manipulating {@code resource} or {@code action job}
      * @param mapping     Mapping between {@code EventAction} and {@code HTTPMethod}
-     * @return new instance of {@link EventMethodDefinition}
+     * @return new instance
      * @see ActionMethodMapping
      */
     public static EventMethodDefinition create(String servicePath, @NonNull ActionMethodMapping mapping,
@@ -154,7 +155,7 @@ public final class EventMethodDefinition implements JsonData {
      * @param servicePath Origin service path that represents for manipulating {@code resource}
      * @param paramPath   Parameter path for manipulating {@code resource}
      * @param mapping     Mapping between {@code EventAction} and {@code HTTPMethod}
-     * @return new instance of {@link EventMethodDefinition}
+     * @return new instance
      * @implNote {@code paramPath} will be append after {@code servicePath}. For example:
      *     <ul>
      *     <li>{@code servicePath}: {@code /client/:clientId/product}</li>
@@ -175,7 +176,7 @@ public final class EventMethodDefinition implements JsonData {
      * @param servicePath Origin service path that represents for manipulating {@code resource}
      * @param paramPath   Parameter path for manipulating {@code resource}
      * @param mapping     Mapping between {@code EventAction} and {@code HTTPMethod}
-     * @return new instance of {@link EventMethodDefinition}
+     * @return new instance
      * @implNote {@code paramPath} will be append after {@code servicePath}. For example:
      *     <ul>
      *     <li>{@code servicePath}: {@code /client/:clientId/product}</li>
@@ -190,7 +191,7 @@ public final class EventMethodDefinition implements JsonData {
         if ((Strings.isBlank(pPath) || sPath.equals(pPath)) && mapping.hasDuplicateMethod()) {
             throw new IllegalStateException("Has duplicate HTTP method for same endpoint");
         }
-        final String cPath = Strings.isBlank(pPath) ? pPath : Urls.combinePath(sPath, pPath);
+        final String cPath = Strings.isBlank(pPath) ? sPath : Urls.combinePath(sPath, pPath);
         Set<EventMethodMapping> map = mapping.get()
                                              .entrySet()
                                              .stream()

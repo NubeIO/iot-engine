@@ -24,6 +24,13 @@ public interface ActionMethodMapping extends Supplier<Map<EventAction, HttpMetho
     ActionMethodMapping CRUD_MAP = ActionMethodMapping.create(defaultCRUDMap());
 
     /**
+     * Default mapping for {@code CREATE_OR_UPDATE | READ | DELETE} operations
+     *
+     * @see #defaultCRDMap()
+     */
+    ActionMethodMapping CRD_MAP = ActionMethodMapping.create(defaultCRDMap());
+
+    /**
      * Default mapping for common {@code CREATE | UPDATE | DELETE} operations
      *
      * @see #defaultDMLMap()
@@ -63,6 +70,15 @@ public interface ActionMethodMapping extends Supplier<Map<EventAction, HttpMetho
         map.put(EventAction.CREATE, HttpMethod.POST);
         map.put(EventAction.UPDATE, HttpMethod.PUT);
         map.put(EventAction.PATCH, HttpMethod.PATCH);
+        map.put(EventAction.REMOVE, HttpMethod.DELETE);
+        map.put(EventAction.GET_ONE, HttpMethod.GET);
+        map.put(EventAction.GET_LIST, HttpMethod.GET);
+        return map;
+    }
+
+    static Map<EventAction, HttpMethod> defaultCRDMap() {
+        Map<EventAction, HttpMethod> map = new HashMap<>();
+        map.put(EventAction.CREATE_OR_UPDATE, HttpMethod.PUT);
         map.put(EventAction.REMOVE, HttpMethod.DELETE);
         map.put(EventAction.GET_ONE, HttpMethod.GET);
         map.put(EventAction.GET_LIST, HttpMethod.GET);

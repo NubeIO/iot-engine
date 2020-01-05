@@ -1,5 +1,6 @@
 package com.nubeiot.core.http.base.event;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -79,6 +80,24 @@ public class EventMethodDefinitionTest {
         Assert.assertEquals(EventAction.UPDATE, definition.search("/translate", HttpMethod.PUT));
         Assert.assertEquals(EventAction.PATCH, definition.search("/translate", HttpMethod.PATCH));
         Assert.assertEquals(EventAction.REMOVE, definition.search("/translate", HttpMethod.DELETE));
+    }
+
+    @Test
+    public void test_has_param_but_not_at_last() throws JSONException {
+        EventMethodDefinition definition = EventMethodDefinition.create("/p/:pid/data", ActionMethodMapping.by(
+            ActionMethodMapping.CRD_MAP,
+            Arrays.asList(EventAction.GET_ONE, EventAction.CREATE_OR_UPDATE, EventAction.REMOVE)));
+        Assert.assertTrue(definition.isUseRequestData());
+        Assert.assertEquals(EventAction.GET_ONE, definition.search("/p/123/data", HttpMethod.GET));
+        Assert.assertEquals(EventAction.CREATE_OR_UPDATE, definition.search("/p/123/data", HttpMethod.PUT));
+        Assert.assertEquals(EventAction.REMOVE, definition.search("/p/123/data", HttpMethod.DELETE));
+        JSONAssert.assertEquals(
+            "{\"servicePath\":\"/p/[^/]+/data\",\"mapping\":[{\"action\":\"GET_ONE\",\"method\":\"GET\"," +
+            "\"capturePath\":\"/p/:pid/data\",\"regexPath\":\"/p/[^/]+/data\"},{\"action\":\"CREATE_OR_UPDATE\"," +
+            "\"method\":\"PUT\",\"capturePath\":\"/p/:pid/data\",\"regexPath\":\"/p/[^/]+/data\"}," +
+            "{\"action\":\"REMOVE\",\"method\":\"DELETE\",\"capturePath\":\"/p/:pid/data\"," +
+            "\"regexPath\":\"/p/[^/]+/data\"}],\"useRequestData\":true}", definition.toJson().encode(),
+            JSONCompareMode.LENIENT);
     }
 
     @Test
