@@ -89,6 +89,34 @@ public final class DataPointConfig implements IConfig {
 
 
     @Getter
+    public static final class BuiltinData extends HashMap<String, Object> implements IConfig {
+
+        static final String NAME = "__builtin_data__";
+
+        static BuiltinData def() {
+            final BuiltinData bd = new BuiltinData();
+            bd.put(MeasureUnitMetadata.INSTANCE.singularKeyName(), DataType.available()
+                                                                           .map(dt -> new MeasureUnit(dt.toJson()))
+                                                                           .map(p -> JsonPojo.from(p).toJson())
+                                                                           .collect(JsonArray::new, JsonArray::add,
+                                                                                    JsonArray::addAll));
+            return bd;
+        }
+
+        @Override
+        public String key() {
+            return NAME;
+        }
+
+        @Override
+        public Class<? extends IConfig> parent() {
+            return DataPointConfig.class;
+        }
+
+    }
+
+
+    @Getter
     @NoArgsConstructor
     @Setter(value = AccessLevel.PACKAGE)
     public static final class DataSyncConfig implements IConfig {
@@ -128,34 +156,6 @@ public final class DataPointConfig implements IConfig {
 
         @Override
         public String key() { return NAME; }
-
-        @Override
-        public Class<? extends IConfig> parent() {
-            return DataPointConfig.class;
-        }
-
-    }
-
-
-    @Getter
-    public static final class BuiltinData extends HashMap<String, Object> implements IConfig {
-
-        static final String NAME = "__builtin_data__";
-
-        static BuiltinData def() {
-            final BuiltinData bd = new BuiltinData();
-            bd.put(MeasureUnitMetadata.INSTANCE.singularKeyName(), DataType.available()
-                                                                           .map(dt -> new MeasureUnit(dt.toJson()))
-                                                                           .map(p -> JsonPojo.from(p).toJson())
-                                                                           .collect(JsonArray::new, JsonArray::add,
-                                                                                    JsonArray::addAll));
-            return bd;
-        }
-
-        @Override
-        public String key() {
-            return NAME;
-        }
 
         @Override
         public Class<? extends IConfig> parent() {

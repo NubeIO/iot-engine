@@ -19,7 +19,7 @@ import com.nubeiot.edge.module.datapoint.DataPointIndex.ThingMetadata;
 
 import lombok.NonNull;
 
-public final class ThingByPointService extends PointThingCompositeService {
+public final class ThingByPointService extends PointThingService {
 
     ThingByPointService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);

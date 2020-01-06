@@ -12,7 +12,7 @@ import lombok.NonNull;
 
 public final class JobByTriggerService extends JobTriggerCompositeService {
 
-    public JobByTriggerService(@NonNull EntityHandler entityHandler, @NonNull QuartzSchedulerContext schedulerContext) {
+    JobByTriggerService(@NonNull EntityHandler entityHandler, @NonNull QuartzSchedulerContext schedulerContext) {
         super(entityHandler, schedulerContext);
     }
 

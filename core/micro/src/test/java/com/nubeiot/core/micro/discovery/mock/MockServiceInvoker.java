@@ -19,13 +19,13 @@ public final class MockServiceInvoker implements GatewayServiceInvoker {
     }
 
     @Override
-    public String requester() {
-        return "discovery.test";
+    public @NonNull String destination() {
+        return destination;
     }
 
     @Override
-    public @NonNull EventbusClient eventClient() {
-        return client;
+    public String requester() {
+        return "discovery.test";
     }
 
     @Override
@@ -34,8 +34,8 @@ public final class MockServiceInvoker implements GatewayServiceInvoker {
     }
 
     @Override
-    public @NonNull String destination() {
-        return destination;
+    public EventbusClient transporter() {
+        return client;
     }
 
 }

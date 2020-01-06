@@ -1,7 +1,6 @@
 package com.nubeiot.core.sql.service;
 
 import java.util.Collection;
-import java.util.Optional;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
@@ -14,8 +13,8 @@ import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.query.EntityQueryExecutor;
-import com.nubeiot.core.sql.service.task.EntityTask;
 import com.nubeiot.core.sql.validation.EntityValidation;
+import com.nubeiot.core.sql.workflow.task.EntityTask;
 
 import lombok.NonNull;
 
@@ -27,8 +26,6 @@ import lombok.NonNull;
  * @see EventListener
  * @see VertxPojo
  * @see EntityMetadata
- * @see EntityValidation
- * @see EntityTransformer
  * @since 1.0.0
  */
 //TODO Missing `BATCH` Creation/Modification/Deletion
@@ -39,6 +36,7 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
      * Defines {@code CURD} actions
      *
      * @return set of default CRUD action
+     * @since 1.0.0
      */
     @NonNull
     default Collection<EventAction> getAvailableEvents() {
@@ -73,25 +71,36 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
     @NonNull EntityTransformer transformer();
 
     /**
-     * Defines {@code task} is run before the entity manager persist operation is actually executed
+     * Defines {@code blocking pre-task} is run before the entity manager do query or persist
      *
-     * @return post task
+     * @return pre blocking task
      * @see EntityTask
      * @since 1.0.0
      */
-    default Optional<? extends EntityTask> prePersistTask() {
-        return Optional.empty();
+    default EntityTask prePersistTask() {
+        return null;
     }
 
     /**
-     * Defines {@code async task} is run after the entity manager persist operation is actually executed
+     * Defines {@code blocking post-task} is run after the entity manager do query or persist
      *
-     * @return post task
+     * @return post blocking task
      * @see EntityTask
      * @since 1.0.0
      */
-    default Optional<? extends EntityTask> postPersistAsyncTask() {
-        return Optional.empty();
+    default EntityTask postPersistTask() {
+        return null;
+    }
+
+    /**
+     * Defines {@code async post-task} is run after the entity manager do query or persist
+     *
+     * @return post async task
+     * @see EntityTask
+     * @since 1.0.0
+     */
+    default EntityTask postPersistAsyncTask() {
+        return null;
     }
 
     /**

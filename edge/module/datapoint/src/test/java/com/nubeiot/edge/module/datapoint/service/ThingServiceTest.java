@@ -73,7 +73,7 @@ public class ThingServiceTest extends BaseDataPointServiceTest {
             "\"label\":{\"label\":\"HVAC Fan Control\"},\"measure_unit\":\"bool\"}]}");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("device_id", PrimaryKey.DEVICE_HVAC.toString())
-                                                           .put("network_id", PrimaryKey.NETWORK.toString()))
+                                                           .put("network_id", PrimaryKey.BACNET_NETWORK.toString()))
                                      .build();
         asserter(context, true, expected, ThingService.class.getName(), EventAction.GET_LIST, req);
     }
@@ -81,11 +81,11 @@ public class ThingServiceTest extends BaseDataPointServiceTest {
     @Test
     public void test_get_things_by_device_not_associated_transitive_network(TestContext context) {
         JsonObject expected = new JsonObject(
-            "{\"code\":\"NOT_FOUND\",\"message\":\"Not found resource with network_id=" + PrimaryKey.NETWORK +
+            "{\"code\":\"NOT_FOUND\",\"message\":\"Not found resource with network_id=" + PrimaryKey.BACNET_NETWORK +
             " and device_id=" + PrimaryKey.DEVICE_DROPLET + "\"}");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("device_id", PrimaryKey.DEVICE_DROPLET.toString())
-                                                           .put("network_id", PrimaryKey.NETWORK.toString()))
+                                                           .put("network_id", PrimaryKey.BACNET_NETWORK.toString()))
                                      .build();
         asserter(context, false, expected, ThingService.class.getName(), EventAction.GET_LIST, req);
     }
@@ -98,7 +98,7 @@ public class ThingServiceTest extends BaseDataPointServiceTest {
             "\"measure_unit\":\"celsius\"}");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("device_id", PrimaryKey.DEVICE_HVAC.toString())
-                                                           .put("network_id", PrimaryKey.NETWORK.toString())
+                                                           .put("network_id", PrimaryKey.BACNET_NETWORK.toString())
                                                            .put("thing_id", PrimaryKey.THING_TEMP_HVAC.toString()))
                                      .build();
         asserter(context, true, expected, ThingService.class.getName(), EventAction.GET_ONE, req);
@@ -107,11 +107,11 @@ public class ThingServiceTest extends BaseDataPointServiceTest {
     @Test
     public void test_get_one_thing_by_device_not_associated_transitive_network(TestContext context) {
         JsonObject expected = new JsonObject(
-            "{\"code\":\"NOT_FOUND\",\"message\":\"Not found resource with network_id=" + PrimaryKey.NETWORK +
+            "{\"code\":\"NOT_FOUND\",\"message\":\"Not found resource with network_id=" + PrimaryKey.BACNET_NETWORK +
             " and device_id" + "=" + PrimaryKey.DEVICE_DROPLET + "\"}");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("device_id", PrimaryKey.DEVICE_DROPLET.toString())
-                                                           .put("network_id", PrimaryKey.NETWORK.toString())
+                                                           .put("network_id", PrimaryKey.BACNET_NETWORK.toString())
                                                            .put("thing_id", PrimaryKey.THING_TEMP_HVAC.toString()))
                                      .build();
         asserter(context, false, expected, ThingService.class.getName(), EventAction.GET_ONE, req);

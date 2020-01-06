@@ -17,54 +17,20 @@ import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 public class EdgeSchedulerModificationTest extends EdgeSchedulerVerticleTest {
 
     @Test
-    public void test_update_trigger(TestContext context) {
+    public void test_update_trigger_200(TestContext context) {
         final RequestData reqData = RequestData.builder().body(MockSchedulerEntityHandler.TRIGGER_2.toJson()).build();
         final JsonObject expected = new JsonObject().put("action", EventAction.UPDATE)
                                                     .put("status", Status.SUCCESS)
                                                     .put("resource", new JsonObject(
                                                         "{\"id\":2,\"group\":\"group1\",\"name\":\"trigger2\"," +
-                                                        "\"type\":\"CRON\",\"detail\":{\"expression\":\"1 1 1 ? * MON" +
-                                                        " *\",\"timezone\":\"Australia/Sydney\"},\"thread\":\"1 1 1 ?" +
-                                                        " * MON *::Australia/Sydney\"}"));
+                                                        "\"type\":\"CRON\",\"detail\":{" +
+                                                        "\"expression\":\"1 1 1 ? * MON *\"," +
+                                                        "\"timezone\":\"Australia/Sydney\"}}"));
         assertRestByClient(context, HttpMethod.PUT, "/api/s/trigger/2", reqData, 200, expected);
     }
 
     @Test
-    public void test_update_non_existed_trigger(TestContext context) {
-        final RequestData reqData = RequestData.builder().body(MockSchedulerEntityHandler.TRIGGER_1.toJson()).build();
-        final JsonObject expected = new JsonObject().put("code", ErrorCode.NOT_FOUND)
-                                                    .put("message", "Not found resource with trigger_id=5");
-        assertRestByClient(context, HttpMethod.PUT, "/api/s/trigger/5", reqData, 410, expected);
-    }
-
-    @Test
-    public void test_update_non_existed_trigger_by_existed_job(TestContext context) {
-        final RequestData reqData = RequestData.builder().body(MockSchedulerEntityHandler.TRIGGER_1.toJson()).build();
-        final JsonObject expected = new JsonObject().put("code", ErrorCode.NOT_FOUND)
-                                                    .put("message",
-                                                         "Not found resource with job_id=1 and trigger_id=3");
-        assertRestByClient(context, HttpMethod.PUT, "/api/s/job/1/trigger/3", reqData, 410, expected);
-    }
-
-    @Test
-    public void test_update_existed_trigger_by_non_existed_job(TestContext context) {
-        final RequestData reqData = RequestData.builder().body(MockSchedulerEntityHandler.TRIGGER_1.toJson()).build();
-        final JsonObject expected = new JsonObject().put("code", ErrorCode.NOT_FOUND)
-                                                    .put("message",
-                                                         "Not found resource with job_id=3 and trigger_id=1");
-        assertRestByClient(context, HttpMethod.PUT, "/api/s/job/3/trigger/1", reqData, 410, expected);
-    }
-
-    @Test
-    public void test_patch_non_existed_trigger(TestContext context) {
-        final RequestData reqData = RequestData.builder().body(MockSchedulerEntityHandler.TRIGGER_1.toJson()).build();
-        final JsonObject expected = new JsonObject().put("code", ErrorCode.NOT_FOUND)
-                                                    .put("message", "Not found resource with trigger_id=5");
-        assertRestByClient(context, HttpMethod.PATCH, "/api/s/trigger/5", reqData, 410, expected);
-    }
-
-    @Test
-    public void test_patch_trigger(TestContext context) {
+    public void test_patch_trigger_200(TestContext context) {
         final RequestData reqData = RequestData.builder().body(new JsonObject().put("intervalInSeconds", 60)).build();
         final JsonObject expected = new JsonObject().put("action", EventAction.PATCH)
                                                     .put("status", Status.SUCCESS)
@@ -76,7 +42,58 @@ public class EdgeSchedulerModificationTest extends EdgeSchedulerVerticleTest {
     }
 
     @Test
-    public void test_patch_trigger_invalid_expr(TestContext context) {
+    public void test_patch_trigger_by_job_200(TestContext context) {
+        final JsonObject req = new JsonObject().put("trigger", MockSchedulerEntityHandler.TRIGGER_2.toJson())
+                                               .put("enabled", true);
+        final JsonObject resource = new JsonObject(
+            "{\"id\":2,\"enabled\":true,\"trigger\":{\"id\":2,\"group\":\"group1\",\"name\":\"trigger2\"," +
+            "\"type\":\"CRON\",\"detail\":{\"expression\":\"1 1 1 ? * MON *\",\"timezone\":\"Australia/Sydney\"}}," +
+            "\"job\":{\"id\":1,\"group\":\"group1\",\"name\":\"job1\",\"type\":\"EVENT_JOB\"," +
+            "\"forward_if_failure\":true,\"detail\":{\"process\":{\"address\":\"scheduler.1\"," +
+            "\"pattern\":\"REQUEST_RESPONSE\",\"action\":\"CREATE\"}}}}");
+        final JsonObject expected = new JsonObject().put("action", EventAction.PATCH)
+                                                    .put("status", Status.SUCCESS)
+                                                    .put("resource", resource);
+        assertRestByClient(context, HttpMethod.PATCH, "/api/s/job/1/trigger/2", RequestData.builder().body(req).build(),
+                           200, expected);
+    }
+
+    @Test
+    public void test_update_non_existed_trigger_410(TestContext context) {
+        final RequestData reqData = RequestData.builder().body(MockSchedulerEntityHandler.TRIGGER_1.toJson()).build();
+        final JsonObject expected = new JsonObject().put("code", ErrorCode.NOT_FOUND)
+                                                    .put("message", "Not found resource with trigger_id=5");
+        assertRestByClient(context, HttpMethod.PUT, "/api/s/trigger/5", reqData, 410, expected);
+    }
+
+    @Test
+    public void test_update_non_existed_trigger_by_existed_job_410(TestContext context) {
+        final RequestData reqData = RequestData.builder().body(MockSchedulerEntityHandler.TRIGGER_1.toJson()).build();
+        final JsonObject expected = new JsonObject().put("code", ErrorCode.NOT_FOUND)
+                                                    .put("message",
+                                                         "Not found resource with job_id=1 and trigger_id=3");
+        assertRestByClient(context, HttpMethod.PUT, "/api/s/job/1/trigger/3", reqData, 410, expected);
+    }
+
+    @Test
+    public void test_update_existed_trigger_by_non_existed_job_410(TestContext context) {
+        final RequestData reqData = RequestData.builder().body(MockSchedulerEntityHandler.TRIGGER_1.toJson()).build();
+        final JsonObject expected = new JsonObject().put("code", ErrorCode.NOT_FOUND)
+                                                    .put("message",
+                                                         "Not found resource with job_id=3 and trigger_id=1");
+        assertRestByClient(context, HttpMethod.PUT, "/api/s/job/3/trigger/1", reqData, 410, expected);
+    }
+
+    @Test
+    public void test_patch_non_existed_trigger_410(TestContext context) {
+        final RequestData reqData = RequestData.builder().body(MockSchedulerEntityHandler.TRIGGER_1.toJson()).build();
+        final JsonObject expected = new JsonObject().put("code", ErrorCode.NOT_FOUND)
+                                                    .put("message", "Not found resource with trigger_id=5");
+        assertRestByClient(context, HttpMethod.PATCH, "/api/s/trigger/5", reqData, 410, expected);
+    }
+
+    @Test
+    public void test_patch_trigger_invalid_expr_400(TestContext context) {
         final JsonObject entity = MockSchedulerEntityHandler.TRIGGER_1.toJson().put("expression", "x");
         entity.remove("name");
         entity.remove("group");
@@ -87,7 +104,7 @@ public class EdgeSchedulerModificationTest extends EdgeSchedulerVerticleTest {
     }
 
     @Test
-    public void test_patch_trigger_invalid_expr_by_job(TestContext context) {
+    public void test_patch_trigger_invalid_expr_by_job_400(TestContext context) {
         final JsonObject body = MockSchedulerEntityHandler.TRIGGER_1.toJson().put("expression", "x");
         body.remove("name");
         body.remove("group");

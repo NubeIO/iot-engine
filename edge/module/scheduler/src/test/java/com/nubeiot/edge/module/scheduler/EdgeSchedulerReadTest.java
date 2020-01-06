@@ -48,11 +48,11 @@ public class EdgeSchedulerReadTest extends EdgeSchedulerVerticleTest {
     public void test_get_list_trigger(TestContext context) {
         final JsonObject expected = new JsonObject(
             "{\"triggers\":[{\"id\":1,\"group\":\"group1\",\"name\":\"trigger1\",\"type\":\"CRON\"," +
-            "\"detail\":{\"expression\":\"0 0 0 ? * SUN *\",\"timezone\":\"Australia/Sydney\"},\"thread\":\"0 0 0 ? *" +
-            " SUN *::Australia/Sydney\"},{\"id\":2,\"group\":\"group1\",\"name\":\"trigger3\",\"type\":\"PERIODIC\"," +
+            "\"detail\":{\"expression\":\"0 0 0 ? * SUN *\",\"timezone\":\"Australia/Sydney\"}}," +
+            "{\"id\":2,\"group\":\"group1\",\"name\":\"trigger3\",\"type\":\"PERIODIC\"," +
             "\"detail\":{\"intervalInSeconds\":120,\"repeat\":10}},{\"id\":4,\"group\":\"group2\"," +
             "\"name\":\"trigger4\",\"type\":\"CRON\",\"detail\":{\"expression\":\"0 0 0 ? * TUE *\"," +
-            "\"timezone\":\"Australia/Sydney\"},\"thread\":\"0 0 0 ? * TUE *::Australia/Sydney\"}]}");
+            "\"timezone\":\"Australia/Sydney\"}}]}");
         assertRestByClient(context, HttpMethod.GET, "/api/s/trigger", 200, expected);
     }
 
@@ -60,8 +60,7 @@ public class EdgeSchedulerReadTest extends EdgeSchedulerVerticleTest {
     public void test_get_trigger_by_id(TestContext context) {
         final JsonObject expected = new JsonObject(
             "{\"id\":1,\"group\":\"group1\",\"name\":\"trigger1\",\"type\":\"CRON\"," +
-            "\"detail\":{\"expression\":\"0 0 0 ? * SUN *\",\"timezone\":\"Australia/Sydney\"}," +
-            "\"thread\":\"0 0 0 ? * SUN *::Australia/Sydney\"}");
+            "\"detail\":{\"expression\":\"0 0 0 ? * SUN *\",\"timezone\":\"Australia/Sydney\"}}");
         assertRestByClient(context, HttpMethod.GET, "/api/s/trigger/1", 200, expected);
     }
 
@@ -119,7 +118,7 @@ public class EdgeSchedulerReadTest extends EdgeSchedulerVerticleTest {
         JsonObject expected = new JsonObject(
             "{\"triggers\":[{\"id\":1,\"enabled\":true,\"trigger\":{\"id\":1,\"group\":\"group1\"," +
             "\"name\":\"trigger1\",\"type\":\"CRON\",\"detail\":{\"expression\":\"0 0 0 ? * SUN *\"," +
-            "\"timezone\":\"Australia/Sydney\"},\"thread\":\"0 0 0 ? * SUN *::Australia/Sydney\"}}," +
+            "\"timezone\":\"Australia/Sydney\"}}}," +
             "{\"id\":2,\"enabled\":false,\"trigger\":{\"id\":2,\"group\":\"group1\",\"name\":\"trigger3\"," +
             "\"type\":\"PERIODIC\",\"detail\":{\"intervalInSeconds\":120,\"repeat\":10}}}]}");
         assertRestByClient(context, HttpMethod.GET, "/api/s/job/1/trigger", 200, expected);
@@ -130,7 +129,7 @@ public class EdgeSchedulerReadTest extends EdgeSchedulerVerticleTest {
         JsonObject expected = new JsonObject(
             "{\"triggers\":[{\"id\":1,\"enabled\":true,\"trigger\":{\"id\":1,\"group\":\"group1\"," +
             "\"name\":\"trigger1\",\"type\":\"CRON\",\"detail\":{\"expression\":\"0 0 0 ? * SUN *\"," +
-            "\"timezone\":\"Australia/Sydney\"},\"thread\":\"0 0 0 ? * SUN *::Australia/Sydney\"}}]}");
+            "\"timezone\":\"Australia/Sydney\"}}}]}");
         assertRestByClient(context, HttpMethod.GET, "/api/s/job/1/trigger?enabled=true", 200, expected);
     }
 

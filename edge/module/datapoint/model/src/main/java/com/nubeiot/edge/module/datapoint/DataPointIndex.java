@@ -33,6 +33,7 @@ import com.nubeiot.edge.module.datapoint.model.pojos.EdgeDeviceComposite;
 import com.nubeiot.edge.module.datapoint.model.pojos.HasProtocol;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointThingComposite;
+import com.nubeiot.iotdata.dto.HistorySettingType;
 import com.nubeiot.iotdata.dto.PointPriorityValue;
 import com.nubeiot.iotdata.dto.PointPriorityValue.PointValue;
 import com.nubeiot.iotdata.dto.Protocol;
@@ -104,6 +105,7 @@ public interface DataPointIndex extends MetadataIndex {
     String CUSTOMER_CODE = "CUSTOMER_CODE";
     String SITE_CODE = "SITE_CODE";
     String EDGE_ID = "EDGE_ID";
+    String DEFAULT_NETWORK_ID = "DEFAULT_NETWORK_ID";
 
     static Map<EntityMetadata, Integer> dependencies() {
         Map<EntityMetadata, Integer> map = new HashMap<>();
@@ -303,6 +305,37 @@ public interface DataPointIndex extends MetadataIndex {
             return "history_setting";
         }
 
+        @Override
+        public @NonNull HistorySetting onCreating(@NonNull RequestData reqData) throws IllegalArgumentException {
+            return validate(reqData.body());
+        }
+
+        @Override
+        public @NonNull HistorySetting onPatching(@NonNull HistorySetting dbData, @NonNull RequestData reqData)
+            throws IllegalArgumentException {
+            return validate(JsonPojo.merge(dbData, parseFromRequest(reqData.body())));
+        }
+
+        @NonNull
+        private HistorySetting validate(JsonObject request) {
+            final HistorySetting setting = parseFromRequest(request);
+            Objects.requireNonNull(setting.getType(), "History setting type is mandatory. One of: " +
+                                                      Arrays.asList(HistorySettingType.COV.type(),
+                                                                    HistorySettingType.PERIOD.type()));
+            if (HistorySettingType.COV.equals(setting.getType())) {
+                Objects.requireNonNull(setting.getTolerance(), "History setting tolerance is mandatory");
+                if (setting.getTolerance() < 0) {
+                    throw new IllegalArgumentException("History setting tolerance must be positive number");
+                }
+                setting.setSchedule(null);
+            }
+            if (HistorySettingType.PERIOD.equals(setting.getType())) {
+                Objects.requireNonNull(setting.getSchedule(), "History setting schedule is mandatory");
+                setting.setTolerance(null);
+            }
+            return setting;
+        }
+
     }
 
 
@@ -357,17 +390,9 @@ public interface DataPointIndex extends MetadataIndex {
     final class NetworkMetadata implements UUIDKeyEntity<Network, NetworkRecord, NetworkDao>, HasProtocol<Network> {
 
         public static final NetworkMetadata INSTANCE = new NetworkMetadata();
-
-        private static Set<String> NULL_ALIASES = Collections.unmodifiableSet(
-            new HashSet<>(Arrays.asList("default", "gpio")));
-
-        public static void optimizeAlias(JsonObject req) {
-            Optional.ofNullable(req).ifPresent(r -> {
-                if (NULL_ALIASES.contains(r.getString(INSTANCE.requestKeyName(), "").toLowerCase())) {
-                    r.put(INSTANCE.requestKeyName(), (String) null);
-                }
-            });
-        }
+        public static final String DEFAULT_CODE = "DEFAULT";
+        public static Set<String> DEFAULT_ALIASES = Collections.unmodifiableSet(
+            new HashSet<>(Arrays.asList(DEFAULT_CODE, "LOCAL")));
 
         @Override
         public @NonNull com.nubeiot.iotdata.edge.model.tables.Network table() {
@@ -423,8 +448,8 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public Point onCreating(RequestData reqData) throws IllegalArgumentException {
             final Point point = UUIDKeyEntity.super.onCreating(reqData);
-            Objects.requireNonNull(point.getEdge(), "Missing device");
-            Strings.requireNotBlank(point.getMeasureUnit(), "Missing point measure unit");
+            Objects.requireNonNull(point.getEdge(), "Point must be assigned to Edge");
+            Strings.requireNotBlank(point.getMeasureUnit(), "Point measure unit is mandatory");
             return point.setId(Optional.ofNullable(point.getId()).orElseGet(UUID::randomUUID));
         }
 
@@ -448,10 +473,15 @@ public interface DataPointIndex extends MetadataIndex {
         public final @NonNull Class<PointComposite> modelClass() { return PointComposite.class; }
 
         @Override
-        public final @NonNull JsonTable<PointRecord> table() { return Tables.POINT; }
+        public final @NonNull com.nubeiot.iotdata.edge.model.tables.Point table() { return Tables.POINT; }
 
         @Override
         public final @NonNull Class<PointDao> daoClass() { return PointDao.class; }
+
+        @Override
+        public @NonNull String requestKeyName() {
+            return PointMetadata.INSTANCE.requestKeyName();
+        }
 
         @Override
         public @NonNull Class<Point> rawClass() {
@@ -496,16 +526,6 @@ public interface DataPointIndex extends MetadataIndex {
         public final @NonNull Class<PointValueDataDao> daoClass() { return PointValueDataDao.class; }
 
         @Override
-        public @NonNull PointValueData parseFromRequest(@NonNull JsonObject request) throws IllegalArgumentException {
-            PointValueData pojo = UUIDKeyEntity.super.parseFromRequest(request);
-            pojo.setPriority(Optional.ofNullable(pojo.getPriority()).orElse(PointPriorityValue.DEFAULT_PRIORITY));
-            pojo.setPriorityValues(Optional.ofNullable(pojo.getPriorityValues())
-                                           .orElse(new PointPriorityValue())
-                                           .add(pojo.getPriority(), pojo.getValue()));
-            return pojo;
-        }
-
-        @Override
         public @NonNull String requestKeyName() {
             return PointMetadata.INSTANCE.requestKeyName();
         }
@@ -521,16 +541,36 @@ public interface DataPointIndex extends MetadataIndex {
         }
 
         @Override
+        public @NonNull PointValueData parseFromRequest(@NonNull JsonObject request) throws IllegalArgumentException {
+            final PointValueData pv = UUIDKeyEntity.super.parseFromRequest(request);
+            return pv.setPriority(Optional.ofNullable(pv.getPriority()).orElse(PointPriorityValue.DEFAULT_PRIORITY));
+        }
+
+        @Override
+        public @NonNull PointValueData onCreating(@NonNull RequestData reqData) throws IllegalArgumentException {
+            final PointValueData pojo = parseFromRequest(reqData.body());
+            return pojo.setPriorityValues(Optional.ofNullable(pojo.getPriorityValues())
+                                                  .orElse(new PointPriorityValue())
+                                                  .add(pojo.getPriority(), pojo.getValue()));
+        }
+
+        @Override
         public @NonNull PointValueData onPatching(@NonNull PointValueData dbData, @NonNull RequestData reqData)
             throws IllegalArgumentException {
-            PointValueData reqPointValueData = parseFromRequest(reqData.body());
-            PointValueData request = UUIDKeyEntity.super.parseFromRequest(JsonPojo.merge(dbData, reqPointValueData));
-            // Set nullable value when we want
-            request.setValue(reqPointValueData.getValue());
-            final PointValueData pvData = parseFromRequest(request.toJson());
-            final PointValue highestValue = pvData.getPriorityValues().findHighestValue();
-            pvData.setPriority(highestValue.getPriority()).setValue(highestValue.getValue());
-            return pvData;
+            final PointValueData pvData = parseFromRequest(reqData.body());
+            final JsonObject priorities = Optional.ofNullable(pvData.getPriorityValues())
+                                                  .map(PointPriorityValue::toJson)
+                                                  .orElse(new JsonObject())
+                                                  .put(pvData.getPriority().toString(), pvData.getValue());
+            final PointPriorityValue merged = JsonData.merge(dbData.getPriorityValues().toJson(), priorities,
+                                                             PointPriorityValue.class);
+            final PointValue highestValue = merged.findHighestValue();
+            return new PointValueData().setPoint(dbData.getPoint())
+                                       .setPriority(highestValue.getPriority())
+                                       .setValue(highestValue.getValue())
+                                       .setPriorityValues(merged)
+                                       .setTimeAudit(dbData.getTimeAudit())
+                                       .setSyncAudit(dbData.getSyncAudit());
         }
 
     }

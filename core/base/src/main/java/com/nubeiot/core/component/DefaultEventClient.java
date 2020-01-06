@@ -1,7 +1,6 @@
 package com.nubeiot.core.component;
 
 import java.util.Objects;
-import java.util.Optional;
 
 import io.reactivex.Single;
 import io.vertx.core.AsyncResult;
@@ -41,11 +40,7 @@ final class DefaultEventClient implements EventbusClient {
     private final DeliveryOptions deliveryOptions;
 
     DefaultEventClient(@NonNull Vertx vertx) {
-        this(vertx, (DeliveryOptions) null);
-    }
-
-    DefaultEventClient(@NonNull Vertx vertx, JsonObject config) {
-        this(vertx, Optional.ofNullable(config).map(DeliveryOptions::new).orElse(null));
+        this(vertx, null);
     }
 
     DefaultEventClient(@NonNull Vertx vertx, DeliveryOptions deliveryOptions) {

@@ -21,9 +21,9 @@ public class DeviceVerticleTest extends BaseDataPointVerticleTest {
     public void test_get_devices_200(TestContext context) {
         final JsonObject expected = new JsonObject(
             "{\"devices\":[{\"id\":1,\"device\":{\"id\":\"" + PrimaryKey.DEVICE_DROPLET + "\"," +
-            "\"code\":\"DROPLET_01\",\"type\":\"DROPLET\",\"protocol\":\"UNKNOWN\",\"state\":\"NONE\"," +
+            "\"code\":\"DROPLET_01\",\"type\":\"DROPLET\",\"protocol\":\"WIRE\",\"state\":\"NONE\"," +
             "\"manufacturer\":\"NubeIO\"}}]}");
-        assertRestByClient(context, HttpMethod.GET, "/api/s/network/gpio/device", 200, expected);
+        assertRestByClient(context, HttpMethod.GET, "/api/s/network/default/device", 200, expected);
     }
 
 }

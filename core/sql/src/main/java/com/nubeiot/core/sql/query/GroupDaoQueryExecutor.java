@@ -1,5 +1,6 @@
 package com.nubeiot.core.sql.query;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.jooq.UpdatableRecord;
@@ -10,25 +11,26 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.CompositePojo;
-import com.nubeiot.core.sql.service.GroupReferenceMarker;
+import com.nubeiot.core.sql.service.marker.GroupReferencingEntityMarker;
 
 import lombok.NonNull;
 
 final class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>,
                                      CP extends CompositePojo<P, CP>>
-    extends BaseDaoQueryExecutor<CP> implements GroupQueryExecutor<P, CP> {
+    extends BaseDaoQueryExecutor<CP> implements GroupQueryExecutor<CP> {
 
     private final CompositeMetadata<K, P, R, D, CP> groupMetadata;
-    private final GroupReferenceMarker marker;
+    private final GroupReferencingEntityMarker marker;
 
     GroupDaoQueryExecutor(@NonNull EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata,
                           @NonNull CompositeMetadata<K, P, R, D, CP> groupMetadata,
-                          @NonNull GroupReferenceMarker marker) {
+                          @NonNull GroupReferencingEntityMarker marker) {
         super(handler, metadata);
         this.groupMetadata = groupMetadata;
         this.marker = marker;
@@ -40,13 +42,19 @@ final class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRec
     }
 
     @Override
-    public Observable<CP> findMany(RequestData requestData) {
-        return super.findMany(requestData)
-                    .map(pojo -> CompositePojo.create(pojo, groupMetadata.rawClass(), groupMetadata.modelClass()));
+    @SuppressWarnings("unchecked")
+    public Observable<CP> findMany(RequestData reqData) {
+        final Pagination paging = Optional.ofNullable(reqData.pagination()).orElse(Pagination.builder().build());
+        final Single<List> many = (Single<List>) entityHandler().dao(getMetadata().daoClass())
+                                                                .queryExecutor()
+                                                                .findMany(queryBuilder().view(reqData.filter(),
+                                                                                              reqData.sort(), paging));
+        return many.flattenAsObservable(rs -> rs)
+                   .map(pojo -> CompositePojo.create(pojo, groupMetadata.rawClass(), groupMetadata.modelClass()));
     }
 
     @Override
-    public @NonNull GroupReferenceMarker marker() {
+    public @NonNull GroupReferencingEntityMarker marker() {
         return marker;
     }
 

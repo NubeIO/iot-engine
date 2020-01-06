@@ -11,9 +11,10 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.service.AbstractEntityService;
-import com.nubeiot.core.sql.service.HasReferenceMarker;
-import com.nubeiot.core.sql.service.workflow.CreationStep;
-import com.nubeiot.core.sql.service.workflow.ModificationStep;
+import com.nubeiot.core.sql.service.marker.EntityReferences;
+import com.nubeiot.core.sql.service.marker.ReferencingEntityMarker;
+import com.nubeiot.core.sql.workflow.step.CreationStep;
+import com.nubeiot.core.sql.workflow.step.ModificationStep;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
@@ -40,13 +41,13 @@ public final class EdgeService extends AbstractEntityService<Edge, EdgeMetadata>
 
     @Override
     protected CreationStep initCreationStep() {
-        return super.initCreationStep().onSuccess((action, keyPojo) -> cacheConfig((Edge) keyPojo.pojo()));
+        return super.initCreationStep().onSuccess((action, keyPojo) -> cacheConfig((Edge) keyPojo.dbEntity()));
     }
 
     @Override
     protected ModificationStep initModificationStep(EventAction action) {
         return super.initModificationStep(action)
-                    .onSuccess((reqData, act, keyPojo) -> cacheConfig((Edge) keyPojo.pojo()));
+                    .onSuccess((reqData, act, keyPojo) -> cacheConfig((Edge) keyPojo.dbEntity()));
     }
 
     private void cacheConfig(Edge edge) {
@@ -56,7 +57,7 @@ public final class EdgeService extends AbstractEntityService<Edge, EdgeMetadata>
         entityHandler().addSharedData(DataPointIndex.DATA_SYNC_CFG, syncConfig);
     }
 
-    public interface EdgeExtension extends HasReferenceMarker {
+    public interface EdgeExtension extends ReferencingEntityMarker {
 
         static void optimizeReqData(@NonNull EntityHandler handler, @NonNull RequestData requestData,
                                     @NonNull String edgeField) {
@@ -67,7 +68,7 @@ public final class EdgeService extends AbstractEntityService<Edge, EdgeMetadata>
         }
 
         @Override
-        default EntityReferences entityReferences() {
+        default EntityReferences referencedEntities() {
             return new EntityReferences().add(EdgeMetadata.INSTANCE, "edge");
         }
 

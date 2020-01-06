@@ -2,7 +2,6 @@ package com.nubeiot.edge.module.datapoint.service;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.Set;
 
 import com.nubeiot.core.event.EventAction;
@@ -11,8 +10,8 @@ import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractEntityService;
+import com.nubeiot.core.sql.workflow.task.EntityTask;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.SyncDispatcherMetadata;
-import com.nubeiot.edge.module.datapoint.task.remote.ProtocolDispatcherTask;
 import com.nubeiot.iotdata.edge.model.tables.pojos.SyncDispatcher;
 
 import lombok.NonNull;
@@ -30,8 +29,8 @@ public final class SyncDispatcherService extends AbstractEntityService<SyncDispa
     }
 
     @Override
-    public Optional<ProtocolDispatcherTask> prePersistTask() {
-        return Optional.empty();
+    public EntityTask prePersistTask() {
+        return null;
     }
 
     public Set<EventMethodDefinition> definitions() {

@@ -16,11 +16,9 @@ public final class HistorySettingType extends AbstractEnumType implements PlainT
         super(type, aliases);
     }
 
-    public static HistorySettingType def() { return PERIOD; }
-
     @JsonCreator
     public static HistorySettingType factory(String type) {
-        return EnumType.factory(type, HistorySettingType.class, def());
+        return EnumType.factory(type, HistorySettingType.class);
     }
 
 }

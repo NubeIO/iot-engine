@@ -18,7 +18,7 @@ import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.http.EntityHttpService;
-import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
+import com.nubeiot.core.sql.service.AbstractReferencingEntityService;
 import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
@@ -30,7 +30,7 @@ import com.nubeiot.iotdata.unit.DataType;
 
 import lombok.NonNull;
 
-public final class RealtimeDataService extends AbstractOneToManyEntityService<PointRealtimeData, RealtimeDataMetadata>
+public final class RealtimeDataService extends AbstractReferencingEntityService<PointRealtimeData, RealtimeDataMetadata>
     implements DataPointService<PointRealtimeData, RealtimeDataMetadata>, PointExtension {
 
     public RealtimeDataService(@NonNull EntityHandler entityHandler) {
@@ -54,24 +54,18 @@ public final class RealtimeDataService extends AbstractOneToManyEntityService<Po
     }
 
     protected OperationValidator initCreationValidator() {
-        return OperationValidator.create((req, prev) -> queryExecutor().checkReferenceExistence(req)
-                                                                       .map(b -> validation().onCreating(req))
-                                                                       .map(PointRealtimeData.class::cast)
-                                                                       .flatMap(this::isAbleToCreate)
-                                                                       .flatMap(this::addDataType));
+        return super.initCreationValidator()
+                    .andThen(OperationValidator.create((req, pojo) -> isAbleToCreate((PointRealtimeData) pojo)))
+                    .andThen(OperationValidator.create((req, pojo) -> addDataType((PointRealtimeData) pojo)));
     }
 
     private Single<PointRealtimeData> isAbleToCreate(@NonNull PointRealtimeData rtData) {
         return entityHandler().dao(RealtimeSettingMetadata.INSTANCE.daoClass())
                               .findOneById(rtData.getPoint())
-                              .filter(Optional::isPresent)
-                              .map(Optional::get)
-                              .map(s -> Optional.ofNullable(s.getEnabled()).orElse(false))
-                              .defaultIfEmpty(false)
-                              .filter(b -> b)
-                              .map(b -> rtData)
+                              .filter(o -> o.flatMap(s -> Optional.ofNullable(s.getEnabled())).orElse(false))
                               .switchIfEmpty(Single.error(new DesiredException(
-                                  "Realtime setting of point " + rtData.getPoint() + " is disabled")));
+                                  "Realtime setting point '" + rtData.getPoint() + "' is disabled")))
+                              .map(b -> rtData);
     }
 
     private Single<PointRealtimeData> addDataType(PointRealtimeData rt) {

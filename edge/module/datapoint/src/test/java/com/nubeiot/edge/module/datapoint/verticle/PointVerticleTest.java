@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.junit.Test;
 
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 
@@ -16,6 +17,7 @@ import com.nubeiot.edge.module.datapoint.BaseDataPointVerticleTest;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
+import com.nubeiot.iotdata.unit.DataTypeCategory.Temperature;
 
 public class PointVerticleTest extends BaseDataPointVerticleTest {
 
@@ -75,10 +77,25 @@ public class PointVerticleTest extends BaseDataPointVerticleTest {
                                            .put("status", Status.SUCCESS)
                                            .put("resource", new JsonObject(
                                                "{\"id\":\"" + uuid + "\",\"code\":\"New One\",\"edge\":\"" +
-                                               PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.NETWORK + "\"," +
-                                               "\"enabled\":true,\"protocol\":\"BACNET\",\"kind\":\"INPUT\"," +
+                                               PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.BACNET_NETWORK +
+                                               "\",\"enabled\":true,\"protocol\":\"BACNET\",\"kind\":\"INPUT\"," +
                                                "\"type\":\"DIGITAL\",\"precision\":3,\"offset\":0," +
                                                "\"unit\":{\"type\":\"bool\",\"category\":\"ALL\"}}")));
+    }
+
+    @Test
+    public void test_get_point_incl_tags_and_his_setting_200(TestContext context) {
+        final JsonObject point = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_TEMP)).toJson();
+        point.remove("measure_unit");
+        point.put("unit", Temperature.CELSIUS.toJson());
+        point.put("history_setting", new JsonObject(
+            "{\"point\":\"" + PrimaryKey.P_GPIO_TEMP + "\",\"type\":\"COV\",\"tolerance\":1.0,\"enabled\":false}"));
+        point.put("tags", new JsonArray(
+            "[{\"id\":1,\"tag_name\":\"sensor\",\"point\":\"" + PrimaryKey.P_GPIO_TEMP + "\"," +
+            "\"tag_value\":\"temp\"},{\"id\":2,\"tag_name\":\"source\",\"point\":\"" + PrimaryKey.P_GPIO_TEMP +
+            "\",\"tag_value\":\"droplet\"}]"));
+        assertRestByClient(context, HttpMethod.GET,
+                           "/api/s/point/" + PrimaryKey.P_GPIO_TEMP + "?_incl=tag,history_setting", 200, point);
     }
 
 }

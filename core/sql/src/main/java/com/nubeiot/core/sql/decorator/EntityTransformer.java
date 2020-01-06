@@ -35,7 +35,7 @@ public interface EntityTransformer {
     Set<String> AUDIT_FIELDS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("time_audit", "sync_audit")));
 
     /**
-     * Construct {@code CUD Response} that includes full resource
+     * Construct a success {@code CUD response} that includes full resource.
      *
      * @param action Event action
      * @param result Result data
@@ -56,17 +56,6 @@ public interface EntityTransformer {
      */
     static JsonObject keyResponse(@NonNull String keyName, @NonNull Object keyValue) {
         return new JsonObject().put(keyName, JsonData.checkAndConvert(keyValue));
-    }
-
-    /**
-     * Gets data.
-     *
-     * @param responseData the response data
-     * @return the data
-     * @since 1.0.0
-     */
-    static JsonObject getData(@NonNull JsonObject responseData) {
-        return responseData.getJsonObject("resource");
     }
 
     /**
@@ -100,7 +89,7 @@ public interface EntityTransformer {
      * @see #afterUpdate(Object, VertxPojo, RequestData)
      * @see #afterPatch(Object, VertxPojo, RequestData)
      * @see #afterGet(VertxPojo, RequestData)
-     * @see #onEach(VertxPojo, RequestData)
+     * @see #afterEach(VertxPojo, RequestData)
      * @since 1.0.0
      */
     default Set<String> ignoreFields(@NonNull RequestData requestData) {
@@ -108,7 +97,7 @@ public interface EntityTransformer {
     }
 
     /**
-     * Do any transformation on each resource in database entities
+     * Do any transformation after query each resource in database entities
      *
      * @param pojo        database entity
      * @param requestData request data
@@ -117,7 +106,7 @@ public interface EntityTransformer {
      * @since 1.0.0
      */
     @NonNull
-    default Single<JsonObject> onEach(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
+    default Single<JsonObject> afterEach(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {
         return Single.just(JsonPojo.from(pojo).toJson(ignoreFields(requestData)));
     }
 
@@ -129,7 +118,7 @@ public interface EntityTransformer {
      * @since 1.0.0
      */
     @NonNull
-    default Single<JsonObject> onMany(@NonNull JsonArray results) {
+    default Single<JsonObject> afterList(@NonNull JsonArray results) {
         return Single.just(new JsonObject().put(resourceMetadata().pluralKeyName(), results));
     }
 
@@ -212,7 +201,7 @@ public interface EntityTransformer {
     default Single<JsonObject> afterDelete(@NonNull VertxPojo pojo, @NonNull RequestData reqData) {
         return Single.just(doTransform(EventAction.REMOVE, pojo, reqData,
                                        (p, r) -> JsonPojo.from(p).toJson(JsonData.MAPPER, ignoreFields(reqData)),
-                                       (Supplier<JsonObject>) JsonObject::new));
+                                       JsonObject::new));
     }
 
     /**

@@ -29,24 +29,24 @@ public interface DataProtocolRpcClient<T extends DataProtocolRpcClient>
     }
 
     @Override
+    default @NonNull String destination() {
+        return DataPointIndex.lookupApiName(representation());
+    }
+
+    @Override
     @NonNull
     default String requester() {
         return protocol().type();
     }
 
     @Override
-    default EventbusClient eventClient() {
+    default EventbusClient transporter() {
         return getSharedDataValue(SHARED_EVENTBUS);
     }
 
     @Override
     default String serviceLabel() {
         return "Edge data-point service";
-    }
-
-    @Override
-    default @NonNull String destination() {
-        return DataPointIndex.lookupApiName(representation());
     }
 
     /**

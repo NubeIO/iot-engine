@@ -24,11 +24,26 @@ public interface ActionMethodMapping extends Supplier<Map<EventAction, HttpMetho
     ActionMethodMapping CRUD_MAP = ActionMethodMapping.create(defaultCRUDMap());
 
     /**
+     * Default mapping for {@code CREATE_OR_UPDATE | READ | DELETE} operations
+     *
+     * @see #defaultCRDMap()
+     */
+    ActionMethodMapping CRD_MAP = ActionMethodMapping.create(defaultCRDMap());
+
+    /**
      * Default mapping for common {@code CREATE | UPDATE | DELETE} operations
      *
      * @see #defaultDMLMap()
      */
     ActionMethodMapping DML_MAP = ActionMethodMapping.create(defaultDMLMap());
+
+    /**
+     * Default mapping for common {@code BATCH_CREATE | BATCH_UPDATE | BATCH_DELETE} operations
+     *
+     * @see #defaultBatchDMLMap()
+     */
+    ActionMethodMapping BATCH_DML_MAP = ActionMethodMapping.create(defaultBatchDMLMap());
+
     /**
      * Default mapping for reading {@code GET | GET_LIST} operations
      *
@@ -61,6 +76,15 @@ public interface ActionMethodMapping extends Supplier<Map<EventAction, HttpMetho
         return map;
     }
 
+    static Map<EventAction, HttpMethod> defaultCRDMap() {
+        Map<EventAction, HttpMethod> map = new HashMap<>();
+        map.put(EventAction.CREATE_OR_UPDATE, HttpMethod.PUT);
+        map.put(EventAction.REMOVE, HttpMethod.DELETE);
+        map.put(EventAction.GET_ONE, HttpMethod.GET);
+        map.put(EventAction.GET_LIST, HttpMethod.GET);
+        return map;
+    }
+
     static Map<EventAction, HttpMethod> defaultDMLMap() {
         Map<EventAction, HttpMethod> map = new HashMap<>();
         map.put(EventAction.CREATE, HttpMethod.POST);
@@ -74,6 +98,15 @@ public interface ActionMethodMapping extends Supplier<Map<EventAction, HttpMetho
         Map<EventAction, HttpMethod> map = new HashMap<>();
         map.put(EventAction.GET_LIST, HttpMethod.GET);
         map.put(EventAction.GET_ONE, HttpMethod.GET);
+        return map;
+    }
+
+    static Map<EventAction, HttpMethod> defaultBatchDMLMap() {
+        Map<EventAction, HttpMethod> map = new HashMap<>();
+        map.put(EventAction.BATCH_CREATE, HttpMethod.POST);
+        map.put(EventAction.BATCH_UPDATE, HttpMethod.PUT);
+        map.put(EventAction.BATCH_PATCH, HttpMethod.PATCH);
+        map.put(EventAction.BATCH_DELETE, HttpMethod.DELETE);
         return map;
     }
 

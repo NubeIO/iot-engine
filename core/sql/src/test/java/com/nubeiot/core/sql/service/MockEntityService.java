@@ -16,6 +16,7 @@ import com.nubeiot.core.sql.mock.oneschema.tables.records.AuthorRecord;
 import com.nubeiot.core.sql.mock.oneschema.tables.records.BookRecord;
 import com.nubeiot.core.sql.service.MockEntityService.Metadata.AuthorMetadata;
 import com.nubeiot.core.sql.service.MockEntityService.Metadata.BookMetadata;
+import com.nubeiot.core.sql.service.marker.EntityReferences;
 import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.core.sql.validation.EntityValidation;
 import com.nubeiot.core.utils.Strings;
@@ -113,7 +114,7 @@ public interface MockEntityService {
     }
 
 
-    final class BookService extends AbstractOneToManyEntityService<Book, BookMetadata> {
+    final class BookService extends AbstractReferencingEntityService<Book, BookMetadata> {
 
         BookService(@NonNull AbstractEntityHandler entityHandler) {
             super(entityHandler);
@@ -130,7 +131,7 @@ public interface MockEntityService {
         }
 
         @Override
-        public EntityReferences entityReferences() {
+        public EntityReferences referencedEntities() {
             return new EntityReferences().add(AuthorMetadata.INSTANCE);
         }
 

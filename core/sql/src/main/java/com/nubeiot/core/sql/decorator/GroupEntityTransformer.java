@@ -1,27 +1,29 @@
 package com.nubeiot.core.sql.decorator;
 
-import java.util.Objects;
+import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.sql.service.GroupReferenceMarker;
+import com.nubeiot.core.sql.service.marker.GroupReferencingEntityMarker;
 
 import lombok.NonNull;
 
 /**
  * The interface Group entity transformer.
  *
- * @see ReferenceEntityTransformer
+ * @see ReferencingEntityTransformer
  * @since 1.0.0
  */
-public interface GroupEntityTransformer extends ReferenceEntityTransformer {
+public interface GroupEntityTransformer extends ReferencingEntityTransformer {
 
     /**
-     * @see GroupReferenceMarker
+     * @return group reference marker
+     * @see GroupReferencingEntityMarker
+     * @since 1.0.0
      */
-    GroupReferenceMarker marker();
+    GroupReferencingEntityMarker marker();
 
     /**
      * Ignore fields that includes {@code audit field}, {@code reference field} and {@code group field}
@@ -31,13 +33,8 @@ public interface GroupEntityTransformer extends ReferenceEntityTransformer {
      */
     @Override
     default Set<String> ignoreFields(@NonNull RequestData requestData) {
-        final Stream<String> groupStream = marker().ignoreFields()
-                                                   .stream()
-                                                   .filter(Objects::nonNull)
-                                                   .filter(excludeResourceField());
-        return Stream.of(ReferenceEntityTransformer.super.ignoreFields(requestData).stream(), groupStream)
-                     .flatMap(s -> s)
-                     .map(String::toLowerCase)
+        return Stream.of(ReferencingEntityTransformer.super.ignoreFields(requestData), marker().ignoreFields())
+                     .flatMap(Collection::stream)
                      .collect(Collectors.toSet());
     }
 
@@ -49,7 +46,7 @@ public interface GroupEntityTransformer extends ReferenceEntityTransformer {
      * @since 1.0.0
      */
     default Set<String> showGroupFields(@NonNull RequestData requestData) {
-        return ReferenceEntityTransformer.super.ignoreFields(requestData);
+        return ReferencingEntityTransformer.super.ignoreFields(requestData);
     }
 
 }

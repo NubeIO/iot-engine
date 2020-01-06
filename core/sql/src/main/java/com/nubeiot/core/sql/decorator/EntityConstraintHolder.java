@@ -30,7 +30,7 @@ import lombok.NonNull;
 public interface EntityConstraintHolder {
 
     /**
-     * Declares {@code Key} class that modelling {@code foreign key} relationships and {@code constraints of tables} in
+     * Declares {@code Key} class that modeling {@code foreign key} relationships and {@code constraints  of  tables} in
      * {@code schema}
      *
      * @return {@code Key} class

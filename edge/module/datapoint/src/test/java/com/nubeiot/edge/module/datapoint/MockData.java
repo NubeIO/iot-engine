@@ -57,6 +57,8 @@ import com.nubeiot.iotdata.unit.DataTypeCategory.AngularVelocity;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Base;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Temperature;
 
+import lombok.NonNull;
+
 public final class MockData {
 
     public static final Edge EDGE = new Edge().setId(PrimaryKey.EDGE)
@@ -64,7 +66,7 @@ public final class MockData {
                                               .setCustomerCode("NUBEIO")
                                               .setSiteCode("SYDNEY-00001");
     public static final JsonObject MEASURE_UNITS = measures();
-    public static final Network NETWORK = network();
+    public static final List<Network> NETWORKS = networks();
     public static final List<Device> DEVICES = devices();
     public static final List<Thing> THINGS = things();
     public static final List<EdgeDevice> EDGE_EQUIPS = edgeEquips();
@@ -107,12 +109,11 @@ public final class MockData {
     }
 
     private static List<RealtimeSetting> rtSettings() {
-        return Collections.singletonList(new RealtimeSetting().setPoint(PrimaryKey.P_GPIO_TEMP).setEnabled(true));
+        return Collections.singletonList(new RealtimeSetting().setPoint(PrimaryKey.P_GPIO_TEMP).setEnabled(false));
     }
 
     private static List<PointValueData> pointData() {
-        return Arrays.asList(new PointValueData().setPoint(PrimaryKey.P_GPIO_HUMIDITY)
-                                                 .setPriority(8)
+        return Arrays.asList(new PointValueData().setPoint(PrimaryKey.P_GPIO_HUMIDITY).setPriority(5)
                                                  .setValue(10d)
                                                  .setPriorityValues(
                                                      new PointPriorityValue().add(5, 10).add(6, 9).add(8, 10)),
@@ -122,10 +123,10 @@ public final class MockData {
                                                  .setPriorityValues(
                                                      new PointPriorityValue().add(3, 24d).add(9, 27.5).add(17, 25.5)),
                              new PointValueData().setPoint(PrimaryKey.P_BACNET_FAN)
-                                                 .setPriority(7)
-                                                 .setValue(260d)
+                                                 .setPriority(2)
+                                                 .setValue(240d)
                                                  .setPriorityValues(
-                                                     new PointPriorityValue().add(5, 240d).add(7, 260d).add(17, 250)));
+                                                     new PointPriorityValue().add(2, 240d).add(7, 260d).add(16, 250)));
     }
 
     private static List<PointHistoryData> historyData() {
@@ -156,11 +157,14 @@ public final class MockData {
     }
 
     private static List<HistorySetting> historySettings() {
-        return Arrays.asList(
-            new HistorySetting().setPoint(PrimaryKey.P_GPIO_TEMP).setType(HistorySettingType.COV).setTolerance(1d),
-            new HistorySetting().setPoint(PrimaryKey.P_BACNET_FAN)
-                                .setType(HistorySettingType.PERIOD)
-                                .setSchedule("xyz"));
+        return Arrays.asList(new HistorySetting().setPoint(PrimaryKey.P_GPIO_TEMP)
+                                                 .setEnabled(false)
+                                                 .setType(HistorySettingType.COV)
+                                                 .setTolerance(1d),
+                             new HistorySetting().setPoint(PrimaryKey.P_BACNET_FAN)
+                                                 .setEnabled(false)
+                                                 .setType(HistorySettingType.PERIOD)
+                                                 .setSchedule("xyz"));
     }
 
     private static List<PointTag> tags() {
@@ -174,19 +178,30 @@ public final class MockData {
                                            .setTagValue("hvac"));
     }
 
-    private static Network network() {
+    private static List<Network> networks() {
         final JsonObject metadata = new JsonObject(
             "{\"subnet_name\":\"subnet-A\",\"networkInterface\":\"docker0\",\"subnet\":\"172.17.0.1/16\"," +
             "\"broadcast\":\"172.17.255.255\",\"mac\":\"02:42:50:e1:cf:2b\",\"port\":47808}");
-        return new Network().setId(PrimaryKey.NETWORK).setCode("network-1").setEdge(EDGE.getId()).setMetadata(metadata);
+        return Arrays.asList(new Network().setId(PrimaryKey.BACNET_NETWORK)
+                                          .setCode("DEMO-1")
+                                          .setState(State.ENABLED)
+                                          .setProtocol(Protocol.BACNET)
+                                          .setEdge(EDGE.getId())
+                                          .setMetadata(metadata), new Network().setId(PrimaryKey.DEFAULT_NETWORK)
+                                                                               .setCode(NetworkMetadata.DEFAULT_CODE)
+                                                                               .setState(State.ENABLED)
+                                                                               .setProtocol(Protocol.WIRE)
+                                                                               .setEdge(EDGE.getId()));
     }
 
     private static List<Device> devices() {
         return Arrays.asList(new Device().setId(PrimaryKey.DEVICE_DROPLET)
                                          .setCode("DROPLET_01")
+                                         .setProtocol(Protocol.WIRE)
                                          .setManufacturer("NubeIO")
                                          .setType(DeviceType.DROPLET), new Device().setId(PrimaryKey.DEVICE_HVAC)
                                                                                    .setCode("HVAC_XYZ")
+                                                                                   .setProtocol(Protocol.BACNET)
                                                                                    .setManufacturer("Lennox")
                                                                                    .setType(DeviceType.HVAC));
     }
@@ -194,8 +209,9 @@ public final class MockData {
     private static List<Point> points() {
         final Point p1 = new Point().setId(PrimaryKey.P_GPIO_HUMIDITY)
                                     .setCode("2CB2B763_HUMIDITY")
-                                    .setProtocol(Protocol.GPIO)
+                                    .setProtocol(Protocol.WIRE)
                                     .setEdge(EDGE.getId())
+                                    .setNetwork(PrimaryKey.DEFAULT_NETWORK)
                                     .setKind(PointKind.INPUT)
                                     .setType(PointType.DIGITAL)
                                     .setMeasureUnit(Base.PERCENTAGE.type())
@@ -206,8 +222,9 @@ public final class MockData {
                                     .setPrecision((short) 3);
         final Point p2 = new Point().setId(PrimaryKey.P_GPIO_TEMP)
                                     .setCode("2CB2B763_TEMP")
-                                    .setProtocol(Protocol.GPIO)
+                                    .setProtocol(Protocol.WIRE)
                                     .setEdge(EDGE.getId())
+                                    .setNetwork(PrimaryKey.DEFAULT_NETWORK)
                                     .setKind(PointKind.INPUT)
                                     .setType(PointType.DIGITAL)
                                     .setMeasureUnit(Temperature.CELSIUS.type())
@@ -218,7 +235,7 @@ public final class MockData {
                                     .setCode("HVAC_01_TEMP")
                                     .setProtocol(Protocol.BACNET)
                                     .setEdge(EDGE.getId())
-                                    .setNetwork(NETWORK.getId())
+                                    .setNetwork(PrimaryKey.BACNET_NETWORK)
                                     .setKind(PointKind.INPUT)
                                     .setType(PointType.DIGITAL)
                                     .setMeasureUnit(Temperature.CELSIUS.type())
@@ -229,7 +246,7 @@ public final class MockData {
                                     .setCode("HVAC_01_FAN")
                                     .setProtocol(Protocol.BACNET)
                                     .setEdge(EDGE.getId())
-                                    .setNetwork(NETWORK.getId())
+                                    .setNetwork(PrimaryKey.BACNET_NETWORK)
                                     .setKind(PointKind.INPUT)
                                     .setType(PointType.DIGITAL)
                                     .setMeasureUnit(AngularVelocity.RPM.type())
@@ -240,7 +257,7 @@ public final class MockData {
                                     .setCode("HVAC_01_FAN_CONTROL")
                                     .setProtocol(Protocol.BACNET)
                                     .setEdge(EDGE.getId())
-                                    .setNetwork(NETWORK.getId())
+                                    .setNetwork(PrimaryKey.BACNET_NETWORK)
                                     .setKind(PointKind.OUTPUT)
                                     .setType(PointType.DIGITAL)
                                     .setMeasureUnit(Base.BOOLEAN.type())
@@ -267,10 +284,12 @@ public final class MockData {
     }
 
     private static List<EdgeDevice> edgeEquips() {
-        return Arrays.asList(new EdgeDevice().setEdgeId(EDGE.getId()).setDeviceId(PrimaryKey.DEVICE_DROPLET),
+        return Arrays.asList(new EdgeDevice().setEdgeId(EDGE.getId())
+                                             .setDeviceId(PrimaryKey.DEVICE_DROPLET)
+                                             .setNetworkId(PrimaryKey.DEFAULT_NETWORK),
                              new EdgeDevice().setEdgeId(EDGE.getId())
                                              .setDeviceId(PrimaryKey.DEVICE_HVAC)
-                                             .setNetworkId(NETWORK.getId()));
+                                             .setNetworkId(PrimaryKey.BACNET_NETWORK));
     }
 
     private static List<Thing> things() {
@@ -317,28 +336,28 @@ public final class MockData {
         final PointThing t1 = new PointThing().setPointId(PrimaryKey.P_GPIO_HUMIDITY)
                                               .setThingId(PrimaryKey.THING_HUMIDITY_DROPLET)
                                               .setDeviceId(PrimaryKey.DEVICE_DROPLET)
-                                              .setNetworkId(null)
+                                              .setNetworkId(PrimaryKey.DEFAULT_NETWORK)
                                               .setEdgeId(PrimaryKey.EDGE)
                                               .setComputedThing(PointThingMetadata.genComputedThing(ThingType.SENSOR,
                                                                                                     PrimaryKey.THING_HUMIDITY_DROPLET));
         final PointThing t2 = new PointThing().setPointId(PrimaryKey.P_GPIO_TEMP)
                                               .setThingId(PrimaryKey.THING_TEMP_DROPLET)
                                               .setDeviceId(PrimaryKey.DEVICE_DROPLET)
-                                              .setNetworkId(null)
+                                              .setNetworkId(PrimaryKey.DEFAULT_NETWORK)
                                               .setEdgeId(PrimaryKey.EDGE)
                                               .setComputedThing(PointThingMetadata.genComputedThing(ThingType.SENSOR,
                                                                                                     PrimaryKey.THING_TEMP_DROPLET));
         final PointThing t3 = new PointThing().setPointId(PrimaryKey.P_BACNET_TEMP)
                                               .setThingId(PrimaryKey.THING_TEMP_HVAC)
                                               .setDeviceId(PrimaryKey.DEVICE_HVAC)
-                                              .setNetworkId(PrimaryKey.NETWORK)
+                                              .setNetworkId(PrimaryKey.BACNET_NETWORK)
                                               .setEdgeId(PrimaryKey.EDGE)
                                               .setComputedThing(PointThingMetadata.genComputedThing(ThingType.SENSOR,
                                                                                                     PrimaryKey.THING_TEMP_HVAC));
         final PointThing t4 = new PointThing().setPointId(PrimaryKey.P_BACNET_FAN)
                                               .setThingId(PrimaryKey.THING_FAN_HVAC)
                                               .setDeviceId(PrimaryKey.DEVICE_HVAC)
-                                              .setNetworkId(PrimaryKey.NETWORK)
+                                              .setNetworkId(PrimaryKey.BACNET_NETWORK)
                                               .setEdgeId(PrimaryKey.EDGE)
                                               .setComputedThing(PointThingMetadata.genComputedThing(ThingType.SENSOR,
                                                                                                     PrimaryKey.THING_FAN_HVAC));
@@ -346,18 +365,22 @@ public final class MockData {
                                               .setThingId(PrimaryKey.THING_SWITCH_HVAC)
                                               .setDeviceId(PrimaryKey.DEVICE_HVAC)
                                               .setDeviceId(PrimaryKey.DEVICE_HVAC)
-                                              .setNetworkId(PrimaryKey.NETWORK)
+                                              .setNetworkId(PrimaryKey.BACNET_NETWORK)
                                               .setEdgeId(PrimaryKey.EDGE)
                                               .setComputedThing(PointThingMetadata.genComputedThing(ThingType.ACTUATOR,
                                                                                                     PrimaryKey.THING_SWITCH_HVAC));
         return Arrays.asList(t1, t2, t3, t4, t5);
     }
 
-    public static Point search(UUID pointKey) {
+    public static Network searchNetwork(@NonNull UUID network) {
+        return NETWORKS.stream().filter(p -> p.getId().equals(network)).findFirst().map(Network::new).orElse(null);
+    }
+
+    public static Point search(@NonNull UUID pointKey) {
         return POINTS.stream().filter(p -> p.getId().equals(pointKey)).findFirst().map(Point::new).orElse(null);
     }
 
-    public static PointValueData searchData(UUID pointKey) {
+    public static PointValueData searchData(@NonNull UUID pointKey) {
         return POINT_DATA.stream()
                          .filter(p -> p.getPoint().equals(pointKey))
                          .findFirst()
@@ -369,7 +392,7 @@ public final class MockData {
         return BuiltinData.def()
                           .toJson()
                           .put(EdgeMetadata.INSTANCE.singularKeyName(), EDGE.toJson())
-                          .put(NetworkMetadata.INSTANCE.singularKeyName(), NETWORK.toJson());
+                          .put(NetworkMetadata.INSTANCE.singularKeyName(), data(NETWORKS));
     }
 
     public static JsonObject data_Device_Equip_Thing() {
@@ -406,7 +429,8 @@ public final class MockData {
     public static final class PrimaryKey {
 
         public static final UUID EDGE = UUID.fromString("d7cd3f57-a188-4462-b959-df7a23994c92");
-        public static final UUID NETWORK = UUID.fromString("01fbb11e-45a6-479b-91a4-003534770c1c");
+        public static final UUID DEFAULT_NETWORK = UUID.fromString("e3eab951-932e-4fcc-a925-08b31e1014a0");
+        public static final UUID BACNET_NETWORK = UUID.fromString("01fbb11e-45a6-479b-91a4-003534770c1c");
 
         public static final UUID P_GPIO_HUMIDITY = UUID.fromString("3bea3c91-850d-4409-b594-8ffb5aa6b8a0");
         public static final UUID P_GPIO_TEMP = UUID.fromString("1efaf662-1333-48d1-a60f-8fc60f259f0e");

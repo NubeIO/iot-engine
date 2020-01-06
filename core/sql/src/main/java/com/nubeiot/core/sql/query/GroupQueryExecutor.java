@@ -1,6 +1,5 @@
 package com.nubeiot.core.sql.query;
 
-import java.util.Objects;
 import java.util.Optional;
 
 import org.jooq.UpdatableRecord;
@@ -16,20 +15,19 @@ import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.CompositePojo;
-import com.nubeiot.core.sql.service.GroupReferenceMarker;
-import com.nubeiot.core.sql.service.HasReferenceMarker.EntityReferences;
+import com.nubeiot.core.sql.service.marker.EntityReferences;
+import com.nubeiot.core.sql.service.marker.GroupReferencingEntityMarker;
 
 import lombok.NonNull;
 
 /**
  * Represents for a {@code sql executor} do {@code DML} or {@code DQL} on {@code group entity}.
  *
- * @param <P>  Type of {@code VertxPojo}
  * @param <CP> Type of {@code CompositePojo}
- * @see GroupReferenceMarker
+ * @see GroupReferencingEntityMarker
  * @since 1.0.0
  */
-public interface GroupQueryExecutor<P extends VertxPojo, CP extends CompositePojo> extends ReferenceQueryExecutor<CP> {
+public interface GroupQueryExecutor<CP extends CompositePojo> extends ReferencingQueryExecutor<CP> {
 
     /**
      * Create group query executor.
@@ -45,22 +43,25 @@ public interface GroupQueryExecutor<P extends VertxPojo, CP extends CompositePoj
      * @param marker            the group entity marker
      * @return the group query executor
      * @see EntityHandler
+     * @see EntityMetadata
+     * @see CompositeMetadata
+     * @see GroupReferencingEntityMarker
      * @since 1.0.0
      */
     static <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>,
-               CP extends CompositePojo<P, CP>> GroupQueryExecutor<P, CP> create(
+               CP extends CompositePojo<P, CP>> GroupQueryExecutor<CP> create(
         @NonNull EntityHandler handler, @NonNull EntityMetadata<K, P, R, D> metadata,
-        @NonNull CompositeMetadata<K, P, R, D, CP> compositeMetadata, @NonNull GroupReferenceMarker marker) {
+        @NonNull CompositeMetadata<K, P, R, D, CP> compositeMetadata, @NonNull GroupReferencingEntityMarker marker) {
         return new GroupDaoQueryExecutor<>(handler, metadata, compositeMetadata, marker);
     }
 
     /**
      * @return the group reference marker
-     * @see GroupReferenceMarker
+     * @see GroupReferencingEntityMarker
      * @since 1.0.0
      */
     @Override
-    @NonNull GroupReferenceMarker marker();
+    @NonNull GroupReferencingEntityMarker marker();
 
     /**
      * Verify {@code entity} whether exists or not.
@@ -70,31 +71,23 @@ public interface GroupQueryExecutor<P extends VertxPojo, CP extends CompositePoj
      * @since 1.0.0
      */
     default Single<Boolean> checkReferenceExistence(@NonNull RequestData reqData) {
-        return ReferenceQueryExecutor.super.checkReferenceExistence(reqData)
-                                           .concatWith(checkGroupExistence(reqData))
-                                           .all(aBoolean -> aBoolean);
+        return ReferencingQueryExecutor.super.checkReferenceExistence(reqData)
+                                             .concatWith(checkGroupExistence(reqData))
+                                             .all(aBoolean -> aBoolean);
     }
 
     default Single<Boolean> checkGroupExistence(@NonNull RequestData reqData) {
         final EntityReferences references = marker().groupReferences();
         final JsonObject body = reqData.body();
-        return Observable.fromIterable(references.getFields().entrySet())
-                         .filter(Objects::nonNull)
-                         .flatMapSingle(entry -> {
-                             EntityMetadata m = entry.getKey();
-                             Optional key = Optional.ofNullable(body.getJsonObject(m.singularKeyName()))
-                                                    .flatMap(b -> Optional.ofNullable(b.getValue(m.jsonKeyName()))
-                                                                          .map(Object::toString)
-                                                                          .map(m::parseKey));
-                             return !key.isPresent()
-                                    ? Single.just(true)
-                                    : fetchExists(queryBuilder().exist(m, key.get())).switchIfEmpty(
-                                        Single.error(m.notFound(key.get())));
-                         })
+        return Observable.fromIterable(references.keys())
+                         .flatMapSingle(m -> Optional.ofNullable(body.getJsonObject(m.singularKeyName()))
+                                                     .flatMap(b -> Optional.ofNullable(b.getValue(m.jsonKeyName()))
+                                                                           .map(Object::toString)
+                                                                           .map(m::parseKey))
+                                                     .map(k -> fetchExists(queryBuilder().exist(m, k)).switchIfEmpty(
+                                                         Single.error(m.notFound(k))))
+                                                     .orElseGet(() -> Single.just(true)))
                          .all(aBoolean -> aBoolean);
     }
-
-    @Override
-    Single<CP> findOneByKey(RequestData requestData);
 
 }

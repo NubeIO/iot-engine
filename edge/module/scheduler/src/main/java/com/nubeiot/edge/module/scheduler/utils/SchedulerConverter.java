@@ -73,11 +73,6 @@ public interface SchedulerConverter {
             throw new IllegalArgumentException("Not yet supported job type: " + type.type());
         }
 
-        static JobEntity validate(@NonNull JobEntity entity) {
-            convert(entity);
-            return entity;
-        }
-
     }
 
 
@@ -115,11 +110,6 @@ public interface SchedulerConverter {
                                            .build();
             }
             throw new IllegalArgumentException("Not yet supported trigger type: " + entity.getType().type());
-        }
-
-        static TriggerEntity validate(TriggerEntity pojo) {
-            convert(pojo);
-            return pojo;
         }
 
     }

@@ -11,23 +11,24 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.ManyToManyEntityTransformer;
 import com.nubeiot.core.sql.pojos.CompositePojo;
 import com.nubeiot.core.sql.query.ComplexQueryExecutor;
+import com.nubeiot.core.sql.service.marker.ManyToManyMarker;
 import com.nubeiot.core.sql.validation.CompositeValidation;
 import com.nubeiot.core.sql.validation.OperationValidator;
 
 import lombok.NonNull;
 
 /**
- * Abstract service to implement {@code CRUD} listeners for the {@code many-to-many entity}.
+ * Abstract service to implement {@code CRUD} listeners for the {@code database entity} has a {@code many-to-many}
+ * relationship.
  *
  * @param <P> Type of {@code CompositePojo}
  * @param <M> Type of {@code CompositeMetadata}
- * @see ManyToManyReferenceEntityService
+ * @see ManyToManyEntityService
  * @see ManyToManyEntityTransformer
  * @since 1.0.0
  */
 public abstract class AbstractManyToManyEntityService<P extends CompositePojo, M extends CompositeMetadata>
-    extends AbstractOneToManyEntityService<P, M>
-    implements ManyToManyReferenceEntityService<P, M>, ManyToManyEntityTransformer {
+    extends HasReferenceEntityService<P, M> implements ManyToManyEntityService<P, M>, ManyToManyEntityTransformer {
 
     /**
      * Instantiates a new Abstract many to many entity service.
@@ -37,19 +38,6 @@ public abstract class AbstractManyToManyEntityService<P extends CompositePojo, M
      */
     public AbstractManyToManyEntityService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
-    }
-
-    @Override
-    public @NonNull ComplexQueryExecutor<P> queryExecutor() {
-        return ManyToManyReferenceEntityService.super.queryExecutor();
-    }
-
-    @Override
-    public @NonNull ManyToManyEntityTransformer transformer() { return this; }
-
-    @Override
-    protected OperationValidator initCreationValidator() {
-        return OperationValidator.create((req, pojo) -> Single.just(context().onCreating(req)));
     }
 
     @Override
@@ -83,7 +71,15 @@ public abstract class AbstractManyToManyEntityService<P extends CompositePojo, M
     public abstract M context();
 
     @Override
+    public @NonNull ComplexQueryExecutor<P> queryExecutor() {
+        return ManyToManyEntityService.super.queryExecutor();
+    }
+
+    @Override
     public @NonNull CompositeValidation validation() { return this.context(); }
+
+    @Override
+    public @NonNull ManyToManyEntityTransformer transformer() { return this; }
 
     @Override
     public @NonNull EntityMetadata resourceMetadata() {
@@ -91,10 +87,11 @@ public abstract class AbstractManyToManyEntityService<P extends CompositePojo, M
     }
 
     @Override
-    public EntityReferences entityReferences() {
-        final EntityReferences entityReferences = new EntityReferences();
-        references().forEach(entityReferences::add);
-        return entityReferences.add(resource());
+    protected OperationValidator initCreationValidator() {
+        return OperationValidator.create((req, pojo) -> Single.just(context().onCreating(req)));
     }
+
+    @Override
+    public ManyToManyMarker marker() { return this; }
 
 }

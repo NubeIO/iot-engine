@@ -29,7 +29,7 @@ public class PointByThingServiceWriterTest extends BaseDataPointServiceTest {
         final Point newOne = MockData.search(PrimaryKey.P_BACNET_TEMP).setId(uuid).setCode("NEW_TEMP");
         final JsonObject expected = new JsonObject(
             "{\"resource\":{\"id\":6,\"point\":{\"id\":\"" + uuid + "\",\"code\":\"NEW_TEMP\",\"edge\":\"" +
-            PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.NETWORK + "\",\"label\":null,\"enabled\":true," +
+            PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.BACNET_NETWORK + "\",\"label\":null,\"enabled\":true," +
             "\"protocol\":\"BACNET\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"measure_unit\":\"celsius\"," +
             "\"unit_alias\":null,\"min_scale\":null,\"max_scale\":null,\"precision\":3,\"offset\":0,\"version\":null," +
             "\"metadata\":null}},\"action\":\"CREATE\",\"status\":\"SUCCESS\"}");

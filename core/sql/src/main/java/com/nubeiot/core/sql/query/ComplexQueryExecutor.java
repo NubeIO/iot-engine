@@ -10,7 +10,7 @@ import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.CompositePojo;
-import com.nubeiot.core.sql.service.HasReferenceMarker;
+import com.nubeiot.core.sql.service.marker.EntityReferences;
 
 import lombok.NonNull;
 
@@ -18,13 +18,13 @@ import lombok.NonNull;
  * Represents an executor that do complex query with {@code join} or {@code group by}
  *
  * @param <CP> Type of {@code CompositePojo}
- * @see ReferenceQueryExecutor
+ * @see ReferencingQueryExecutor
  * @see JDBCQueryExecutor
  * @see RXQueryExecutor
  * @since 1.0.0
  */
 public interface ComplexQueryExecutor<CP extends CompositePojo>
-    extends ReferenceQueryExecutor<CP>, JDBCQueryExecutor<Single<?>>, RXQueryExecutor {
+    extends ReferencingQueryExecutor<CP>, JDBCQueryExecutor<Single<?>>, RXQueryExecutor {
 
     /**
      * Create complex query executor.
@@ -71,7 +71,7 @@ public interface ComplexQueryExecutor<CP extends CompositePojo>
      * @return a reference to this, so the API can be used fluently
      * @since 1.0.0
      */
-    ComplexQueryExecutor references(@NonNull HasReferenceMarker.EntityReferences references);
+    ComplexQueryExecutor references(@NonNull EntityReferences references);
 
     /**
      * Add {@code view predicate}.

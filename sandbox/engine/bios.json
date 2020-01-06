@@ -181,7 +181,7 @@
                   {
                     "point": "3bea3c91-850d-4409-b594-8ffb5aa6b8a0",
                     "value": 10.0,
-                    "priority": 8,
+                    "priority": 5,
                     "priority_values": {
                       "5": 10.0,
                       "6": 9.0,
@@ -200,12 +200,12 @@
                   },
                   {
                     "point": "6997056d-4c1b-4d30-b205-969432f72a93",
-                    "value": 260.0,
-                    "priority": 7,
+                    "value": 240.0,
+                    "priority": 2,
                     "priority_values": {
-                      "5": 240.0,
+                      "2": 240.0,
                       "7": 260.0,
-                      "17": 250.0
+                      "16": 250.0
                     }
                   }
                 ],
@@ -214,37 +214,40 @@
                     "point_id": "3bea3c91-850d-4409-b594-8ffb5aa6b8a0",
                     "thing_id": "5eb7da66-8013-4cc4-9608-ead768eca665",
                     "computed_thing": "XrfaZoATTMSWCOrXaOymZQ-SENSOR",
-                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92",
-                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535"
+                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535",
+                    "network_id": "e3eab951-932e-4fcc-a925-08b31e1014a0",
+                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92"
                   },
                   {
                     "point_id": "1efaf662-1333-48d1-a60f-8fc60f259f0e",
                     "thing_id": "08d66e92-f15d-4fdb-9ed5-fd165b212591",
                     "computed_thing": "CNZukvFdT9ue1f0WWyElkQ-SENSOR",
-                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92",
-                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535"
+                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535",
+                    "network_id": "e3eab951-932e-4fcc-a925-08b31e1014a0",
+                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92"
                   },
                   {
                     "point_id": "edbe3acf-5fca-4672-b633-72aa73004917",
                     "thing_id": "960f5686-1dd6-48c0-bb5b-bec79c2b5788",
                     "computed_thing": "lg9Whh3WSMC7W77HnCtXiA-SENSOR",
-                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92",
+                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
                     "network_id": "01fbb11e-45a6-479b-91a4-003534770c1c",
-                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5"
+                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92"
                   },
                   {
                     "point_id": "6997056d-4c1b-4d30-b205-969432f72a93",
                     "thing_id": "388519ef-797f-49ca-a613-204b4587ef28",
-                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92",
+                    "computed_thing": "OIUZ73l_ScqmEyBLRYfvKA-SENSOR",
+                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
                     "network_id": "01fbb11e-45a6-479b-91a4-003534770c1c",
-                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5"
+                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92"
                   },
                   {
                     "point_id": "463fbdf0-388d-447e-baef-96dbb8232dd7",
                     "thing_id": "76d34f4e-3b20-4776-99c7-d93d79d5b4a6",
-                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92",
+                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
                     "network_id": "01fbb11e-45a6-479b-91a4-003534770c1c",
-                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5"
+                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92"
                   }
                 ],
                 "history": [
@@ -294,8 +297,9 @@
                     "id": "3bea3c91-850d-4409-b594-8ffb5aa6b8a0",
                     "code": "2CB2B763_HUMIDITY",
                     "edge": "d7cd3f57-a188-4462-b959-df7a23994c92",
+                    "network": "e3eab951-932e-4fcc-a925-08b31e1014a0",
                     "enabled": true,
-                    "protocol": "GPIO",
+                    "protocol": "WIRE",
                     "kind": "INPUT",
                     "type": "DIGITAL",
                     "measure_unit": "percentage",
@@ -308,8 +312,9 @@
                     "id": "1efaf662-1333-48d1-a60f-8fc60f259f0e",
                     "code": "2CB2B763_TEMP",
                     "edge": "d7cd3f57-a188-4462-b959-df7a23994c92",
+                    "network": "e3eab951-932e-4fcc-a925-08b31e1014a0",
                     "enabled": true,
-                    "protocol": "GPIO",
+                    "protocol": "WIRE",
                     "kind": "INPUT",
                     "type": "DIGITAL",
                     "measure_unit": "celsius",
@@ -354,19 +359,30 @@
                     "measure_unit": "bool"
                   }
                 ],
-                "network": {
-                  "id": "01fbb11e-45a6-479b-91a4-003534770c1c",
-                  "code": "network-1",
-                  "edge": "d7cd3f57-a188-4462-b959-df7a23994c92",
-                  "metadata": {
-                    "subnet_name": "subnet-A",
-                    "networkInterface": "docker0",
-                    "subnet": "172.17.0.1/16",
-                    "broadcast": "172.17.255.255",
-                    "mac": "02:42:50:e1:cf:2b",
-                    "port": 47808
+                "network": [
+                  {
+                    "id": "01fbb11e-45a6-479b-91a4-003534770c1c",
+                    "code": "DEMO-1",
+                    "edge": "d7cd3f57-a188-4462-b959-df7a23994c92",
+                    "protocol": "BACNET",
+                    "state": "ENABLED",
+                    "metadata": {
+                      "subnet_name": "subnet-A",
+                      "networkInterface": "docker0",
+                      "subnet": "172.17.0.1/16",
+                      "broadcast": "172.17.255.255",
+                      "mac": "02:42:50:e1:cf:2b",
+                      "port": 47808
+                    }
+                  },
+                  {
+                    "id": "e3eab951-932e-4fcc-a925-08b31e1014a0",
+                    "code": "DEFAULT",
+                    "edge": "d7cd3f57-a188-4462-b959-df7a23994c92",
+                    "protocol": "WIRE",
+                    "state": "ENABLED"
                   }
-                },
+                ],
                 "unit": [
                   {
                     "type": "revolutions_per_minute",
@@ -451,7 +467,7 @@
                 "rt_setting": [
                   {
                     "point": "1efaf662-1333-48d1-a60f-8fc60f259f0e",
-                    "enabled": true
+                    "enabled": false
                   }
                 ],
                 "tag": [
@@ -481,19 +497,22 @@
                     "id": "e43aa03a-4746-4fb5-815d-ee62f709b535",
                     "code": "DROPLET_01",
                     "type": "DROPLET",
+                    "protocol": "WIRE",
                     "manufacturer": "NubeIO"
                   },
                   {
                     "id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
                     "code": "HVAC_XYZ",
                     "type": "HVAC",
+                    "protocol": "BACNET",
                     "manufacturer": "Lennox"
                   }
                 ],
                 "edge_device": [
                   {
                     "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92",
-                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535"
+                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535",
+                    "network_id": "e3eab951-932e-4fcc-a925-08b31e1014a0"
                   },
                   {
                     "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92",
@@ -561,11 +580,13 @@
                 "history_setting": [
                   {
                     "point": "1efaf662-1333-48d1-a60f-8fc60f259f0e",
+                    "enabled": false,
                     "type": "COV",
                     "tolerance": 1.0
                   },
                   {
                     "point": "6997056d-4c1b-4d30-b205-969432f72a93",
+                    "enabled": false,
                     "type": "PERIOD",
                     "schedule": "xyz"
                   }

@@ -19,7 +19,6 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.http.dynamic.DynamicServiceTestBase;
 import com.nubeiot.core.sql.SqlConfig;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.BuiltinData;
-import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -57,8 +56,8 @@ public abstract class BaseDataPointVerticleTest extends DynamicServiceTestBase {
 
     protected abstract JsonObject builtinData();
 
-    protected DataSyncConfig syncConfig() {
-        return DataSyncConfig.def();
+    protected DataPointConfig.DataSyncConfig syncConfig() {
+        return DataPointConfig.DataSyncConfig.def();
     }
 
 }

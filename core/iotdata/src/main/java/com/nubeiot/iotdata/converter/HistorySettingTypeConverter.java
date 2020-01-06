@@ -6,9 +6,7 @@ import com.nubeiot.iotdata.dto.HistorySettingType;
 public final class HistorySettingTypeConverter extends AbstractEnumConverter<HistorySettingType> {
 
     @Override
-    protected HistorySettingType def() {
-        return HistorySettingType.def();
-    }
+    protected HistorySettingType def() { return null; }
 
     @Override
     public Class<HistorySettingType> toType() { return HistorySettingType.class; }

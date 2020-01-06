@@ -120,6 +120,68 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
     default EntityMetadata context() { return this; }
 
     /**
+     * Defines request key name that represents for {@code primary/unique key} in {@code table} to lookup in doing
+     * {@code get /update /patch /delete} resource
+     *
+     * @return request key name. Default is {@code <model_name>_<json_key_name>}
+     * @apiNote It might not represents for actual primary key column in database table
+     * @see #modelClass()
+     * @since 1.0.0
+     */
+    @NonNull
+    default String requestKeyName() {
+        return createRequestKeyName(modelClass(), jsonKeyName());
+    }
+
+    /**
+     * Primary key column is represented in {@code json} mode
+     * <p>
+     * Default is primary key column in lowercase
+     *
+     * @return primary key column in json
+     * @apiNote It doesn't support composite key or no primary key in {@code table}
+     * @see #table()
+     * @since 1.0.0
+     */
+    @NonNull
+    default String jsonKeyName() {
+        return createJsonKeyName(table());
+    }
+
+    /**
+     * Define response key name for single resource
+     *
+     * @return response key name
+     * @apiNote Default is {@link #table()} name in lowercase
+     * @since 1.0.0
+     */
+    default @NonNull String singularKeyName() {
+        return table().getName().toLowerCase();
+    }
+
+    /**
+     * Defines response  key name for multiple resource
+     *
+     * @return response key name
+     * @apiNote Default is {@link #singularKeyName()} appends "{@code s}" character
+     * @since 1.0.0
+     */
+    default @NonNull String pluralKeyName() {
+        return singularKeyName() + "s";
+    }
+
+    /**
+     * Default order fields
+     *
+     * @return order fields
+     * @see OrderField
+     * @since 1.0.0
+     */
+    default @NonNull List<OrderField<?>> orderFields() {
+        return Collections.singletonList((OrderField<?>) table().getField(jsonKeyName()).asc());
+    }
+
+    /**
      * Parses given data from entity database to {@code pojo} object
      *
      * @param <PP>    Type of {@code VertxPojo}
@@ -188,68 +250,6 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      * @since 1.0.0
      */
     @NonNull K parseKey(@NonNull String dataKey) throws IllegalArgumentException;
-
-    /**
-     * Defines request key name that represents for {@code primary/unique key} in {@code table} to lookup in doing
-     * {@code get /update /patch /delete} resource
-     *
-     * @return request key name. Default is {@code <model_name>_<json_key_name>}
-     * @apiNote It might not represents for actual primary key column in database table
-     * @see #modelClass()
-     * @since 1.0.0
-     */
-    @NonNull
-    default String requestKeyName() {
-        return createRequestKeyName(modelClass(), jsonKeyName());
-    }
-
-    /**
-     * Primary key column is represented in {@code json} mode
-     * <p>
-     * Default is primary key column in lowercase
-     *
-     * @return primary key column in json
-     * @apiNote It doesn't support composite key or no primary key in {@code table}
-     * @see #table()
-     * @since 1.0.0
-     */
-    @NonNull
-    default String jsonKeyName() {
-        return createJsonKeyName(table());
-    }
-
-    /**
-     * Define response key name for single resource
-     *
-     * @return response key name
-     * @apiNote Default is {@link #table()} name in lowercase
-     * @since 1.0.0
-     */
-    default @NonNull String singularKeyName() {
-        return table().getName().toLowerCase();
-    }
-
-    /**
-     * Defines response  key name for multiple resource
-     *
-     * @return response key name
-     * @apiNote Default is {@link #singularKeyName()} appends "{@code s}" character
-     * @since 1.0.0
-     */
-    default @NonNull String pluralKeyName() {
-        return singularKeyName() + "s";
-    }
-
-    /**
-     * Default order fields
-     *
-     * @return order fields
-     * @see OrderField
-     * @since 1.0.0
-     */
-    default @NonNull List<OrderField<?>> orderFields() {
-        return Collections.singletonList((OrderField<?>) table().getField(jsonKeyName()).asc());
-    }
 
     /**
      * Represents entity primary key is in {@code Integer} data type

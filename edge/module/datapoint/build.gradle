@@ -9,7 +9,9 @@ dependencies {
     compile project(":core:httpclient")
     compile project(":core:iotdata")
     compile project(":edge:module:datapoint:model")
-    compile 'net.thisptr:jackson-jq:0.0.10'
+    compile project(":edge:module:datapoint:sync")
+    //    TODO temp
+    compile project(":edge:connector:ditto")
 
     testCompile project(":core:base").sourceSets.test.output
     testCompile project(":core:sql").sourceSets.test.output

@@ -1,0 +1,11 @@
+dependencies {
+    compile project(":core:httpclient")
+    compile project(":core:cache")
+    compile project(":edge:module:datapoint:sync")
+    compile 'net.thisptr:jackson-jq:0.0.10'
+
+    testCompile project(":core:base").sourceSets.test.output
+    testCompile project(":core:sql").sourceSets.test.output
+    testCompile project(":edge:module:datapoint")
+    testCompile project(":edge:module:datapoint").sourceSets.test.output
+}

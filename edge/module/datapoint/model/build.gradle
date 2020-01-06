@@ -64,8 +64,7 @@ task jooqGen(type: JooqGenerateTask) {
     javaTypes = project(':core:sql').ext.javaTypes + [
         new JsonDataType(className: "com.nubeiot.iotdata.dto.HistorySettingType",
                          converter: "%s.type()",
-                         parser: "com.nubeiot.iotdata.dto.HistorySettingType.factory((String)%s)",
-                         defVal: "com.nubeiot.iotdata.dto.HistorySettingType.def()"),
+                         parser: "com.nubeiot.iotdata.dto.HistorySettingType.factory((String)%s)"),
         new JsonDataType(className: "com.nubeiot.iotdata.dto.Protocol",
                          converter: "%s.type()",
                          parser: "com.nubeiot.iotdata.dto.Protocol.factory((String)%s)",

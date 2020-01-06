@@ -3,7 +3,6 @@ package com.nubeiot.edge.module.datapoint.service;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -16,11 +15,11 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.EntityService;
+import com.nubeiot.core.sql.workflow.task.EntityTask;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.task.remote.ProtocolDispatcherTask;
 import com.nubeiot.edge.module.datapoint.task.sync.SyncServiceFactory;
-import com.nubeiot.edge.module.datapoint.task.sync.SyncTask;
 
 public interface DataPointService<P extends VertxPojo, M extends EntityMetadata>
     extends EntityService<P, M>, EventHttpService {
@@ -35,12 +34,12 @@ public interface DataPointService<P extends VertxPojo, M extends EntityMetadata>
     }
 
     @Override
-    default Optional<ProtocolDispatcherTask> prePersistTask() {
-        return Optional.of(new ProtocolDispatcherTask(entityHandler()));
+    default EntityTask prePersistTask() {
+        return new ProtocolDispatcherTask(entityHandler());
     }
 
     @Override
-    default Optional<SyncTask> postPersistAsyncTask() {
+    default EntityTask postPersistAsyncTask() {
         return SyncServiceFactory.get(entityHandler(), entityHandler().sharedData(DataPointIndex.DATA_SYNC_CFG));
     }
 

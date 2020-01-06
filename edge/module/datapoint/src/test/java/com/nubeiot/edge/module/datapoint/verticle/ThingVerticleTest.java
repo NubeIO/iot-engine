@@ -43,16 +43,16 @@ public class ThingVerticleTest extends BaseDataPointVerticleTest {
             "{\"code\":\"HVAC-XYZ-FAN-CONTROL\",\"id\":\"" + PrimaryKey.THING_SWITCH_HVAC + "\",\"label\":{\"label\":" +
             "\"HVAC Fan Control\"},\"type\":\"ACTUATOR\",\"category\":\"SWITCH\",\"measure_unit\":\"bool\"}");
         assertRestByClient(context, HttpMethod.GET,
-                           "/api/s/network/" + PrimaryKey.NETWORK + "/device/" + PrimaryKey.DEVICE_HVAC + "/thing/" +
-                           PrimaryKey.THING_SWITCH_HVAC, 200, expected);
+                           "/api/s/network/" + PrimaryKey.BACNET_NETWORK + "/device/" + PrimaryKey.DEVICE_HVAC +
+                           "/thing/" + PrimaryKey.THING_SWITCH_HVAC, 200, expected);
     }
 
     @Test
     public void test_get_thing_by_network_only_should_404(TestContext context) {
         final JsonObject expected = new JsonObject().put("message", "Resource not found").put("uri", "");
         assertRestByClient(context, HttpMethod.GET,
-                           "/api/s/network/" + PrimaryKey.NETWORK + "/thing/" + PrimaryKey.THING_SWITCH_HVAC, 404,
-                           expected, JsonHelper.ignore("uri"));
+                           "/api/s/network/" + PrimaryKey.BACNET_NETWORK + "/thing/" + PrimaryKey.THING_SWITCH_HVAC,
+                           404, expected, JsonHelper.ignore("uri"));
     }
 
 }

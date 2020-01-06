@@ -20,10 +20,10 @@ import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.http.EntityHttpService;
-import com.nubeiot.core.sql.service.AbstractOneToManyEntityService;
-import com.nubeiot.core.sql.service.workflow.CreationStep;
-import com.nubeiot.core.sql.service.workflow.ModificationStep;
+import com.nubeiot.core.sql.service.AbstractReferencingEntityService;
 import com.nubeiot.core.sql.validation.OperationValidator;
+import com.nubeiot.core.sql.workflow.step.CreationStep;
+import com.nubeiot.core.sql.workflow.step.ModificationStep;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistoryDataMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistorySettingMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
@@ -36,7 +36,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
 
 import lombok.NonNull;
 
-public final class HistoryDataService extends AbstractOneToManyEntityService<PointHistoryData, HistoryDataMetadata>
+public final class HistoryDataService extends AbstractReferencingEntityService<PointHistoryData, HistoryDataMetadata>
     implements PointExtension, DataPointService<PointHistoryData, HistoryDataMetadata> {
 
     public HistoryDataService(@NonNull EntityHandler entityHandler) {
@@ -65,32 +65,30 @@ public final class HistoryDataService extends AbstractOneToManyEntityService<Poi
 
     @Override
     protected CreationStep initCreationStep() {
-        return super.initCreationStep().onSuccess((action, keyPojo) -> putIntoCache((PointHistoryData) keyPojo.pojo()));
+        return super.initCreationStep()
+                    .onSuccess((action, keyPojo) -> putIntoCache((PointHistoryData) keyPojo.dbEntity()));
     }
 
     @Override
     protected ModificationStep initModificationStep(EventAction action) {
         return super.initModificationStep(action)
-                    .onSuccess((reqData, event, keyPojo) -> putIntoCache((PointHistoryData) keyPojo.pojo()));
+                    .onSuccess((reqData, event, keyPojo) -> putIntoCache((PointHistoryData) keyPojo.dbEntity()));
     }
 
     @Override
     protected OperationValidator initCreationValidator() {
-        return OperationValidator.create((req, prev) -> queryExecutor().checkReferenceExistence(req)
-                                                                       .map(b -> validation().onCreating(req))
-                                                                       .flatMap(h -> isAbleToInsertByCov(
-                                                                           (PointHistoryData) h)));
+        return super.initCreationValidator()
+                    .andThen(OperationValidator.create((req, pojo) -> isAbleToInsertByCov((PointHistoryData) pojo)));
     }
 
     private Single<PointHistoryData> isAbleToInsertByCov(@NonNull PointHistoryData his) {
         final UUID point = his.getPoint();
-        return getHistorySetting(point).filter(this::isTolerance)
-                                       .flatMap(s -> getLastHistory(point).map(p -> validateCOV(his, p, s)))
-                                       .switchIfEmpty(Single.just(true))
-                                       .filter(b -> b)
-                                       .switchIfEmpty(Single.error(new DesiredException(
-                                           "COV of point " + his.getPoint() + " doesn't meet setting requirement")))
-                                       .map(b -> his);
+        return getHistorySetting(point).filter(HistorySetting::getEnabled)
+                                       .filter(this::isTolerance)
+                                       .switchIfEmpty(Maybe.error(new DesiredException(
+                                           "History setting point '" + point + "' is disabled or not COV type")))
+                                       .flatMap(s -> getLastHistory(point).map(last -> checkCovExcess(his, last, s)))
+                                       .switchIfEmpty(Single.just(his));
     }
 
     private Maybe<PointHistoryData> getLastHistory(@NonNull UUID point) {
@@ -110,8 +108,14 @@ public final class HistoryDataService extends AbstractOneToManyEntityService<Poi
                               .doOnSuccess(history -> cache.add(point, history));
     }
 
-    private boolean validateCOV(PointHistoryData his, PointHistoryData p, HistorySetting s) {
-        return s.getTolerance().compareTo(Math.abs(his.getValue() - p.getValue())) < 0;
+    private PointHistoryData checkCovExcess(@NonNull PointHistoryData his, @NonNull PointHistoryData last,
+                                            @NonNull HistorySetting s) {
+        if (Double.compare(Math.abs(his.getValue() - last.getValue()), s.getTolerance()) > 0) {
+            return his;
+        }
+        throw new DesiredException(
+            "COV of point " + his.getPoint() + " is " + his.getValue() + " that doesn't exceed setting " +
+            s.getTolerance());
     }
 
     private boolean isTolerance(HistorySetting s) {

@@ -37,7 +37,7 @@ public class ProtocolDispatcherTaskTest extends BaseDataPointServiceTest {
     @Test
     public void test_no_protocol_dispatcher(TestContext context) {
         final JsonObject resource = new JsonObject(
-            "{\"id\":\"" + PrimaryKey.NETWORK + "\",\"code\":\"test\",\"edge\":\"" + PrimaryKey.EDGE + "\"," +
+            "{\"id\":\"" + PrimaryKey.BACNET_NETWORK + "\",\"code\":\"test\",\"edge\":\"" + PrimaryKey.EDGE + "\"," +
             "\"protocol\":\"BACNET\",\"state\":\"ENABLED\",\"metadata\":{\"host\":\"172.1.1.1\"}}");
         final JsonObject expected = new JsonObject().put("action", EventAction.UPDATE)
                                                     .put("status", Status.SUCCESS)
@@ -46,7 +46,8 @@ public class ProtocolDispatcherTaskTest extends BaseDataPointServiceTest {
         final RequestData req = RequestData.builder()
                                            .body(JsonPojo.from(network)
                                                          .toJson()
-                                                         .put("network_id", UUID64.uuidToBase64(PrimaryKey.NETWORK))
+                                                         .put("network_id",
+                                                              UUID64.uuidToBase64(PrimaryKey.BACNET_NETWORK))
                                                          .put("metadata", new JsonObject().put("host", "172.1.1.1")))
                                            .build();
         asserter(context, true, expected, NetworkService.class.getName(), EventAction.UPDATE, req);

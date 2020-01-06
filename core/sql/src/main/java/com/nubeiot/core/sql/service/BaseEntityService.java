@@ -8,15 +8,16 @@ import lombok.NonNull;
 interface BaseEntityService<M extends EntityMetadata> {
 
     /**
-     * Entity handler
+     * Declares entity handler
      *
      * @return entity handler
+     * @see EntityHandler
      * @since 1.0.0
      */
     @NonNull EntityHandler entityHandler();
 
     /**
-     * Context entity metadata
+     * Declares physical database entity metadata
      *
      * @return entity metadata
      * @see EntityMetadata
