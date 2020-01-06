@@ -22,15 +22,12 @@ import com.nubeiot.core.dto.RequestData.Filters;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.edge.module.datapoint.BaseDataPointServiceTest;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
-
-import lombok.NonNull;
 
 public class PointValueServiceTest extends BaseDataPointServiceTest {
 
@@ -45,30 +42,6 @@ public class PointValueServiceTest extends BaseDataPointServiceTest {
                             .action(EventAction.CREATE_OR_UPDATE)
                             .addPayload(reqData)
                             .build();
-    }
-
-    static void createPointValue(@NonNull EventbusClient client, @NonNull TestContext context,
-                                 @NonNull EventAction action, @NonNull PointValueData pv,
-                                 @NonNull PointValueData response) {
-        createPointValue(client, context, action, response, PointValueServiceTest.createPointEvent(pv, false));
-    }
-
-    private static void createPointValue(@NonNull EventbusClient client, @NonNull TestContext context,
-                                         @NonNull EventAction action, @NonNull PointValueData response,
-                                         @NonNull DeliveryEvent event) {
-        final Async async = context.async();
-        client.fire(event, EventbusHelper.replyAsserter(context, body -> {
-            JsonObject result = JsonPojo.from(response).toJson(JsonData.MAPPER, AUDIT_FIELDS);
-            JsonObject expected = new JsonObject().put("action", action)
-                                                  .put("status", Status.SUCCESS)
-                                                  .put("resource", result);
-            JsonHelper.assertJson(context, async, expected, body.getJsonObject("data"));
-        }));
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            context.fail(e);
-        }
     }
 
     @Override
@@ -204,26 +177,6 @@ public class PointValueServiceTest extends BaseDataPointServiceTest {
         }));
         Thread.sleep(500);
         latch.await(TestHelper.TEST_TIMEOUT_SEC / 3, TimeUnit.SECONDS);
-    }
-
-    @Test
-    public void test_get_history_data(TestContext context) {
-        JsonObject expected = new JsonObject(
-            "{\"histories\":[{\"id\":4,\"point\":\"3bea3c91-850d-4409-b594-8ffb5aa6b8a0\"," +
-            "\"time\":\"2019-08-10T09:22Z\",\"value\":42.0,\"priority\":16},{\"id\":3," +
-            "\"point\":\"3bea3c91-850d-4409-b594-8ffb5aa6b8a0\",\"time\":\"2019-08-10T09:20Z\",\"value\":32.0," +
-            "\"priority\":16},{\"id\":8,\"point\":\"edbe3acf-5fca-4672-b633-72aa73004917\"," +
-            "\"time\":\"2019-08-10T09:18:15Z\",\"value\":20.6,\"priority\":16},{\"id\":2," +
-            "\"point\":\"3bea3c91-850d-4409-b594-8ffb5aa6b8a0\",\"time\":\"2019-08-10T09:18Z\",\"value\":35.0," +
-            "\"priority\":16},{\"id\":7,\"point\":\"edbe3acf-5fca-4672-b633-72aa73004917\"," +
-            "\"time\":\"2019-08-10T09:17:15Z\",\"value\":20.8,\"priority\":16},{\"id\":6," +
-            "\"point\":\"edbe3acf-5fca-4672-b633-72aa73004917\",\"time\":\"2019-08-10T09:16:15Z\",\"value\":20.8," +
-            "\"priority\":16},{\"id\":5,\"point\":\"edbe3acf-5fca-4672-b633-72aa73004917\"," +
-            "\"time\":\"2019-08-10T09:15:15Z\",\"value\":20.5,\"priority\":16},{\"id\":1," +
-            "\"point\":\"3bea3c91-850d-4409-b594-8ffb5aa6b8a0\",\"time\":\"2019-08-10T09:15Z\",\"value\":30.0," +
-            "\"priority\":16}]}");
-        RequestData req = RequestData.builder().build();
-        asserter(context, true, expected, HistoryDataService.class.getName(), EventAction.GET_LIST, req);
     }
 
 }

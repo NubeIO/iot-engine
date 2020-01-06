@@ -77,16 +77,16 @@ public final class HistoryDataService extends AbstractReferencingEntityService<P
 
     @Override
     protected OperationValidator initCreationValidator() {
-        return OperationValidator.create((req, prev) -> queryExecutor().checkReferenceExistence(req)
-                                                                       .map(b -> validation().onCreating(req))
-                                                                       .flatMap(h -> isAbleToInsertByCov(
-                                                                           (PointHistoryData) h)));
+        return super.initCreationValidator()
+                    .andThen(OperationValidator.create((req, pojo) -> isAbleToInsertByCov((PointHistoryData) pojo)));
     }
 
     private Single<PointHistoryData> isAbleToInsertByCov(@NonNull PointHistoryData his) {
         final UUID point = his.getPoint();
         return getHistorySetting(point).filter(HistorySetting::getEnabled)
                                        .filter(this::isTolerance)
+                                       .switchIfEmpty(Maybe.error(new DesiredException(
+                                           "History setting point '" + point + "' is disabled or not COV type")))
                                        .flatMap(s -> getLastHistory(point).map(last -> checkCovExcess(his, last, s)))
                                        .switchIfEmpty(Single.just(his));
     }

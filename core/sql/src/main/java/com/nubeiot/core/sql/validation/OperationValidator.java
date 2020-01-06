@@ -26,7 +26,8 @@ public interface OperationValidator {
      * @since 1.0.0
      */
     @NonNull
-    static OperationValidator create(@NonNull BiFunction<RequestData, VertxPojo, Single<VertxPojo>> validation) {
+    static OperationValidator create(
+        @NonNull BiFunction<RequestData, VertxPojo, Single<? extends VertxPojo>> validation) {
         return new DefaultOperationValidator(validation);
     }
 

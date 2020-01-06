@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 class DefaultOperationValidator implements OperationValidator {
 
     @NonNull
-    private final BiFunction<RequestData, VertxPojo, Single<VertxPojo>> validation;
+    private final BiFunction<RequestData, VertxPojo, Single<? extends VertxPojo>> validation;
     private OperationValidator andThen;
 
     @Override
