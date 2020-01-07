@@ -6,7 +6,6 @@ import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import io.vertx.core.Handler;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 
@@ -14,7 +13,6 @@ import com.nubeiot.core.TestHelper.EventbusHelper;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.RequestData.Filters;
-import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
@@ -25,7 +23,6 @@ import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.module.datapoint.BaseDataPointServiceTest;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
-import com.nubeiot.iotdata.dto.Protocol;
 
 public class EdgeServiceTest extends BaseDataPointServiceTest {
 
@@ -84,30 +81,6 @@ public class EdgeServiceTest extends BaseDataPointServiceTest {
             context.assertEquals(Status.INITIAL, syncAudit.getStatus());
             context.assertNull(syncAudit.getSyncedTime());
         };
-    }
-
-    @Test
-    public void test_list_network(TestContext context) {
-        final JsonArray list = MockData.NETWORKS.stream()
-                                                .map(n -> JsonPojo.from(n).toJson())
-                                                .collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
-        JsonObject expected = new JsonObject().put("networks", list);
-        asserter(context, true, expected, NetworkService.class.getName(), EventAction.GET_LIST,
-                 RequestData.builder().build(), JSONCompareMode.LENIENT);
-    }
-
-    @Test
-    public void test_get_network_by_edge(TestContext context) {
-        JsonObject expected = JsonPojo.from(MockData.searchNetwork(PrimaryKey.BACNET_NETWORK))
-                                      .toJson()
-                                      .put("protocol", Protocol.BACNET.type())
-                                      .put("state", State.ENABLED);
-        expected.remove("edge");
-        RequestData req = RequestData.builder()
-                                     .body(new JsonObject().put("edge_id", PrimaryKey.EDGE.toString())
-                                                           .put("network_id", PrimaryKey.BACNET_NETWORK.toString()))
-                                     .build();
-        asserter(context, true, expected, NetworkService.class.getName(), EventAction.GET_ONE, req);
     }
 
 }

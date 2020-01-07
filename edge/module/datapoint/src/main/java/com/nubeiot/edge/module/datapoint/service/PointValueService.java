@@ -27,7 +27,7 @@ import com.nubeiot.core.sql.workflow.step.CreationStep;
 import com.nubeiot.core.sql.workflow.step.ModificationStep;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointValueMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.RealtimeDataMetadata;
-import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
+import com.nubeiot.edge.module.datapoint.service.extension.PointExtension;
 import com.nubeiot.iotdata.dto.PointPriorityValue.PointValue;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointRealtimeData;

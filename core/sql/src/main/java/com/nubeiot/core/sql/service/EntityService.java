@@ -12,6 +12,7 @@ import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
+import com.nubeiot.core.sql.decorator.RequestDecorator;
 import com.nubeiot.core.sql.query.EntityQueryExecutor;
 import com.nubeiot.core.sql.validation.EntityValidation;
 import com.nubeiot.core.sql.workflow.task.EntityTask;
@@ -51,6 +52,15 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
      * @since 1.0.0
      */
     @NonNull EntityQueryExecutor<P> queryExecutor();
+
+    /**
+     * Helps decorating request before handling request
+     *
+     * @return request decorator
+     * @see RequestDecorator
+     * @since 1.0.0
+     */
+    @NonNull RequestDecorator requestDecorator();
 
     /**
      * Service validation for context resource

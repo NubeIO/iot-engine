@@ -14,9 +14,11 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
 @Getter
+@Setter
 @Accessors(fluent = true)
 public final class RequestData extends AbstractDTO {
 

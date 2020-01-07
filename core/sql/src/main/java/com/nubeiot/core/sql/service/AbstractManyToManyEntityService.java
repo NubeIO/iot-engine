@@ -1,14 +1,12 @@
 package com.nubeiot.core.sql.service;
 
-import java.util.stream.Stream;
-
 import io.reactivex.Single;
 
-import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.ManyToManyEntityTransformer;
+import com.nubeiot.core.sql.decorator.ManyToManyRequestDecorator;
 import com.nubeiot.core.sql.pojos.CompositePojo;
 import com.nubeiot.core.sql.query.ComplexQueryExecutor;
 import com.nubeiot.core.sql.service.marker.ManyToManyMarker;
@@ -24,11 +22,13 @@ import lombok.NonNull;
  * @param <P> Type of {@code CompositePojo}
  * @param <M> Type of {@code CompositeMetadata}
  * @see ManyToManyEntityService
+ * @see ManyToManyRequestDecorator
  * @see ManyToManyEntityTransformer
  * @since 1.0.0
  */
 public abstract class AbstractManyToManyEntityService<P extends CompositePojo, M extends CompositeMetadata>
-    extends HasReferenceEntityService<P, M> implements ManyToManyEntityService<P, M>, ManyToManyEntityTransformer {
+    extends AbstractEntityService<P, M>
+    implements ManyToManyEntityService<P, M>, ManyToManyRequestDecorator, ManyToManyEntityTransformer {
 
     /**
      * Instantiates a new Abstract many to many entity service.
@@ -38,33 +38,6 @@ public abstract class AbstractManyToManyEntityService<P extends CompositePojo, M
      */
     public AbstractManyToManyEntityService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
-    }
-
-    @Override
-    @NonNull
-    public RequestData onCreatingOneResource(@NonNull RequestData requestData) {
-        return recomputeRequestData(requestData, convertKey(requestData, references()));
-    }
-
-    @Override
-    @NonNull
-    public RequestData onModifyingOneResource(@NonNull RequestData requestData) {
-        return recomputeRequestData(requestData, convertKey(requestData,
-                                                            Stream.concat(references().stream(), Stream.of(resource()))
-                                                                  .toArray(EntityMetadata[]::new)));
-    }
-
-    @Override
-    @NonNull
-    public RequestData onReadingManyResource(@NonNull RequestData requestData) {
-        return recomputeRequestData(requestData, convertKey(requestData, references()));
-    }
-
-    @Override
-    public @NonNull RequestData onReadingOneResource(@NonNull RequestData requestData) {
-        return recomputeRequestData(requestData, convertKey(requestData,
-                                                            Stream.concat(references().stream(), Stream.of(resource()))
-                                                                  .toArray(EntityMetadata[]::new)));
     }
 
     @Override

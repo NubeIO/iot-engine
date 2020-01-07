@@ -3,7 +3,6 @@ package com.nubeiot.edge.module.datapoint.service;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -13,15 +12,13 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.http.base.Urls;
-import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.decorator.RequestDecorator;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractGroupEntityService;
 import com.nubeiot.core.sql.service.marker.EntityReferences;
-import com.nubeiot.core.sql.service.marker.ReferencingEntityMarker;
 import com.nubeiot.core.sql.workflow.task.EntityTask;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
@@ -29,8 +26,8 @@ import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
-import com.nubeiot.edge.module.datapoint.service.EdgeService.EdgeExtension;
-import com.nubeiot.edge.module.datapoint.service.NetworkService.NetworkExtension;
+import com.nubeiot.edge.module.datapoint.service.extension.EdgeExtension;
+import com.nubeiot.edge.module.datapoint.service.extension.NetworkExtension;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
 import com.nubeiot.iotdata.unit.DataType;
 import com.nubeiot.iotdata.unit.UnitAlias;
@@ -82,10 +79,8 @@ public final class PointService
     }
 
     @Override
-    protected RequestData recomputeRequestData(RequestData reqData, JsonObject extra) {
-        EdgeExtension.optimizeReqData(entityHandler(), reqData, context().table().getJsonField(context().table().EDGE));
-        NetworkExtension.optimizeAlias(entityHandler(), reqData);
-        return super.recomputeRequestData(reqData, extra);
+    public @NonNull RequestDecorator requestDecorator() {
+        return NetworkExtension.create(EdgeExtension.create(this));
     }
 
     @Override
@@ -130,38 +125,6 @@ public final class PointService
         return JsonPojo.from(pojo)
                        .toJson(ignoreFields(requestData))
                        .put(MeasureUnitMetadata.INSTANCE.singularKeyName(), DataType.factory(unit, unitAlias).toJson());
-    }
-
-    public interface PointExtension extends ReferencingEntityMarker {
-
-        static Set<EventMethodDefinition> oneToOneDefinitions(@NonNull Collection<EventAction> availableEvents,
-                                                              @NonNull Supplier<String> servicePath,
-                                                              @NonNull Supplier<String> requestKeySupplier) {
-            final ActionMethodMapping mapping = ActionMethodMapping.by(ActionMethodMapping.CRD_MAP, availableEvents);
-            final EventMethodDefinition definition = EventMethodDefinition.create(
-                Urls.combinePath(EntityHttpService.toCapturePath(PointMetadata.INSTANCE), servicePath.get()), mapping);
-            return Stream.of(Collections.singleton(definition),
-                             EntityHttpService.createDefinitions(mapping, servicePath, requestKeySupplier))
-                         .flatMap(Collection::stream)
-                         .collect(Collectors.toSet());
-        }
-
-        static RequestData createRequestData(@NonNull RequestData requestData, @NonNull JsonObject body) {
-            final String pointId = requestData.body().getString(PointMetadata.INSTANCE.requestKeyName());
-            return RequestData.builder()
-                              .headers(requestData.headers())
-                              .filter(requestData.filter())
-                              .sort(requestData.sort())
-                              .pagination(requestData.pagination())
-                              .body(body.put(PointMetadata.INSTANCE.requestKeyName(), pointId))
-                              .build();
-        }
-
-        @Override
-        default EntityReferences referencedEntities() {
-            return new EntityReferences().add(PointMetadata.INSTANCE, "point");
-        }
-
     }
 
 }

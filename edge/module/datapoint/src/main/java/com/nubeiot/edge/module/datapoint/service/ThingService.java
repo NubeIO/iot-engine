@@ -7,10 +7,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.core.sql.decorator.RequestDecorator;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractTransitiveEntityService;
 import com.nubeiot.core.sql.service.marker.EntityReferences;
@@ -18,7 +18,7 @@ import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeDeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.ThingMetadata;
-import com.nubeiot.edge.module.datapoint.service.NetworkService.NetworkExtension;
+import com.nubeiot.edge.module.datapoint.service.extension.NetworkExtension;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
 
 import lombok.NonNull;
@@ -58,28 +58,8 @@ public final class ThingService extends AbstractTransitiveEntityService<Thing, T
     }
 
     @Override
-    public @NonNull RequestData onCreatingOneResource(@NonNull RequestData requestData) {
-        return super.onCreatingOneResource(optimizeRequestData(requestData));
-    }
-
-    @Override
-    public @NonNull RequestData onModifyingOneResource(@NonNull RequestData requestData) {
-        return super.onModifyingOneResource(optimizeRequestData(requestData));
-    }
-
-    @Override
-    public @NonNull RequestData onReadingManyResource(@NonNull RequestData requestData) {
-        return super.onReadingManyResource(optimizeRequestData(requestData));
-    }
-
-    @Override
-    public @NonNull RequestData onReadingOneResource(@NonNull RequestData requestData) {
-        return super.onReadingOneResource(optimizeRequestData(requestData));
-    }
-
-    private RequestData optimizeRequestData(@NonNull RequestData requestData) {
-        NetworkExtension.optimizeAlias(entityHandler(), requestData);
-        return requestData;
+    public @NonNull RequestDecorator requestDecorator() {
+        return NetworkExtension.create(this);
     }
 
 }

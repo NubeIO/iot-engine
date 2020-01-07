@@ -88,8 +88,8 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
         JsonObject data = new JsonObject(
             "{\"id\":\"" + id + "\",\"code\":\"TET_01\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"protocol" +
             "\":\"WIRE\",\"unit\":{\"type\":\"meters_per_second\",\"symbol\":\"m/s\",\"category\":\"VELOCITY\"," +
-            "\"alias\":{\"= 10.0\":\"hah\",\"> 10.0\":\"xyz\"}},\"edge\":\"" + PrimaryKey.EDGE + "\",\"enabled\":true" +
-            "}");
+            "\"alias\":{\"= 10.0\":\"hah\",\"> 10.0\":\"xyz\"}},\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" +
+            PrimaryKey.DEFAULT_NETWORK + "\",\"enabled\":true" + "}");
         JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
                                               .put("status", Status.SUCCESS)
                                               .put("resource", data);
@@ -111,7 +111,8 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
         JsonObject data = new JsonObject(
             "{\"id\":\"" + id + "\",\"code\":\"TET_01\",\"kind\":\"OUTPUT\",\"type\":\"DIGITAL\",\"protocol" +
             "\":\"BACNET\",\"unit\":{\"type\":\"fahrenheit\",\"symbol\":\"°F\",\"category\":\"TEMPERATURE\"}," +
-            "\"edge\":\"" + PrimaryKey.EDGE + "\",\"enabled\":true}");
+            "\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.DEFAULT_NETWORK +
+            "\",\"enabled\":true}");
         JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
                                               .put("status", Status.SUCCESS)
                                               .put("resource", data);
@@ -178,49 +179,44 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
     }
 
     @Test
-    public void test_update_by_edge(TestContext context) {
-        JsonObject body = new JsonObject(
-            "{\"id\":\"" + PrimaryKey.P_GPIO_HUMIDITY + "\",\"code\":\"NUBE_VELOCITY\",\"edge\":\"" + PrimaryKey.EDGE +
-            "\",\"enabled\":false,\"protocol\":\"BACNET\",\"kind\":\"INPUT\",\"type\":\"UNKNOWN\"" +
-            ",\"unit\":{\"type\":\"kilometers_per_hour\",\"category\":\"VELOCITY\",\"symbol\":\"km/h\"}}");
-        JsonObject expected = new JsonObject().put("action", EventAction.UPDATE)
-                                              .put("status", Status.SUCCESS)
-                                              .put("resource", body);
-        final Point p1 = new Point().setCode("NUBE_VELOCITY")
-                                    .setProtocol(Protocol.BACNET)
-                                    .setKind(PointKind.INPUT)
-                                    .setMeasureUnit(Velocity.KM_PER_HOUR.type())
-                                    .setEnabled(false);
-        RequestData req = RequestData.builder()
-                                     .body(p1.toJson()
-                                             .put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString())
-                                             .put("edge_id", PrimaryKey.EDGE.toString()))
-                                     .build();
-        asserter(context, true, expected, PointService.class.getName(), EventAction.UPDATE, req);
-    }
-
-    @Test
-    public void test_update_by_edge_network(TestContext context) {
-        JsonObject body = new JsonObject(
+    public void test_update_by_edge_and_network(TestContext context) {
+        final JsonObject body = new JsonObject(
             "{\"id\":\"" + PrimaryKey.P_GPIO_HUMIDITY + "\",\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" +
             PrimaryKey.DEFAULT_NETWORK + "\",\"code\":\"NUBE_VELOCITY\",\"enabled\":false," +
             "\"protocol\":\"BACNET\",\"kind\":\"INPUT\",\"type\":\"UNKNOWN\"," +
             "\"unit\":{\"type\":\"kilometers_per_hour\",\"category\":\"VELOCITY\",\"symbol\":\"km/h\"}}");
-        JsonObject expected = new JsonObject().put("action", EventAction.UPDATE)
-                                              .put("status", Status.SUCCESS)
-                                              .put("resource", body);
+        final JsonObject expected = new JsonObject().put("action", EventAction.UPDATE)
+                                                    .put("status", Status.SUCCESS)
+                                                    .put("resource", body);
         final Point p1 = new Point().setCode("NUBE_VELOCITY")
                                     .setProtocol(Protocol.BACNET)
                                     .setKind(PointKind.INPUT)
                                     .setMeasureUnit(Velocity.KM_PER_HOUR.type())
                                     .setEnabled(false);
-        RequestData req = RequestData.builder()
-                                     .body(p1.toJson()
-                                             .put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString())
-                                             .put("edge_id", PrimaryKey.EDGE.toString())
-                                             .put("network_id", "local"))
-                                     .build();
+        final RequestData req = RequestData.builder()
+                                           .body(p1.toJson()
+                                                   .put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString())
+                                                   .put("edge_id", PrimaryKey.EDGE.toString())
+                                                   .put("network_id", "local"))
+                                           .build();
         asserter(context, true, expected, PointService.class.getName(), EventAction.UPDATE, req);
+    }
+
+    @Test
+    public void test_update_by_edge_missing_network(TestContext context) {
+        final JsonObject expected = new JsonObject().put("code", ErrorCode.INVALID_ARGUMENT)
+                                                    .put("message", "Point must be assigned to Network");
+        final Point p1 = new Point().setCode("NUBE_VELOCITY")
+                                    .setProtocol(Protocol.BACNET)
+                                    .setKind(PointKind.INPUT)
+                                    .setMeasureUnit(Velocity.KM_PER_HOUR.type())
+                                    .setEnabled(false);
+        final RequestData req = RequestData.builder()
+                                           .body(p1.toJson()
+                                                   .put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString())
+                                                   .put("edge_id", PrimaryKey.EDGE.toString()))
+                                           .build();
+        asserter(context, false, expected, PointService.class.getName(), EventAction.UPDATE, req);
     }
 
     @Test
@@ -244,12 +240,11 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
                                         .toJson()
                                         .put("code", "NUBE_XX");
         body.remove("measure_unit");
-        body.remove("network");
         body.put("unit", Base.BOOLEAN.toJson());
         JsonObject expected = new JsonObject().put("action", EventAction.PATCH)
                                               .put("status", Status.SUCCESS)
                                               .put("resource", body);
-        final JsonObject p1 = JsonPojo.from(new Point().setCode("NUBE_XX")).toJson().put("network", (String) null);
+        final JsonObject p1 = JsonPojo.from(new Point().setCode("NUBE_XX")).toJson();
         RequestData req = RequestData.builder()
                                      .body(p1.put("point_id", PrimaryKey.P_BACNET_SWITCH.toString())
                                              .put("edge_id", PrimaryKey.EDGE.toString()))

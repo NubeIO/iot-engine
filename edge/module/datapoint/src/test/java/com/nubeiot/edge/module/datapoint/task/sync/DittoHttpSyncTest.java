@@ -99,7 +99,8 @@ public class DittoHttpSyncTest extends BaseDataPointVerticleTest {
         JsonObject data = new JsonObject(
             "{\"id\":\"" + id + "\",\"code\":\"TET_01\",\"kind\":\"OUTPUT\",\"type\":\"DIGITAL\",\"protocol" +
             "\":\"BACNET\",\"unit\":{\"type\":\"fahrenheit\",\"symbol\":\"°F\",\"category\":\"TEMPERATURE\"}," +
-            "\"edge\":\"" + PrimaryKey.EDGE + "\",\"enabled\":true}");
+            "\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.DEFAULT_NETWORK + "\"," +
+            "\"enabled\":true}");
         JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
                                               .put("status", Status.SUCCESS)
                                               .put("resource", data);

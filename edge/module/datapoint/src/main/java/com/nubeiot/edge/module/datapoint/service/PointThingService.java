@@ -6,14 +6,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import io.vertx.core.json.JsonObject;
-
-import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.decorator.RequestDecorator;
 import com.nubeiot.core.sql.service.AbstractManyToManyEntityService;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointThingMetadata;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointThingComposite;
-import com.nubeiot.edge.module.datapoint.service.NetworkService.NetworkExtension;
+import com.nubeiot.edge.module.datapoint.service.extension.NetworkExtension;
 import com.nubeiot.iotdata.edge.model.tables.PointThing;
 
 import lombok.NonNull;
@@ -26,6 +24,11 @@ abstract class PointThingService extends AbstractManyToManyEntityService<PointTh
     }
 
     @Override
+    public @NonNull RequestDecorator requestDecorator() {
+        return NetworkExtension.create(this);
+    }
+
+    @Override
     public Set<String> ignoreFields() {
         final @NonNull PointThing table = context().table();
         return Stream.of(super.ignoreFields(),
@@ -33,12 +36,6 @@ abstract class PointThingService extends AbstractManyToManyEntityService<PointTh
                                        table.getJsonField(table.EDGE_ID), table.getJsonField(table.COMPUTED_THING)))
                      .flatMap(Collection::stream)
                      .collect(Collectors.toSet());
-    }
-
-    @Override
-    protected RequestData recomputeRequestData(RequestData reqData, JsonObject extra) {
-        NetworkExtension.optimizeAlias(entityHandler(), reqData);
-        return super.recomputeRequestData(reqData, extra);
     }
 
 }

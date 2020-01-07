@@ -6,10 +6,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.core.sql.decorator.RequestDecorator;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractManyToManyEntityService;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
@@ -17,8 +17,8 @@ import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeDeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.model.pojos.EdgeDeviceComposite;
-import com.nubeiot.edge.module.datapoint.service.EdgeService.EdgeExtension;
-import com.nubeiot.edge.module.datapoint.service.NetworkService.NetworkExtension;
+import com.nubeiot.edge.module.datapoint.service.extension.EdgeExtension;
+import com.nubeiot.edge.module.datapoint.service.extension.NetworkExtension;
 import com.nubeiot.iotdata.edge.model.tables.EdgeDevice;
 
 import lombok.NonNull;
@@ -29,26 +29,6 @@ public final class DeviceByNetworkService
 
     public DeviceByNetworkService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
-    }
-
-    @Override
-    public @NonNull RequestData onCreatingOneResource(@NonNull RequestData requestData) {
-        return super.onCreatingOneResource(optimizeRequestData(requestData));
-    }
-
-    @Override
-    public @NonNull RequestData onModifyingOneResource(@NonNull RequestData requestData) {
-        return super.onModifyingOneResource(optimizeRequestData(requestData));
-    }
-
-    @Override
-    public @NonNull RequestData onReadingManyResource(@NonNull RequestData requestData) {
-        return super.onReadingManyResource(optimizeRequestData(requestData));
-    }
-
-    @Override
-    public @NonNull RequestData onReadingOneResource(@NonNull RequestData requestData) {
-        return super.onReadingOneResource(optimizeRequestData(requestData));
     }
 
     @Override
@@ -77,15 +57,14 @@ public final class DeviceByNetworkService
     }
 
     @Override
+    public @NonNull RequestDecorator requestDecorator() {
+        return NetworkExtension.create(EdgeExtension.create(this));
+    }
+
+    @Override
     public final Set<EventMethodDefinition> definitions() {
         return EntityHttpService.createDefinitions(getAvailableEvents(), resource(), EdgeMetadata.INSTANCE,
                                                    NetworkMetadata.INSTANCE);
-    }
-
-    private RequestData optimizeRequestData(@NonNull RequestData requestData) {
-        EdgeExtension.optimizeReqData(entityHandler(), requestData, getEdgeField());
-        NetworkExtension.optimizeAlias(entityHandler(), requestData);
-        return requestData;
     }
 
     private String getEdgeField() {

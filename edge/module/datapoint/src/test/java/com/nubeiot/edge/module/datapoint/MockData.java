@@ -113,7 +113,8 @@ public final class MockData {
     }
 
     private static List<PointValueData> pointData() {
-        return Arrays.asList(new PointValueData().setPoint(PrimaryKey.P_GPIO_HUMIDITY).setPriority(5)
+        return Arrays.asList(new PointValueData().setPoint(PrimaryKey.P_GPIO_HUMIDITY)
+                                                 .setPriority(5)
                                                  .setValue(10d)
                                                  .setPriorityValues(
                                                      new PointPriorityValue().add(5, 10).add(6, 9).add(8, 10)),
@@ -122,8 +123,7 @@ public final class MockData {
                                                  .setValue(24d)
                                                  .setPriorityValues(
                                                      new PointPriorityValue().add(3, 24d).add(9, 27.5).add(17, 25.5)),
-                             new PointValueData().setPoint(PrimaryKey.P_BACNET_FAN)
-                                                 .setPriority(2)
+                             new PointValueData().setPoint(PrimaryKey.P_BACNET_FAN).setPriority(2)
                                                  .setValue(240d)
                                                  .setPriorityValues(
                                                      new PointPriorityValue().add(2, 240d).add(7, 260d).add(16, 250)));

@@ -10,7 +10,7 @@ import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractReferencingEntityService;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.TagPointMetadata;
-import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
+import com.nubeiot.edge.module.datapoint.service.extension.PointExtension;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointTag;
 
 import lombok.NonNull;

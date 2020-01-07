@@ -4,6 +4,7 @@ target/
 .vertx/
 **/bin/
 **/*.db
+**/*.log
 **/*.bak
 **/generated/
 **/logs/

@@ -1,11 +1,11 @@
 package com.nubeiot.core.sql.service;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.vertx.core.json.JsonObject;
+import io.reactivex.Single;
 
-import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.core.sql.decorator.HasReferenceRequestDecorator;
 import com.nubeiot.core.sql.decorator.ReferencingEntityTransformer;
 import com.nubeiot.core.sql.query.ReferencingQueryExecutor;
 import com.nubeiot.core.sql.service.marker.ReferencingEntityMarker;
@@ -20,11 +20,13 @@ import lombok.NonNull;
  * @param <P> Type of {@code VertxPojo}
  * @param <M> Type of {@code EntityMetadata}
  * @see ReferencingEntityService
+ * @see HasReferenceRequestDecorator
  * @see ReferencingEntityTransformer
  * @since 1.0.0
  */
 public abstract class AbstractReferencingEntityService<P extends VertxPojo, M extends EntityMetadata>
-    extends HasReferenceEntityService<P, M> implements ReferencingEntityService<P, M>, ReferencingEntityTransformer {
+    extends AbstractEntityService<P, M>
+    implements ReferencingEntityService<P, M>, HasReferenceRequestDecorator, ReferencingEntityTransformer {
 
     /**
      * Instantiates a new Abstract one to many entity service.
@@ -52,33 +54,18 @@ public abstract class AbstractReferencingEntityService<P extends VertxPojo, M ex
     }
 
     @Override
+    protected @NonNull OperationValidator initPatchValidator() {
+        return OperationValidator.create((req, dbEntity) -> Single.just(validation().onPatching(dbEntity, req)));
+    }
+
+    @Override
+    protected @NonNull OperationValidator initUpdateValidator() {
+        return OperationValidator.create((req, dbEntity) -> Single.just(validation().onUpdating(dbEntity, req)));
+    }
+
+    @Override
     public ReferencingEntityMarker marker() {
         return this;
-    }
-
-    @Override
-    public @NonNull RequestData onCreatingOneResource(@NonNull RequestData requestData) {
-        return recomputeRequestData(requestData, convertKey(requestData, marker().referencedEntities().stream()));
-    }
-
-    @Override
-    @NonNull
-    public RequestData onModifyingOneResource(@NonNull RequestData requestData) {
-        final JsonObject extra = convertKey(requestData, context());
-        final JsonObject refExtra = convertKey(requestData, marker().referencedEntities().stream());
-        return recomputeRequestData(requestData, extra.mergeIn(refExtra, true));
-    }
-
-    @Override
-    @NonNull
-    public RequestData onReadingManyResource(@NonNull RequestData requestData) {
-        return recomputeRequestData(requestData, null);
-    }
-
-    @Override
-    @NonNull
-    public RequestData onReadingOneResource(@NonNull RequestData requestData) {
-        return recomputeRequestData(requestData, convertKey(requestData, context()));
     }
 
 }
