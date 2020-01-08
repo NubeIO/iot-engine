@@ -12,6 +12,7 @@ import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
+import com.nubeiot.core.sql.decorator.RequestDecorator;
 import com.nubeiot.core.sql.query.SimpleQueryExecutor;
 import com.nubeiot.core.sql.validation.EntityValidation;
 import com.nubeiot.core.sql.validation.OperationValidator;
@@ -33,13 +34,14 @@ import lombok.RequiredArgsConstructor;
  * @param <P> Type of {@code VertxPojo}
  * @param <M> Type of {@code EntityMetadata}
  * @see EntityService
+ * @see RequestDecorator
  * @see EntityTransformer
  * @since 1.0.0
  */
 @RequiredArgsConstructor
 @SuppressWarnings("unchecked")
 public abstract class AbstractEntityService<P extends VertxPojo, M extends EntityMetadata>
-    implements SimpleEntityService<P, M>, EntityTransformer {
+    implements SimpleEntityService<P, M>, RequestDecorator, EntityTransformer {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final EntityHandler entityHandler;
@@ -53,6 +55,9 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
     }
 
     @Override
+    public @NonNull RequestDecorator requestDecorator() { return this; }
+
+    @Override
     public @NonNull EntityValidation validation() { return context(); }
 
     @Override
@@ -63,7 +68,7 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
         return DefaultDQLBatchWorkflow.builder()
                                       .action(EventAction.GET_LIST)
                                       .metadata(context())
-                                      .normalize(this::onReadingManyResource)
+                                      .normalize(requestDecorator()::onReadingManyResource)
                                       .validator(initGetOneValidator())
                                       .preTask(prePersistTask())
                                       .sqlStep(initGetManyStep())
@@ -78,7 +83,7 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
     public Single<JsonObject> get(RequestData requestData) {
         return DefaultDQLWorkflow.<P>builder().action(EventAction.GET_ONE)
                                               .metadata(context())
-                                              .normalize(this::onReadingOneResource)
+                                              .normalize(requestDecorator()::onReadingOneResource)
                                               .validator(initGetOneValidator())
                                               .preTask(prePersistTask())
                                               .sqlStep(initGetOneStep())
@@ -94,7 +99,7 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
         return DefaultDMLWorkflow.builder()
                                  .action(EventAction.CREATE)
                                  .metadata(context())
-                                 .normalize(this::onCreatingOneResource)
+                                 .normalize(requestDecorator()::onCreatingOneResource)
                                  .validator(initCreationValidator())
                                  .preTask(prePersistTask())
                                  .sqlStep(initCreationStep())
@@ -110,7 +115,7 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
         return DefaultDMLWorkflow.builder()
                                  .action(EventAction.UPDATE)
                                  .metadata(context())
-                                 .normalize(this::onModifyingOneResource)
+                                 .normalize(requestDecorator()::onModifyingOneResource)
                                  .validator(initUpdateValidator())
                                  .preTask(prePersistTask())
                                  .sqlStep(initModificationStep(EventAction.UPDATE))
@@ -126,7 +131,7 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
         return DefaultDMLWorkflow.builder()
                                  .action(EventAction.PATCH)
                                  .metadata(context())
-                                 .normalize(this::onModifyingOneResource)
+                                 .normalize(requestDecorator()::onModifyingOneResource)
                                  .validator(initPatchValidator())
                                  .preTask(prePersistTask())
                                  .sqlStep(initModificationStep(EventAction.PATCH))
@@ -142,7 +147,7 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
         return DefaultDMLWorkflow.builder()
                                  .action(EventAction.REMOVE)
                                  .metadata(context())
-                                 .normalize(this::onModifyingOneResource)
+                                 .normalize(requestDecorator()::onDeletingOneResource)
                                  .validator(initDeletionValidator())
                                  .preTask(prePersistTask())
                                  .sqlStep(initDeletionStep())

@@ -24,6 +24,11 @@ public final class PointComposite extends Point implements CompositePojo<Point, 
     }
 
     @Override
+    public JsonObject toJsonWithoutExt() {
+        return super.toJson();
+    }
+
+    @Override
     public JsonObject toJson() {
         return super.toJson().mergeIn(extensionToJson(), true);
     }

@@ -10,7 +10,7 @@ import com.nubeiot.core.sql.service.marker.GroupReferencingEntityMarker;
 import lombok.NonNull;
 
 /**
- * Represents for {@code Group Entity} service based on eventbus listener.
+ * Represents for an entity service that holds a {@code Group resource}.
  *
  * @param <M>  Type of {@code EntityMetadata}
  * @param <CP> Type of {@code CompositePojo}

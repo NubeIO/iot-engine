@@ -15,7 +15,17 @@ import com.nubeiot.core.sql.service.marker.OneToOneEntityMarker;
 
 import lombok.NonNull;
 
-public interface OneToOneEntityService<CP extends CompositePojo, CM extends CompositeMetadata>
+/**
+ * Represents for an entity service that has {@code one-to-one} relationship to other entities and in business context,
+ * it is as {@code parent} entity.
+ *
+ * @param <CP> Type of {@code CompositePojo}
+ * @param <CM> Type of {@code CompositeMetadata}
+ * @see ReferencedEntityService
+ * @see OneToOneEntityMarker
+ * @since 1.0.0
+ */
+public interface OneToOneParentEntityService<CP extends CompositePojo, CM extends CompositeMetadata>
     extends ReferencedEntityService<CP, CM>, OneToOneEntityMarker {
 
     @SuppressWarnings("unchecked")
@@ -32,6 +42,14 @@ public interface OneToOneEntityService<CP extends CompositePojo, CM extends Comp
         return RequestData.builder().body(new JsonObject().put(referenceKey, JsonData.checkAndConvert(key))).build();
     }
 
+    /**
+     * On create maybe.
+     *
+     * @param requestData the request data
+     * @param pojo        the pojo
+     * @return the maybe
+     * @since 1.0.0
+     */
     default Maybe<CP> onCreate(@NonNull RequestData requestData, @NonNull CP pojo) {
         return Maybe.just(pojo);
     }

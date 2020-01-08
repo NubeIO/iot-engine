@@ -1,7 +1,6 @@
 package com.nubeiot.edge.module.datapoint.service;
 
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
@@ -18,16 +17,18 @@ import com.nubeiot.core.dto.RequestData.Filters;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventMessage;
-import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.http.OneToOneChildEntityHttpService;
 import com.nubeiot.core.sql.pojos.JsonPojo;
-import com.nubeiot.core.sql.service.AbstractReferencingEntityService;
+import com.nubeiot.core.sql.service.AbstractOneToOneChildEntityService;
+import com.nubeiot.core.sql.service.CreateOrUpdateEntityService;
+import com.nubeiot.core.sql.service.OneToOneChildEntityService;
 import com.nubeiot.core.sql.workflow.step.CreationStep;
 import com.nubeiot.core.sql.workflow.step.ModificationStep;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointValueMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.RealtimeDataMetadata;
-import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
+import com.nubeiot.edge.module.datapoint.service.extension.PointExtension.PointOneToOneExtension;
 import com.nubeiot.iotdata.dto.PointPriorityValue.PointValue;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointRealtimeData;
@@ -35,8 +36,10 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
 
 import lombok.NonNull;
 
-public final class PointValueService extends AbstractReferencingEntityService<PointValueData, PointValueMetadata>
-    implements DataPointService<PointValueData, PointValueMetadata>, PointExtension {
+public final class PointValueService extends AbstractOneToOneChildEntityService<PointValueData, PointValueMetadata>
+    implements DataPointService<PointValueData, PointValueMetadata>, PointOneToOneExtension,
+               OneToOneChildEntityHttpService<PointValueData, PointValueMetadata>,
+               CreateOrUpdateEntityService<PointValueData, PointValueMetadata> {
 
     public PointValueService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
@@ -49,7 +52,17 @@ public final class PointValueService extends AbstractReferencingEntityService<Po
 
     @Override
     public @NonNull Collection<EventAction> getAvailableEvents() {
-        return Arrays.asList(EventAction.GET_ONE, EventAction.CREATE_OR_UPDATE, EventAction.REMOVE);
+        return OneToOneChildEntityService.availableEvents(CreateOrUpdateEntityService.super.getAvailableEvents());
+    }
+
+    @Override
+    public Set<EventMethodDefinition> definitions() {
+        return OneToOneChildEntityHttpService.super.definitions();
+    }
+
+    @EventContractor(action = EventAction.CREATE_OR_UPDATE, returnType = Single.class)
+    public Single<JsonObject> createOrUpdate(RequestData requestData) {
+        return CreateOrUpdateEntityService.super.createOrUpdate(requestData);
     }
 
     @Override
@@ -60,27 +73,6 @@ public final class PointValueService extends AbstractReferencingEntityService<Po
     @Override
     public @NonNull RequestData onModifyingOneResource(@NonNull RequestData requestData) {
         return recomputeRequestData(super.onModifyingOneResource(requestData));
-    }
-
-    @NonNull
-    private RequestData recomputeRequestData(RequestData reqData) {
-        JsonObject filter = Optional.ofNullable(reqData.filter()).orElse(new JsonObject());
-        if (!filter.getBoolean(Filters.AUDIT, false)) {
-            filter.put(Filters.TEMP_AUDIT, true);
-        }
-        filter.put(Filters.AUDIT, true);
-        return RequestData.builder()
-                          .headers(reqData.headers())
-                          .body(reqData.body())
-                          .filter(filter)
-                          .sort(reqData.sort())
-                          .pagination(reqData.pagination())
-                          .build();
-    }
-
-    @Override
-    public Set<EventMethodDefinition> definitions() {
-        return PointExtension.oneToOneDefinitions(getAvailableEvents(), this::servicePath, context()::requestKeyName);
     }
 
     @NonNull
@@ -118,20 +110,6 @@ public final class PointValueService extends AbstractReferencingEntityService<Po
                                                                         (PointValueData) output.dbEntity()));
     }
 
-    @EventContractor(action = EventAction.CREATE_OR_UPDATE, returnType = Single.class)
-    public Single<JsonObject> createOrUpdate(RequestData reqData) {
-        final PointValueData data = context().parseFromRequest(reqData.body());
-        final RequestData patch = PointExtension.createRequestData(reqData, JsonPojo.from(data)
-                                                                                    .toJson(JsonData.MAPPER,
-                                                                                            AUDIT_FIELDS));
-        return patch(patch).onErrorResumeNext(t -> {
-            if (t instanceof NotFoundException) {
-                return create(PointExtension.createRequestData(reqData, JsonPojo.from(data).toJson()));
-            }
-            return Single.error(t);
-        });
-    }
-
     private void syncPointValue(@NonNull PointValueData prev, @NonNull EventAction action,
                                 @NonNull PointValueData pointValue) {
         final OffsetDateTime createdTime = action == EventAction.CREATE
@@ -157,15 +135,28 @@ public final class PointValueService extends AbstractReferencingEntityService<Po
         final int priority = Objects.isNull(requestValue.getValue()) ? pv.getPriority() : requestValue.getPriority();
         send(HistoryDataService.class, new PointHistoryData().setPoint(pv.getPoint())
                                                              .setValue(value)
-                                                             .setPriority(priority)
-                                                             .setTime(createdTime)
-                                                             .toJson());
+                                                             .setPriority(priority).setTime(createdTime).toJson());
     }
 
     private void send(@NonNull Class<? extends DataPointService> serviceName, @NonNull JsonObject body) {
         entityHandler().eventClient()
                        .send(serviceName.getName(),
                              EventMessage.initial(EventAction.CREATE, RequestData.builder().body(body).build()));
+    }
+
+    private @NonNull RequestData recomputeRequestData(RequestData reqData) {
+        JsonObject filter = Optional.ofNullable(reqData.filter()).orElse(new JsonObject());
+        if (!filter.getBoolean(Filters.AUDIT, false)) {
+            filter.put(Filters.TEMP_AUDIT, true);
+        }
+        filter.put(Filters.AUDIT, true);
+        return RequestData.builder()
+                          .headers(reqData.headers())
+                          .body(reqData.body())
+                          .filter(filter)
+                          .sort(reqData.sort())
+                          .pagination(reqData.pagination())
+                          .build();
     }
 
 }

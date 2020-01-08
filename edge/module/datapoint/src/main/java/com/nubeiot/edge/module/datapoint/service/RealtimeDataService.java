@@ -24,7 +24,7 @@ import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.RealtimeDataMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.RealtimeSettingMetadata;
-import com.nubeiot.edge.module.datapoint.service.PointService.PointExtension;
+import com.nubeiot.edge.module.datapoint.service.extension.PointExtension;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointRealtimeData;
 import com.nubeiot.iotdata.unit.DataType;
 

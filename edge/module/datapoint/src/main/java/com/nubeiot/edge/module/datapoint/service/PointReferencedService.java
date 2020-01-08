@@ -14,7 +14,7 @@ import com.nubeiot.core.dto.RequestData.Filters;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
-import com.nubeiot.core.sql.service.OneToOneEntityService;
+import com.nubeiot.core.sql.service.OneToOneParentEntityService;
 import com.nubeiot.core.sql.service.ReferencedEntityService;
 import com.nubeiot.core.sql.service.marker.EntityReferences;
 import com.nubeiot.core.sql.workflow.task.EntityDefinitionContext;
@@ -110,7 +110,8 @@ public final class PointReferencedService
     @Getter
     @Accessors(fluent = true)
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-    static final class PointOneToOneService implements OneToOneEntityService<PointComposite, PointCompositeMetadata> {
+    static final class PointOneToOneService
+        implements OneToOneParentEntityService<PointComposite, PointCompositeMetadata> {
 
         private final EntityHandler entityHandler;
 

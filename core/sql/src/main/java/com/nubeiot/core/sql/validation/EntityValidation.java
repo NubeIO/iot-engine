@@ -74,8 +74,10 @@ public interface EntityValidation<P extends VertxPojo> {
     default <PP extends P> PP onUpdating(@NonNull P dbData, @NonNull RequestData reqData)
         throws IllegalArgumentException {
         final JsonObject body = reqData.body().copy();
-        return (PP) context().parseFromRequest(
-            body.put(context().jsonKeyName(), JsonData.checkAndConvert(context().parseKey(reqData))));
+        final Object key = Optional.ofNullable(body.remove(context().requestKeyName()))
+                                   .orElse(body.remove(context().jsonKeyName()));
+        body.put(context().jsonKeyName(), JsonData.checkAndConvert(context().parseKey(Strings.toString(key))));
+        return (PP) context().parseFromRequest(body);
     }
 
     /**

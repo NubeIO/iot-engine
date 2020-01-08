@@ -21,6 +21,11 @@ public final class JobTriggerComposite extends JobTrigger implements CompositePo
     }
 
     @Override
+    public JsonObject toJsonWithoutExt() {
+        return super.toJson();
+    }
+
+    @Override
     public JsonObject toJson() {
         return super.toJson().mergeIn(extensionToJson(), true);
     }

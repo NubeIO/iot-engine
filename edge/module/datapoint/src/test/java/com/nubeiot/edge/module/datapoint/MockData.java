@@ -113,7 +113,8 @@ public final class MockData {
     }
 
     private static List<PointValueData> pointData() {
-        return Arrays.asList(new PointValueData().setPoint(PrimaryKey.P_GPIO_HUMIDITY).setPriority(5)
+        return Arrays.asList(new PointValueData().setPoint(PrimaryKey.P_GPIO_HUMIDITY)
+                                                 .setPriority(5)
                                                  .setValue(10d)
                                                  .setPriorityValues(
                                                      new PointPriorityValue().add(5, 10).add(6, 9).add(8, 10)),
@@ -386,6 +387,10 @@ public final class MockData {
                          .findFirst()
                          .map(PointValueData::new)
                          .orElse(null);
+    }
+
+    public static Device searchDevice(@NonNull UUID deviceKey) {
+        return DEVICES.stream().filter(p -> p.getId().equals(deviceKey)).findFirst().map(Device::new).orElse(null);
     }
 
     public static JsonObject data_Edge_Network() {

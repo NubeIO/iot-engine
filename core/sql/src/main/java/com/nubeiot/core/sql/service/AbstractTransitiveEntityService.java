@@ -4,6 +4,7 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.core.sql.decorator.HasReferenceRequestDecorator;
 import com.nubeiot.core.sql.query.TransitiveReferenceQueryExecutor;
 import com.nubeiot.core.sql.service.marker.TransitiveReferenceMarker;
 
@@ -20,7 +21,7 @@ import lombok.NonNull;
  * @since 1.0.0
  */
 public abstract class AbstractTransitiveEntityService<P extends VertxPojo, M extends EntityMetadata>
-    extends AbstractReferencingEntityService<P, M> implements TransitiveReferenceMarker {
+    extends AbstractReferencingEntityService<P, M> implements HasReferenceRequestDecorator, TransitiveReferenceMarker {
 
     /**
      * Instantiates a new Abstract one to many entity service.

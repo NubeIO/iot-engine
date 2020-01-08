@@ -36,9 +36,9 @@ public class ProtocolDispatcherTaskTest extends BaseDataPointServiceTest {
 
     @Test
     public void test_no_protocol_dispatcher(TestContext context) {
-        final JsonObject resource = new JsonObject(
-            "{\"id\":\"" + PrimaryKey.BACNET_NETWORK + "\",\"code\":\"test\",\"edge\":\"" + PrimaryKey.EDGE + "\"," +
-            "\"protocol\":\"BACNET\",\"state\":\"ENABLED\",\"metadata\":{\"host\":\"172.1.1.1\"}}");
+        final JsonObject resource = new JsonObject("{\"id\":\"" + PrimaryKey.BACNET_NETWORK + "\",\"code\":\"test\"," +
+                                                   "\"protocol\":\"BACNET\",\"state\":\"ENABLED\"," +
+                                                   "\"metadata\":{\"host\":\"172.1.1.1\"}}");
         final JsonObject expected = new JsonObject().put("action", EventAction.UPDATE)
                                                     .put("status", Status.SUCCESS)
                                                     .put("resource", resource);
@@ -116,8 +116,7 @@ public class ProtocolDispatcherTaskTest extends BaseDataPointServiceTest {
                  new JsonObject().put("code", ErrorCode.INVALID_ARGUMENT).put("message", "Unable to deleted"),
                  NetworkService.class.getName(), EventAction.REMOVE, req);
         TestHelper.sleep(1000);
-        asserter(context, true, JsonPojo.from(pojo).toJson().put("edge", PrimaryKey.EDGE.toString()),
-                 NetworkService.class.getName(), EventAction.GET_ONE, req);
+        asserter(context, true, JsonPojo.from(pojo).toJson(), NetworkService.class.getName(), EventAction.GET_ONE, req);
     }
 
     private void createNetwork(TestContext context, JsonObject metadata, Network reqBody) {

@@ -5,7 +5,7 @@ import lombok.NonNull;
 /**
  * Represents for an {@code database entity} marker.
  * <p>
- * It manifests {@code resource entity} is referenced by to other resources.
+ * It manifests {@code resource entity} is referenced by other resources.
  * <p>
  * In mapping to {@code database term}, it is known as {@code primary key} of this {@code table} is {@code foreign key}
  * in other {@code tables}.

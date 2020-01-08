@@ -15,6 +15,7 @@ import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
+import com.nubeiot.core.sql.decorator.RequestDecorator;
 import com.nubeiot.core.sql.query.EntityQueryExecutor;
 import com.nubeiot.core.sql.validation.EntityValidation;
 import com.nubeiot.core.sql.workflow.task.EntityTask;
@@ -47,6 +48,16 @@ public abstract class EntityServiceDelegate<P extends VertxPojo, M extends Entit
     }
 
     @Override
+    public @NonNull EntityHandler entityHandler() {
+        return unwrap().entityHandler();
+    }
+
+    @Override
+    public M context() {
+        return unwrap().context();
+    }
+
+    @Override
     public @NonNull Collection<EventAction> getAvailableEvents() {
         return unwrap().getAvailableEvents();
     }
@@ -54,6 +65,11 @@ public abstract class EntityServiceDelegate<P extends VertxPojo, M extends Entit
     @Override
     public @NonNull EntityQueryExecutor<P> queryExecutor() {
         return unwrap().queryExecutor();
+    }
+
+    @Override
+    public @NonNull RequestDecorator requestDecorator() {
+        return unwrap().requestDecorator();
     }
 
     @Override
@@ -129,16 +145,6 @@ public abstract class EntityServiceDelegate<P extends VertxPojo, M extends Entit
     @Override
     public Single<EventMessage> apply(Message<Object> message) {
         return unwrap().apply(message);
-    }
-
-    @Override
-    public @NonNull EntityHandler entityHandler() {
-        return unwrap().entityHandler();
-    }
-
-    @Override
-    public M context() {
-        return unwrap().context();
     }
 
 }

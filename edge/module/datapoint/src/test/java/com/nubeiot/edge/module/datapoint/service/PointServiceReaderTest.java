@@ -40,8 +40,7 @@ public class PointServiceReaderTest extends BaseDataPointServiceTest {
     @Test
     public void test_get_point_by_network(TestContext context) {
         JsonObject expected = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_TEMP))
-                                      .toJson()
-                                      .put("unit", Temperature.CELSIUS.toJson());
+                                      .toJson().put("unit", Temperature.CELSIUS.toJson());
         expected.remove("measure_unit");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("network_id", "local")
@@ -51,7 +50,30 @@ public class PointServiceReaderTest extends BaseDataPointServiceTest {
     }
 
     @Test
-    public void test_get_list_point_by_default_network(TestContext context) {
+    public void test_get_list_point_by_filter_network_id(TestContext context) {
+        final JsonObject p1 = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_HUMIDITY)).toJson();
+        final JsonObject p2 = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_TEMP)).toJson();
+        final JsonObject expected = new JsonObject().put("points", new JsonArray().add(p1).add(p2));
+        final RequestData req = RequestData.builder()
+                                           .filter(
+                                               new JsonObject().put("network", PrimaryKey.DEFAULT_NETWORK.toString()))
+                                           .build();
+        asserter(context, true, expected, PointService.class.getName(), EventAction.GET_LIST, req,
+                 JSONCompareMode.LENIENT);
+    }
+
+    @Test
+    public void test_get_list_point_by_filter_network_alias(TestContext context) {
+        final JsonObject p1 = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_HUMIDITY)).toJson();
+        final JsonObject p2 = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_TEMP)).toJson();
+        final JsonObject expected = new JsonObject().put("points", new JsonArray().add(p1).add(p2));
+        final RequestData req = RequestData.builder().filter(new JsonObject().put("network", "default")).build();
+        asserter(context, true, expected, PointService.class.getName(), EventAction.GET_LIST, req,
+                 JSONCompareMode.LENIENT);
+    }
+
+    @Test
+    public void test_get_list_point_by_network_alias(TestContext context) {
         final JsonObject p1 = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_HUMIDITY)).toJson();
         final JsonObject p2 = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_TEMP)).toJson();
         final JsonObject expected = new JsonObject().put("points", new JsonArray().add(p1).add(p2));
@@ -61,7 +83,7 @@ public class PointServiceReaderTest extends BaseDataPointServiceTest {
     }
 
     @Test
-    public void test_get_list_point_by_another_network(TestContext context) {
+    public void test_get_list_point_by_network_id(TestContext context) {
         final JsonObject p1 = JsonPojo.from(MockData.search(PrimaryKey.P_BACNET_TEMP)).toJson();
         final JsonObject p2 = JsonPojo.from(MockData.search(PrimaryKey.P_BACNET_FAN)).toJson();
         final JsonObject p3 = JsonPojo.from(MockData.search(PrimaryKey.P_BACNET_SWITCH)).toJson();

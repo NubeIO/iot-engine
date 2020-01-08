@@ -36,6 +36,18 @@ public interface RequestDecorator {
     }
 
     /**
+     * Decorates request data on deleting one resource.
+     *
+     * @param requestData the request data
+     * @return the request data
+     * @since 1.0.0
+     */
+    @NonNull
+    default RequestData onDeletingOneResource(@NonNull RequestData requestData) {
+        return requestData;
+    }
+
+    /**
      * Decorates request data on reading many resource.
      *
      * @param requestData the request data

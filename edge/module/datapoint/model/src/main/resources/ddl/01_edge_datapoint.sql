@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS EDGE_DEVICE (
 	ID                   bigint GENERATED ALWAYS AS IDENTITY  NOT NULL,
 	EDGE_ID              uuid   NOT NULL,
 	DEVICE_ID            uuid   NOT NULL,
-	NETWORK_ID           uuid   ,
+	NETWORK_ID           uuid   NOT NULL,
 	ADDRESS_JSON         clob(2147483647)   ,
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           clob(2147483647)   ,
@@ -125,7 +125,7 @@ CREATE TABLE IF NOT EXISTS POINT (
 	ID                   uuid   NOT NULL,
 	CODE                 varchar(63)   NOT NULL,
 	EDGE                 uuid   NOT NULL,
-	NETWORK              uuid   ,
+	NETWORK              uuid   NOT NULL,
 	LABEL                varchar(1000)   ,
 	ENABLED              boolean  DEFAULT TRUE NOT NULL,
 	PROTOCOL             varchar(31)  DEFAULT 'UNKNOWN' NOT NULL,
@@ -175,7 +175,7 @@ CREATE INDEX IDX_POINT_THING_POINT ON POINT_THING ( POINT_ID );
 
 CREATE INDEX IDX_POINT_THING_THING ON POINT_THING ( THING_ID );
 
-COMMENT ON TABLE POINT_THING IS 'Represents for Point is attached to one and more specific Things.\nThing with type is SENSOR is attached to only one Point. It will be validated by COMPUTED_THING field';
+COMMENT ON TABLE POINT_THING IS 'Represents for Point is attached to one and more specific Things.\nThing with type is SENSOR is attached to only one Point. It will be validated by COMPUTED_THING field.\nField: DEVICE_ID, NETWORK_ID, EDGE_ID, COMPUTED_THING is computed by TRIGGER: com.nubeiot.edge.module.datapoint.trigger.PointThingTrigger';
 COMMENT ON COLUMN POINT_THING.COMPUTED_THING IS 'Computed Thing Id and Thing Type to ensure unique sensor thing';
 COMMENT ON COLUMN POINT_THING.EDGE_ID IS 'Egde value is inherited from Point';
 COMMENT ON COLUMN POINT_THING.COMPUTED_THING IS 'Network value is inherited from Point';
