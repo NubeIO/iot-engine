@@ -123,7 +123,8 @@ public final class MockData {
                                                  .setValue(24d)
                                                  .setPriorityValues(
                                                      new PointPriorityValue().add(3, 24d).add(9, 27.5).add(17, 25.5)),
-                             new PointValueData().setPoint(PrimaryKey.P_BACNET_FAN).setPriority(2)
+                             new PointValueData().setPoint(PrimaryKey.P_BACNET_FAN)
+                                                 .setPriority(2)
                                                  .setValue(240d)
                                                  .setPriorityValues(
                                                      new PointPriorityValue().add(2, 240d).add(7, 260d).add(16, 250)));
@@ -386,6 +387,10 @@ public final class MockData {
                          .findFirst()
                          .map(PointValueData::new)
                          .orElse(null);
+    }
+
+    public static Device searchDevice(@NonNull UUID deviceKey) {
+        return DEVICES.stream().filter(p -> p.getId().equals(deviceKey)).findFirst().map(Device::new).orElse(null);
     }
 
     public static JsonObject data_Edge_Network() {
