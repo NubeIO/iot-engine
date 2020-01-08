@@ -22,7 +22,7 @@ public final class EdgeSchedulerVerticle extends ContainerVerticle {
     private SchedulerEntityHandler entityHandler;
     private MicroContext microCtx;
 
-    EdgeSchedulerVerticle() {
+    public EdgeSchedulerVerticle() {
         this.entityHandlerClass = SchedulerEntityHandler.class;
     }
 
