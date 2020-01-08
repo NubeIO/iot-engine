@@ -104,6 +104,8 @@ public interface CompositePojo<P extends VertxPojo, CP extends CompositePojo> ex
         return extension().toJson();
     }
 
+    JsonObject toJsonWithoutExt();
+
     final class ExtensionPojo implements JsonData {
 
         final @NonNull Map<String, VertxPojo> other = new HashMap<>();
