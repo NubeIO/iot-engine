@@ -305,18 +305,17 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull HistorySetting onCreating(@NonNull RequestData reqData) throws IllegalArgumentException {
-            return validate(reqData.body());
+            return validate(parseFromRequest(reqData.body()));
         }
 
         @Override
         public @NonNull HistorySetting onPatching(@NonNull HistorySetting dbData, @NonNull RequestData reqData)
             throws IllegalArgumentException {
-            return validate(JsonPojo.merge(dbData, parseFromRequest(reqData.body())));
+            return validate(UUIDKeyEntity.super.onPatching(dbData, reqData));
         }
 
         @NonNull
-        private HistorySetting validate(JsonObject request) {
-            final HistorySetting setting = parseFromRequest(request);
+        private HistorySetting validate(@NonNull HistorySetting setting) {
             Objects.requireNonNull(setting.getType(), "History setting type is mandatory. One of: " +
                                                       Arrays.asList(HistorySettingType.COV.type(),
                                                                     HistorySettingType.PERIOD.type()));
@@ -451,15 +450,6 @@ public interface DataPointIndex extends MetadataIndex {
         }
 
         @Override
-        public @NonNull Point onUpdating(@NonNull Point dbData, @NonNull RequestData reqData)
-            throws IllegalArgumentException {
-            final Point point = UUIDKeyEntity.super.onUpdating(dbData, reqData);
-            Objects.requireNonNull(point.getEdge(), "Point must be assigned to Edge");
-            Objects.requireNonNull(point.getNetwork(), "Point must be assigned to Network");
-            return point;
-        }
-
-        @Override
         public Protocol getProtocol(@NonNull Point pojo) {
             return pojo.getProtocol();
         }
@@ -496,16 +486,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull PointComposite onCreating(RequestData reqData) throws IllegalArgumentException {
-            PointComposite point = parseFromRequest(reqData.body());
-            Objects.requireNonNull(point.getEdge(), "Point must be assigned to Edge");
-            Objects.requireNonNull(point.getNetwork(), "Point must be assigned to Network");
-            MeasureUnit other = point.getOther(MeasureUnitMetadata.INSTANCE.singularKeyName());
-            if (Objects.isNull(other)) {
-                point.addMeasureUnit(new MeasureUnit().setType(
-                    Strings.requireNotBlank(point.getMeasureUnit(), "Point measure unit is mandatory")));
-            } else {
-                point.setMeasureUnit(other.getType());
-            }
+            PointComposite point = validate(parseFromRequest(reqData.body()));
             point.setId(Optional.ofNullable(point.getId()).orElseGet(UUID::randomUUID));
             return point;
         }
@@ -513,15 +494,31 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull PointComposite onUpdating(@NonNull Point dbData, RequestData reqData)
             throws IllegalArgumentException {
-            final PointComposite point = super.onUpdating(dbData, reqData);
-            Objects.requireNonNull(point.getEdge(), "Point must be assigned to Edge");
-            Objects.requireNonNull(point.getNetwork(), "Point must be assigned to Network");
-            return point;
+            return validate(super.onUpdating(dbData, reqData));
+        }
+
+        @Override
+        public @NonNull PointComposite onPatching(@NonNull Point dbData, RequestData reqData)
+            throws IllegalArgumentException {
+            return validate(super.onPatching(dbData, reqData));
         }
 
         @Override
         public Protocol getProtocol(@NonNull Point pojo) {
             return pojo.getProtocol();
+        }
+
+        private PointComposite validate(@NonNull PointComposite point) {
+            Objects.requireNonNull(point.getEdge(), "Point must be assigned to Edge");
+            Objects.requireNonNull(point.getNetwork(), "Point must be assigned to Network");
+            final MeasureUnit other = point.getOther(MeasureUnitMetadata.INSTANCE.singularKeyName());
+            if (Objects.isNull(other)) {
+                point.addMeasureUnit(new MeasureUnit().setType(
+                    Strings.requireNotBlank(point.getMeasureUnit(), "Point measure unit is mandatory")));
+            } else {
+                point.setMeasureUnit(other.getType());
+            }
+            return point;
         }
 
     }

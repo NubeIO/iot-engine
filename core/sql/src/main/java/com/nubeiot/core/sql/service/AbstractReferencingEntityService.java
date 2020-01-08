@@ -1,7 +1,6 @@
 package com.nubeiot.core.sql.service;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.reactivex.Single;
 
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
@@ -49,23 +48,27 @@ public abstract class AbstractReferencingEntityService<P extends VertxPojo, M ex
     }
 
     protected OperationValidator initCreationValidator() {
-        return OperationValidator.create(
-            (req, pojo) -> queryExecutor().checkReferenceExistence(req).map(b -> validation().onCreating(req)));
+        return super.initCreationValidator().andThen(checkReferenceExisted());
     }
 
     @Override
     protected @NonNull OperationValidator initPatchValidator() {
-        return OperationValidator.create((req, dbEntity) -> Single.just(validation().onPatching(dbEntity, req)));
+        return super.initPatchValidator().andThen(checkReferenceExisted());
     }
 
     @Override
     protected @NonNull OperationValidator initUpdateValidator() {
-        return OperationValidator.create((req, dbEntity) -> Single.just(validation().onUpdating(dbEntity, req)));
+        return super.initUpdateValidator().andThen(checkReferenceExisted());
     }
 
     @Override
     public ReferencingEntityMarker marker() {
         return this;
+    }
+
+    @NonNull
+    protected OperationValidator checkReferenceExisted() {
+        return OperationValidator.create((req, pojo) -> queryExecutor().checkReferenceExistence(req).map(b -> pojo));
     }
 
 }

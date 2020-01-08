@@ -20,7 +20,7 @@ import com.nubeiot.core.sql.workflow.task.EntityTask;
 import lombok.NonNull;
 
 /**
- * Represents for {@code entity service} based on {@code eventbus listener}
+ * Represents for an {@code entity service} based on {@code eventbus listener}
  *
  * @param <P> Type of {@code VertxPojo}
  * @param <M> Type of {@code EntityMetadata}

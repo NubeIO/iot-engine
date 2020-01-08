@@ -8,8 +8,6 @@ import com.nubeiot.core.sql.decorator.GroupRequestDecorator;
 import com.nubeiot.core.sql.pojos.CompositePojo;
 import com.nubeiot.core.sql.query.GroupQueryExecutor;
 import com.nubeiot.core.sql.service.marker.GroupReferencingEntityMarker;
-import com.nubeiot.core.sql.validation.EntityValidation;
-import com.nubeiot.core.sql.validation.OperationValidator;
 
 import lombok.NonNull;
 
@@ -43,11 +41,6 @@ public abstract class AbstractGroupEntityService<M extends EntityMetadata, CP ex
     }
 
     @Override
-    public @NonNull EntityValidation validation() {
-        return this.rawContext();
-    }
-
-    @Override
     public @NonNull GroupQueryExecutor<CP> queryExecutor() {
         return GroupEntityService.super.queryExecutor();
     }
@@ -55,12 +48,6 @@ public abstract class AbstractGroupEntityService<M extends EntityMetadata, CP ex
     @Override
     public @NonNull GroupEntityTransformer transformer() {
         return this;
-    }
-
-    @Override
-    protected OperationValidator initCreationValidator() {
-        return OperationValidator.create(
-            (req, pojo) -> queryExecutor().checkReferenceExistence(req).map(b -> context().onCreating(req)));
     }
 
     @Override

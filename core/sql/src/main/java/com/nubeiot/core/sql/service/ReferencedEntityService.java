@@ -19,7 +19,7 @@ import com.nubeiot.core.sql.service.marker.ReferencedEntityMarker;
 import lombok.NonNull;
 
 /**
- * The interface Referenced entity service.
+ * Represents for an entity service that holds a {@code resource entity} is referenced by other resources.
  *
  * @param <CP> Type of {@code CompositePojo}
  * @param <CM> Type of {@code CompositeMetadata}

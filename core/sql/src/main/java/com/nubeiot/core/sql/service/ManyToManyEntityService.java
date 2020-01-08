@@ -10,8 +10,8 @@ import com.nubeiot.core.sql.validation.CompositeValidation;
 import lombok.NonNull;
 
 /**
- * Represents {@code middlemen} service that holds a {@code middlemen resource} has one or more {@code reference} to
- * other resources.
+ * Represents an entity service that holds a {@code middlemen resource} has one or more {@code reference} to other
+ * resources.
  * <p>
  * It presents {@code many-to-one} connection between {@code middlemen resource} with {@code reference resource}. But
  * between among {@code reference resources}, it is {@code many-to-many} relationship

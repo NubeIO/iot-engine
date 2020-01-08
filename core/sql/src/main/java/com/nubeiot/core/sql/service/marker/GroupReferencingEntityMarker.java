@@ -5,8 +5,8 @@ import java.util.Set;
 /**
  * Represents for an {@code database entity} marker.
  * <p>
- * It manifests one {@code resource entity} has one or more {@code references} to other resources and also includes
- * these {@code referenced entity} into itself
+ * It manifests one {@code resource entity} has one or more {@code references} to other resources and at the same time,
+ * it includes these {@code referenced entity} into itself
  *
  * @see ReferencingEntityMarker
  * @since 1.0.0

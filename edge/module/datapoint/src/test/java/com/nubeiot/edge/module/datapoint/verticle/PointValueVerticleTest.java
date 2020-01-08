@@ -25,9 +25,16 @@ public class PointValueVerticleTest extends BaseDataPointVerticleTest {
     }
 
     @Test
-    public void test_get_pv(TestContext context) {
+    public void test_get_pv_directly(TestContext context) {
         final PointValueData v = MockData.searchData(PrimaryKey.P_GPIO_HUMIDITY);
         assertRestByClient(context, HttpMethod.GET, "/api/s/data/" + PrimaryKey.P_GPIO_HUMIDITY, 200,
+                           JsonPojo.from(v).toJson(JsonData.MAPPER, EntityTransformer.AUDIT_FIELDS));
+    }
+
+    @Test
+    public void test_get_pv_via_point(TestContext context) {
+        final PointValueData v = MockData.searchData(PrimaryKey.P_BACNET_TEMP);
+        assertRestByClient(context, HttpMethod.GET, "/api/s/point/" + PrimaryKey.P_BACNET_TEMP + "/data", 200,
                            JsonPojo.from(v).toJson(JsonData.MAPPER, EntityTransformer.AUDIT_FIELDS));
     }
 

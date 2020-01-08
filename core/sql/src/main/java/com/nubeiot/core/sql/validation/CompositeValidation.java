@@ -69,7 +69,7 @@ public interface CompositeValidation<P extends VertxPojo, C extends CompositePoj
     @Override
     default <PP extends P> @NonNull PP onPatching(@NonNull P dbData, RequestData reqData)
         throws IllegalArgumentException {
-        C request = (C) context().parseFromEntity(JsonPojo.merge(dbData, context().parseFromRequest(reqData.body())));
+        C request = (C) context().parseFromEntity(JsonPojo.merge(dbData, reqData.body()));
         validateSubEntities((C) dbData, request,
                             (metadata, requestData, pojo) -> metadata.onPatching(pojo, requestData));
         return (PP) request;

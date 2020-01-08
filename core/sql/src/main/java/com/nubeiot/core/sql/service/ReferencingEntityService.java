@@ -10,7 +10,8 @@ import com.nubeiot.core.sql.service.marker.ReferencingEntityMarker;
 import lombok.NonNull;
 
 /**
- * Represents service that holds a {@code resource entity} contains one or more {@code reference} to other resources.
+ * Represents an entity service that holds a {@code resource entity} contains one or more {@code reference} to other
+ * resources.
  * <p>
  * It means the {@code service context resource} has an {@code one-to-one} or {@code many-to-one} relationship to
  * another resource.
