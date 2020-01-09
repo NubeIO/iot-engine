@@ -74,7 +74,7 @@ public final class LocalServiceSearch implements IServiceSearch {
             }
         }
 
-        //TODO from/to + "_" + table fields name
+        //TODO from/to + "_" + table fields name https://github.com/NubeIO/iot-engine/issues/244
         String from = filter.getString("from");
         String to = filter.getString("to");
         if (Strings.isNotBlank(from)) {

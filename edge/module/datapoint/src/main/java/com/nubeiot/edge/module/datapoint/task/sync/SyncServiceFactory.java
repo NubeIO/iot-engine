@@ -20,7 +20,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
-//TODO temporary
+//TODO https://github.com/NubeIO/iot-engine/issues/140
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SyncServiceFactory {
 

@@ -10,7 +10,7 @@ import com.nubeiot.core.utils.Strings;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
-//TODO Later for other languages (except JAVA)
+//TODO Later for other languages (except JAVA) https://github.com/NubeIO/iot-engine/issues/239
 public interface ModuleType {
 
     static ModuleType getDefault() {

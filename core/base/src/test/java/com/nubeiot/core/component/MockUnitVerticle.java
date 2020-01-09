@@ -34,7 +34,7 @@ public final class MockUnitVerticle extends UnitVerticle<MockConfig, UnitContext
         logger.info("Starting Mock Unit Verticle...");
         super.start();
         if (error) {
-            throw new RuntimeException();
+            throw new RuntimeException("Error when starting Unit Verticle");
         }
     }
 

@@ -28,7 +28,7 @@ public final class DittoEdge extends AbstractDittoModel<IEdge> {
     @Override
     public JsonObject toJson() {
         JsonObject metadata = get().getMetadata();
-        //TODO temporary
+        //TODO https://github.com/NubeIO/iot-engine/issues/140
         metadata.remove("__data_sync__");
         return JsonPojo.from(get().setMetadata(metadata).setSyncAudit(null)).toJson();
     }
