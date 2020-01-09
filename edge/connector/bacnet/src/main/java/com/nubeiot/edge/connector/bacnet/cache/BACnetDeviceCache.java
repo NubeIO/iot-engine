@@ -5,16 +5,17 @@ import io.vertx.core.Vertx;
 import com.nubeiot.core.cache.AbstractLocalCache;
 import com.nubeiot.core.cache.LocalDataCache;
 import com.nubeiot.core.protocol.CommunicationProtocol;
-import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.BACnetDeviceInitializer;
+import com.nubeiot.edge.connector.bacnet.IBACnetDevice;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
+//TODO implement it
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class BACnetDeviceCache extends AbstractLocalCache<CommunicationProtocol, BACnetDevice, BACnetDeviceCache>
-    implements LocalDataCache<CommunicationProtocol, BACnetDevice> {
+public final class BACnetDeviceCache extends AbstractLocalCache<CommunicationProtocol, IBACnetDevice, BACnetDeviceCache>
+    implements LocalDataCache<CommunicationProtocol, IBACnetDevice> {
 
     static BACnetDeviceCache init(@NonNull Vertx vertx, @NonNull String sharedKey) {
         return new BACnetDeviceCache().register(protocol -> BACnetDeviceInitializer.builder()
@@ -25,7 +26,7 @@ public final class BACnetDeviceCache extends AbstractLocalCache<CommunicationPro
     }
 
     @Override
-    public BACnetDeviceCache add(@NonNull CommunicationProtocol protocol, BACnetDevice device) {
+    public BACnetDeviceCache add(@NonNull CommunicationProtocol protocol, IBACnetDevice device) {
         cache().put(protocol, device);
         return this;
     }
@@ -37,7 +38,7 @@ public final class BACnetDeviceCache extends AbstractLocalCache<CommunicationPro
 
     @Override
     protected String valueLabel() {
-        return BACnetDevice.class.getSimpleName();
+        return IBACnetDevice.class.getSimpleName();
     }
 
 }

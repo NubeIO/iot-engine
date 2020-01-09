@@ -12,6 +12,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 
 import lombok.NonNull;
 
+//TODO implement it
 public final class ObjectSubscriber extends AbstractProtocolSubscriber<Point> implements BACnetSubscriber<Point> {
 
     ObjectSubscriber(@NonNull Vertx vertx, @NonNull String sharedKey) {

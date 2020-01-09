@@ -22,10 +22,10 @@ public final class BACnetDeviceInitializer {
     private final Consumer<BACnetDevice> preFunction;
     private final List<DeviceEventListener> listeners;
 
-    public BACnetDevice asyncStart(@NonNull CommunicationProtocol protocol) {
+    public IBACnetDevice asyncStart(@NonNull CommunicationProtocol protocol) {
         final BACnetDevice device = new BACnetDevice(vertx, sharedKey, protocol);
         Optional.ofNullable(preFunction).ifPresent(f -> f.accept(device));
-        Optional.ofNullable(listeners).map(l -> l.toArray(new DeviceEventListener[0])).ifPresent(device::addListener);
+        Optional.ofNullable(listeners).ifPresent(device::addListeners);
         return device.asyncStart();
     }
 

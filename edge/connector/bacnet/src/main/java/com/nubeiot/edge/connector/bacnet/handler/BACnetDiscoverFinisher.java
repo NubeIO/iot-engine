@@ -7,6 +7,7 @@ import com.nubeiot.core.component.SharedDataDelegate;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+//TODO implement it
 @RequiredArgsConstructor
 public final class BACnetDiscoverFinisher extends DiscoverCompletionHandler
     implements SharedDataDelegate<BACnetDiscoverFinisher> {

@@ -6,8 +6,8 @@ import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
 import com.nubeiot.iotdata.translator.IoTEntityTranslator;
 
-public class BACnetPointTranslator implements BACnetTranslator<PointComposite, PropertyValuesMixin>,
-                                              IoTEntityTranslator<PointComposite, PropertyValuesMixin> {
+//TODO implement it
+public class BACnetPointTranslator implements BACnetTranslator<PointComposite, PropertyValuesMixin>, IoTEntityTranslator<PointComposite, PropertyValuesMixin> {
 
     @Override
     public PointComposite serialize(PropertyValuesMixin object) {

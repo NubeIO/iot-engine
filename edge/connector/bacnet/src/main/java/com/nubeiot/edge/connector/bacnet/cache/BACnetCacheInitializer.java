@@ -8,6 +8,7 @@ import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.BACnetVerticle;
 import com.nubeiot.edge.connector.bacnet.service.BACnetRpcClient;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -17,6 +18,7 @@ public final class BACnetCacheInitializer implements CacheInitializer<BACnetCach
     public static final String EDGE_NETWORK_CACHE = "EDGE_NETWORK_CACHE";
     public static final String BACNET_DEVICE_CACHE = "BACNET_DEVICE_CACHE";
     @NonNull
+    @Getter
     private final BACnetConfig config;
 
     @Override

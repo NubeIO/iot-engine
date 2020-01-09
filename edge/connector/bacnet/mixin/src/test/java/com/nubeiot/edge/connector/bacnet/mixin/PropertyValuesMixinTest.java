@@ -47,13 +47,13 @@ import com.serotonin.bacnet4j.util.PropertyValues;
 
 public class PropertyValuesMixinTest {
 
+    private final ObjectIdentifier oid = new ObjectIdentifier(ObjectType.device, 111);
+
     @BeforeClass
     public static void setup() {
         TestHelper.setup();
         //        ((Logger) LoggerFactory.getLogger("com.nubeiot")).setLevel(Level.TRACE);
     }
-
-    private final ObjectIdentifier oid = new ObjectIdentifier(ObjectType.device, 111);
 
     @Test
     public void test_serialize_java_type_or_primitive() throws JSONException {
@@ -74,7 +74,7 @@ public class PropertyValuesMixinTest {
         pvs.add(oid, PropertyIdentifier.averageValue, null, new SignedInteger(-100));
         pvs.add(oid, PropertyIdentifier.feedbackValue, null, new UnsignedInteger(100));
         pvs.add(oid, PropertyIdentifier.statusFlags, null, new StatusFlags(true, false, true, false));
-        PropertyValuesMixin pvJson = PropertyValuesMixin.create(oid, pvs, false);
+        final PropertyValuesMixin pvJson = PropertyValuesMixin.create(oid, pvs, false);
         final JsonObject expected = new JsonObject(
             "{\"status-flags\":{\"in-alarm\":true,\"fault\":false,\"overridden\":true,\"out-of-service\":false}," +
             "\"adjust-value\":20.5,\"group-id\":\"xxx\",\"alarm-value\":10.0,\"is-utc\":true,\"feedback-value\":100," +
@@ -184,7 +184,7 @@ public class PropertyValuesMixinTest {
             "\"7\":\"Null\",\"8\":\"Null\",\"9\":\"Null\",\"10\":\"Null\",\"11\":\"Null\",\"12\":\"Null\"," +
             "\"13\":\"Null\",\"14\":\"Null\",\"15\":\"Null\",\"16\":\"Null\"},\"object-identifier\":\"device:111\"}");
         final PropertyValuesMixin mixin = JsonData.convert(expected, PropertyValuesMixin.class, BACnetMixin.MAPPER);
-        //        JsonHelper.assertJson(expected, mixin.toJson());
+        JsonHelper.assertJson(expected, mixin.toJson());
     }
 
     private void assertBACnetTime(JsonObject expected, JsonObject actual, String key) {

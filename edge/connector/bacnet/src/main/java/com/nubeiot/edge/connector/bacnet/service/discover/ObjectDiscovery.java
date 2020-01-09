@@ -13,7 +13,7 @@ import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.utils.Functions;
-import com.nubeiot.edge.connector.bacnet.BACnetDevice;
+import com.nubeiot.edge.connector.bacnet.IBACnetDevice;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
@@ -57,9 +57,9 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
         final CommunicationProtocol protocol = parseNetworkProtocol(request);
         logger.info("Discover objects in device '{}' by network {}", request.getDeviceCode(), protocol.toJson());
         final BACnetDeviceCache cache = getSharedDataValue(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
-        final BACnetDevice device = cache.get(protocol);
+        final IBACnetDevice device = cache.get(protocol);
         return device.discoverRemoteDevice(request.getDeviceCode(), options)
-                     .flatMap(remote -> getRemoteObjects(device.getLocalDevice(), remote, options.isDetail()))
+                     .flatMap(remote -> getRemoteObjects(device.localDevice(), remote, options.isDetail()))
                      .map(opv -> DiscoverResponse.builder().objects(opv).build())
                      .map(DiscoverResponse::toJson)
                      .doFinally(device::stop);
@@ -104,10 +104,10 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
         logger.info("Discover object '{}' in device '{}' by network {}", request.getObjectCode(),
                     request.getDeviceCode(), protocol.toJson());
         final BACnetDeviceCache cache = getSharedDataValue(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
-        final BACnetDevice device = cache.get(protocol);
+        final IBACnetDevice device = cache.get(protocol);
         final ObjectIdentifier objId = ObjectIdentifierMixin.deserialize(request.getObjectCode());
         return device.discoverRemoteDevice(request.getDeviceCode(), options)
-                     .flatMap(rd -> parseRemoteObject(device.getLocalDevice(), rd, objId, true, options.isDetail()))
+                     .flatMap(rd -> parseRemoteObject(device.localDevice(), rd, objId, true, options.isDetail()))
                      .doFinally(device::stop);
     }
 

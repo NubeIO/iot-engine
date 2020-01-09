@@ -14,6 +14,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 
 import lombok.NonNull;
 
+//TODO implement it
 public final class NetworkSubscriber extends AbstractProtocolSubscriber<Network> implements BACnetSubscriber<Network> {
 
     NetworkSubscriber(@NonNull Vertx vertx, @NonNull String sharedKey) {

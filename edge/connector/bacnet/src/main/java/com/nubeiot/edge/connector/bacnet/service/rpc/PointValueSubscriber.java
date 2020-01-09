@@ -12,6 +12,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
 
 import lombok.NonNull;
 
+//TODO implement it
 public final class PointValueSubscriber extends AbstractProtocolSubscriber<PointValueData>
     implements BACnetSubscriber<PointValueData> {
 

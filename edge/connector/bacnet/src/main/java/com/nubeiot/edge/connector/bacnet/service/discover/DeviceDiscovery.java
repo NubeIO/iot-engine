@@ -10,7 +10,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.sql.EntityMetadata;
-import com.nubeiot.edge.connector.bacnet.BACnetDevice;
+import com.nubeiot.edge.connector.bacnet.IBACnetDevice;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
@@ -51,11 +51,11 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
         final CommunicationProtocol requestProtocol = parseNetworkProtocol(request);
         logger.info("Discover devices by network {}", requestProtocol.toJson());
         final BACnetDeviceCache cache = getSharedDataValue(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
-        final BACnetDevice device = cache.get(requestProtocol);
+        final IBACnetDevice device = cache.get(requestProtocol);
         return device.scanRemoteDevices(options)
                      .map(RemoteDeviceScanner::getRemoteDevices)
                      .flattenAsObservable(r -> r)
-                     .flatMapSingle(rd -> parseRemoteDevice(device.getLocalDevice(), rd, options.isDetail(), false))
+                     .flatMapSingle(rd -> parseRemoteDevice(device.localDevice(), rd, options.isDetail(), false))
                      .collect(ArrayList<RemoteDeviceMixin>::new, List::add)
                      .map(results -> DiscoverResponse.builder().remoteDevices(results).build().toJson())
                      .doFinally(device::stop);
@@ -94,9 +94,9 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
         final CommunicationProtocol protocol = parseNetworkProtocol(request);
         logger.info("Discover device {} by network {}", request.getDeviceCode(), protocol.toJson());
         final BACnetDeviceCache cache = getSharedDataValue(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
-        final BACnetDevice device = cache.get(protocol);
+        final IBACnetDevice device = cache.get(protocol);
         return device.discoverRemoteDevice(request.getDeviceCode(), options)
-                     .flatMap(rd -> parseRemoteDevice(device.getLocalDevice(), rd, true, options.isDetail()))
+                     .flatMap(rd -> parseRemoteDevice(device.localDevice(), rd, true, options.isDetail()))
                      .doFinally(device::stop);
     }
 

@@ -29,29 +29,25 @@ import com.serotonin.bacnet4j.util.PropertyValues;
 public class BACnetDeviceTranslatorTest {
 
     private ObjectIdentifier oid;
-    private Address address;
     private JsonObject addressJson;
-    private PropertyValuesMixin mixin;
     private RemoteDeviceMixin deviceMixin;
-    private BACnetDeviceTranslator translator;
 
     @Before
     public void setup() {
-        translator = new BACnetDeviceTranslator();
         oid = new ObjectIdentifier(ObjectType.device, 444);
-        address = new Address(new byte[] {(byte) 206, (byte) 210, 100, (byte) 134});
+        final Address address = new Address(new byte[] {(byte) 206, (byte) 210, 100, (byte) 134});
         addressJson = new JsonObject(
             "{\"type\":\"IP\",\"networkNumber\":0,\"hostAddress\":\"206.210.100.134\",\"macAddress\":\"CE-D2-64-86\"}");
         final PropertyValues pvs = new PropertyValues();
         pvs.add(oid, PropertyIdentifier.vendorIdentifier, null, new UnsignedInteger(LocalDeviceMetadata.VENDOR_ID));
         pvs.add(oid, PropertyIdentifier.vendorName, null, new CharacterString(LocalDeviceMetadata.VENDOR_NAME));
-        mixin = PropertyValuesMixin.create(oid, pvs, false);
+        final PropertyValuesMixin mixin = PropertyValuesMixin.create(oid, pvs, false);
         deviceMixin = RemoteDeviceMixin.create(oid, "test", address, mixin);
     }
 
     @Test
     public void test_serialize() throws JSONException {
-        final EdgeDeviceComposite composite = translator.serialize(deviceMixin);
+        final EdgeDeviceComposite composite = new BACnetDeviceTranslator().serialize(deviceMixin);
         JsonHelper.assertJson(addressJson, composite.getAddress());
         final Device device = composite.getDevice();
         Assert.assertEquals("device:444", device.getCode());
@@ -64,16 +60,17 @@ public class BACnetDeviceTranslatorTest {
     }
 
     @Test
-    public void test_deserialize() throws JSONException {
+    public void test_deserialize_without_metadata() throws JSONException {
         final Device device = new Device().setCode(ObjectIdentifierMixin.serialize(oid))
                                           .setManufacturer("1173-Nube iO Operations Pty Ltd")
                                           .setProtocol(Protocol.BACNET)
                                           .setState(State.ENABLED)
                                           .setType(DeviceType.EQUIPMENT);
-        final EdgeDeviceComposite composite = (EdgeDeviceComposite) new EdgeDeviceComposite().addDevice(device)
+        final EdgeDeviceComposite composite = (EdgeDeviceComposite) new EdgeDeviceComposite().setDevice(device)
                                                                                              .setAddress(addressJson);
-        final RemoteDeviceMixin mixin = translator.deserialize(composite);
+        final RemoteDeviceMixin mixin = new BACnetDeviceTranslator().deserialize(composite);
         Assert.assertNotNull(mixin);
+        System.out.println(mixin.toJson());
         final PropertyValuesMixin propertyValues = mixin.getPropertyValues();
         JsonHelper.assertJson(mixin.getAddress().toJson(), addressJson);
         Assert.assertNull(mixin.getName());

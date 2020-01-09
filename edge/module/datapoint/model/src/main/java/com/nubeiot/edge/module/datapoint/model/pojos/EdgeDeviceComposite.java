@@ -33,7 +33,7 @@ public final class EdgeDeviceComposite extends EdgeDevice implements CompositePo
         return super.toJson().mergeIn(extensionToJson(), true);
     }
 
-    public EdgeDeviceComposite addDevice(Device device) {
+    public EdgeDeviceComposite setDevice(Device device) {
         this.put(DeviceMetadata.INSTANCE.singularKeyName(), device);
         return this;
     }

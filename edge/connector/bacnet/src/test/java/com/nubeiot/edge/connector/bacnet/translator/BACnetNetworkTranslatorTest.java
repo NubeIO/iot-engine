@@ -28,9 +28,9 @@ public class BACnetNetworkTranslatorTest {
     }
 
     @Test
-    public void test_deserialize_with_metadata() throws JSONException {
+    public void test_deserialize_invalid_code_with_valid_metadata() throws JSONException {
         final UdpProtocol protocol = UdpProtocol.builder().ip(Ipv4Network.getFirstActiveIp()).port(47808).build();
-        final Network input = new Network().setCode(protocol.identifier())
+        final Network input = new Network().setCode("XXX")
                                            .setProtocol(Protocol.BACNET)
                                            .setState(State.ENABLED)
                                            .setMetadata(protocol.toJson());
@@ -41,8 +41,19 @@ public class BACnetNetworkTranslatorTest {
         JsonHelper.assertJson(protocol.toJson(), udp.toJson());
     }
 
+    @Test
+    public void test_deserialize_valid_code_without_metadata() throws JSONException {
+        final UdpProtocol protocol = UdpProtocol.builder().ip(Ipv4Network.getFirstActiveIp()).port(47808).build();
+        final Network input = new Network().setCode(protocol.identifier())
+                                           .setProtocol(Protocol.BACNET)
+                                           .setState(State.ENABLED);
+        final CommunicationProtocol udp = new BACnetNetworkTranslator().deserialize(input);
+        Assert.assertEquals(protocol, udp);
+        JsonHelper.assertJson(protocol.toJson(), udp.toJson());
+    }
+
     @Test(expected = NotFoundException.class)
-    public void test_deserialize_without_metadata() {
+    public void test_deserialize_invalid_code_without_metadata() {
         final Network input = new Network().setCode("udp4-xxx+abc=44444-47808")
                                            .setProtocol(Protocol.BACNET)
                                            .setState(State.ENABLED);
@@ -50,7 +61,7 @@ public class BACnetNetworkTranslatorTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void test_deserialize_with_metadata_has_invalid_type() {
+    public void test_deserialize_invalid_code_with_invalid_metadata() {
         final Network input = new Network().setCode("udp4-xxx+abc=44444-47808")
                                            .setProtocol(Protocol.BACNET)
                                            .setState(State.ENABLED)

@@ -78,7 +78,7 @@ public final class BACnetInstance extends AbstractSharedDataDelegate<BACnetInsta
     private BACnetInstance(@NonNull Vertx vertx, @NonNull String sharedKey, @NonNull TransportProvider provider) {
         super(vertx);
         registerSharedKey(sharedKey);
-        this.localDevice = BACnetDevice.create(getSharedDataValue(BACnetDevice.EDGE_BACNET_METADATA), provider);
+        this.localDevice = BACnetDevice.create(getSharedDataValue(IBACnetDevice.EDGE_BACNET_METADATA), provider);
         logger.info("Init BACnet instance with network {}", provider.protocol().toJson());
     }
 
@@ -104,7 +104,7 @@ public final class BACnetInstance extends AbstractSharedDataDelegate<BACnetInsta
     }
 
     private Single<BACnetInstance> init(@NonNull Map<String, BACnetInstance> instances) {
-        final LocalDeviceMetadata metadata = getSharedDataValue(BACnetDevice.EDGE_BACNET_METADATA);
+        final LocalDeviceMetadata metadata = getSharedDataValue(IBACnetDevice.EDGE_BACNET_METADATA);
         //TODO should consider RemoteEntityCachePolicy.NEVER_EXPIRE
         return Single.fromCallable(localDevice::initialize)
                      .map(ld -> addBACnetEvent(metadata, localDevice, instances))
@@ -130,7 +130,7 @@ public final class BACnetInstance extends AbstractSharedDataDelegate<BACnetInsta
 
     @Deprecated
     public void startRemoteDiscover() {
-        final LocalDeviceMetadata metadata = getSharedDataValue(BACnetDevice.EDGE_BACNET_METADATA);
+        final LocalDeviceMetadata metadata = getSharedDataValue(IBACnetDevice.EDGE_BACNET_METADATA);
         startRemoteDiscover(metadata.getMaxTimeoutInMS());
     }
 

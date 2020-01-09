@@ -17,7 +17,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.protocol.CommunicationProtocol;
-import com.nubeiot.edge.connector.bacnet.BACnetDevice;
+import com.nubeiot.edge.connector.bacnet.IBACnetDevice;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
@@ -71,7 +71,7 @@ abstract class AbstractDiscoveryService extends AbstractSharedDataDelegate<Abstr
     public abstract Single<JsonObject> discoverThenDoPersist(RequestData reqData);
 
     final DiscoverOptions parseDiscoverOptions(@NonNull RequestData reqData) {
-        final LocalDeviceMetadata metadata = getSharedDataValue(BACnetDevice.EDGE_BACNET_METADATA);
+        final LocalDeviceMetadata metadata = getSharedDataValue(IBACnetDevice.EDGE_BACNET_METADATA);
         return DiscoverOptions.from(metadata.getMaxTimeoutInMS(), reqData);
     }
 

@@ -16,13 +16,12 @@ import lombok.NonNull;
 
 public final class CovNotifier extends DeviceEventAdapter implements DeviceEventListener, BACnetNotifier<CovNotifier> {
 
+    //TODO implement it
     @Override
-    public void covNotificationReceived(UnsignedInteger subscriberProcessIdentifier,
-                                        ObjectIdentifier initiatingDeviceIdentifier,
+    public void covNotificationReceived(UnsignedInteger subscriberProcessIdentifier, ObjectIdentifier initiatingDeviceIdentifier,
                                         ObjectIdentifier monitoredObjectIdentifier, UnsignedInteger timeRemaining,
                                         SequenceOf<PropertyValue> listOfValues) {
-        super.covNotificationReceived(subscriberProcessIdentifier, initiatingDeviceIdentifier,
-                                      monitoredObjectIdentifier, timeRemaining, listOfValues);
+        super.covNotificationReceived(subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, listOfValues);
     }
 
     @Override

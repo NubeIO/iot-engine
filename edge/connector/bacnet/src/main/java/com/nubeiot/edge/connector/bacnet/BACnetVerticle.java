@@ -43,8 +43,7 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
 
     @Override
     protected void successHandler(@NonNull BACnetConfig config) {
-        new BACnetCacheInitializer(config).init(this);
-        super.successHandler(config);
+        super.successHandler(new BACnetCacheInitializer(config).init(this).getConfig());
     }
 
     @Override
@@ -78,8 +77,8 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
     }
 
     @Override
-    protected void addListenerOnEachDevice(BACnetDevice device) {
-        device.addListener(new WhoIsListener());
+    protected void addListenerOnEachDevice(@NonNull IBACnetDevice device) {
+        device.addListeners(new WhoIsListener());
     }
 
     @Override

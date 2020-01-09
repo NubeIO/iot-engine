@@ -34,7 +34,7 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
         if (logger.isDebugEnabled()) {
             logger.debug("BACnet verticle configuration: {}", config.toJson());
         }
-        this.addSharedData(BACnetDevice.EDGE_BACNET_METADATA, LocalDeviceMetadata.from(config))
+        this.addSharedData(IBACnetDevice.EDGE_BACNET_METADATA, LocalDeviceMetadata.from(config))
             .registerSuccessHandler(event -> successHandler(config));
     }
 
@@ -106,10 +106,11 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
      * Add one or more {@code BACnet listeners} after each {@code BACnet device} on each network starts
      *
      * @param device BACnet device
+     * @see IBACnetDevice
      * @see DeviceEventListener
      * @see BACnetNotifier
      */
-    protected abstract void addListenerOnEachDevice(@NonNull BACnetDevice device);
+    protected abstract void addListenerOnEachDevice(@NonNull IBACnetDevice device);
 
     /**
      * Provide available BACnet networks

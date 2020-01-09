@@ -12,6 +12,7 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 
 import lombok.NonNull;
 
+//TODO implement it
 public final class DeviceSubscriber extends AbstractProtocolSubscriber<Device> implements BACnetSubscriber<Device> {
 
     DeviceSubscriber(@NonNull Vertx vertx, @NonNull String sharedKey) {

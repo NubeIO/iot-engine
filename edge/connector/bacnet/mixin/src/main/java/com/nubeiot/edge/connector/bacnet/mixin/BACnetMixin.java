@@ -11,13 +11,13 @@ public interface BACnetMixin extends JsonData {
     ObjectMapper MAPPER = JsonData.MAPPER.copy().registerModule(BACnetJsonModule.MODULE);
 
     /**
-     * Standardize BACnet key property with lower-case and separate by {@code -}
+     * Standardize BACnet key property with lower-case and separate by {@code dash(-)}
      *
      * @param keyProp Given key Property
      * @return standard key
+     * @apiNote It might not standard
      * @see <a href="https://csimn.com/MHelp-SPX-B/spxb-section-14.html">Object Properties</a>
      */
-    //    TODO Not sure it is standard
     static String standardizeKey(@NonNull String keyProp) {
         return Strings.transform(keyProp, false, "-");
     }

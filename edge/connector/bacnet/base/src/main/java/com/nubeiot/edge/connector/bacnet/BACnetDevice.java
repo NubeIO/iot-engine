@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
@@ -39,17 +38,17 @@ import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.experimental.Accessors;
 
-public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice> {
-
-    public static final String EDGE_BACNET_METADATA = "EDGE_BACNET_METADATA";
+@Accessors(fluent = true)
+final class BACnetDevice extends AbstractSharedDataDelegate<IBACnetDevice> implements IBACnetDevice {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     @Getter
     private final LocalDeviceMetadata metadata;
-    private final TransportProvider transportProvider;
     @Getter
     private final LocalDevice localDevice;
+    private final TransportProvider transportProvider;
 
     BACnetDevice(@NonNull Vertx vertx, @NonNull String sharedKey, @NonNull CommunicationProtocol protocol) {
         this(vertx, sharedKey, TransportProvider.byProtocol(protocol));
@@ -76,7 +75,15 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
                                             new CharacterString(metadata.getObjectName()));
     }
 
-    BACnetDevice asyncStart() {
+    @Override
+    public IBACnetDevice addListeners(@NonNull List<DeviceEventListener> listeners) {
+        listeners.stream()
+                 .filter(Objects::nonNull)
+                 .forEachOrdered(listener -> this.localDevice.getEventHandler().addListener(listener));
+        return this;
+    }
+
+    public IBACnetDevice asyncStart() {
         final DiscoverOptions options = DiscoverOptions.builder()
                                                        .force(true)
                                                        .timeout(metadata.getMaxTimeoutInMS())
@@ -90,26 +97,19 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
         localDevice.terminate();
     }
 
-    public Single<RemoteDevice> discoverRemoteDevice(int deviceCode, DiscoverOptions options) {
-        long timeout = TimeUnit.MILLISECONDS.convert(options.getTimeout(), options.getTimeUnit());
-        return init(options.isForce()).map(
-            ld -> Functions.getOrThrow(t -> new NotFoundException("Not found device id " + deviceCode, t),
-                                       () -> ld.getRemoteDeviceBlocking(deviceCode, timeout)));
-    }
-
-    public BACnetDevice addListener(DeviceEventListener... listeners) {
-        Stream.of(listeners)
-              .filter(Objects::nonNull)
-              .forEachOrdered(listener -> this.localDevice.getEventHandler().addListener(listener));
-        return this;
-    }
-
     public Single<RemoteDeviceScanner> scanRemoteDevices(@NonNull DiscoverOptions options) {
         return this.init(options.isForce())
                    .map(ld -> RemoteDeviceScanner.create(ld, options))
                    .map(RemoteDeviceScanner::start)
                    .delay(options.getTimeout(), options.getTimeUnit())
                    .doAfterSuccess(RemoteDeviceScanner::stop);
+    }
+
+    public Single<RemoteDevice> discoverRemoteDevice(int deviceCode, DiscoverOptions options) {
+        long timeout = TimeUnit.MILLISECONDS.convert(options.getTimeout(), options.getTimeUnit());
+        return init(options.isForce()).map(
+            ld -> Functions.getOrThrow(t -> new NotFoundException("Not found device id " + deviceCode, t),
+                                       () -> ld.getRemoteDeviceBlocking(deviceCode, timeout)));
     }
 
     private Single<LocalDevice> init(boolean force) {
