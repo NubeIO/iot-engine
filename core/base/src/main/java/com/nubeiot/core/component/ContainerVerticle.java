@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -38,9 +39,9 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
     private final Map<Class<? extends Unit>, Consumer<? extends UnitContext>> afterSuccesses = new HashMap<>();
     private final Set<String> deployments = new HashSet<>();
     @Getter
-    private EventbusClient eventbusClient;
-    @Getter
     protected NubeConfig nubeConfig;
+    @Getter
+    private EventbusClient eventbusClient;
     private Handler<Void> successHandler;
 
     @Override
@@ -103,13 +104,11 @@ public abstract class ContainerVerticle extends AbstractVerticle implements Cont
             return vertx.rxDeployVerticle(unit, options)
                         .doOnSuccess(deployId -> succeed(unit, deployId))
                         .doOnError(t -> logger.error("Cannot start unit verticle {}", t, unit.getClass().getName()));
-        }).count().subscribe(ignored -> {
-            if (Objects.nonNull(successHandler)) {
-                this.successHandler.handle(null);
-            }
-            logger.info("Deployed {} unit verticle(s)...", ignored);
-            future.complete();
-        }, throwable -> fail(future, throwable));
+        }).count().map(count -> {
+            logger.info("Deployed {} unit verticle(s)...", count);
+            Optional.ofNullable(successHandler).ifPresent(handler -> handler.handle(null));
+            return count;
+        }).subscribe(count -> future.complete(), throwable -> fail(future, throwable));
     }
 
     @Override

@@ -22,7 +22,8 @@ import lombok.experimental.Accessors;
 public abstract class AbstractLocalCache<K, V, C extends AbstractLocalCache> implements LocalCache<K, V> {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
-    //TODO implement cache policy to allow soft concurrent map beside hard concurrent map for better performance
+    //TODO https://github.com/NubeIO/iot-engine/issues/268 implement cache policy to allow soft concurrent map beside
+    // hard concurrent map for better performance
     private final ConcurrentMap<K, V> cache = new ConcurrentHashMap<>();
     private Function<K, V> discover;
 
