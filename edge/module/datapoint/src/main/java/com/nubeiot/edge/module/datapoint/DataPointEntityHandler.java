@@ -151,7 +151,7 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
     private Single<Integer> insert(EntityMetadata metadata, @NonNull Object data) {
         final String createdBy = "SYSTEM_INITIATOR";
         Class<? extends VertxPojo> pClazz = metadata.modelClass();
-        VertxDAO dao = metadata.dao(this);
+        VertxDAO dao = dao(metadata);
         if (parsable(pClazz, data)) {
             return ((Single<Integer>) dao.insert(
                 AuditDecorator.addCreationAudit(true, validate(metadata, data), createdBy))).doOnSuccess(

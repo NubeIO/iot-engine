@@ -27,6 +27,11 @@ public final class NetworkDiscovery extends AbstractDiscoveryService implements 
     }
 
     @Override
+    public @NonNull EntityMetadata representation() {
+        return NetworkMetadata.INSTANCE;
+    }
+
+    @Override
     public @NonNull String servicePath() {
         return "/network";
     }
@@ -64,11 +69,6 @@ public final class NetworkDiscovery extends AbstractDiscoveryService implements 
     @Override
     public Single<JsonObject> discoverThenDoPersist(RequestData reqData) {
         return doPersist(new BACnetNetworkTranslator().serialize(parseProtocol(reqData)).toJson());
-    }
-
-    @Override
-    public @NonNull EntityMetadata representation() {
-        return NetworkMetadata.INSTANCE;
     }
 
     private CommunicationProtocol parseProtocol(RequestData reqData) {

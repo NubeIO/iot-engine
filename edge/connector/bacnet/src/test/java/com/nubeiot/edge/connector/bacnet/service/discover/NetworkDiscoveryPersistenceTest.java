@@ -1,5 +1,8 @@
 package com.nubeiot.edge.connector.bacnet.service.discover;
 
+import java.util.Collections;
+import java.util.Set;
+
 import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
@@ -13,12 +16,19 @@ import com.nubeiot.core.enums.State;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.core.http.base.EventHttpService;
 import com.nubeiot.core.protocol.network.Ipv4Network;
 import com.nubeiot.core.protocol.network.UdpProtocol;
 import com.nubeiot.edge.connector.bacnet.BACnetWithGatewayTest;
+import com.nubeiot.edge.connector.bacnet.service.mock.MockNetworkPersistService;
 import com.nubeiot.iotdata.dto.Protocol;
 
 public class NetworkDiscoveryPersistenceTest extends BACnetWithGatewayTest {
+
+    @Override
+    protected Set<EventHttpService> serviceDefinitions() {
+        return Collections.singleton(MockNetworkPersistService.builder().hasNetworks(true).build());
+    }
 
     @Test
     public void test_persist_network_invalid(TestContext context) {

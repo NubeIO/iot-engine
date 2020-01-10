@@ -1,8 +1,5 @@
 package com.nubeiot.edge.connector.bacnet.service.discover;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -21,7 +18,7 @@ import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
 import com.nubeiot.edge.connector.bacnet.discover.RemoteDeviceScanner;
 import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
 import com.nubeiot.edge.connector.bacnet.translator.BACnetDeviceTranslator;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeDeviceMetadata;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
@@ -32,6 +29,11 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
 
     DeviceDiscovery(@NonNull Vertx vertx, @NonNull String sharedKey) {
         super(vertx, sharedKey);
+    }
+
+    @Override
+    public @NonNull EntityMetadata representation() {
+        return EdgeDeviceMetadata.INSTANCE;
     }
 
     @Override
@@ -56,7 +58,7 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
                      .map(RemoteDeviceScanner::getRemoteDevices)
                      .flattenAsObservable(r -> r)
                      .flatMapSingle(rd -> parseRemoteDevice(device.localDevice(), rd, options.isDetail(), false))
-                     .collect(ArrayList<RemoteDeviceMixin>::new, List::add)
+                     .toList()
                      .map(results -> DiscoverResponse.builder().remoteDevices(results).build().toJson())
                      .doFinally(device::stop);
     }
@@ -75,11 +77,6 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
     public Single<JsonObject> discoverThenDoPersist(RequestData reqData) {
         return doGet(reqData).map(rd -> new BACnetDeviceTranslator().serialize(rd))
                              .flatMap(device -> doPersist(device.toJson()));
-    }
-
-    @Override
-    public @NonNull EntityMetadata representation() {
-        return DeviceMetadata.INSTANCE;
     }
 
     private Single<RemoteDeviceMixin> parseRemoteDevice(@NonNull LocalDevice ld, @NonNull RemoteDevice rd,

@@ -21,7 +21,7 @@ def versions = [
         "sonar" : "2.7",
     ],
     tests   : [
-        junit: "4.12",
+        junit : "4.12",
         jacoco: "0.8.4"
     ],
 ]
@@ -61,6 +61,7 @@ ext.deps = [
         jooqMetaExt     : "org.jooq:jooq-meta-extensions:$versions.database.jooq",
         jooqCodegen     : "org.jooq:jooq-codegen:$versions.database.jooq",
         jooqVertxRx     : "io.github.jklingsporn:vertx-jooq-rx:$versions.database.jooqVertx",
+        jooqVertxShared : "io.github.jklingsporn:vertx-jooq-shared:$versions.database.jooqVertx",
         jooqVertxCodegen: "io.github.jklingsporn:vertx-jooq-generate:$versions.database.jooqVertx"
     ],
     tests   : [

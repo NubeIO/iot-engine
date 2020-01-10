@@ -41,6 +41,11 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
     }
 
     @Override
+    public @NonNull EntityMetadata representation() {
+        return PointCompositeMetadata.INSTANCE;
+    }
+
+    @Override
     public @NonNull String servicePath() {
         return "/network/:" + Fields.networkCode + "/device/:" + Fields.deviceCode + "/object";
     }
@@ -79,11 +84,6 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
     public Single<JsonObject> discoverThenDoPersist(RequestData reqData) {
         return doGet(reqData).map(properties -> new BACnetPointTranslator().serialize(properties))
                              .flatMap(point -> doPersist(point.toJson()));
-    }
-
-    @Override
-    public @NonNull EntityMetadata representation() {
-        return PointCompositeMetadata.INSTANCE;
     }
 
     private Single<ObjectPropertyValues> getRemoteObjects(@NonNull LocalDevice local, @NonNull RemoteDevice rd,

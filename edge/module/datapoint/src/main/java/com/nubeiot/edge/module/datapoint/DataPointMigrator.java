@@ -22,15 +22,15 @@ final class DataPointMigrator implements SchemaMigrator {
     @Override
     public Single<EventMessage> execute(@NonNull EntityHandler entityHandler, @NonNull Catalog catalog) {
         final DataPointEntityHandler handler = (DataPointEntityHandler) entityHandler;
-        return EdgeMetadata.INSTANCE.dao(handler)
-                                    .findOneByCondition(DSL.trueCondition())
-                                    .filter(Optional::isPresent)
-                                    .map(Optional::get)
-                                    .map(handler::cacheEdge)
-                                    .map(edge -> new JsonObject())
-                                    .switchIfEmpty(handler.initDataFromConfig(EventAction.MIGRATE))
-                                    .map(json -> EventMessage.success(EventAction.MIGRATE, json))
-                                    .doOnSuccess(ignore -> new DataCacheInitializer().init(handler));
+        return handler.dao(EdgeMetadata.INSTANCE)
+                      .findOneByCondition(DSL.trueCondition())
+                      .filter(Optional::isPresent)
+                      .map(Optional::get)
+                      .map(handler::cacheEdge)
+                      .map(edge -> new JsonObject())
+                      .switchIfEmpty(handler.initDataFromConfig(EventAction.MIGRATE))
+                      .map(json -> EventMessage.success(EventAction.MIGRATE, json))
+                      .doOnSuccess(ignore -> new DataCacheInitializer().init(handler));
     }
 
 }

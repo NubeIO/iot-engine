@@ -1,6 +1,5 @@
 dependencies {
-    compile project(':core:base')
-    compileOnly project(':core:sql')
+    compile project(':core:sql:type')
 
     testCompile project(":core:base").sourceSets.test.output
     testCompile project(':core:sql')

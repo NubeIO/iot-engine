@@ -49,8 +49,8 @@ public interface DataProtocolSubscriber<P extends VertxPojo> extends EventListen
      * with declared protocol
      *
      * @return {@code true} if global
-     * @see #protocol() Declared Entity Protocol
-     * @see #metadata() Declared Entity Metadata
+     * @see #protocol()
+     * @see #metadata()
      */
     default boolean isGlobal() {
         return false;

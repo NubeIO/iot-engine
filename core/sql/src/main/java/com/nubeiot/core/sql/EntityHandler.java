@@ -109,17 +109,29 @@ public interface EntityHandler {
     @NonNull DSLContext dsl();
 
     /**
+     * Create DAO by given entity handler
+     *
+     * @param metadata Entity metadata
+     * @return the instance of DAO
+     * @since 1.0.0
+     */
+    default @NonNull <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> D dao(
+        @NonNull EntityMetadata<K, P, R, D> metadata) {
+        return this.dao(metadata.daoClass());
+    }
+
+    /**
      * Create {@code DAO} by given {@code daoClass}.
      *
      * @param <K>      Type of {@code primary key}
-     * @param <M>      Type of {@code VertxPojo}
+     * @param <P>      Type of {@code VertxPojo}
      * @param <R>      Type of {@code UpdatableRecord}
      * @param <D>      Type of {@code VertxDAO}
      * @param daoClass the dao class
      * @return the instance of DAO
      * @since 1.0.0
      */
-    <K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>> D dao(
+    <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> D dao(
         @NonNull Class<D> daoClass);
 
     /**
