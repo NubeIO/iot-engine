@@ -13,6 +13,7 @@ import com.nubeiot.core.dto.RequestData.Filters;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.micro.ServiceGatewayIndex.Params;
 import com.nubeiot.core.micro.transfomer.RecordTransformer.RecordView;
 
@@ -20,8 +21,10 @@ public class ServiceGatewayIndexTest extends BaseMicroServiceTest {
 
     @Test
     public void test_not_found(TestContext context) {
-        final JsonObject expected = new JsonObject(
-            "{\"code\":\"SERVICE_NOT_FOUND\",\"message\":\"Not found service by given parameters\"}");
+        final JsonObject expected = new JsonObject().put("code", ErrorCode.SERVICE_NOT_FOUND)
+                                                    .put("message", "Not found service by given parameters: " +
+                                                                    "{\"_by\":\"name\",\"identifier\":\"event.not" +
+                                                                    ".found\"}");
         testFailed(context, RequestData.builder()
                                        .body(new JsonObject().put(Params.IDENTIFIER, "event.not.found"))
                                        .filter(new JsonObject().put(Params.BY, "name"))
@@ -55,8 +58,8 @@ public class ServiceGatewayIndexTest extends BaseMicroServiceTest {
             "\"location\":\"event.address.1\",\"status\":\"UP\"}");
         testSuccess(context, RequestData.builder()
                                         .body(new JsonObject().put(Params.IDENTIFIER, "event.record.1"))
-                                        .filter(
-                                            new JsonObject().put(Params.BY, "name").put("view", RecordView.TECHNICAL))
+                                        .filter(new JsonObject().put(Params.BY, "name")
+                                                                .put(Params.VIEW, RecordView.TECHNICAL))
                                         .build(), EventAction.GET_ONE, value);
     }
 

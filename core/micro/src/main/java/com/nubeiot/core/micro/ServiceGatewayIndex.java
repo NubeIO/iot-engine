@@ -49,8 +49,9 @@ public final class ServiceGatewayIndex implements EventListener {
                          .rxGetRecord(RecordPredicate.filter(filter, EventAction.GET_ONE))
                          .map(RecordTransformer.create(view)::transform)
                          .map(RecordOutput::toJson)
-                         .switchIfEmpty(
-                             Single.error(new ServiceNotFoundException("Not found service by given parameters")));
+                         .switchIfEmpty(Single.error(new ServiceNotFoundException(
+                             "Not found service by given parameters: " +
+                             requestData.filter().put(Params.IDENTIFIER, identifier).encode())));
     }
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
@@ -75,12 +76,12 @@ public final class ServiceGatewayIndex implements EventListener {
     public static final class Params {
 
         public static final String IDENTIFIER = "identifier";
-        public static final String TYPE = "type";
-        public static final String STATUS = "status";
-        public static final String SCOPE = "scope";
-        public static final String BY = "by";
-        public static final String VIEW = "view";
-        public static final String KIND = "kind";
+        public static final String TYPE = "_type";
+        public static final String STATUS = "_status";
+        public static final String SCOPE = "_scope";
+        public static final String BY = "_by";
+        public static final String VIEW = "_view";
+        public static final String KIND = "_kind";
 
         public static final String ACTION = "_action";
 

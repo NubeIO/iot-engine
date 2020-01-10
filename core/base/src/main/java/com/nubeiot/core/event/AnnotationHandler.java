@@ -184,8 +184,10 @@ final class AnnotationHandler<T extends EventListener> {
     private EventMessage convertError(Throwable throwable, EventAction action, Logger logger) {
         if (throwable instanceof DesiredException) {
             logger.debug("Failed when handle event {}", throwable, action);
-        } else {
+        } else if (throwable instanceof ImplementationError) {
             logger.error("Failed when handle event {}", throwable, action);
+        } else {
+            logger.warn("Failed when handle event {}", throwable, action);
         }
         Throwable t = NubeExceptionConverter.friendly(throwable, throwable instanceof ImplementationError ?
                                                                  "No reply from event " + action : null);
