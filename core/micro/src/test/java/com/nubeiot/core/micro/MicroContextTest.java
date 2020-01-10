@@ -28,6 +28,7 @@ import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
+import com.nubeiot.core.micro.ServiceGatewayIndex.Params;
 import com.nubeiot.core.micro.mock.MockEventbusService;
 import com.nubeiot.core.micro.type.EventMessageService;
 
@@ -102,7 +103,8 @@ public class MicroContextTest {
                      "{\"status\":\"SUCCESS\",\"action\":\"GET_LIST\",\"data\":{\"apis\":[{\"name\":\"test\"," +
                      "\"type\":\"eventbus-service-proxy\",\"status\":\"UP\",\"location\":\"address1\"}]}}");
                  final JsonObject payload = RequestData.builder()
-                                                       .filter(new JsonObject().put("scope", ServiceScope.INTERNAL))
+                                                       .filter(
+                                                           new JsonObject().put(Params.SCOPE, ServiceScope.INTERNAL))
                                                        .build()
                                                        .toJson();
                  controller.fire(DeliveryEvent.builder()
