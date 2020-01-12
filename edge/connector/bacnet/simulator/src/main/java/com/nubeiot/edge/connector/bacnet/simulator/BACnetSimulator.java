@@ -48,17 +48,17 @@ public final class BACnetSimulator extends AbstractBACnetVerticle<SimulatorConfi
     }
 
     @Override
-    protected void addListenerOnEachDevice(BACnetDevice device) {
-        device.addListener(new WhoIsListener());
-    }
-
-    @Override
     protected @NonNull Single<List<CommunicationProtocol>> availableNetworks(@NonNull SimulatorConfig config) {
         JsonObject points = Configs.loadJsonConfig("points.json");
         return Single.just(config.getNetworks().toNetworks())
                      .flattenAsObservable(networks -> networks)
                      .map(BACnetNetwork::toProtocol)
                      .toList();
+    }
+
+    @Override
+    protected void addListenerOnEachDevice(BACnetDevice device) {
+        device.addListeners(new WhoIsListener());
     }
 
     @Override

@@ -8,9 +8,17 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.exceptions.ErrorData;
+import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 
 import lombok.NonNull;
 
+/**
+ * Represents for {@code discover completion handler} that listens {@code success} or {@code error} event after scanning
+ * network and initializing {@code local BACnet device}.
+ *
+ * @see BACnetDevice
+ * @since 1.0.0
+ */
 public class DiscoverCompletionHandler implements ApplicationReadinessHandler {
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());

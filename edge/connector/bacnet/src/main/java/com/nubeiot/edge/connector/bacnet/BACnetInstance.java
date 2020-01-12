@@ -78,7 +78,7 @@ public final class BACnetInstance extends AbstractSharedDataDelegate<BACnetInsta
     private BACnetInstance(@NonNull Vertx vertx, @NonNull String sharedKey, @NonNull TransportProvider provider) {
         super(vertx);
         registerSharedKey(sharedKey);
-        this.localDevice = BACnetDevice.create(getSharedDataValue(BACnetDevice.EDGE_BACNET_METADATA), provider);
+        this.localDevice = DefaultBACnetDevice.create(getSharedDataValue(BACnetDevice.EDGE_BACNET_METADATA), provider);
         logger.info("Init BACnet instance with network {}", provider.protocol().toJson());
     }
 

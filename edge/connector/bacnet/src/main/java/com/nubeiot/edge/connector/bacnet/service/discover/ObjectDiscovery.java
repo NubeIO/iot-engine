@@ -59,7 +59,7 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
         final BACnetDeviceCache cache = getSharedDataValue(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
         final BACnetDevice device = cache.get(protocol);
         return device.discoverRemoteDevice(request.getDeviceCode(), options)
-                     .flatMap(remote -> getRemoteObjects(device.getLocalDevice(), remote, options.isDetail()))
+                     .flatMap(remote -> getRemoteObjects(device.localDevice(), remote, options.isDetail()))
                      .map(opv -> DiscoverResponse.builder().objects(opv).build())
                      .map(DiscoverResponse::toJson)
                      .doFinally(device::stop);
@@ -86,6 +86,12 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
         return PointCompositeMetadata.INSTANCE;
     }
 
+    @Override
+    protected String parseResourceId(@NonNull JsonObject resource) {
+        //TODO implement it
+        return null;
+    }
+
     private Single<ObjectPropertyValues> getRemoteObjects(@NonNull LocalDevice local, @NonNull RemoteDevice rd,
                                                           boolean detail) {
         return Observable.fromIterable(Functions.getOrThrow(t -> new NubeException(ErrorCode.ENGINE_ERROR, t),
@@ -107,7 +113,7 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
         final BACnetDevice device = cache.get(protocol);
         final ObjectIdentifier objId = ObjectIdentifierMixin.deserialize(request.getObjectCode());
         return device.discoverRemoteDevice(request.getDeviceCode(), options)
-                     .flatMap(rd -> parseRemoteObject(device.getLocalDevice(), rd, objId, true, options.isDetail()))
+                     .flatMap(rd -> parseRemoteObject(device.localDevice(), rd, objId, true, options.isDetail()))
                      .doFinally(device::stop);
     }
 

@@ -1,18 +1,23 @@
 package com.nubeiot.edge.connector.bacnet.service.discover;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.BiFunction;
 
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.exceptions.AlreadyExistException;
+import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
-import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
@@ -34,7 +39,6 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
         super(vertx, sharedKey);
     }
 
-
     @Override
     public @NonNull String servicePath() {
         return "/network/:" + Fields.networkCode + "/device";
@@ -51,20 +55,19 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
         final DiscoverOptions options = parseDiscoverOptions(reqData);
         final CommunicationProtocol requestProtocol = parseNetworkProtocol(request);
         logger.info("Discover devices by network {}", requestProtocol.toJson());
-        final BACnetDeviceCache cache = getSharedDataValue(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
-        final BACnetDevice device = cache.get(requestProtocol);
+        final BACnetDevice device = getDeviceCache().get(requestProtocol);
         return device.scanRemoteDevices(options)
                      .map(RemoteDeviceScanner::getRemoteDevices)
                      .flattenAsObservable(r -> r)
-                     .flatMapSingle(rd -> parseRemoteDevice(device.getLocalDevice(), rd, options.isDetail(), false))
-                     .collect(ArrayList<RemoteDeviceMixin>::new, List::add)
+                     .flatMapSingle(rd -> parseRemoteDevice(device, rd, options.isDetail(), false))
+                     .toList()
                      .map(results -> DiscoverResponse.builder().remoteDevices(results).build().toJson())
                      .doFinally(device::stop);
     }
 
     @Override
     public Single<JsonObject> get(RequestData reqData) {
-        return doGet(reqData).map(RemoteDeviceMixin::toJson);
+        return doGet(reqData, (device, integer) -> device).map(RemoteDeviceMixin::toJson);
     }
 
     @Override
@@ -74,8 +77,15 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
 
     @Override
     public Single<JsonObject> discoverThenDoPersist(RequestData reqData) {
-        return doGet(reqData).map(rd -> new BACnetDeviceTranslator().serialize(rd))
-                             .flatMap(device -> doPersist(device.toJson()));
+        return doGet(reqData, this::validateCache).filter(rd -> Objects.nonNull(rd.getNetworkId()))
+                                                  .switchIfEmpty(Single.error(new NotFoundException(
+                                                      "Not found network information. Need to persist network first")))
+                                                  .flatMap(this::doPersist);
+    }
+
+    @Override
+    protected String parseResourceId(JsonObject resource) {
+        return resource.getJsonObject("device", new JsonObject()).getString("id");
     }
 
     @Override
@@ -83,22 +93,47 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
         return DeviceMetadata.INSTANCE;
     }
 
-    private Single<RemoteDeviceMixin> parseRemoteDevice(@NonNull LocalDevice ld, @NonNull RemoteDevice rd,
-                                                        boolean detail, boolean includeError) {
-        final ObjectIdentifier objId = rd.getObjectIdentifier();
-        return parseRemoteObject(ld, rd, objId, detail, includeError).map(pvm -> RemoteDeviceMixin.create(rd, pvm));
+    private Single<JsonObject> doPersist(@NonNull RemoteDeviceMixin rd) {
+        final BACnetNetworkCache networkCache = getNetworkCache();
+        final BACnetDeviceCache deviceCache = getDeviceCache();
+        final CommunicationProtocol protocol = networkCache.get(rd.getNetworkCode());
+        return doPersist(JsonPojo.from(new BACnetDeviceTranslator().serialize(rd)).toJson()).map(response -> {
+            deviceCache.addDataKey(protocol, rd.getInstanceNumber(), parsePersistResponse(response));
+            return response;
+        });
     }
 
-    private Single<RemoteDeviceMixin> doGet(RequestData reqData) {
-        final DiscoverRequest request = DiscoverRequest.from(reqData, DiscoverLevel.DEVICE);
+    private BACnetDevice validateCache(@NonNull BACnetDevice device, @NonNull Integer deviceCode) {
+        final Optional<UUID> deviceId = getDeviceCache().getDataKey(device.protocol(), deviceCode);
+        if (deviceId.isPresent()) {
+            throw new AlreadyExistException(
+                "Already existed device " + deviceCode + " in network code " + device.protocol().identifier());
+        }
+        return device;
+    }
+
+    private Single<RemoteDeviceMixin> doGet(@NonNull RequestData reqData,
+                                            @NonNull BiFunction<BACnetDevice, Integer, BACnetDevice> validation) {
         final DiscoverOptions options = parseDiscoverOptions(reqData);
+        final DiscoverRequest request = DiscoverRequest.from(reqData, DiscoverLevel.DEVICE);
         final CommunicationProtocol protocol = parseNetworkProtocol(request);
         logger.info("Discover device {} by network {}", request.getDeviceCode(), protocol.toJson());
-        final BACnetDeviceCache cache = getSharedDataValue(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
-        final BACnetDevice device = cache.get(protocol);
-        return device.discoverRemoteDevice(request.getDeviceCode(), options)
-                     .flatMap(rd -> parseRemoteDevice(device.getLocalDevice(), rd, true, options.isDetail()))
-                     .doFinally(device::stop);
+        final BACnetDevice device = getDeviceCache().get(protocol);
+        return validation.apply(device, request.getDeviceCode())
+                         .discoverRemoteDevice(request.getDeviceCode(), options)
+                         .flatMap(rd -> parseRemoteDevice(device, rd, true, options.isDetail()))
+                         .doFinally(device::stop);
+    }
+
+    private Single<RemoteDeviceMixin> parseRemoteDevice(@NonNull BACnetDevice device, @NonNull RemoteDevice rd,
+                                                        boolean detail, boolean includeError) {
+        final ObjectIdentifier objId = rd.getObjectIdentifier();
+        final LocalDevice ld = device.localDevice();
+        final String networkCode = device.protocol().identifier();
+        final UUID networkId = getNetworkCache().getDataKey(networkCode).orElse(null);
+        return parseRemoteObject(ld, rd, objId, detail, includeError).map(pvm -> RemoteDeviceMixin.create(rd, pvm))
+                                                                     .map(rdm -> rdm.setNetworkCode(networkCode)
+                                                                                    .setNetworkId(networkId));
     }
 
 }

@@ -8,7 +8,6 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.sql.EntityMetadata;
-import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
@@ -39,7 +38,7 @@ public final class NetworkDiscovery extends AbstractDiscoveryService implements 
     @Override
     public Single<JsonObject> list(RequestData reqData) {
         final DiscoverOptions options = parseDiscoverOptions(reqData);
-        final BACnetNetworkCache cache = getSharedDataValue(BACnetCacheInitializer.EDGE_NETWORK_CACHE);
+        final BACnetNetworkCache cache = getNetworkCache();
         if (options.isForce()) {
             BACnetNetworkCache.rescan(cache);
         }
@@ -64,6 +63,11 @@ public final class NetworkDiscovery extends AbstractDiscoveryService implements 
     @Override
     public Single<JsonObject> discoverThenDoPersist(RequestData reqData) {
         return doPersist(new BACnetNetworkTranslator().serialize(parseProtocol(reqData)).toJson());
+    }
+
+    @Override
+    protected String parseResourceId(@NonNull JsonObject resource) {
+        return resource.getString("id");
     }
 
     @Override

@@ -105,6 +105,7 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
      * Add one or more {@code BACnet listeners} after each {@code BACnet device} on each network starts
      *
      * @param device BACnet device
+     * @see BACnetDevice
      * @see DeviceEventListener
      * @see BACnetNotifier
      */

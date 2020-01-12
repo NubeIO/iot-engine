@@ -15,7 +15,7 @@ import com.nubeiot.core.micro.MicroConfig;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.Microservice;
 import com.nubeiot.core.micro.MicroserviceProvider;
-import com.nubeiot.edge.connector.bacnet.service.mock.NetworkPersistService;
+import com.nubeiot.edge.connector.bacnet.service.mock.MockNetworkPersistService;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.service.DataPointApiService;
 
@@ -24,7 +24,7 @@ import lombok.NonNull;
 public abstract class BACnetWithGatewayTest extends BaseBACnetVerticleTest {
 
     protected final String apiName = DataPointApiService.DEFAULT.lookupApiName(NetworkMetadata.INSTANCE);
-    protected final String address = NetworkPersistService.class.getName();
+    protected final String address = MockNetworkPersistService.class.getName();
 
     protected MicroConfig getMicroConfig() {
         return IConfig.fromClasspath("mockGateway.json", MicroConfig.class);
@@ -52,13 +52,13 @@ public abstract class BACnetWithGatewayTest extends BaseBACnetVerticleTest {
         });
     }
 
-    protected NetworkPersistService createMockRemoteNetworkService() {
-        return NetworkPersistService.builder().hasNetworks(true).build();
+    protected MockNetworkPersistService createMockRemoteNetworkService() {
+        return MockNetworkPersistService.builder().hasNetworks(true).build();
     }
 
     private void registerMockGatewayService(@NonNull TestContext context, @NonNull Async async,
                                             @NonNull MicroContext microContext) {
-        final NetworkPersistService listener = createMockRemoteNetworkService();
+        final MockNetworkPersistService listener = createMockRemoteNetworkService();
         final ActionMethodMapping mapping = ActionMethodMapping.byCRUD(listener.getAvailableEvents());
         final EventMethodDefinition definition = EventMethodDefinition.create("/api/test", mapping);
         microContext.getLocalController()
