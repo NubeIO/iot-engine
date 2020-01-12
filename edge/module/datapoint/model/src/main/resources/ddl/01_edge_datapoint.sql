@@ -41,8 +41,8 @@ COMMENT ON COLUMN NETWORK.CODE IS 'Network Code should be subnet name or Network
 CREATE TABLE IF NOT EXISTS DEVICE (
 	ID                   uuid          NOT NULL,
 	CODE                 varchar(63)   NOT NULL,
-	DEVICE_TYPE          varchar(63)   NOT NULL,
 	PROTOCOL             varchar(31)   DEFAULT 'UNKNOWN' NOT NULL,
+	DEVICE_TYPE          varchar(63)   NOT NULL,
 	STATE                varchar(31)   DEFAULT 'NONE' NOT NULL,
 	NAME                 varchar(127)   ,
 	MANUFACTURER         varchar(500)   ,
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS DEVICE (
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           clob(2147483647)   ,
 	CONSTRAINT PK_DEVICE PRIMARY KEY ( ID ),
-	CONSTRAINT IDX_UQ_DEVICE UNIQUE ( CODE, DEVICE_TYPE )
+	CONSTRAINT IDX_UQ_DEVICE UNIQUE ( CODE, PROTOCOL )
  );
 
 COMMENT ON TABLE DEVICE IS 'Remote Device is connected and managed by NubeIO Edge';
