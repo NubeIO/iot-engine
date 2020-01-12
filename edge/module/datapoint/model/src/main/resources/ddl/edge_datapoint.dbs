@@ -5,10 +5,10 @@
 			<comment><![CDATA[Remote Device is connected and managed by NubeIO Edge]]></comment>
 			<column name="ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="CODE" type="varchar" length="63" decimal="0" jt="12" mandatory="y" />
-			<column name="DEVICE_TYPE" type="varchar" length="63" decimal="0" jt="12" mandatory="y" />
 			<column name="PROTOCOL" type="varchar" length="31" decimal="0" jt="12" mandatory="y" >
 				<defo>&#039;UNKNOWN&#039;</defo>
 			</column>
+			<column name="DEVICE_TYPE" type="varchar" length="63" decimal="0" jt="12" mandatory="y" />
 			<column name="STATE" type="varchar" length="31" decimal="0" jt="12" mandatory="y" >
 				<defo>&#039;NONE&#039;</defo>
 			</column>
@@ -26,7 +26,7 @@
 			</index>
 			<index name="IDX_UQ_DEVICE" unique="UNIQUE" >
 				<column name="CODE" options="ASC" />
-				<column name="DEVICE_TYPE" options="ASC" />
+				<column name="PROTOCOL" options="ASC" />
 			</index>
 		</table>
 		<table name="DEVICE_TAG" >
@@ -95,13 +95,13 @@
 				<column name="EDGE_ID" options="ASC" />
 				<column name="DEVICE_ID" options="ASC" />
 			</index>
-			<index name="IDX_FK_DEVICE_EQUIPMENT_DEVICE" unique="NORMAL" >
+			<index name="IDX_FK_EDGE_DEVICE_EDGE" unique="NORMAL" >
 				<column name="EDGE_ID" options="ASC" />
 			</index>
-			<index name="IDX_FK_DEVICE_EQUIP_EQUIP" unique="NORMAL" >
+			<index name="IDX_FK_EDGE_DEVICE_DEVICE" unique="NORMAL" >
 				<column name="DEVICE_ID" options="ASC" />
 			</index>
-			<index name="IDX_FK_DEVICE_EQUIP_NETWORK" unique="NORMAL" >
+			<index name="IDX_FK_EDGE_DEVICE_NETWORK" unique="NORMAL" >
 				<column name="NETWORK_ID" options="ASC" />
 			</index>
 			<fk name="FK_EDGE_DEVICE_DEVICE" to_schema="edge_datapoint.PUBLIC" to_table="DEVICE" delete_action="cascade" update_action="cascade" >
@@ -244,14 +244,14 @@
 		</table>
 		<table name="POINT_HISTORY_DATA" >
 			<column name="ID" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
-				<defo>(NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_80300AAB_0F06_4978_9ABB_E101C001FAB6)</defo>
+				<defo>(NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_2826D1DC_2469_4121_AF21_078D214F1CA7)</defo>
 			</column>
 			<column name="POINT" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="TIME" type="timestamp" length="26" decimal="6" jt="93" mandatory="y" />
 			<column name="VALUE" type="double" length="17" decimal="0" jt="8" />
 			<column name="PRIORITY" type="integer" length="10" decimal="0" jt="4" />
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
-			<column name="SYNC_AUDIT" type="clob" length="2147483647" jt="2005" />
+			<column name="SYNC_AUDIT" type="clob" length="2147483647" decimal="0" jt="2005" />
 			<index name="CONSTRAINT_B" unique="PRIMARY_KEY" >
 				<column name="ID" />
 			</index>
@@ -270,9 +270,7 @@
 			</fk>
 		</table>
 		<table name="POINT_REALTIME_DATA" >
-			<column name="ID" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
-				<defo>(NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_0C4DB876_E135_4BE2_9067_6A7D40678A0B)</defo>
-			</column>
+			<column name="ID" type="bigint" jt="-5" mandatory="y" autoincrement="y" />
 			<column name="POINT" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="TIME" type="timestamp" length="26" decimal="6" jt="93" mandatory="y" />
 			<column name="VALUE_JSON" type="clob" length="2147483647" decimal="0" jt="2005" />
@@ -297,17 +295,12 @@
 			</fk>
 		</table>
 		<table name="POINT_TAG" >
-			<column name="ID" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
-				<defo>(NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_8477E3AC_D540_4A25_891F_B44771BDA9AB)</defo>
-			</column>
+			<column name="ID" type="bigint" jt="-5" mandatory="y" autoincrement="y" />
 			<column name="TAG_NAME" type="varchar" length="63" decimal="0" jt="12" mandatory="y" />
 			<column name="POINT" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="TAG_VALUE" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
 			<column name="SYNC_AUDIT" type="varchar" length="2147483647" jt="12" />
-			<index name="CONSTRAINT_3" unique="PRIMARY_KEY" >
-				<column name="ID" />
-			</index>
 			<index name="IDX_UQ_POINT_TAG" unique="UNIQUE" >
 				<column name="TAG_NAME" options="ASC" />
 				<column name="POINT" options="ASC" />
@@ -317,6 +310,9 @@
 			</index>
 			<index name="IDX_TAG_BY_POINT" unique="NORMAL" >
 				<column name="TAG_NAME" options="ASC" />
+			</index>
+			<index name="PK_POINT_TAG" unique="PRIMARY_KEY" >
+				<column name="ID" />
 			</index>
 			<fk name="FK_TAG_POINT" to_schema="edge_datapoint.PUBLIC" to_table="POINT" delete_action="cascade" update_action="cascade" >
 				<fk_column name="POINT" pk="ID" />
@@ -513,24 +509,24 @@ Field: DEVICE_ID, NETWORK_ID, EDGE_ID, COMPUTED_THING is computed by TRIGGER: co
 	</schema>
 	<connector name="H2" database="H2" driver_class="org.h2.Driver" driver_jar="h2-1.4.197.jar" driver_desc="File" host="localhost" port="0" instance="/data/projects/nubeio/iot-engine/edge/module/datapoint/model/src/main/resources/ddl/edge_datapoint" />
 	<layout name="Default Layout" id="Layout_4a6ba2c" show_relation="columns" >
-		<entity schema="edge_datapoint.PUBLIC" name="POINT_HISTORY_DATA" color="C7F4BE" x="48" y="336" />
-		<entity schema="edge_datapoint.PUBLIC" name="POINT_REALTIME_DATA" color="C7F4BE" x="48" y="528" />
-		<entity schema="edge_datapoint.PUBLIC" name="POINT_VALUE_DATA" color="C7F4BE" x="240" y="784" />
+		<entity schema="edge_datapoint.PUBLIC" name="POINT_VALUE_DATA" color="EEF7EC" x="240" y="784" />
 		<entity schema="edge_datapoint.PUBLIC" name="PROTOCOL_DISPATCHER" color="FFFFCC" x="1344" y="80" />
 		<entity schema="edge_datapoint.PUBLIC" name="SYNC_DISPATCHER" color="FFFFCC" x="1344" y="368" />
 		<entity schema="edge_datapoint.PUBLIC" name="MEASURE_UNIT" color="FFCCE6" x="704" y="576" />
 		<entity schema="edge_datapoint.PUBLIC" name="THING" color="FFCCE6" x="1008" y="576" />
-		<entity schema="edge_datapoint.PUBLIC" name="POINT_TAG" color="C7F4BE" x="416" y="80" />
-		<entity schema="edge_datapoint.PUBLIC" name="DEVICE_TAG" color="FFCCE6" x="1120" y="800" />
-		<entity schema="edge_datapoint.PUBLIC" name="DEVICE" color="FFCCE6" x="1344" y="592" />
 		<entity schema="edge_datapoint.PUBLIC" name="NETWORK" color="BEBEF4" x="976" y="320" />
 		<entity schema="edge_datapoint.PUBLIC" name="EDGE" color="BEBEF4" x="704" y="112" />
-		<entity schema="edge_datapoint.PUBLIC" name="HISTORY_SETTING" color="C7F4BE" x="432" y="784" />
-		<entity schema="edge_datapoint.PUBLIC" name="REALTIME_SETTING" color="C7F4BE" x="64" y="704" />
-		<entity schema="edge_datapoint.PUBLIC" name="SCHEDULE_SETTING" color="C7F4BE" x="48" y="80" />
-		<entity schema="edge_datapoint.PUBLIC" name="POINT" color="C7F4BE" x="400" y="304" />
-		<entity schema="edge_datapoint.PUBLIC" name="EDGE_DEVICE" color="BEBEF4" x="1136" y="80" />
+		<entity schema="edge_datapoint.PUBLIC" name="HISTORY_SETTING" color="EEF7EC" x="432" y="784" />
+		<entity schema="edge_datapoint.PUBLIC" name="REALTIME_SETTING" color="EEF7EC" x="64" y="704" />
+		<entity schema="edge_datapoint.PUBLIC" name="SCHEDULE_SETTING" color="EEF7EC" x="48" y="80" />
+		<entity schema="edge_datapoint.PUBLIC" name="POINT" color="EEF7EC" x="400" y="304" />
 		<entity schema="edge_datapoint.PUBLIC" name="POINT_THING" color="FFCCE6" x="768" y="752" />
+		<entity schema="edge_datapoint.PUBLIC" name="EDGE_DEVICE" color="BEBEF4" x="1136" y="80" />
+		<entity schema="edge_datapoint.PUBLIC" name="DEVICE" color="FFCCE6" x="1344" y="592" />
+		<entity schema="edge_datapoint.PUBLIC" name="POINT_TAG" color="EEF7EC" x="416" y="80" />
+		<entity schema="edge_datapoint.PUBLIC" name="DEVICE_TAG" color="FFCCE6" x="1120" y="800" />
+		<entity schema="edge_datapoint.PUBLIC" name="POINT_REALTIME_DATA" color="EEF7EC" x="48" y="528" />
+		<entity schema="edge_datapoint.PUBLIC" name="POINT_HISTORY_DATA" color="EEF7EC" x="48" y="336" />
 		<group name="SYSTEM" color="FFFFCC" >
 			<entity schema="edge_datapoint.PUBLIC" name="PROTOCOL_DISPATCHER" />
 			<entity schema="edge_datapoint.PUBLIC" name="SYNC_DISPATCHER" />
@@ -552,10 +548,10 @@ Field: DEVICE_ID, NETWORK_ID, EDGE_ID, COMPUTED_THING is computed by TRIGGER: co
 			<entity schema="edge_datapoint.PUBLIC" name="HISTORY_SETTING" />
 			<entity schema="edge_datapoint.PUBLIC" name="POINT_VALUE_DATA" />
 			<entity schema="edge_datapoint.PUBLIC" name="POINT_REALTIME_DATA" />
-			<entity schema="edge_datapoint.PUBLIC" name="POINT_HISTORY_DATA" />
 			<entity schema="edge_datapoint.PUBLIC" name="POINT_TAG" />
 			<entity schema="edge_datapoint.PUBLIC" name="REALTIME_SETTING" />
 			<entity schema="edge_datapoint.PUBLIC" name="SCHEDULE_SETTING" />
+			<entity schema="edge_datapoint.PUBLIC" name="POINT_HISTORY_DATA" />
 		</group>
 		<script name="DEVICE" id="Editor_3b225e6" language="SQL" >
 			<string><![CDATA[DROP INDEX IDX_UQ_PROTOCOL_DISPATCHER]]></string>
@@ -1341,6 +1337,26 @@ ALTER TABLE POINT_THING ADD CONSTRAINT FK_POINT_THING_THING FOREIGN KEY ( THING_
 		</script>
 		<script name="SQL_Editor_003" id="Editor_a25751" language="SQL" >
 			<string><![CDATA[ALTER TABLE PUBLIC.DEVICE_TAG ALTER COLUMN ID bigint GENERATED ALWAYS AS IDENTITY NOT NULL;]]></string>
+		</script>
+		<script name="SQL_Editor_004" id="Editor_2a6d2f7" language="SQL" >
+			<string><![CDATA[CREATE TABLE IF NOT EXISTS POINT_HISTORY_DATA (
+	ID                   bigint GENERATED ALWAYS AS IDENTITY  NOT NULL,
+	POINT                uuid   NOT NULL,
+	TIME                 timestamp   NOT NULL,
+	VALUE                double   ,
+	PRIORITY             integer  ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           clob(2147483647)   ,
+	CONSTRAINT IDX_UQ_POINT_HISTORY_DATA UNIQUE ( POINT, TIME ) ,
+	CONSTRAINT PK_POINT_HISTORY_DATA PRIMARY KEY ( ID )
+ );
+
+CREATE INDEX IDX_FK_HISTORY_DATA_POINT ON POINT_HISTORY_DATA ( POINT );
+
+CREATE INDEX IDX_POINT_HISTORY_DATA_TIME ON POINT_HISTORY_DATA ( TIME );
+
+ALTER TABLE POINT_HISTORY_DATA ADD CONSTRAINT FK_HISTORY_DATA_POINT FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+]]></string>
 		</script>
 		<script name="SYNC_DISPATCHER" id="Editor_2516967" language="SQL" >
 			<string><![CDATA[CREATE TABLE PUBLIC.SYNC_DISPATCHER ( 
