@@ -1,11 +1,19 @@
 package com.nubeiot.edge.connector.bacnet.cache;
 
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import com.nubeiot.core.cache.AbstractLocalCache;
 import com.nubeiot.core.cache.LocalDataCache;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.protocol.network.Ipv4Network;
 import com.nubeiot.core.protocol.network.Ipv6Network;
 import com.nubeiot.core.protocol.serial.SerialPortProtocol;
+import com.nubeiot.core.utils.Strings;
+import com.nubeiot.core.utils.UUID64;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -14,6 +22,8 @@ import lombok.NonNull;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class BACnetNetworkCache extends AbstractLocalCache<String, CommunicationProtocol, BACnetNetworkCache>
     implements LocalDataCache<String, CommunicationProtocol> {
+
+    private final ConcurrentMap<String, String> dataPointCache = new ConcurrentHashMap<>();
 
     static BACnetNetworkCache init() {
         return rescan(new BACnetNetworkCache().register(CommunicationProtocol::parse));
@@ -40,6 +50,19 @@ public final class BACnetNetworkCache extends AbstractLocalCache<String, Communi
     public BACnetNetworkCache add(@NonNull String key, CommunicationProtocol protocol) {
         cache().put(key, protocol);
         return this;
+    }
+
+    public BACnetNetworkCache addDataKey(@NonNull CommunicationProtocol protocol, String dataPointKey) {
+        if (Objects.isNull(get(protocol.identifier()))) {
+            throw new IllegalArgumentException("Invalid or unreachable network " + protocol.identifier());
+        }
+        dataPointCache.put(protocol.identifier(),
+                           UUID64.uuidToBase64(Strings.requireNotBlank(dataPointKey, "Missing data point network_id")));
+        return this;
+    }
+
+    public Optional<UUID> getDataKey(@NonNull String key) {
+        return Optional.ofNullable(dataPointCache.get(key)).map(UUID64::uuid64ToUuid);
     }
 
 }

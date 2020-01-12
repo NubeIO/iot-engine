@@ -22,8 +22,8 @@ public final class BACnetDeviceInitializer {
     private final Consumer<BACnetDevice> preFunction;
     private final List<DeviceEventListener> listeners;
 
-    public IBACnetDevice asyncStart(@NonNull CommunicationProtocol protocol) {
-        final BACnetDevice device = new BACnetDevice(vertx, sharedKey, protocol);
+    public BACnetDevice asyncStart(@NonNull CommunicationProtocol protocol) {
+        final BACnetDevice device = new DefaultBACnetDevice(vertx, sharedKey, protocol);
         Optional.ofNullable(preFunction).ifPresent(f -> f.accept(device));
         Optional.ofNullable(listeners).ifPresent(device::addListeners);
         return device.asyncStart();

@@ -1,14 +1,18 @@
 package com.nubeiot.edge.connector.bacnet.service.discover;
 
+import java.util.Optional;
+import java.util.UUID;
+
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.exceptions.AlreadyExistException;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.sql.EntityMetadata;
-import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
+import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
@@ -44,7 +48,7 @@ public final class NetworkDiscovery extends AbstractDiscoveryService implements 
     @Override
     public Single<JsonObject> list(RequestData reqData) {
         final DiscoverOptions options = parseDiscoverOptions(reqData);
-        final BACnetNetworkCache cache = getSharedDataValue(BACnetCacheInitializer.EDGE_NETWORK_CACHE);
+        final BACnetNetworkCache cache = getNetworkCache();
         if (options.isForce()) {
             BACnetNetworkCache.rescan(cache);
         }
@@ -68,9 +72,27 @@ public final class NetworkDiscovery extends AbstractDiscoveryService implements 
 
     @Override
     public Single<JsonObject> discoverThenDoPersist(RequestData reqData) {
-        return doPersist(new BACnetNetworkTranslator().serialize(parseProtocol(reqData)).toJson());
+        final CommunicationProtocol protocol = parseProtocol(reqData);
+        final BACnetNetworkCache cache = getNetworkCache();
+        final Optional<UUID> networkId = cache.getDataKey(protocol.identifier());
+        if (networkId.isPresent()) {
+            throw new AlreadyExistException(
+                "Already persisted network code " + protocol.identifier() + " with id " + networkId.get());
+        }
+        final JsonObject network = JsonPojo.from(new BACnetNetworkTranslator().serialize(protocol)).toJson();
+        return doPersist(network).map(response -> {
+            cache.addDataKey(protocol, parsePersistResponse(response));
+            return response;
+        });
     }
 
+    @Override
+    protected String parseResourceId(@NonNull JsonObject resource) {
+        return resource.getString("id");
+    }
+
+    //TODO need to split case physical network like ip and transport network like udp. For example: `ipv4-eth0`,
+    // `udp4-eth0-47808`, `udp4-eth0-47809`
     private CommunicationProtocol parseProtocol(RequestData reqData) {
         return parseNetworkProtocol(DiscoverRequest.from(reqData, DiscoverLevel.NETWORK));
     }

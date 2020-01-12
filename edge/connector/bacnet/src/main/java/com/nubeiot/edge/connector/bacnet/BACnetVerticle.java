@@ -77,7 +77,7 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
     }
 
     @Override
-    protected void addListenerOnEachDevice(@NonNull IBACnetDevice device) {
+    protected void addListenerOnEachDevice(@NonNull BACnetDevice device) {
         device.addListeners(new WhoIsListener());
     }
 

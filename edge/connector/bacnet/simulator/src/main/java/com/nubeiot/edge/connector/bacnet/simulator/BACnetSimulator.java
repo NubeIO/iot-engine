@@ -11,7 +11,7 @@ import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.utils.Configs;
 import com.nubeiot.edge.connector.bacnet.AbstractBACnetVerticle;
-import com.nubeiot.edge.connector.bacnet.IBACnetDevice;
+import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.dto.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
 import com.nubeiot.edge.connector.bacnet.listener.WhoIsListener;
@@ -57,7 +57,7 @@ public final class BACnetSimulator extends AbstractBACnetVerticle<SimulatorConfi
     }
 
     @Override
-    protected void addListenerOnEachDevice(IBACnetDevice device) {
+    protected void addListenerOnEachDevice(BACnetDevice device) {
         device.addListeners(new WhoIsListener());
     }
 

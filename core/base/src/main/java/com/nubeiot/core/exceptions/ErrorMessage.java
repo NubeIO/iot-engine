@@ -47,7 +47,7 @@ public final class ErrorMessage implements Serializable, JsonData {
         return new ErrorMessage(code, message);
     }
 
-    public static ErrorMessage parse(JsonObject error) {
+    public static ErrorMessage parse(@NonNull JsonObject error) {
         return JsonData.convert(error, ErrorMessage.class);
     }
 

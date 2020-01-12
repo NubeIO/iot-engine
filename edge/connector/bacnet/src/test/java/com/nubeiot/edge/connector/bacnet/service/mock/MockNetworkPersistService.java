@@ -11,9 +11,11 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventListener;
+import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.http.base.EventHttpService;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.protocol.network.Ipv4Network;
@@ -27,14 +29,19 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
 @Builder
+@Accessors(fluent = true)
 public class MockNetworkPersistService implements EventListener, EventHttpService {
 
     @Getter
     private final UUID id = UUID.randomUUID();
     private final Ipv4Network network = Ipv4Network.getFirstActiveIp();
     private final boolean hasNetworks;
+    @Setter
+    private boolean errorInCreate;
 
     @Override
     public @NonNull Collection<EventAction> getAvailableEvents() {
@@ -43,7 +50,13 @@ public class MockNetworkPersistService implements EventListener, EventHttpServic
 
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
     public Single<JsonObject> create(RequestData reqData) {
-        return Single.just(JsonPojo.from(new Network().fromJson(reqData.body()).setId(UUID.randomUUID())).toJson());
+        if (errorInCreate) {
+            return Single.error(new NubeException("Failed"));
+        }
+        final JsonObject resource = JsonPojo.from(new Network().fromJson(reqData.body()).setId(UUID.randomUUID()))
+                                            .toJson();
+        return Single.just(
+            new JsonObject().put("action", EventAction.CREATE).put("status", Status.SUCCESS).put("resource", resource));
     }
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
