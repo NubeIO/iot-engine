@@ -8,7 +8,6 @@ import java.util.Optional;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 
@@ -20,6 +19,7 @@ import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
 import com.nubeiot.edge.connector.bacnet.handler.BACnetDiscoverFinisher;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
 import com.nubeiot.edge.connector.bacnet.listener.WhoIsListener;
@@ -83,7 +83,7 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
     }
 
     @Override
-    protected void addListenerOnEachDevice(BACnetDevice device) {
+    protected void addListenerOnEachDevice(@NonNull BACnetDevice device) {
         device.addListeners(new WhoIsListener());
     }
 
@@ -102,8 +102,18 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
     }
 
     @Override
-    protected Future<Void> stopBACnet() {
-        return Future.succeededFuture();
+    protected Single<JsonObject> stopBACnet() {
+        final BACnetDeviceCache deviceCache = SharedDataDelegate.getLocalDataValue(getVertx(), getSharedKey(),
+                                                                                   BACnetCacheInitializer.BACNET_DEVICE_CACHE);
+        return subscription.unregisterAll()
+                           .flatMap(output -> Observable.fromIterable(deviceCache.all().values())
+                                                        .flatMapSingle(BACnetDevice::stop)
+                                                        .collect(JsonObject::new, (object, device) -> object.put(
+                                                            device.protocol().identifier(), device.metadata().toJson()))
+                                                        .map(devices -> new JsonObject().put("terminated", devices))
+                                                        .map(json -> json.put("unsubscribed",
+                                                                              "Unregistered " + output.size() +
+                                                                              " BACnet Subscribers")));
     }
 
     @Override
