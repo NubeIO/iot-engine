@@ -32,14 +32,10 @@ public abstract class BACnetWithGatewayTest extends BaseBACnetVerticleTest {
         return new ReadinessAsserter(context, async, new JsonObject("{\"total\":1}"));
     }
 
-    protected void deployServices(TestContext context, BACnetConfig bacnetCfg, BACnetVerticle verticle) {
+    protected void deployServices(TestContext context) {
         busClient = EventClientProxy.create(vertx, null).transporter();
         final Async async = context.async(2);
-        final String readinessAddress = bacnetCfg.getReadinessAddress();
-        deployVerticle(vertx, context, async,
-                       () -> VertxHelper.deploy(vertx, context, createDeploymentOptions(bacnetCfg), verticle,
-                                                event -> busClient.register(readinessAddress,
-                                                                            createReadinessHandler(context, async))));
+        deployVerticle(vertx, context, async, () -> deployBACnetVerticle(context, async));
     }
 
     protected MicroConfig getMicroConfig() {

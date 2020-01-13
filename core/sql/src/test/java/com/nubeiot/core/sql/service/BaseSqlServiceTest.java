@@ -16,22 +16,8 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.sql.BaseSqlTest;
-import com.nubeiot.core.sql.MockOneEntityHandler;
-import com.nubeiot.core.sql.SchemaTest;
-import com.nubeiot.core.sql.service.MockEntityService.AuthorService;
-import com.nubeiot.core.sql.service.MockEntityService.BookService;
 
 public abstract class BaseSqlServiceTest extends BaseSqlTest {
-
-    static final String AUTHOR_ADDRESS = "com.nubeiot.core.sql.author";
-    static final String BOOK_ADDRESS = "com.nubeiot.core.sql.book";
-    protected MockOneEntityHandler entityHandler;
-
-    protected void setup(TestContext context) {
-        entityHandler = startSQL(context, SchemaTest.OneSchema.CATALOG, MockOneEntityHandler.class);
-        controller().register(AUTHOR_ADDRESS, new AuthorService(entityHandler));
-        controller().register(BOOK_ADDRESS, new BookService(entityHandler));
-    }
 
     protected void asserter(TestContext context, boolean isSuccess, JsonObject expected, String address,
                             EventAction action, RequestData reqData) {

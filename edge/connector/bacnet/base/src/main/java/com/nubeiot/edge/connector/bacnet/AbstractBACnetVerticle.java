@@ -40,7 +40,8 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
 
     @Override
     public void stop(Future<Void> future) {
-        super.stop(future);
+        stopBACnet().doOnSuccess(result -> logger.info(result.encode()))
+                    .subscribe(ignore -> super.stop(future), future::fail);
     }
 
     protected void successHandler(@NonNull C config) {
@@ -121,7 +122,7 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
      */
     protected abstract @NonNull Single<List<CommunicationProtocol>> availableNetworks(@NonNull C config);
 
-    protected abstract Future<Void> stopBACnet();
+    protected abstract Single<JsonObject> stopBACnet();
 
     @NonNull
     protected DiscoverCompletionHandler createDiscoverCompletionHandler() {

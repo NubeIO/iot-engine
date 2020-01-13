@@ -7,7 +7,6 @@ import java.util.Optional;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 
@@ -18,6 +17,7 @@ import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
 import com.nubeiot.edge.connector.bacnet.handler.BACnetDiscoverFinisher;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
 import com.nubeiot.edge.connector.bacnet.listener.WhoIsListener;
@@ -34,6 +34,7 @@ import lombok.NonNull;
 public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
 
     private MicroContext microContext;
+    private BACnetSubscription subscription;
 
     @Override
     public void start() {
@@ -43,6 +44,7 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
 
     @Override
     protected void successHandler(@NonNull BACnetConfig config) {
+        this.subscription = new BACnetSubscription(getVertx(), getSharedKey(), config.isAllowSlave());
         super.successHandler(new BACnetCacheInitializer(config).init(this).getConfig());
     }
 
@@ -67,12 +69,13 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
     @Override
     protected @NonNull Single<JsonObject> registerSubscriber(@NonNull EventbusClient client,
                                                              @NonNull BACnetConfig config) {
-        final BACnetSubscription register = new BACnetSubscription(getVertx(), getSharedKey(), config.isAllowSlave());
         return Observable.fromIterable(BACnetRpcClientHelper.createSubscribers(getVertx(), getSharedKey()))
                          .doOnNext(subscriber -> client.register(subscriber.address(), subscriber))
-                         .flatMapSingle(register::doRegister)
+                         .flatMapSingle(subscription::register)
                          .count()
-                         .map(total -> new JsonObject().put("message", "Registered " + total + " BACnet Subscribers"))
+                         .map(total -> new JsonObject().put("message",
+                                                            "Registered " + subscription.subscribers().size() + " in " +
+                                                            total + " BACnet Subscribers"))
                          .doOnSuccess(logger::info);
     }
 
@@ -90,8 +93,18 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
     }
 
     @Override
-    protected Future<Void> stopBACnet() {
-        return Future.succeededFuture();
+    protected Single<JsonObject> stopBACnet() {
+        final BACnetDeviceCache deviceCache = SharedDataDelegate.getLocalDataValue(getVertx(), getSharedKey(),
+                                                                                   BACnetCacheInitializer.BACNET_DEVICE_CACHE);
+        return subscription.unregisterAll()
+                           .flatMap(output -> Observable.fromIterable(deviceCache.all().values())
+                                                        .flatMapSingle(BACnetDevice::stop)
+                                                        .collect(JsonObject::new, (object, device) -> object.put(
+                                                            device.protocol().identifier(), device.metadata().toJson()))
+                                                        .map(devices -> new JsonObject().put("terminated", devices))
+                                                        .map(json -> json.put("unsubscribed",
+                                                                              "Unregistered " + output.size() +
+                                                                              " BACnet Subscribers")));
     }
 
     @Override

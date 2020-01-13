@@ -44,6 +44,16 @@ public class MockNetworkPersistService implements EventListener, EventHttpServic
     private boolean errorInCreate;
 
     @Override
+    public String api() {
+        return DataPointIndex.lookupApiName(NetworkMetadata.INSTANCE);
+    }
+
+    @Override
+    public Set<EventMethodDefinition> definitions() {
+        return Collections.singleton(EventMethodDefinition.createDefault("/network", "network_id"));
+    }
+
+    @Override
     public @NonNull Collection<EventAction> getAvailableEvents() {
         return Arrays.asList(EventAction.CREATE, EventAction.GET_LIST);
     }
@@ -71,16 +81,6 @@ public class MockNetworkPersistService implements EventListener, EventHttpServic
         final UdpProtocol protocol = UdpProtocol.builder().port(47808).canReusePort(true).ip(network).build();
         final Network network = new BACnetNetworkTranslator().serialize(protocol).setId(id);
         return new JsonArray().add(JsonPojo.from(network).toJson());
-    }
-
-    @Override
-    public String api() {
-        return DataPointIndex.lookupApiName(NetworkMetadata.INSTANCE);
-    }
-
-    @Override
-    public Set<EventMethodDefinition> definitions() {
-        return Collections.singleton(EventMethodDefinition.createDefault("/network", "network_id"));
     }
 
 }

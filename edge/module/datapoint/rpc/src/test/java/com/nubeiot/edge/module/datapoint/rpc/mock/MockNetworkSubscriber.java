@@ -4,7 +4,6 @@ import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.MockData.ProtocolDispatcherAddress;
 import com.nubeiot.edge.module.datapoint.rpc.AbstractProtocolSubscriber;
@@ -25,6 +24,11 @@ public class MockNetworkSubscriber extends AbstractProtocolSubscriber<Network>
     }
 
     @Override
+    public @NonNull Protocol protocol() {
+        return Protocol.BACNET;
+    }
+
+    @Override
     public @NonNull NetworkMetadata metadata() {
         return NetworkMetadata.INSTANCE;
     }
@@ -35,29 +39,23 @@ public class MockNetworkSubscriber extends AbstractProtocolSubscriber<Network>
     }
 
     @Override
-    public @NonNull Single<Network> create(@NonNull RequestData requestData) {
-        final Network network = metadata().parseFromRequest(requestData.body());
-        return Single.just(network.setMetadata(metadata));
+    protected Single<Network> doCreate(@NonNull Network pojo) {
+        return Single.just(pojo.setMetadata(metadata));
     }
 
     @Override
-    public @NonNull Single<Network> update(@NonNull RequestData requestData) {
+    protected Single<Network> doUpdate(@NonNull Network pojo) {
         return null;
     }
 
     @Override
-    public @NonNull Single<Network> patch(@NonNull RequestData requestData) {
+    protected Single<Network> doPatch(@NonNull Network pojo) {
         return null;
     }
 
     @Override
-    public @NonNull Single<Network> delete(@NonNull RequestData requestData) {
+    protected Single<Network> doDelete(@NonNull Network pojo) {
         return null;
-    }
-
-    @Override
-    public @NonNull Protocol protocol() {
-        return Protocol.BACNET;
     }
 
 }

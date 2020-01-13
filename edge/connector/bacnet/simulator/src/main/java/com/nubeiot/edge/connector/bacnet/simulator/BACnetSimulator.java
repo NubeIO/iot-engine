@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 
 import io.reactivex.Single;
-import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.event.EventbusClient;
@@ -48,6 +47,11 @@ public final class BACnetSimulator extends AbstractBACnetVerticle<SimulatorConfi
     }
 
     @Override
+    protected void addListenerOnEachDevice(@NonNull BACnetDevice device) {
+        device.addListeners(new WhoIsListener());
+    }
+
+    @Override
     protected @NonNull Single<List<CommunicationProtocol>> availableNetworks(@NonNull SimulatorConfig config) {
         JsonObject points = Configs.loadJsonConfig("points.json");
         return Single.just(config.getNetworks().toNetworks())
@@ -57,13 +61,8 @@ public final class BACnetSimulator extends AbstractBACnetVerticle<SimulatorConfi
     }
 
     @Override
-    protected void addListenerOnEachDevice(BACnetDevice device) {
-        device.addListeners(new WhoIsListener());
-    }
-
-    @Override
-    protected Future<Void> stopBACnet() {
-        return Future.succeededFuture();
+    protected Single<JsonObject> stopBACnet() {
+        return Single.just(new JsonObject());
     }
 
     @Override

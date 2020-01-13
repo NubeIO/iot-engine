@@ -1,6 +1,7 @@
 package com.nubeiot.edge.connector.bacnet.service.discover;
 
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -30,6 +31,7 @@ import com.nubeiot.edge.connector.bacnet.BACnetWithGatewayTest;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.service.mock.MockNetworkPersistService;
+import com.nubeiot.edge.connector.bacnet.service.mock.MockProtocolDispatcherService;
 import com.nubeiot.iotdata.dto.Protocol;
 
 public class NetworkDiscoveryPersistenceTest extends BACnetWithGatewayTest {
@@ -38,7 +40,8 @@ public class NetworkDiscoveryPersistenceTest extends BACnetWithGatewayTest {
 
     @Override
     protected Set<EventHttpService> serviceDefinitions() {
-        return Collections.singleton(mockService = MockNetworkPersistService.builder().hasNetworks(true).build());
+        return new HashSet<>(Arrays.asList(mockService = MockNetworkPersistService.builder().hasNetworks(true).build(),
+                                           new MockProtocolDispatcherService()));
     }
 
     @Test

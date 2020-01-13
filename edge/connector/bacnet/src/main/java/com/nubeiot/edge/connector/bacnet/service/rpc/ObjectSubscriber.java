@@ -3,7 +3,6 @@ package com.nubeiot.edge.connector.bacnet.service.rpc;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 
-import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.edge.connector.bacnet.service.BACnetSubscriber;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
@@ -25,23 +24,23 @@ public final class ObjectSubscriber extends AbstractProtocolSubscriber<Point> im
     }
 
     @Override
-    public Single<Point> create(RequestData requestData) {
-        return null;
+    protected Single<Point> doCreate(@NonNull Point pojo) {
+        throw new UnsupportedOperationException("Not yet supported CREATE BACnet object");
     }
 
     @Override
-    public Single<Point> update(RequestData requestData) {
-        return null;
+    protected Single<Point> doUpdate(@NonNull Point pojo) {
+        throw new UnsupportedOperationException("Not yet supported UPDATE BACnet object");
     }
 
     @Override
-    public Single<Point> patch(RequestData requestData) {
-        return null;
+    protected Single<Point> doPatch(@NonNull Point pojo) {
+        throw new UnsupportedOperationException("Not yet supported PATCH BACnet object");
     }
 
     @Override
-    public Single<Point> delete(RequestData requestData) {
-        return null;
+    protected Single<Point> doDelete(@NonNull Point pojo) {
+        throw new UnsupportedOperationException("Not yet supported DELETE BACnet object");
     }
 
 }

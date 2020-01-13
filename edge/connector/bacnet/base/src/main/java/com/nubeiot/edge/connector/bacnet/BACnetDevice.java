@@ -35,7 +35,7 @@ public interface BACnetDevice extends SharedDataDelegate<BACnetDevice> {
      * @see LocalDeviceMetadata
      * @since 1.0.0
      */
-    LocalDeviceMetadata metadata();
+    @NonNull LocalDeviceMetadata metadata();
 
     /**
      * Gets communication protocol.
@@ -44,7 +44,7 @@ public interface BACnetDevice extends SharedDataDelegate<BACnetDevice> {
      * @see CommunicationProtocol
      * @since 1.0.0
      */
-    CommunicationProtocol protocol();
+    @NonNull CommunicationProtocol protocol();
 
     /**
      * Gets local device.
@@ -53,7 +53,7 @@ public interface BACnetDevice extends SharedDataDelegate<BACnetDevice> {
      * @see LocalDevice
      * @since 1.0.0
      */
-    LocalDevice localDevice();
+    @NonNull LocalDevice localDevice();
 
     /**
      * Add listeners to BACnet Device.
@@ -62,7 +62,7 @@ public interface BACnetDevice extends SharedDataDelegate<BACnetDevice> {
      * @return a reference to this, so the API can be used fluently
      * @since 1.0.0
      */
-    BACnetDevice addListeners(@NonNull List<DeviceEventListener> listeners);
+    @NonNull BACnetDevice addListeners(@NonNull List<DeviceEventListener> listeners);
 
     /**
      * Add listener to BACnet Device.
@@ -71,7 +71,7 @@ public interface BACnetDevice extends SharedDataDelegate<BACnetDevice> {
      * @return a reference to this, so the API can be used fluently
      * @since 1.0.0
      */
-    default BACnetDevice addListeners(DeviceEventListener... listeners) {
+    default @NonNull BACnetDevice addListeners(DeviceEventListener... listeners) {
         return addListeners(Arrays.asList(listeners));
     }
 
@@ -86,9 +86,10 @@ public interface BACnetDevice extends SharedDataDelegate<BACnetDevice> {
     /**
      * Stop BACnet device.
      *
+     * @return a reference to this, so the API can be used fluently
      * @since 1.0.0
      */
-    void stop();
+    @NonNull Single<BACnetDevice> stop();
 
     /**
      * Scan remote devices in {@code BACnet} network
@@ -99,7 +100,7 @@ public interface BACnetDevice extends SharedDataDelegate<BACnetDevice> {
      * @see RemoteDeviceScanner
      * @since 1.0.0
      */
-    Single<RemoteDeviceScanner> scanRemoteDevices(@NonNull DiscoverOptions options);
+    @NonNull Single<RemoteDeviceScanner> scanRemoteDevices(@NonNull DiscoverOptions options);
 
     /**
      * Discover remote device by {@code device code}.
@@ -111,6 +112,6 @@ public interface BACnetDevice extends SharedDataDelegate<BACnetDevice> {
      * @see RemoteDevice
      * @since 1.0.0
      */
-    Single<RemoteDevice> discoverRemoteDevice(int deviceCode, @NonNull DiscoverOptions options);
+    @NonNull Single<RemoteDevice> discoverRemoteDevice(int deviceCode, @NonNull DiscoverOptions options);
 
 }

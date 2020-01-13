@@ -3,17 +3,17 @@ package com.nubeiot.edge.connector.bacnet.service.rpc;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 
-import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.edge.connector.bacnet.service.BACnetSubscriber;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeDeviceMetadata;
+import com.nubeiot.edge.module.datapoint.model.pojos.EdgeDeviceComposite;
 import com.nubeiot.edge.module.datapoint.rpc.AbstractProtocolSubscriber;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 
 import lombok.NonNull;
 
 //TODO implement it
-public final class DeviceSubscriber extends AbstractProtocolSubscriber<Device> implements BACnetSubscriber<Device> {
+public final class DeviceSubscriber extends AbstractProtocolSubscriber<EdgeDeviceComposite>
+    implements BACnetSubscriber<EdgeDeviceComposite> {
 
     DeviceSubscriber(@NonNull Vertx vertx, @NonNull String sharedKey) {
         super(vertx, sharedKey);
@@ -21,27 +21,27 @@ public final class DeviceSubscriber extends AbstractProtocolSubscriber<Device> i
 
     @Override
     public @NonNull EntityMetadata metadata() {
-        return DeviceMetadata.INSTANCE;
+        return EdgeDeviceMetadata.INSTANCE;
     }
 
     @Override
-    public Single<Device> create(@NonNull RequestData requestData) {
-        return null;
+    protected Single<EdgeDeviceComposite> doCreate(@NonNull EdgeDeviceComposite pojo) {
+        throw new UnsupportedOperationException("Not yet supported create BACnet device");
     }
 
     @Override
-    public Single<Device> update(@NonNull RequestData requestData) {
-        return null;
+    protected Single<EdgeDeviceComposite> doUpdate(@NonNull EdgeDeviceComposite pojo) {
+        throw new UnsupportedOperationException("Not yet supported update BACnet device");
     }
 
     @Override
-    public Single<Device> patch(@NonNull RequestData requestData) {
-        return null;
+    protected Single<EdgeDeviceComposite> doPatch(@NonNull EdgeDeviceComposite pojo) {
+        throw new UnsupportedOperationException("Not yet supported patch BACnet device");
     }
 
     @Override
-    public Single<Device> delete(@NonNull RequestData requestData) {
-        return null;
+    protected Single<EdgeDeviceComposite> doDelete(@NonNull EdgeDeviceComposite pojo) {
+        throw new UnsupportedOperationException("Not yet supported delete BACnet device");
     }
 
 }

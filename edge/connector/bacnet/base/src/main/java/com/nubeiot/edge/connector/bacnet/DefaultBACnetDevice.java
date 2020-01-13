@@ -98,8 +98,11 @@ final class DefaultBACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
         return this;
     }
 
-    public void stop() {
-        localDevice.terminate();
+    public Single<BACnetDevice> stop() {
+        return ExecutorHelpers.blocking(getVertx(), () -> {
+            localDevice.terminate();
+            return this;
+        });
     }
 
     public Single<RemoteDeviceScanner> scanRemoteDevices(@NonNull DiscoverOptions options) {
