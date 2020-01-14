@@ -6,8 +6,8 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.MockData.ProtocolDispatcherAddress;
-import com.nubeiot.edge.module.datapoint.rpc.AbstractProtocolSubscriber;
-import com.nubeiot.edge.module.datapoint.rpc.DataProtocolSubscriber;
+import com.nubeiot.edge.module.datapoint.rpc.subscriber.AbstractProtocolSubscriber;
+import com.nubeiot.edge.module.datapoint.rpc.subscriber.DataProtocolSubscriber;
 import com.nubeiot.iotdata.dto.Protocol;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 
@@ -29,7 +29,7 @@ public class MockNetworkSubscriber extends AbstractProtocolSubscriber<Network>
     }
 
     @Override
-    public @NonNull NetworkMetadata metadata() {
+    public @NonNull NetworkMetadata context() {
         return NetworkMetadata.INSTANCE;
     }
 

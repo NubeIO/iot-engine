@@ -1,6 +1,6 @@
 package com.nubeiot.edge.connector.bacnet;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Objects;
 
 import io.reactivex.Single;
@@ -120,7 +120,8 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
      * @return single of list networks
      * @see CommunicationProtocol
      */
-    protected abstract @NonNull Single<List<CommunicationProtocol>> availableNetworks(@NonNull C config);
+    protected abstract @NonNull Single<? extends Collection<CommunicationProtocol>> availableNetworks(
+        @NonNull C config);
 
     protected abstract Single<JsonObject> stopBACnet();
 

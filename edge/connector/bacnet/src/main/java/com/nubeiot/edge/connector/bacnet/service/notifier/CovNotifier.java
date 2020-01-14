@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.bacnet.listener;
+package com.nubeiot.edge.connector.bacnet.service.notifier;
 
 import java.util.function.Function;
 
@@ -35,7 +35,7 @@ public final class CovNotifier extends DeviceEventAdapter implements DeviceEvent
     }
 
     @Override
-    public @NonNull EntityMetadata representation() {
+    public @NonNull EntityMetadata context() {
         return PointCompositeMetadata.INSTANCE;
     }
 

@@ -1,23 +1,22 @@
-package com.nubeiot.edge.module.datapoint.rpc;
+package com.nubeiot.edge.module.datapoint.rpc.subscriber;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 
-import com.nubeiot.core.component.SharedDataDelegate.AbstractSharedDataDelegate;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.edge.module.datapoint.model.pojos.HasProtocol;
+import com.nubeiot.edge.module.datapoint.rpc.BaseRpcProtocol;
 
 import lombok.NonNull;
 
 public abstract class AbstractProtocolSubscriber<P extends VertxPojo>
-    extends AbstractSharedDataDelegate<AbstractProtocolSubscriber> implements DataProtocolSubscriber<P> {
+    extends BaseRpcProtocol<AbstractProtocolSubscriber> implements DataProtocolSubscriber<P> {
 
     protected AbstractProtocolSubscriber(@NonNull Vertx vertx, @NonNull String sharedKey) {
-        super(vertx);
-        this.registerSharedKey(sharedKey);
+        super(vertx, sharedKey);
     }
 
     @Override
@@ -50,12 +49,12 @@ public abstract class AbstractProtocolSubscriber<P extends VertxPojo>
 
     @SuppressWarnings("unchecked")
     protected P parseEntity(@NonNull RequestData requestData) {
-        return (P) metadata().parseFromRequest(requestData.body());
+        return (P) context().parseFromRequest(requestData.body());
     }
 
     @SuppressWarnings("unchecked")
     protected boolean shouldSkip(P pojo) {
-        return !(metadata() instanceof HasProtocol) || !((HasProtocol) metadata()).getProtocol(pojo).equals(protocol());
+        return !(context() instanceof HasProtocol) || !((HasProtocol) context()).getProtocol(pojo).equals(protocol());
     }
 
     protected abstract Single<P> doCreate(@NonNull P pojo);

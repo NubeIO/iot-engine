@@ -1,7 +1,8 @@
 package com.nubeiot.edge.connector.bacnet;
 
+import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -18,13 +19,15 @@ import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.handler.BACnetDiscoverFinisher;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
 import com.nubeiot.edge.connector.bacnet.listener.WhoIsListener;
-import com.nubeiot.edge.connector.bacnet.service.BACnetRpcClient;
+import com.nubeiot.edge.connector.bacnet.service.BACnetRpcProtocol;
 import com.nubeiot.edge.connector.bacnet.service.discover.BACnetDiscoveryService;
-import com.nubeiot.edge.connector.bacnet.service.rpc.BACnetRpcClientHelper;
-import com.nubeiot.edge.connector.bacnet.service.rpc.BACnetSubscription;
+import com.nubeiot.edge.connector.bacnet.service.scanner.BACnetScannerHelper;
+import com.nubeiot.edge.connector.bacnet.service.subscriber.BACnetRpcClientHelper;
+import com.nubeiot.edge.connector.bacnet.service.subscriber.BACnetSubscription;
 
 import lombok.NonNull;
 
@@ -85,11 +88,17 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
     }
 
     @Override
-    protected @NonNull Single<List<CommunicationProtocol>> availableNetworks(@NonNull BACnetConfig config) {
-        return BACnetRpcClientHelper.createScanner(getVertx(), getSharedKey()).scan().onErrorReturn(t -> {
-            BACnetRpcClient.sneakyThrowable(logger, t, config.isAllowSlave());
-            return Collections.emptyList();
-        });
+    protected @NonNull Single<Collection<CommunicationProtocol>> availableNetworks(@NonNull BACnetConfig config) {
+        final BACnetNetworkCache cache = SharedDataDelegate.getLocalDataValue(getVertx(), getSharedKey(),
+                                                                              BACnetCacheInitializer.EDGE_NETWORK_CACHE);
+        return BACnetScannerHelper.createNetworkScanner(getVertx(), getSharedKey())
+                                  .scan()
+                                  .doOnSuccess(map -> map.forEach((key, value) -> cache.addDataKey(value, key)))
+                                  .map(Map::values)
+                                  .onErrorReturn(t -> {
+                                      BACnetRpcProtocol.sneakyThrowable(logger, t, config.isAllowSlave());
+                                      return Collections.emptyList();
+                                  });
     }
 
     @Override
@@ -109,7 +118,7 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
 
     @Override
     protected DiscoverCompletionHandler createDiscoverCompletionHandler() {
-        return new BACnetDiscoverFinisher(s -> SharedDataDelegate.getLocalDataValue(getVertx(), getSharedKey(), s));
+        return new BACnetDiscoverFinisher(getVertx(), getSharedKey());
     }
 
     private Observable<Record> registerEndpoint(ServiceDiscoveryController discovery, BACnetDiscoveryService s) {

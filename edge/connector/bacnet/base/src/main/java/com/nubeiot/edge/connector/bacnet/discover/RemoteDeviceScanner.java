@@ -31,13 +31,14 @@ public final class RemoteDeviceScanner {
     private final ReceiveIAmListener listener;
 
     public static RemoteDeviceScanner create(@NonNull LocalDevice localDevice, @NonNull DiscoverOptions options) {
-        final RemoteEntityCachePolicy policy = Optional.ofNullable(options.getDuration()).map(TimedExpiry::new)
+        final RemoteEntityCachePolicy policy = Optional.ofNullable(options.getDuration())
+                                                       .map(TimedExpiry::new)
                                                        .map(RemoteEntityCachePolicy.class::cast)
                                                        .orElse(RemoteEntityCachePolicy.NEVER_EXPIRE);
-        Consumer<RemoteDevice> consumer = remoteDevice -> localDevice.getRemoteDeviceCache()
-                                                                     .putEntity(remoteDevice.getInstanceNumber(),
-                                                                                remoteDevice, policy);
-        int maxDevice = options.getMaxItem() == -1 ? ObjectIdentifier.UNINITIALIZED : options.getMaxItem();
+        final Consumer<RemoteDevice> consumer = remoteDevice -> localDevice.getRemoteDeviceCache()
+                                                                           .putEntity(remoteDevice.getInstanceNumber(),
+                                                                                      remoteDevice, policy);
+        final int maxDevice = options.getMaxItem() == -1 ? ObjectIdentifier.UNINITIALIZED : options.getMaxItem();
         return RemoteDeviceScanner.builder()
                                   .localDevice(localDevice)
                                   .listener(new ReceiveIAmListener(consumer))

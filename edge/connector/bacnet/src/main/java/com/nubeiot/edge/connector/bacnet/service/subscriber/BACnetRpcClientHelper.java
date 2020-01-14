@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.bacnet.service.rpc;
+package com.nubeiot.edge.connector.bacnet.service.subscriber;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -24,10 +24,6 @@ public interface BACnetRpcClientHelper {
                               .map(clazz -> ReflectionClass.createObject(clazz, inputs))
                               .filter(Objects::nonNull)
                               .collect(Collectors.toSet());
-    }
-
-    static BACnetNetworkScanner createScanner(@NonNull Vertx vertx, @NonNull String sharedKey) {
-        return new BACnetNetworkScanner(vertx, sharedKey);
     }
 
 }

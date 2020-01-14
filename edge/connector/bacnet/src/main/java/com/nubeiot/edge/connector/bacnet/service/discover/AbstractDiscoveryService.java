@@ -25,6 +25,7 @@ import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetObjectCache;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
 import com.nubeiot.edge.connector.bacnet.dto.BACnetNetwork;
@@ -83,9 +84,9 @@ abstract class AbstractDiscoveryService extends AbstractSharedDataDelegate<Abstr
         return getSharedDataValue(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
     }
 
-    //    final BACnetObjectCache getObjectCache() {
-    //        return getSharedDataValue(BACnetCacheInitializer.BACNET_OBJECT_CACHE);
-    //    }
+    final BACnetObjectCache getObjectCache() {
+        return getSharedDataValue(BACnetCacheInitializer.BACNET_OBJECT_CACHE);
+    }
 
     final DiscoverOptions parseDiscoverOptions(@NonNull RequestData reqData) {
         final LocalDeviceMetadata metadata = getSharedDataValue(BACnetDevice.EDGE_BACNET_METADATA);

@@ -1,4 +1,4 @@
-package com.nubeiot.edge.module.datapoint.rpc;
+package com.nubeiot.edge.module.datapoint.rpc.subscriber;
 
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -17,6 +17,7 @@ import com.nubeiot.core.enums.State;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.ProtocolDispatcherMetadata;
+import com.nubeiot.edge.module.datapoint.rpc.DataProtocolRpcClient;
 import com.nubeiot.iotdata.edge.model.tables.pojos.ProtocolDispatcher;
 
 import lombok.NonNull;
@@ -35,7 +36,7 @@ public interface DataProtocolSubscription<T extends DataProtocolSubscription,
     extends DataProtocolRpcClient<T> {
 
     @Override
-    default @NonNull ProtocolDispatcherMetadata representation() {
+    default @NonNull ProtocolDispatcherMetadata context() {
         return ProtocolDispatcherMetadata.INSTANCE;
     }
 
@@ -137,7 +138,7 @@ public interface DataProtocolSubscription<T extends DataProtocolSubscription,
                                        .setProtocol(subscriber.protocol())
                                        .setAction(action)
                                        .setGlobal(subscriber.isGlobal())
-                                       .setEntity(subscriber.metadata().singularKeyName());
+                                       .setEntity(subscriber.context().singularKeyName());
     }
 
     /**

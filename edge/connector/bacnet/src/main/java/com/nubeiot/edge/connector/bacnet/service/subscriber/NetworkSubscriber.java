@@ -1,11 +1,11 @@
-package com.nubeiot.edge.connector.bacnet.service.rpc;
+package com.nubeiot.edge.connector.bacnet.service.subscriber;
 
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 
 import com.nubeiot.edge.connector.bacnet.service.BACnetSubscriber;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
-import com.nubeiot.edge.module.datapoint.rpc.AbstractProtocolSubscriber;
+import com.nubeiot.edge.module.datapoint.rpc.subscriber.AbstractProtocolSubscriber;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 
 import lombok.NonNull;
@@ -18,7 +18,7 @@ public final class NetworkSubscriber extends AbstractProtocolSubscriber<Network>
     }
 
     @Override
-    public @NonNull NetworkMetadata metadata() {
+    public @NonNull NetworkMetadata context() {
         return NetworkMetadata.INSTANCE;
     }
 

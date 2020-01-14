@@ -41,7 +41,7 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
     }
 
     @Override
-    public @NonNull EntityMetadata representation() {
+    public @NonNull EntityMetadata context() {
         return PointCompositeMetadata.INSTANCE;
     }
 

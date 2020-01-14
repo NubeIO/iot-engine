@@ -1,4 +1,6 @@
-package com.nubeiot.edge.module.datapoint.rpc;
+package com.nubeiot.edge.module.datapoint.rpc.notifier;
+
+import com.nubeiot.edge.module.datapoint.rpc.DataProtocolRpcClient;
 
 /**
  * Represents for a {@code Notifier RPC client} that watches the specific {@code Protocol} event then do notify to

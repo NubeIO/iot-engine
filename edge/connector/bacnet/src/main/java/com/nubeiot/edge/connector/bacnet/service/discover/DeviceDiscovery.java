@@ -40,7 +40,7 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
     }
 
     @Override
-    public @NonNull EntityMetadata representation() {
+    public @NonNull EntityMetadata context() {
         return EdgeDeviceMetadata.INSTANCE;
     }
 
