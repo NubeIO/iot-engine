@@ -1,29 +1,71 @@
 package com.nubeiot.edge.connector.bacnet.cache;
 
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.nubeiot.core.cache.AbstractLocalCache;
 import com.nubeiot.core.cache.LocalDataCache;
 import com.nubeiot.core.protocol.CommunicationProtocol;
-import com.nubeiot.edge.connector.bacnet.BACnetDevice;
+import com.nubeiot.core.utils.Strings;
+import com.nubeiot.core.utils.UUID64;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetObjectCache.BACnetObjectCacheKey;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetObjectCache.BACnetObjectCacheValue;
+import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
-//TODO implement it
-public final class BACnetObjectCache extends AbstractLocalCache<CommunicationProtocol, BACnetDevice, BACnetDeviceCache>
-    implements LocalDataCache<CommunicationProtocol, BACnetDevice> {
+public final class BACnetObjectCache
+    extends AbstractLocalCache<BACnetObjectCacheKey, BACnetObjectCacheValue, BACnetDeviceCache>
+    implements LocalDataCache<BACnetObjectCacheKey, BACnetObjectCacheValue> {
 
     @Override
     protected String keyLabel() {
-        return null;
+        return "BACnet device and protocol";
     }
 
     @Override
     protected String valueLabel() {
-        return null;
+        return "BACnet objects";
     }
 
     @Override
-    public LocalDataCache add(@NonNull CommunicationProtocol key, BACnetDevice device) {
-        return null;
+    public BACnetObjectCache add(@NonNull BACnetObjectCacheKey key, @NonNull BACnetObjectCacheValue points) {
+        cache().put(key, points);
+        return this;
     }
+
+    public BACnetObjectCache addDataKey(@NonNull CommunicationProtocol protocol, @NonNull ObjectIdentifier remoteDevice,
+                                        @NonNull ObjectIdentifier objectCode, String dataPointId) {
+        cache().computeIfPresent(new BACnetObjectCacheKey(protocol, remoteDevice), (key, value) -> {
+            value.put(objectCode,
+                      UUID64.uuidToBase64(Strings.requireNotBlank(dataPointId, "Missing data point point_id")));
+            return value;
+        });
+        return this;
+    }
+
+    public Optional<UUID> getDataKey(@NonNull CommunicationProtocol protocol, @NonNull ObjectIdentifier remoteDevice,
+                                     @NonNull ObjectIdentifier objectCode) {
+        return Optional.ofNullable(cache().get(new BACnetObjectCacheKey(protocol, remoteDevice)))
+                       .flatMap(cacheValue -> Optional.ofNullable(cacheValue.get(objectCode)))
+                       .map(UUID64::uuid64ToUuid);
+    }
+
+    @Getter
+    @RequiredArgsConstructor
+    public static final class BACnetObjectCacheKey {
+
+        @NonNull
+        private final CommunicationProtocol protocol;
+        @NonNull
+        private final ObjectIdentifier deviceCode;
+
+    }
+
+
+    public static final class BACnetObjectCacheValue extends ConcurrentHashMap<ObjectIdentifier, String> {}
 
 }

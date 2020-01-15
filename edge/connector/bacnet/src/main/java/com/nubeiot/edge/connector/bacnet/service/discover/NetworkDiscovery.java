@@ -48,7 +48,7 @@ public final class NetworkDiscovery extends AbstractDiscoveryService implements 
     @Override
     public Single<JsonObject> list(RequestData reqData) {
         final DiscoverOptions options = parseDiscoverOptions(reqData);
-        final BACnetNetworkCache cache = getNetworkCache();
+        final BACnetNetworkCache cache = networkCache();
         if (options.isForce()) {
             BACnetNetworkCache.rescan(cache);
         }
@@ -73,17 +73,14 @@ public final class NetworkDiscovery extends AbstractDiscoveryService implements 
     @Override
     public Single<JsonObject> discoverThenDoPersist(RequestData reqData) {
         final CommunicationProtocol protocol = parseProtocol(reqData);
-        final BACnetNetworkCache cache = getNetworkCache();
+        final BACnetNetworkCache cache = networkCache();
         final Optional<UUID> networkId = cache.getDataKey(protocol.identifier());
         if (networkId.isPresent()) {
             throw new AlreadyExistException(
                 "Already persisted network code " + protocol.identifier() + " with id " + networkId.get());
         }
         final JsonObject network = JsonPojo.from(new BACnetNetworkTranslator().serialize(protocol)).toJson();
-        return doPersist(network).map(response -> {
-            cache.addDataKey(protocol, parsePersistResponse(response));
-            return response;
-        });
+        return doPersist(network).doOnSuccess(response -> cache.addDataKey(protocol, parsePersistResponse(response)));
     }
 
     @Override

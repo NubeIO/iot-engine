@@ -60,8 +60,8 @@ public final class BACnetDiscoverFinisher extends DiscoverCompletionHandler
         ExecutorHelpers.blocking(vertx, () -> BACnetScannerHelper.createDeviceScanner(vertx, sharedKey))
                        .flatMap(deviceScanner -> deviceScanner.scan(networkId))
                        .flatMapObservable(map -> Observable.fromIterable(map.entrySet()))
-                       .doOnNext(entry -> deviceCache.addDataKey(protocol, entry.getValue().getInstanceNumber(),
-                                                                 entry.getKey()))
+                       .doOnNext(
+                           entry -> deviceCache.addDataKey(protocol, entry.getValue().getObjectId(), entry.getKey()))
                        .flatMapSingle(entry -> pointScanner.scan(networkId, UUID64.uuid64ToUuid(entry.getKey())))
                        .subscribe(logger::info, logger::error);
         return true;

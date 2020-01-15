@@ -16,6 +16,7 @@ import io.vertx.ext.unit.TestContext;
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.EventbusHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
+import com.nubeiot.core.component.ReadinessAsserter;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.State;
@@ -36,12 +37,16 @@ import com.nubeiot.iotdata.dto.Protocol;
 
 public class NetworkDiscoveryPersistenceTest extends BACnetWithGatewayTest {
 
-    MockNetworkPersistService mockService;
+    MockNetworkPersistService networkService;
+
+    protected ReadinessAsserter createReadinessHandler(TestContext context, Async async) {
+        return new ReadinessAsserter(context, async, new JsonObject("{\"total\":0}"));
+    }
 
     @Override
     protected Set<EventHttpService> serviceDefinitions() {
-        return new HashSet<>(Arrays.asList(mockService = MockNetworkPersistService.builder().hasNetworks(true).build(),
-                                           new MockProtocolDispatcherService()));
+        networkService = MockNetworkPersistService.builder().hasNetworks(false).build();
+        return new HashSet<>(Arrays.asList(networkService, new MockProtocolDispatcherService()));
     }
 
     @Test
@@ -111,7 +116,7 @@ public class NetworkDiscoveryPersistenceTest extends BACnetWithGatewayTest {
 
     @Test
     public void test_persist_network_failed(TestContext context) {
-        mockService.errorInCreate(true);
+        networkService.errorInCreate(true);
         final Async async = context.async(2);
         final UdpProtocol protocol = UdpProtocol.builder()
                                                 .ip(Ipv4Network.getFirstActiveIp())

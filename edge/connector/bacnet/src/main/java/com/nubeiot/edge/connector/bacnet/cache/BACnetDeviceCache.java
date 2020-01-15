@@ -17,6 +17,8 @@ import com.nubeiot.core.utils.Strings;
 import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.BACnetDeviceInitializer;
+import com.serotonin.bacnet4j.type.enumerated.ObjectType;
+import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -26,7 +28,8 @@ import lombok.NonNull;
 public final class BACnetDeviceCache extends AbstractLocalCache<CommunicationProtocol, BACnetDevice, BACnetDeviceCache>
     implements LocalDataCache<CommunicationProtocol, BACnetDevice> {
 
-    private final ConcurrentMap<CommunicationProtocol, Map<Integer, String>> dataPointCache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<CommunicationProtocol, Map<ObjectIdentifier, String>> remoteDeviceCache
+        = new ConcurrentHashMap<>();
 
     static BACnetDeviceCache init(@NonNull Vertx vertx, @NonNull String sharedKey) {
         return new BACnetDeviceCache().register(protocol -> BACnetDeviceInitializer.builder()
@@ -52,21 +55,27 @@ public final class BACnetDeviceCache extends AbstractLocalCache<CommunicationPro
         return BACnetDevice.class.getSimpleName();
     }
 
-    public BACnetDeviceCache addDataKey(@NonNull CommunicationProtocol protocol, @NonNull Integer bacnetDeviceId,
-                                        String dataPointDeviceId) {
+    public BACnetDeviceCache addDataKey(@NonNull CommunicationProtocol protocol,
+                                        @NonNull ObjectIdentifier remoteDeviceId, String dataPointDeviceId) {
+        final int instance = Optional.of(remoteDeviceId)
+                                     .filter(id -> id.getObjectType() == ObjectType.device)
+                                     .map(ObjectIdentifier::getInstanceNumber)
+                                     .orElseThrow(
+                                         () -> new IllegalArgumentException("Invalid remote device identifier"));
         Optional.ofNullable(cache().get(protocol))
-                .flatMap(device -> Optional.ofNullable(device.localDevice().getCachedRemoteDevice(bacnetDeviceId)))
+                .flatMap(device -> Optional.ofNullable(device.localDevice().getCachedRemoteDevice(instance)))
                 .orElseThrow(() -> new NotFoundException(
-                    "Invalid or unreachable remote device " + bacnetDeviceId + " in protocol " + protocol));
-        dataPointCache.computeIfAbsent(protocol, key -> new HashMap<>())
-                      .put(bacnetDeviceId, UUID64.uuidToBase64(
-                          Strings.requireNotBlank(dataPointDeviceId, "Missing data point device_id")));
+                    "Invalid or unreachable remote device " + remoteDeviceId + " in protocol " + protocol));
+        remoteDeviceCache.computeIfAbsent(protocol, key -> new HashMap<>())
+                         .put(remoteDeviceId, UUID64.uuidToBase64(
+                             Strings.requireNotBlank(dataPointDeviceId, "Missing data point device_id")));
         return this;
     }
 
-    public Optional<UUID> getDataKey(@NonNull CommunicationProtocol protocol, @NonNull Integer bacnetDeviceId) {
-        return Optional.ofNullable(dataPointCache.get(protocol))
-                       .flatMap(map -> Optional.ofNullable(map.get(bacnetDeviceId)))
+    public Optional<UUID> getDataKey(@NonNull CommunicationProtocol protocol,
+                                     @NonNull ObjectIdentifier remoteDeviceId) {
+        return Optional.ofNullable(remoteDeviceCache.get(protocol))
+                       .flatMap(map -> Optional.ofNullable(map.get(remoteDeviceId)))
                        .map(UUID64::uuid64ToUuid);
     }
 
