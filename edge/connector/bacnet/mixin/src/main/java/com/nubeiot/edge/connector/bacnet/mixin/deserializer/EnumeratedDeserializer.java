@@ -19,7 +19,7 @@ final class EnumeratedDeserializer<T extends Enumerated> implements EncodableDes
     }
 
     @Override
-    public @NonNull Class<String> fromClass() {
+    public @NonNull Class<String> javaClass() {
         return String.class;
     }
 

@@ -48,6 +48,11 @@ public final class ProtocolDispatcherService
                                     .build();
     }
 
+    @Override
+    public EntityTask postPersistAsyncTask() {
+        return null;
+    }
+
     public Set<EventMethodDefinition> definitions() {
         //TODO temporary. microservice need to refactor to accept `null` HTTP Method a.k.a hide it in public mode
         final Map<EventAction, HttpMethod> mapping = new HashMap<>(ActionMethodMapping.DQL_MAP.get());

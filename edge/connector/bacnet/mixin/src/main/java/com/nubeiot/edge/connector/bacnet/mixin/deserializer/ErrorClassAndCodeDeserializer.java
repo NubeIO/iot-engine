@@ -16,7 +16,7 @@ public final class ErrorClassAndCodeDeserializer implements EncodableDeserialize
     }
 
     @Override
-    public @NonNull Class<JsonObject> fromClass() {
+    public @NonNull Class<JsonObject> javaClass() {
         return JsonObject.class;
     }
 

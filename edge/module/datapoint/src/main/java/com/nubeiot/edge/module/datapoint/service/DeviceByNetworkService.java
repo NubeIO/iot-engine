@@ -12,6 +12,7 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.RequestDecorator;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractManyToManyEntityService;
+import com.nubeiot.core.sql.workflow.task.EntityTask;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeDeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
@@ -54,6 +55,11 @@ public final class DeviceByNetworkService
     @Override
     public Set<String> ignoreFields() {
         return Stream.concat(super.ignoreFields().stream(), Stream.of(getEdgeField())).collect(Collectors.toSet());
+    }
+
+    @Override
+    public EntityTask postPersistAsyncTask() {
+        return null;
     }
 
     @Override

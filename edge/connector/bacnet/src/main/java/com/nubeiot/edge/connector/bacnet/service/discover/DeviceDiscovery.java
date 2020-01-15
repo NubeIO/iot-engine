@@ -58,13 +58,13 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
                       .flatMapSingle(rd -> parseRemoteDevice(request.device(), rd, request.options().isDetail(), false))
                       .toList()
                       .map(results -> DiscoverResponse.builder().remoteDevices(results).build().toJson())
-                      .doFinally(request.device()::stop);
+                      .doFinally(() -> request.device().stop().subscribe());
     }
 
     @Override
     public Single<JsonObject> get(RequestData reqData) {
-        final DiscoveryRequestWrapper wrapper = toRequest(reqData, DiscoverLevel.DEVICE);
-        return doGet(wrapper).map(RemoteDeviceMixin::toJson);
+        final DiscoveryRequestWrapper request = toRequest(reqData, DiscoverLevel.DEVICE);
+        return doGet(request).map(RemoteDeviceMixin::toJson).doFinally(() -> request.device().stop().subscribe());
     }
 
     @Override
@@ -79,7 +79,8 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
                          .map(pojo -> JsonPojo.from(pojo).toJson())
                          .flatMap(this::doPersist)
                          .doOnSuccess(r -> deviceCache().addDataKey(req.device().protocol(), req.remoteDeviceId(),
-                                                                    parsePersistResponse(r)));
+                                                                    parsePersistResponse(r)))
+                         .doOnError(t -> req.device().stop().subscribe());
     }
 
     @Override
@@ -89,8 +90,8 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
 
     private DiscoveryRequestWrapper validateCache(@NonNull DiscoveryRequestWrapper request) {
         networkCache().getDataKey(request.device().protocol().identifier())
-                      .orElseThrow(
-                          () -> new NotFoundException("Not found network information. Need to persist network"));
+                      .orElseThrow(() -> new NotFoundException("Not found a persistence network by network code " +
+                                                               request.device().protocol().identifier()));
         final Optional<UUID> deviceId = deviceCache().getDataKey(request.device().protocol(), request.remoteDeviceId());
         if (deviceId.isPresent()) {
             throw new AlreadyExistException(
@@ -100,13 +101,12 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
         return request;
     }
 
-    private Single<RemoteDeviceMixin> doGet(@NonNull DiscoveryRequestWrapper wrapper) {
-        logger.info("Discovering remote device {} in network {}...", wrapper.remoteDeviceId(),
-                    wrapper.device().protocol().identifier());
-        return wrapper.device()
-                      .discoverRemoteDevice(wrapper.remoteDeviceId(), wrapper.options())
-                      .flatMap(rd -> parseRemoteDevice(wrapper.device(), rd, true, wrapper.options().isDetail()))
-                      .doFinally(wrapper.device()::stop);
+    private Single<RemoteDeviceMixin> doGet(@NonNull DiscoveryRequestWrapper request) {
+        logger.info("Discovering remote device {} in network {}...", request.remoteDeviceId(),
+                    request.device().protocol().identifier());
+        return request.device()
+                      .discoverRemoteDevice(request.remoteDeviceId(), request.options())
+                      .flatMap(rd -> parseRemoteDevice(request.device(), rd, true, request.options().isDetail()));
     }
 
     private Single<RemoteDeviceMixin> parseRemoteDevice(@NonNull BACnetDevice device, @NonNull RemoteDevice rd,

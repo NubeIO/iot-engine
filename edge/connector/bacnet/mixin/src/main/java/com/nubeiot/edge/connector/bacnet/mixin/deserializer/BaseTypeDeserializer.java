@@ -20,7 +20,7 @@ class BaseTypeDeserializer<T extends BaseType> implements EncodableDeserializer<
     }
 
     @Override
-    public @NonNull Class<JsonObject> fromClass() {
+    public @NonNull Class<JsonObject> javaClass() {
         return JsonObject.class;
     }
 

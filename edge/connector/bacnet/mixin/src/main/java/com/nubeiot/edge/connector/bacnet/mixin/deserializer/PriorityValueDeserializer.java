@@ -12,7 +12,7 @@ final class PriorityValueDeserializer implements EncodableDeserializer<PriorityV
     }
 
     @Override
-    public @NonNull Class<Object> fromClass() {
+    public @NonNull Class<Object> javaClass() {
         return Object.class;
     }
 

@@ -41,11 +41,7 @@ import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.util.PropertyReferences;
 import com.serotonin.bacnet4j.util.RequestUtils;
 
-import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.Accessors;
 
 /**
  * Defines public service to expose HTTP API for end-user and/or nube-io service
@@ -144,25 +140,5 @@ abstract class AbstractDiscoveryService extends AbstractSharedDataDelegate<Abstr
         return new DiscoveryRequestWrapper(request, options, device);
     }
 
-    @Getter
-    @Accessors(fluent = true)
-    @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
-    protected static final class DiscoveryRequestWrapper {
-
-        @NonNull
-        private final DiscoverRequest request;
-        @NonNull
-        private final DiscoverOptions options;
-        private final BACnetDevice device;
-
-        public ObjectIdentifier remoteDeviceId() {
-            return request.getDeviceCode();
-        }
-
-        public ObjectIdentifier objectCode() {
-            return request.getObjectId();
-        }
-
-    }
 
 }

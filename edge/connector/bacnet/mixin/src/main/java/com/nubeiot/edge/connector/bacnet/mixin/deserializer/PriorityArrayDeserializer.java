@@ -27,7 +27,7 @@ final class PriorityArrayDeserializer implements EncodableDeserializer<PriorityA
     }
 
     @Override
-    public @NonNull Class<JsonObject> fromClass() {
+    public @NonNull Class<JsonObject> javaClass() {
         return JsonObject.class;
     }
 

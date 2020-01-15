@@ -27,13 +27,13 @@ import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
-import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.Fields;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectPropertyValues;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
+import com.nubeiot.edge.connector.bacnet.service.subscriber.PointValueSubscriber;
 import com.nubeiot.edge.connector.bacnet.translator.BACnetPointTranslator;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
 import com.serotonin.bacnet4j.RemoteDevice;
@@ -82,12 +82,13 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
                       .flatMap(remote -> getRemoteObjects(request.device(), remote, request.options().isDetail()))
                       .map(opv -> DiscoverResponse.builder().objects(opv).build())
                       .map(DiscoverResponse::toJson)
-                      .doFinally(request.device()::stop);
+                      .doFinally(() -> request.device().stop().subscribe());
     }
 
     @Override
     public Single<JsonObject> get(RequestData requestData) {
-        return doGet(toRequest(requestData, DiscoverLevel.OBJECT)).map(PropertyValuesMixin::toJson);
+        final DiscoveryRequestWrapper request = toRequest(requestData, DiscoverLevel.OBJECT);
+        return doGet(request).map(PropertyValuesMixin::toJson).doFinally(() -> request.device().stop().subscribe());
     }
 
     @Override
@@ -104,7 +105,8 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
                              .doOnSuccess(response -> objectCache().addDataKey(request.device().protocol(),
                                                                                request.remoteDeviceId(),
                                                                                request.objectCode(),
-                                                                               parsePersistResponse(response)));
+                                                                               parsePersistResponse(response)))
+                             .doOnError(t -> request.device().stop().subscribe());
     }
 
     @Override
@@ -119,8 +121,7 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
 
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
     public Single<JsonObject> patchValue(RequestData requestData) {
-        final DiscoverRequest request = DiscoverRequest.from(requestData, DiscoverLevel.OBJECT);
-        return Single.just(new JsonObject());
+        return PointValueSubscriber.write(toRequest(requestData, DiscoverLevel.OBJECT), requestData.body());
     }
 
     private Single<ObjectPropertyValues> getRemoteObjects(@NonNull BACnetDevice device, @NonNull RemoteDevice rd,
@@ -140,16 +141,16 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
         return request.device()
                       .discoverRemoteDevice(request.remoteDeviceId(), request.options())
                       .flatMap(rd -> parseRemoteObject(request.device(), rd, request.objectCode(), true,
-                                                       request.options().isDetail()))
-                      .doFinally(request.device()::stop);
+                                                       request.options().isDetail()));
     }
 
     private DiscoveryRequestWrapper validateCache(@NonNull DiscoveryRequestWrapper request) {
         networkCache().getDataKey(request.device().protocol().identifier())
-                      .orElseThrow(
-                          () -> new NotFoundException("Not found network information. Need to persist network"));
+                      .orElseThrow(() -> new NotFoundException("Not found a persistence network by network code " +
+                                                               request.device().protocol().identifier()));
         deviceCache().getDataKey(request.device().protocol(), request.remoteDeviceId())
-                     .orElseThrow(() -> new NotFoundException("Not found device information. Need to persist device"));
+                     .orElseThrow(() -> new NotFoundException(
+                         "Not found a persistence device by remote device " + request.remoteDeviceId()));
         final Optional<UUID> objectId = objectCache().getDataKey(request.device().protocol(), request.remoteDeviceId(),
                                                                  request.objectCode());
         if (objectId.isPresent()) {

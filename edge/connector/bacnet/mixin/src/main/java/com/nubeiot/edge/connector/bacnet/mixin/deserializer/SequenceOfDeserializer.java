@@ -25,7 +25,7 @@ final class SequenceOfDeserializer implements EncodableDeserializer<SequenceOf, 
     }
 
     @Override
-    public @NonNull Class<JsonArray> fromClass() {
+    public @NonNull Class<JsonArray> javaClass() {
         return JsonArray.class;
     }
 
