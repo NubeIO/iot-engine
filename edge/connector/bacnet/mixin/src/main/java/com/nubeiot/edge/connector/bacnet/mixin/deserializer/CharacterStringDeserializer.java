@@ -16,7 +16,7 @@ public final class CharacterStringDeserializer implements EncodableDeserializer<
 
     @NonNull
     @Override
-    public Class<String> fromClass() {
+    public Class<String> javaClass() {
         return String.class;
     }
 

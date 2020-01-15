@@ -15,7 +15,7 @@ public final class DateRangeDeserializer implements EncodableDeserializer<DateRa
     }
 
     @Override
-    public @NonNull Class<JsonObject> fromClass() {
+    public @NonNull Class<JsonObject> javaClass() {
         return JsonObject.class;
     }
 

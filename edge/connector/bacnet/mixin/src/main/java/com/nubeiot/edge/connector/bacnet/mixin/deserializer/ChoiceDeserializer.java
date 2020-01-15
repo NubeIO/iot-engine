@@ -12,7 +12,7 @@ public final class ChoiceDeserializer implements EncodableDeserializer<Choice, S
     }
 
     @Override
-    public @NonNull Class<String> fromClass() {
+    public @NonNull Class<String> javaClass() {
         return String.class;
     }
 

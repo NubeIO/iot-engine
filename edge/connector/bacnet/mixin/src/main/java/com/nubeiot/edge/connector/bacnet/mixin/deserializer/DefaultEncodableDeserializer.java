@@ -41,7 +41,7 @@ final class DefaultEncodableDeserializer implements EncodableDeserializer<Encoda
     }
 
     @Override
-    public @NonNull Class<Object> fromClass() {
+    public @NonNull Class<Object> javaClass() {
         return Object.class;
     }
 

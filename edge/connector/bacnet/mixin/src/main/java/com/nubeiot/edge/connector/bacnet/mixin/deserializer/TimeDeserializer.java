@@ -20,7 +20,7 @@ public final class TimeDeserializer implements EncodableDeserializer<Time, Strin
     }
 
     @Override
-    public @NonNull Class<String> fromClass() {
+    public @NonNull Class<String> javaClass() {
         return String.class;
     }
 

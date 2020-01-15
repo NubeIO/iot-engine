@@ -12,7 +12,7 @@ public final class FloatDeserializer implements NumberDeserializer<Real, Float> 
     }
 
     @Override
-    public @NonNull Class<Float> fromClass() {
+    public @NonNull Class<Float> javaClass() {
         return Float.class;
     }
 

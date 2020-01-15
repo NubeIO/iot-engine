@@ -40,7 +40,7 @@ public final class DiscoverRequest implements JsonData {
 
     @NonNull
     public static DiscoverRequest from(@NonNull JsonObject body, @NonNull DiscoverLevel level) {
-        return validate(JsonData.from(body, DiscoverRequest.class), level);
+        return validate(JsonData.from(body, DiscoverRequest.class, JsonData.LENIENT_MAPPER), level);
     }
 
     @NonNull
