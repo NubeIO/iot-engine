@@ -34,6 +34,7 @@ import com.serotonin.bacnet4j.transport.Transport;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
+import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 
 import lombok.Getter;
@@ -113,11 +114,12 @@ final class DefaultBACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
                    .doAfterSuccess(RemoteDeviceScanner::stop);
     }
 
-    public Single<RemoteDevice> discoverRemoteDevice(int deviceCode, DiscoverOptions options) {
+    public Single<RemoteDevice> discoverRemoteDevice(@NonNull ObjectIdentifier deviceCode,
+                                                     @NonNull DiscoverOptions options) {
         long timeout = TimeUnit.MILLISECONDS.convert(options.getTimeout(), options.getTimeUnit());
         return init(options.isForce()).map(
             ld -> Functions.getOrThrow(t -> new NotFoundException("Not found device id " + deviceCode, t),
-                                       () -> ld.getRemoteDeviceBlocking(deviceCode, timeout)));
+                                       () -> ld.getRemoteDeviceBlocking(deviceCode.getInstanceNumber(), timeout)));
     }
 
     private Single<LocalDevice> init(boolean force) {

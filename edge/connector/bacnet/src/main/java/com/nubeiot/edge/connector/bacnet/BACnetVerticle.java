@@ -118,7 +118,7 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
 
     @Override
     protected DiscoverCompletionHandler createDiscoverCompletionHandler() {
-        return new BACnetDiscoverFinisher(s -> SharedDataDelegate.getLocalDataValue(getVertx(), getSharedKey(), s));
+        return new BACnetDiscoverFinisher(getVertx(), getSharedKey());
     }
 
     private Observable<Record> registerEndpoint(ServiceDiscoveryController discovery, BACnetDiscoveryService s) {

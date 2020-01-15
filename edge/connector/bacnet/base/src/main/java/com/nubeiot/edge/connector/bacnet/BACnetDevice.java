@@ -13,6 +13,7 @@ import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
+import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
 import lombok.NonNull;
 
@@ -112,6 +113,7 @@ public interface BACnetDevice extends SharedDataDelegate<BACnetDevice> {
      * @see RemoteDevice
      * @since 1.0.0
      */
-    @NonNull Single<RemoteDevice> discoverRemoteDevice(int deviceCode, @NonNull DiscoverOptions options);
+    @NonNull Single<RemoteDevice> discoverRemoteDevice(@NonNull ObjectIdentifier deviceCode,
+                                                       @NonNull DiscoverOptions options);
 
 }
