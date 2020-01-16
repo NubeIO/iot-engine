@@ -76,13 +76,25 @@ public final class PropertyValuesMixin implements BACnetMixin {
     }
 
     /**
-     * Get and cast to plain java type
+     * Get and cast encodable value
+     *
+     * @param propertyIdentifier given property identifier
+     * @param <E>                Type of {@code Encodable}
+     * @return optional encodable. Empty in case cannot cast
+     */
+    @SuppressWarnings("unchecked")
+    public <E extends Encodable> Optional<E> getAndCast(@NonNull PropertyIdentifier propertyIdentifier) {
+        return Functions.getIfThrow(() -> (E) values.get(propertyIdentifier));
+    }
+
+    /**
+     * Encode property to plain java type
      *
      * @param propertyIdentifier given property identifier
      * @param <T>                Type of expected value
      * @return value
      */
-    public <T> T getAndCast(@NonNull PropertyIdentifier propertyIdentifier) {
+    public <T> T encode(@NonNull PropertyIdentifier propertyIdentifier) {
         return EncodableSerializer.encode(get(propertyIdentifier));
     }
 

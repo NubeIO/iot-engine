@@ -22,6 +22,7 @@ import com.nubeiot.iotdata.dto.DeviceType;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 import com.nubeiot.iotdata.edge.model.tables.pojos.EdgeDevice;
 import com.nubeiot.iotdata.translator.IoTEntityTranslator;
+import com.serotonin.bacnet4j.type.enumerated.DeviceStatus;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
@@ -37,13 +38,14 @@ public final class BACnetDeviceTranslator implements BACnetTranslator<EdgeDevice
         }
         final PropertyValuesMixin values = remoteDevice.getPropertyValues();
         final String manufacturer = String.join("-", Arrays.asList(
-            Strings.toString(values.getAndCast(PropertyIdentifier.vendorIdentifier)),
-            Strings.toString(values.getAndCast(PropertyIdentifier.vendorName))));
+            Strings.toString(values.encode(PropertyIdentifier.vendorIdentifier)),
+            Strings.toString(values.encode(PropertyIdentifier.vendorName))));
         final DeviceType deviceType = analyzeDeviceType(values);
-        final State state = new BACnetStateTranslator().serialize(values.getAndCast(PropertyIdentifier.systemStatus));
+        final State state = new BACnetStateTranslator().serialize(
+            (DeviceStatus) values.getAndCast(PropertyIdentifier.systemStatus).orElse(DeviceStatus.nonOperational));
         final Label label = Label.builder()
-                                 .description(values.getAndCast(PropertyIdentifier.description))
-                                 .label(Optional.ofNullable((String) values.getAndCast(PropertyIdentifier.objectName))
+                                 .description(values.encode(PropertyIdentifier.description))
+                                 .label(Optional.ofNullable((String) values.encode(PropertyIdentifier.objectName))
                                                 .orElse(remoteDevice.getName()))
                                  .build();
         final Device device = new Device().setCode(ObjectIdentifierMixin.serialize(remoteDevice.getObjectId()))
@@ -51,10 +53,10 @@ public final class BACnetDeviceTranslator implements BACnetTranslator<EdgeDevice
                                           .setProtocol(protocol())
                                           .setName(remoteDevice.getName())
                                           .setManufacturer(manufacturer)
-                                          .setModel(values.getAndCast(PropertyIdentifier.modelName))
-                                          .setFirmwareVersion(values.getAndCast(PropertyIdentifier.firmwareRevision))
+                                          .setModel(values.encode(PropertyIdentifier.modelName))
+                                          .setFirmwareVersion(values.encode(PropertyIdentifier.firmwareRevision))
                                           .setSoftwareVersion(
-                                              values.getAndCast(PropertyIdentifier.applicationSoftwareVersion))
+                                              values.encode(PropertyIdentifier.applicationSoftwareVersion))
                                           .setState(state)
                                           .setLabel(label)
                                           .setMetadata(remoteDevice.getPropertyValues().toJson());
@@ -97,11 +99,9 @@ public final class BACnetDeviceTranslator implements BACnetTranslator<EdgeDevice
     }
 
     private DeviceType analyzeDeviceType(@NonNull PropertyValuesMixin values) {
-        final DeviceType type = new BACnetDeviceTypeTranslator().serialize(values.get(PropertyIdentifier.deviceType));
-        return Optional.ofNullable(type)
-                       .orElse(Objects.isNull(values.getAndCast(PropertyIdentifier.deviceAddressBinding))
-                               ? DeviceType.EQUIPMENT
-                               : DeviceType.GATEWAY);
+        return Objects.isNull(values.encode(PropertyIdentifier.deviceAddressBinding))
+               ? DeviceType.EQUIPMENT
+               : DeviceType.GATEWAY;
     }
 
     private JsonObject toProperties(@NonNull Device device, @NonNull ObjectIdentifier identifier) {

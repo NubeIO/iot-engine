@@ -41,6 +41,7 @@ public class BACnetDeviceTranslatorTest {
         final PropertyValues pvs = new PropertyValues();
         pvs.add(oid, PropertyIdentifier.vendorIdentifier, null, new UnsignedInteger(LocalDeviceMetadata.VENDOR_ID));
         pvs.add(oid, PropertyIdentifier.vendorName, null, new CharacterString(LocalDeviceMetadata.VENDOR_NAME));
+        pvs.add(oid, PropertyIdentifier.systemStatus, null, DeviceStatus.operational);
         final PropertyValuesMixin mixin = PropertyValuesMixin.create(oid, pvs, false);
         deviceMixin = RemoteDeviceMixin.create(oid, "test", address, mixin);
     }
@@ -53,7 +54,7 @@ public class BACnetDeviceTranslatorTest {
         Assert.assertEquals("device:444", device.getCode());
         Assert.assertEquals(DeviceType.EQUIPMENT, device.getType());
         Assert.assertEquals(Protocol.BACNET, device.getProtocol());
-        Assert.assertEquals(State.NONE, device.getState());
+        Assert.assertEquals(State.ENABLED, device.getState());
         Assert.assertEquals("1173-Nube iO Operations Pty Ltd", device.getManufacturer());
         JsonHelper.assertJson(deviceMixin.getPropertyValues().toJson(), device.getMetadata());
         JsonHelper.assertJson(deviceMixin.getAddress().toJson(), composite.getAddress());
@@ -77,9 +78,13 @@ public class BACnetDeviceTranslatorTest {
         Assert.assertEquals(oid, mixin.getObjectId());
         Assert.assertEquals(444, mixin.getInstanceNumber());
         Assert.assertNotNull(propertyValues);
-        Assert.assertEquals(1173, (long) propertyValues.getAndCast(PropertyIdentifier.vendorIdentifier));
-        Assert.assertEquals("Nube iO Operations Pty Ltd", propertyValues.getAndCast(PropertyIdentifier.vendorName));
+        Assert.assertEquals(1173, (long) propertyValues.encode(PropertyIdentifier.vendorIdentifier));
+        Assert.assertEquals("Nube iO Operations Pty Ltd", propertyValues.encode(PropertyIdentifier.vendorName));
         Assert.assertEquals(DeviceStatus.operational, propertyValues.get(PropertyIdentifier.systemStatus));
     }
 
+    //    @Test
+    //    public void test_(){
+    //        final JsonObject entries = Configs.loadJsonConfig("device.json");
+    //    }
 }
