@@ -58,13 +58,13 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
                       .flatMapSingle(rd -> parseRemoteDevice(request.device(), rd, request.options().isDetail(), false))
                       .toList()
                       .map(results -> DiscoverResponse.builder().remoteDevices(results).build().toJson())
-                      .doFinally(() -> request.device().stop().subscribe());
+                      .doFinally(request.device()::stop);
     }
 
     @Override
     public Single<JsonObject> get(RequestData reqData) {
         final DiscoveryRequestWrapper request = toRequest(reqData, DiscoverLevel.DEVICE);
-        return doGet(request).map(RemoteDeviceMixin::toJson).doFinally(() -> request.device().stop().subscribe());
+        return doGet(request).map(RemoteDeviceMixin::toJson);
     }
 
     @Override
@@ -79,8 +79,7 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
                          .map(pojo -> JsonPojo.from(pojo).toJson())
                          .flatMap(this::doPersist)
                          .doOnSuccess(r -> deviceCache().addDataKey(req.device().protocol(), req.remoteDeviceId(),
-                                                                    parsePersistResponse(r)))
-                         .doOnError(t -> req.device().stop().subscribe());
+                                                                    parsePersistResponse(r)));
     }
 
     @Override
@@ -102,11 +101,13 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
     }
 
     private Single<RemoteDeviceMixin> doGet(@NonNull DiscoveryRequestWrapper request) {
-        logger.info("Discovering remote device {} in network {}...", request.remoteDeviceId(),
+        logger.info("Discovering remote device {} in network {}...",
+                    ObjectIdentifierMixin.serialize(request.remoteDeviceId()),
                     request.device().protocol().identifier());
         return request.device()
                       .discoverRemoteDevice(request.remoteDeviceId(), request.options())
-                      .flatMap(rd -> parseRemoteDevice(request.device(), rd, true, request.options().isDetail()));
+                      .flatMap(rd -> parseRemoteDevice(request.device(), rd, true, request.options().isDetail()))
+                      .doFinally(request.device()::stop);
     }
 
     private Single<RemoteDeviceMixin> parseRemoteDevice(@NonNull BACnetDevice device, @NonNull RemoteDevice rd,
