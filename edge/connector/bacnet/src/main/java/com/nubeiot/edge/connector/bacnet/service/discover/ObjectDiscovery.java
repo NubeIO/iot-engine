@@ -80,20 +80,21 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
     @Override
     public Single<JsonObject> list(RequestData requestData) {
         final DiscoveryRequestWrapper request = toRequest(requestData, DiscoverLevel.DEVICE);
-        logger.info("Discovering objects in device '{}' in network {}...", request.remoteDeviceId(),
+        logger.info("Discovering objects in device '{}' in network {}...",
+                    ObjectIdentifierMixin.serialize(request.remoteDeviceId()),
                     request.device().protocol().identifier());
         return request.device()
                       .discoverRemoteDevice(request.remoteDeviceId(), request.options())
                       .flatMap(remote -> getRemoteObjects(request.device(), remote, request.options().isDetail()))
                       .map(opv -> DiscoverResponse.builder().objects(opv).build())
                       .map(DiscoverResponse::toJson)
-                      .doFinally(() -> request.device().stop().subscribe());
+                      .doFinally(request.device()::stop);
     }
 
     @Override
     public Single<JsonObject> get(RequestData requestData) {
         final DiscoveryRequestWrapper request = toRequest(requestData, DiscoverLevel.OBJECT);
-        return doGet(request).map(PropertyValuesMixin::toJson).doFinally(() -> request.device().stop().subscribe());
+        return doGet(request).map(PropertyValuesMixin::toJson);
     }
 
     @Override
@@ -110,8 +111,7 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
                              .doOnSuccess(response -> objectCache().addDataKey(request.device().protocol(),
                                                                                request.remoteDeviceId(),
                                                                                request.objectCode(),
-                                                                               parsePersistResponse(response)))
-                             .doOnError(t -> request.device().stop().subscribe());
+                                                                               parsePersistResponse(response)));
     }
 
     @Override
@@ -132,12 +132,15 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
                          .flatMapSingle(objId -> parseRemoteObject(device, rd, objId, detail, false).map(
                              props -> new SimpleEntry<>(objId, props)))
                          .collect(ObjectPropertyValues::new,
-                                  (values, entry) -> values.add(entry.getKey(), entry.getValue()));
+                                  (values, entry) -> values.add(entry.getKey(), entry.getValue()))
+                         .doFinally(device::stop);
     }
 
     private Single<PropertyValuesMixin> doGet(@NonNull DiscoveryRequestWrapper request) {
-        logger.info("Discovering object '{}' in device '{}' in network {}...", request.objectCode(),
-                    request.remoteDeviceId(), request.device().protocol().identifier());
+        logger.info("Discovering object '{}' in device '{}' in network {}...",
+                    ObjectIdentifierMixin.serialize(request.objectCode()),
+                    ObjectIdentifierMixin.serialize(request.remoteDeviceId()),
+                    request.device().protocol().identifier());
         return request.device()
                       .discoverRemoteDevice(request.remoteDeviceId(), request.options())
                       .flatMap(rd -> parseRemoteObject(request.device(), rd, request.objectCode(), true,

@@ -1,6 +1,10 @@
 package com.nubeiot.edge.connector.bacnet.discover;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -28,6 +32,18 @@ public final class DiscoverResponse implements JsonData {
     private ObjectPropertyValues objects;
     private PropertyValuesMixin object;
 
+    @Override
+    public JsonObject toJson() {
+        final JsonObject json = JsonData.super.toJson();
+        Optional.ofNullable(object).ifPresent(o -> json.put(Fields.object, object.toJson()));
+        Optional.ofNullable(objects).ifPresent(o -> json.put(Fields.objects, objects.toJson()));
+        Optional.ofNullable(remoteDevice).ifPresent(o -> json.put(Fields.remoteDevice, remoteDevice.toJson()));
+        Optional.ofNullable(remoteDevices)
+                .ifPresent(o -> json.put(Fields.remoteDevices, remoteDevices.stream()
+                                                                            .map(RemoteDeviceMixin::toJson)
+                                                                            .collect(Collectors.toList())));
+        return json;
+    }
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {}
