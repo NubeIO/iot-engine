@@ -1,18 +1,23 @@
 package com.nubeiot.edge.connector.bacnet.translator;
 
+import java.util.Objects;
+
 import com.nubeiot.edge.connector.bacnet.translator.BACnetTranslator.BACnetIoTNotionTranslator;
 import com.nubeiot.iotdata.dto.PointType;
-import com.serotonin.bacnet4j.type.Encodable;
+import com.serotonin.bacnet4j.type.primitive.CharacterString;
 
-public final class BACnetPointTypeTranslator implements BACnetIoTNotionTranslator<PointType, Encodable> {
+public final class BACnetPointTypeTranslator implements BACnetIoTNotionTranslator<PointType, CharacterString> {
 
     @Override
-    public PointType serialize(Encodable object) {
-        return null;
+    public PointType serialize(CharacterString object) {
+        if (Objects.isNull(object)) {
+            return PointType.UNKNOWN;
+        }
+        return PointType.factory(object.getValue());
     }
 
     @Override
-    public Encodable deserialize(PointType concept) {
+    public CharacterString deserialize(PointType concept) {
         return null;
     }
 
@@ -22,8 +27,8 @@ public final class BACnetPointTypeTranslator implements BACnetIoTNotionTranslato
     }
 
     @Override
-    public Class<Encodable> toType() {
-        return Encodable.class;
+    public Class<CharacterString> toType() {
+        return CharacterString.class;
     }
 
 }
