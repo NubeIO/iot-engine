@@ -17,7 +17,7 @@ import lombok.NonNull;
 
 public final class EncodableDeserializerRegistry {
 
-    public final static Map<Class<Encodable>, EncodableDeserializer> DESERIALIZERS = create();
+    private final static Map<Class<Encodable>, EncodableDeserializer> DESERIALIZERS = create();
 
     @SuppressWarnings("unchecked")
     static Map<Class<Encodable>, EncodableDeserializer> create() {

@@ -9,6 +9,8 @@ public final class PointKind extends AbstractEnumType implements PlainType, IoTN
 
     public static final PointKind INPUT = new PointKind("INPUT");
     public static final PointKind OUTPUT = new PointKind("OUTPUT");
+    public static final PointKind SET_POINT = new PointKind("SET_POINT");
+    public static final PointKind COMMAND = new PointKind("COMMAND");
     public static final PointKind UNKNOWN = new PointKind("UNKNOWN");
 
     private PointKind(String type) {

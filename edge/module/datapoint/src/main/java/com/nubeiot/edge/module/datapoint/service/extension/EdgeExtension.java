@@ -48,7 +48,7 @@ public interface EdgeExtension extends RequestDecoratorExtension {
     @NonNull
     static JsonObject optimize(@NonNull List<String> keys, String optimizedValue, JsonObject data) {
         if (Strings.isBlank(optimizedValue) || Objects.isNull(data) || keys.isEmpty()) {
-            return data;
+            return new JsonObject();
         }
         final String key = keys.stream().filter(data::containsKey).findFirst().orElse(keys.get(0));
         if (Objects.isNull(data.getValue(key))) {
