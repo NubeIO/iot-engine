@@ -13,7 +13,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-final class EnumeratedDeserializer<T extends Enumerated> implements EncodableDeserializer<T, String> {
+public final class EnumeratedDeserializer<T extends Enumerated>
+    implements EncodableDeserializer<T, String>, NonRegistryDeserializer {
 
     @NonNull
     private final Class<T> enumeratedClass;

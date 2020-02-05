@@ -15,6 +15,7 @@ import com.serotonin.bacnet4j.obj.ObjectPropertyTypeDefinition;
 import com.serotonin.bacnet4j.obj.PropertyTypeDefinition;
 import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
+import com.serotonin.bacnet4j.type.primitive.Null;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
 import lombok.NonNull;
@@ -44,12 +45,12 @@ public interface EncodableDeserializer<T extends Encodable, V> {
      */
     static Encodable parse(@NonNull PropertyIdentifier propertyIdentifier, Object value) {
         if (Objects.isNull(value)) {
-            return null;
+            return Null.instance;
         }
         final PropertyTypeDefinition definition = ObjectProperties.getPropertyTypeDefinition(propertyIdentifier);
         if (Objects.isNull(definition)) {
             LOGGER.warn("Not found Encodable definition of {}", propertyIdentifier);
-            return null;
+            return Null.instance;
         }
         final EncodableDeserializer deserializer = EncodableDeserializerRegistry.lookup(definition);
         if (definition.isCollection() && Objects.isNull(definition.getInnerType())) {
@@ -71,7 +72,7 @@ public interface EncodableDeserializer<T extends Encodable, V> {
     static Encodable parse(@NonNull ObjectIdentifier objectIdentifier, @NonNull PropertyIdentifier propertyIdentifier,
                            Object value) {
         if (Objects.isNull(value)) {
-            return null;
+            return Null.instance;
         }
         final PropertyTypeDefinition definition = Optional.ofNullable(
             ObjectProperties.getObjectPropertyTypeDefinition(objectIdentifier.getObjectType(), propertyIdentifier))
@@ -112,16 +113,17 @@ public interface EncodableDeserializer<T extends Encodable, V> {
     }
 
     /**
-     * Same with {@link #parse(PropertyIdentifier, Object)} but with lenient that means returns {@code null} if {@code
-     * value}* is non-parsable
+     * Same with {@link #parse(PropertyIdentifier, Object)} but with lenient that means returns {@link Null#instance} if
+     * {@code value} is non-parsable
      *
      * @param propertyIdentifier Given property identifier
      * @param value              Given value
      * @return BACnet Encodable value
+     * @see Null#instance
      * @since 1.0.0
      */
     static Encodable parseLenient(@NonNull PropertyIdentifier propertyIdentifier, Object value) {
-        return Functions.getIfThrow(() -> parse(propertyIdentifier, value)).orElse(null);
+        return Functions.getIfThrow(() -> parse(propertyIdentifier, value)).orElse(Null.instance);
     }
 
     /**

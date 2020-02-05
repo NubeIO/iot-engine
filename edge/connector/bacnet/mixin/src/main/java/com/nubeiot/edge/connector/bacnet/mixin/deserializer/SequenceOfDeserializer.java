@@ -12,7 +12,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-final class SequenceOfDeserializer implements EncodableDeserializer<SequenceOf, JsonArray> {
+public final class SequenceOfDeserializer
+    implements EncodableDeserializer<SequenceOf, JsonArray>, NonRegistryDeserializer {
 
     @NonNull
     private final PropertyTypeDefinition itemDefinition;

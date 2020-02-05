@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import io.github.zero88.utils.Functions;
 import io.vertx.core.json.JsonObject;
@@ -14,9 +17,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.nubeiot.edge.connector.bacnet.mixin.adjuster.PriorityValuesAdjuster;
 import com.nubeiot.edge.connector.bacnet.mixin.deserializer.EncodableDeserializer;
 import com.nubeiot.edge.connector.bacnet.mixin.serializer.EncodableSerializer;
 import com.serotonin.bacnet4j.type.Encodable;
+import com.serotonin.bacnet4j.type.constructed.PriorityArray;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.error.ErrorClassAndCode;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
@@ -36,16 +41,16 @@ public final class PropertyValuesMixin implements BACnetMixin {
 
     @JsonCreator
     public static PropertyValuesMixin create(JsonObject properties) {
-        final Map<PropertyIdentifier, Encodable> map = new HashMap<>();
-        Optional.ofNullable(properties)
-                .orElse(new JsonObject())
-                .stream()
-                .map(entry -> new SimpleEntry<>(
-                    Functions.getIfThrow(() -> PropertyIdentifier.forName(entry.getKey())).orElse(null),
-                    entry.getValue()))
-                .filter(entry -> Objects.nonNull(entry.getKey()) && Objects.nonNull(entry.getValue()))
-                .forEach(e -> map.put(e.getKey(), EncodableDeserializer.parseLenient(e.getKey(), e.getValue())));
-        return new PropertyValuesMixin(map);
+        final Function<Entry<String, Object>, Entry<PropertyIdentifier, Object>> converter = entry -> new SimpleEntry<>(
+            Functions.getIfThrow(() -> PropertyIdentifier.forName(entry.getKey())).orElse(null), entry.getValue());
+        final Function<Entry<PropertyIdentifier, Object>, Encodable> parser
+            = entry -> EncodableDeserializer.parseLenient(entry.getKey(), entry.getValue());
+        return new PropertyValuesMixin(Optional.ofNullable(properties)
+                                               .orElse(new JsonObject())
+                                               .stream()
+                                               .map(converter)
+                                               .filter(entry -> Objects.nonNull(entry.getKey()))
+                                               .collect(Collectors.toMap(Entry::getKey, parser))).tweak();
     }
 
     public static PropertyValuesMixin create(@NonNull ObjectIdentifier objId, @NonNull PropertyValues values,
@@ -101,6 +106,13 @@ public final class PropertyValuesMixin implements BACnetMixin {
     @Override
     public JsonObject toJson() {
         return getMapper().convertValue(values, JsonObject.class);
+    }
+
+    private PropertyValuesMixin tweak() {
+        values.computeIfPresent(PropertyIdentifier.priorityArray,
+                                (pId, arrayValues) -> new PriorityValuesAdjuster().apply(
+                                    values.get(PropertyIdentifier.presentValue), (PriorityArray) arrayValues));
+        return this;
     }
 
     public static final class PropertyValuesSerializer extends StdSerializer<PropertyValuesMixin> {
