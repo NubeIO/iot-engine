@@ -1,20 +1,18 @@
 package com.nubeiot.edge.connector.bacnet.mixin.deserializer;
 
-import java.util.AbstractMap.SimpleEntry;
-
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.utils.Functions;
 import com.serotonin.bacnet4j.obj.PropertyTypeDefinition;
-import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.constructed.PriorityArray;
-import com.serotonin.bacnet4j.type.primitive.Null;
+import com.serotonin.bacnet4j.type.constructed.PriorityValue;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-final class PriorityArrayDeserializer implements EncodableDeserializer<PriorityArray, JsonObject> {
+public final class PriorityArrayDeserializer
+    implements EncodableDeserializer<PriorityArray, JsonObject>, NonRegistryDeserializer {
 
     @NonNull
     private final PropertyTypeDefinition itemDefinition;
@@ -36,14 +34,13 @@ final class PriorityArrayDeserializer implements EncodableDeserializer<PriorityA
         final PriorityArray array = new PriorityArray();
         value.stream()
              .filter(entry -> Functions.getIfThrow(() -> Functions.toInt().apply(entry.getKey())).isPresent())
-             .map(entry -> new SimpleEntry<>(Functions.toInt().apply(entry.getKey()), parseValue(entry.getValue())))
-             .forEach(entry -> array.put(entry.getKey(), entry.getValue()));
+             .forEach(entry -> array.setBase1(Functions.toInt().apply(entry.getKey()), parseValue(entry.getValue())));
         return array;
     }
 
-    public Encodable parseValue(Object value) {
-        return Functions.getIfThrow(() -> EncodableDeserializer.parse(value, itemDefinition, itemDeserializer))
-                        .orElse(Null.instance);
+    private PriorityValue parseValue(Object value) {
+        return (PriorityValue) Functions.getIfThrow(
+            () -> EncodableDeserializer.parse(value, itemDefinition, itemDeserializer)).orElse(null);
     }
 
 }

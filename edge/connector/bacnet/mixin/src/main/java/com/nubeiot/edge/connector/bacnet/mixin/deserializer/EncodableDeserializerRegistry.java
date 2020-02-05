@@ -1,11 +1,13 @@
 package com.nubeiot.edge.connector.bacnet.mixin.deserializer;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
+import com.nubeiot.edge.connector.bacnet.mixin.deserializer.BitStringDeserializer.DefaultBitStringDeserializer;
 import com.serotonin.bacnet4j.obj.PropertyTypeDefinition;
 import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.constructed.PriorityArray;
@@ -18,12 +20,13 @@ public final class EncodableDeserializerRegistry {
 
     private final static Map<Class<Encodable>, EncodableDeserializer> DESERIALIZERS = create();
 
-    @SuppressWarnings("unchecked")
     static Map<Class<Encodable>, EncodableDeserializer> create() {
         return ReflectionClass.stream(EncodableDeserializer.class.getPackage().getName(), EncodableDeserializer.class,
-                                      ReflectionClass.publicClass())
+                                      ReflectionClass.publicClass()
+                                                     .and(clz -> !clz.implementsInterface(
+                                                         NonRegistryDeserializer.class.getName())))
                               .map(ReflectionClass::createObject)
-                              .collect(HashMap::new, (m, d) -> m.put(d.encodableClass(), d), Map::putAll);
+                              .collect(Collectors.toMap(EncodableDeserializer::encodableClass, Function.identity()));
     }
 
     @NonNull
@@ -55,7 +58,7 @@ public final class EncodableDeserializerRegistry {
             return new EnumeratedDeserializer(clazz);
         }
         if (ReflectionClass.assertDataType(clazz, BitString.class)) {
-            return new BitStringDeserializer(clazz);
+            return new DefaultBitStringDeserializer(clazz);
         }
         return new DefaultEncodableDeserializer(clazz);
     }

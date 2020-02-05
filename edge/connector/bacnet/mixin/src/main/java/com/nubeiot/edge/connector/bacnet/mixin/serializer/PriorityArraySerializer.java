@@ -8,7 +8,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.serotonin.bacnet4j.type.constructed.PriorityArray;
 
-public class PriorityArraySerializer extends EncodableSerializer<PriorityArray> {
+public final class PriorityArraySerializer extends EncodableSerializer<PriorityArray> {
 
     PriorityArraySerializer() {
         super(PriorityArray.class);
