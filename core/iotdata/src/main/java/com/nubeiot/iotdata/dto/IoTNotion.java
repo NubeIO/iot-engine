@@ -1,3 +1,7 @@
 package com.nubeiot.iotdata.dto;
 
-public interface IoTNotion {}
+public interface IoTNotion {
+
+    interface IoTChunkNotion extends IoTNotion {}
+
+}

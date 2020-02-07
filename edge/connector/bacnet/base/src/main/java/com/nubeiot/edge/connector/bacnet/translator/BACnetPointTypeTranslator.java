@@ -2,23 +2,24 @@ package com.nubeiot.edge.connector.bacnet.translator;
 
 import java.util.Objects;
 
-import com.nubeiot.edge.connector.bacnet.translator.BACnetTranslator.BACnetIoTNotionTranslator;
+import com.nubeiot.edge.connector.bacnet.translator.BACnetTranslator.BACnetIoTChunkNotionTranslator;
 import com.nubeiot.iotdata.dto.PointType;
-import com.serotonin.bacnet4j.type.primitive.CharacterString;
+import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 
-public final class BACnetPointTypeTranslator implements BACnetIoTNotionTranslator<PointType, CharacterString> {
+public final class BACnetPointTypeTranslator implements BACnetIoTChunkNotionTranslator<PointType, ObjectType> {
 
     @Override
-    public PointType serialize(CharacterString object) {
-        if (Objects.isNull(object)) {
-            return PointType.UNKNOWN;
+    public PointType serialize(ObjectType objectType) {
+        Objects.requireNonNull(objectType, "Invalid BACnet object type");
+        if (objectType.isOneOf(ObjectType.analogInput, ObjectType.analogOutput, ObjectType.analogValue,
+                               ObjectType.largeAnalogValue)) {
+            return PointType.ANALOG;
         }
-        return PointType.factory(object.getValue());
-    }
-
-    @Override
-    public CharacterString deserialize(PointType concept) {
-        return null;
+        if (objectType.isOneOf(ObjectType.binaryInput, ObjectType.binaryOutput, ObjectType.binaryValue,
+                               ObjectType.binaryLightingOutput)) {
+            return PointType.DIGITAL;
+        }
+        return PointType.UNKNOWN;
     }
 
     @Override
@@ -27,8 +28,8 @@ public final class BACnetPointTypeTranslator implements BACnetIoTNotionTranslato
     }
 
     @Override
-    public Class<CharacterString> toType() {
-        return CharacterString.class;
+    public Class<ObjectType> toType() {
+        return ObjectType.class;
     }
 
 }

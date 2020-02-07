@@ -4,11 +4,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.nubeiot.core.dto.EnumType;
 import com.nubeiot.core.dto.EnumType.AbstractEnumType;
 import com.nubeiot.core.dto.PlainType;
+import com.nubeiot.iotdata.dto.IoTNotion.IoTChunkNotion;
 
-public final class PointKind extends AbstractEnumType implements PlainType, IoTNotion {
+public final class PointKind extends AbstractEnumType implements PlainType, IoTChunkNotion {
 
     public static final PointKind INPUT = new PointKind("INPUT");
+    public static final PointKind MULTI_STATE_INPUT = new PointKind("MULTI_STATE_INPUT");
     public static final PointKind OUTPUT = new PointKind("OUTPUT");
+    public static final PointKind MULTI_STATE_OUTPUT = new PointKind("MULTI_STATE_OUTPUT");
     public static final PointKind SET_POINT = new PointKind("SET_POINT");
     public static final PointKind COMMAND = new PointKind("COMMAND");
     public static final PointKind UNKNOWN = new PointKind("UNKNOWN");
