@@ -48,11 +48,12 @@ public final class ThingByPointService extends PointThingService {
     @Override
     public final Set<EventMethodDefinition> definitions() {
         final @NonNull Collection<EventAction> events = getAvailableEvents();
-        return Stream.of(EntityHttpService.createDefinitions(events, resource(), true, EdgeMetadata.INSTANCE,
-                                                             NetworkMetadata.INSTANCE, reference()),
-                         EntityHttpService.createDefinitions(events, resource(), true, NetworkMetadata.INSTANCE,
+        return Stream.of(super.definitions(),
+                         EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, events, resource(), true,
+                                                             EdgeMetadata.INSTANCE, NetworkMetadata.INSTANCE,
                                                              reference()),
-                         EntityHttpService.createDefinitions(events, resource(), reference()))
+                         EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, events, resource(), true,
+                                                             NetworkMetadata.INSTANCE, reference()))
                      .flatMap(Collection::stream)
                      .collect(Collectors.toSet());
     }

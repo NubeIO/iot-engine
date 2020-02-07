@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project name="H2" id="Project_20250b0" template="Default" database="H2" >
+<project name="H2" id="Project_20250b0" database="H2" >
 	<schema name="PUBLIC" catalogname="edge_datapoint" >
 		<table name="DEVICE" >
 			<comment><![CDATA[Remote Device is connected and managed by NubeIO Edge]]></comment>
@@ -322,26 +322,17 @@
 			<comment><![CDATA[Represents for Point is attached to one and more specific Things.
 Thing with type is SENSOR is attached to only one Point. It will be validated by COMPUTED_THING field
 Field: DEVICE_ID, NETWORK_ID, EDGE_ID, COMPUTED_THING is computed by TRIGGER: com.nubeiot.edge.module.datapoint.trigger.PointThingTrigger]]></comment>
-			<column name="ID" type="bigint" length="19" decimal="0" jt="-5" mandatory="y" >
-				<defo>(NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_74AA94FC_5590_4BD9_9B3E_931B9B3F8D33)</defo>
-			</column>
+			<column name="ID" type="bigint" jt="-5" mandatory="y" autoincrement="y" />
 			<column name="POINT_ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
-			<column name="THING_ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
-			<column name="COMPUTED_THING" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="DEVICE_ID" type="uuid" length="2147483647" jt="-2" />
+			<column name="THING_ID" type="uuid" length="2147483647" jt="-2" />
+			<column name="COMPUTED_THING" type="varchar" length="100" decimal="0" jt="12" />
 			<column name="NETWORK_ID" type="uuid" length="2147483647" decimal="0" jt="-2" />
 			<column name="EDGE_ID" type="uuid" length="2147483647" jt="-2" />
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
 			<column name="SYNC_AUDIT" type="clob" length="2147483647" decimal="0" jt="2005" />
-			<index name="CONSTRAINT_D" unique="PRIMARY_KEY" >
-				<column name="ID" />
-			</index>
 			<index name="IDX_UQ_POINT_THING_COMPUTED" unique="UNIQUE" >
 				<column name="COMPUTED_THING" options="ASC" />
-			</index>
-			<index name="IDX_UQ_POINT_THING" unique="UNIQUE" >
-				<column name="POINT_ID" options="ASC" />
-				<column name="THING_ID" options="ASC" />
 			</index>
 			<index name="IDX_POINT_THING_POINT" unique="NORMAL" >
 				<column name="POINT_ID" options="ASC" />
@@ -349,11 +340,25 @@ Field: DEVICE_ID, NETWORK_ID, EDGE_ID, COMPUTED_THING is computed by TRIGGER: co
 			<index name="IDX_POINT_THING_THING" unique="NORMAL" >
 				<column name="THING_ID" options="ASC" />
 			</index>
+			<index name="IDX_POINT_THING_DEVICE" unique="NORMAL" >
+				<column name="DEVICE_ID" />
+			</index>
+			<index name="PK_POINT_THING" unique="PRIMARY_KEY" >
+				<column name="ID" />
+			</index>
+			<index name="IDX_UQ_POINT_THING" unique="UNIQUE" >
+				<column name="POINT_ID" />
+				<column name="DEVICE_ID" />
+				<column name="THING_ID" />
+			</index>
 			<fk name="FK_POINT_THING_POINT" to_schema="edge_datapoint.PUBLIC" to_table="POINT" delete_action="cascade" update_action="cascade" >
 				<fk_column name="POINT_ID" pk="ID" />
 			</fk>
 			<fk name="FK_POINT_THING_THING" to_schema="edge_datapoint.PUBLIC" to_table="THING" delete_action="cascade" update_action="cascade" >
 				<fk_column name="THING_ID" pk="ID" />
+			</fk>
+			<fk name="FK_POINT_THING_DEVICE" to_schema="edge_datapoint.PUBLIC" to_table="DEVICE" delete_action="cascade" update_action="cascade" >
+				<fk_column name="DEVICE_ID" pk="ID" />
 			</fk>
 		</table>
 		<table name="POINT_VALUE_DATA" >
@@ -468,6 +473,7 @@ Field: DEVICE_ID, NETWORK_ID, EDGE_ID, COMPUTED_THING is computed by TRIGGER: co
 			<column name="THING_CATEGORY" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
 			<column name="LABEL" type="varchar" length="1000" decimal="0" jt="12" />
 			<column name="MEASURE_UNIT" type="varchar" length="63" decimal="0" jt="12" />
+			<column name="METADATA_JSON" type="clob" length="2147483647" jt="2005" />
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
 			<column name="SYNC_AUDIT" type="clob" length="2147483647" decimal="0" jt="2005" />
 			<index name="PK_THING" unique="PRIMARY_KEY" >
@@ -512,26 +518,26 @@ Field: DEVICE_ID, NETWORK_ID, EDGE_ID, COMPUTED_THING is computed by TRIGGER: co
 		<entity schema="edge_datapoint.PUBLIC" name="POINT_VALUE_DATA" color="EEF7EC" x="240" y="784" />
 		<entity schema="edge_datapoint.PUBLIC" name="PROTOCOL_DISPATCHER" color="FFFFCC" x="1344" y="80" />
 		<entity schema="edge_datapoint.PUBLIC" name="SYNC_DISPATCHER" color="FFFFCC" x="1344" y="368" />
-		<entity schema="edge_datapoint.PUBLIC" name="MEASURE_UNIT" color="FFCCE6" x="704" y="576" />
-		<entity schema="edge_datapoint.PUBLIC" name="THING" color="FFCCE6" x="1008" y="576" />
+		<entity schema="edge_datapoint.PUBLIC" name="MEASURE_UNIT" color="FFCCCC" x="704" y="576" />
 		<entity schema="edge_datapoint.PUBLIC" name="NETWORK" color="BEBEF4" x="976" y="320" />
 		<entity schema="edge_datapoint.PUBLIC" name="EDGE" color="BEBEF4" x="704" y="112" />
 		<entity schema="edge_datapoint.PUBLIC" name="HISTORY_SETTING" color="EEF7EC" x="432" y="784" />
 		<entity schema="edge_datapoint.PUBLIC" name="REALTIME_SETTING" color="EEF7EC" x="64" y="704" />
 		<entity schema="edge_datapoint.PUBLIC" name="SCHEDULE_SETTING" color="EEF7EC" x="48" y="80" />
-		<entity schema="edge_datapoint.PUBLIC" name="POINT" color="EEF7EC" x="400" y="304" />
-		<entity schema="edge_datapoint.PUBLIC" name="POINT_THING" color="FFCCE6" x="768" y="752" />
 		<entity schema="edge_datapoint.PUBLIC" name="EDGE_DEVICE" color="BEBEF4" x="1136" y="80" />
-		<entity schema="edge_datapoint.PUBLIC" name="DEVICE" color="FFCCE6" x="1344" y="592" />
 		<entity schema="edge_datapoint.PUBLIC" name="POINT_TAG" color="EEF7EC" x="416" y="80" />
-		<entity schema="edge_datapoint.PUBLIC" name="DEVICE_TAG" color="FFCCE6" x="1120" y="800" />
 		<entity schema="edge_datapoint.PUBLIC" name="POINT_REALTIME_DATA" color="EEF7EC" x="48" y="528" />
 		<entity schema="edge_datapoint.PUBLIC" name="POINT_HISTORY_DATA" color="EEF7EC" x="48" y="336" />
+		<entity schema="edge_datapoint.PUBLIC" name="POINT" color="EEF7EC" x="400" y="304" />
+		<entity schema="edge_datapoint.PUBLIC" name="DEVICE" color="FFCCCC" x="1392" y="624" />
+		<entity schema="edge_datapoint.PUBLIC" name="DEVICE_TAG" color="FFCCCC" x="1200" y="768" />
+		<entity schema="edge_datapoint.PUBLIC" name="THING" color="FFCCCC" x="1008" y="576" />
+		<entity schema="edge_datapoint.PUBLIC" name="POINT_THING" color="FFCCCC" x="736" y="752" />
 		<group name="SYSTEM" color="FFFFCC" >
 			<entity schema="edge_datapoint.PUBLIC" name="PROTOCOL_DISPATCHER" />
 			<entity schema="edge_datapoint.PUBLIC" name="SYNC_DISPATCHER" />
 		</group>
-		<group name="DEVICE" color="FFCCE6" >
+		<group name="DEVICE" color="FFCCCC" >
 			<entity schema="edge_datapoint.PUBLIC" name="THING" />
 			<entity schema="edge_datapoint.PUBLIC" name="DEVICE" />
 			<entity schema="edge_datapoint.PUBLIC" name="MEASURE_UNIT" />

@@ -8,6 +8,7 @@ import org.jooq.Query;
 import org.jooq.Record;
 import org.jooq.ResultQuery;
 import org.jooq.exception.DataAccessException;
+import org.jooq.exception.SQLStateClass;
 import org.jooq.impl.DSL;
 
 import io.github.jklingsporn.vertx.jooq.rx.RXQueryExecutor;
@@ -55,6 +56,9 @@ public class JDBCRXGenericQueryExecutor extends AbstractQueryExecutor
             } catch (DataAccessException e) {
                 Throwable cause = Functions.getIfThrow(() -> e.getCause().getCause().getCause()).orElse(null);
                 if (cause instanceof NubeException) {
+                    if (e.sqlStateClass() == SQLStateClass.C22_DATA_EXCEPTION) {
+                        throw (NubeException) cause;
+                    }
                     throw new DatabaseException(
                         "Database error. Code: " + e.sqlStateClass() + " | Cause:" + cause.getMessage(),
                         new HiddenException(e.getCause()));

@@ -148,7 +148,7 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
     }
 
     /**
-     * Defines response  key name for multiple resource
+     * Defines response key name for multiple resource
      *
      * @return response key name
      * @apiNote Default is {@link #singularKeyName()} appends "{@code s}" character
