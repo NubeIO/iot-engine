@@ -2,6 +2,7 @@ package com.nubeiot.edge.connector.bacnet.mixin;
 
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -30,14 +31,19 @@ import com.serotonin.bacnet4j.util.PropertyValues;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
 /**
  * @see PropertyValues
  */
+@Setter(value = AccessLevel.PRIVATE)
+@Accessors(chain = true)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class PropertyValuesMixin implements BACnetMixin {
 
     private final Map<PropertyIdentifier, Encodable> values;
+    private ObjectIdentifier objectId;
 
     @JsonCreator
     public static PropertyValuesMixin create(JsonObject properties) {
@@ -67,7 +73,7 @@ public final class PropertyValuesMixin implements BACnetMixin {
             }
             map.put(opr.getPropertyIdentifier(), value);
         });
-        return new PropertyValuesMixin(map);
+        return new PropertyValuesMixin(map).setObjectId(objId);
     }
 
     /**
@@ -103,6 +109,23 @@ public final class PropertyValuesMixin implements BACnetMixin {
         return EncodableSerializer.encode(get(propertyIdentifier));
     }
 
+    public PropertyValuesMixin viewByProperties(@NonNull Collection<PropertyIdentifier> properties) {
+        return new PropertyValuesMixin(properties.stream().collect(Collectors.toMap(pi -> pi, values::get)));
+    }
+
+    public PropertyValuesMixin viewWithoutProperties(@NonNull Collection<PropertyIdentifier> properties) {
+        return new PropertyValuesMixin(values.entrySet()
+                                             .stream()
+                                             .filter(entry -> !properties.contains(entry.getKey()))
+                                             .collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
+    }
+
+    public ObjectIdentifier getObjectId() {
+        return Optional.ofNullable(objectId)
+                       .orElseGet(
+                           () -> (ObjectIdentifier) getAndCast(PropertyIdentifier.objectIdentifier).orElse(null));
+    }
+
     @Override
     public JsonObject toJson() {
         return getMapper().convertValue(values, JsonObject.class);
@@ -112,7 +135,7 @@ public final class PropertyValuesMixin implements BACnetMixin {
         values.computeIfPresent(PropertyIdentifier.priorityArray,
                                 (pId, arrayValues) -> new PriorityValuesAdjuster().apply(
                                     values.get(PropertyIdentifier.presentValue), (PriorityArray) arrayValues));
-        return this;
+        return this.setObjectId((ObjectIdentifier) getAndCast(PropertyIdentifier.objectIdentifier).orElse(null));
     }
 
     public static final class PropertyValuesSerializer extends StdSerializer<PropertyValuesMixin> {

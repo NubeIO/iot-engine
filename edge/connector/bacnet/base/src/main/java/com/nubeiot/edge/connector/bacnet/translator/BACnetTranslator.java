@@ -1,6 +1,7 @@
 package com.nubeiot.edge.connector.bacnet.translator;
 
 import com.nubeiot.iotdata.dto.IoTNotion;
+import com.nubeiot.iotdata.dto.IoTNotion.IoTChunkNotion;
 import com.nubeiot.iotdata.dto.Protocol;
 import com.nubeiot.iotdata.translator.IoTNotionTranslator;
 import com.nubeiot.iotdata.translator.IoTTranslator;
@@ -17,6 +18,17 @@ public interface BACnetTranslator<T, U> extends IoTTranslator<T, U> {
 
     interface BACnetIoTNotionTranslator<T extends IoTNotion, U extends Encodable>
         extends BACnetTranslator<T, U>, IoTNotionTranslator<T, U> {
+
+    }
+
+
+    interface BACnetIoTChunkNotionTranslator<T extends IoTChunkNotion, U extends Encodable>
+        extends BACnetTranslator<T, U>, IoTNotionTranslator<T, U> {
+
+        @Override
+        default U deserialize(T concept) {
+            throw new UnsupportedOperationException();
+        }
 
     }
 

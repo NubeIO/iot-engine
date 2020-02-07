@@ -4,12 +4,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.nubeiot.core.dto.EnumType;
 import com.nubeiot.core.dto.EnumType.AbstractEnumType;
 import com.nubeiot.core.dto.PlainType;
+import com.nubeiot.iotdata.dto.IoTNotion.IoTChunkNotion;
 
-public final class ThingCategory extends AbstractEnumType implements PlainType, IoTNotion {
+public final class ThingCategory extends AbstractEnumType implements PlainType, IoTChunkNotion {
 
     public static final ThingCategory TEMP = new ThingCategory("TEMP");
     public static final ThingCategory HUMIDITY = new ThingCategory("HUMIDITY");
     public static final ThingCategory MOTION = new ThingCategory("MOTION");
+    public static final ThingCategory LIGHTING = new ThingCategory("LIGHTING");
     public static final ThingCategory VELOCITY = new ThingCategory("VELOCITY");
     public static final ThingCategory SWITCH = new ThingCategory("SWITCH");
     public static final ThingCategory RELAY = new ThingCategory("RELAY");

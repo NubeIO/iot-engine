@@ -27,6 +27,7 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.utils.Functions;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
+import com.nubeiot.edge.connector.bacnet.ObjectTypeCategory;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.Fields;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
@@ -65,7 +66,7 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
 
     @Override
     public @NonNull Collection<EventAction> getAvailableEvents() {
-        //TODO temporary
+        //TODO PATCH is temporary
         return Stream.concat(super.getAvailableEvents().stream(), Stream.of(EventAction.PATCH))
                      .collect(Collectors.toSet());
     }
@@ -105,13 +106,17 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
     @Override
     public Single<JsonObject> discoverThenDoPersist(RequestData requestData) {
         final DiscoveryRequestWrapper request = validateCache(toRequest(requestData, DiscoverLevel.OBJECT));
-        return doGet(request).map(properties -> new BACnetPointTranslator().serialize(properties))
-                             .map(pojo -> JsonPojo.from(pojo).toJson())
-                             .flatMap(this::doPersist)
-                             .doOnSuccess(response -> objectCache().addDataKey(request.device().protocol(),
-                                                                               request.remoteDeviceId(),
-                                                                               request.objectCode(),
-                                                                               parsePersistResponse(response)));
+        final ObjectType objectType = request.objectCode().getObjectType();
+        if (ObjectTypeCategory.isPoint(objectType)) {
+            return doGet(request).map(properties -> new BACnetPointTranslator().serialize(properties))
+                                 .map(pojo -> JsonPojo.from(pojo).toJson())
+                                 .flatMap(this::doPersist)
+                                 .doOnSuccess(response -> objectCache().addDataKey(request.device().protocol(),
+                                                                                   request.remoteDeviceId(),
+                                                                                   request.objectCode(),
+                                                                                   parsePersistResponse(response)));
+        }
+        return Single.error(new IllegalArgumentException("Unsupported persist object type " + objectType));
     }
 
     @Override

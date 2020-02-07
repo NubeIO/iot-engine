@@ -4,9 +4,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.nubeiot.core.dto.EnumType;
 import com.nubeiot.core.dto.EnumType.AbstractEnumType;
 import com.nubeiot.core.dto.PlainType;
+import com.nubeiot.iotdata.dto.IoTNotion.IoTChunkNotion;
 
-public final class PointType extends AbstractEnumType implements PlainType, IoTNotion {
+public final class PointType extends AbstractEnumType implements PlainType, IoTChunkNotion {
 
+    public static final PointType ANALOG = new PointType("ANALOG");
     public static final PointType DIGITAL = new PointType("DIGITAL");
     public static final PointType DC_10 = new PointType("0-10DC");
     public static final PointType DC_12 = new PointType("0-12DC");
