@@ -7,11 +7,13 @@ import java.util.UUID;
 
 import org.h2.api.Trigger;
 import org.jooq.DSLContext;
+import org.jooq.Record2;
 import org.jooq.Record4;
 import org.jooq.exception.SQLStateClass;
 import org.jooq.impl.DSL;
 
-import com.nubeiot.core.exceptions.StateException;
+import com.nubeiot.core.exceptions.NubeException;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointThingMetadata;
@@ -29,42 +31,21 @@ public final class PointThingTrigger implements Trigger {
     @Override
     public void fire(Connection conn, Object[] oldRow, Object[] newRow) throws SQLException {
         final DSLContext context = DSL.using(conn);
-        if (Functions.getIfThrow(() -> newRow[4]).isPresent()) {
+        if (Functions.getIfThrow(() -> newRow[6]).isPresent()) { // Tables.POINT_THING.EDGE_ID
             return;
         }
         final com.nubeiot.iotdata.edge.model.tables.PointThing table = Tables.POINT_THING;
-        final PointThing pointThing = new PointThing().setPointId(table.POINT_ID.getDataType().convert(newRow[1]))
-                                                      .setThingId(table.THING_ID.getDataType().convert(newRow[2]));
-        final Record4<ThingType, UUID, UUID, UUID> record = context.select(Tables.THING.TYPE, Tables.THING.DEVICE_ID,
-                                                                           Tables.EDGE_DEVICE.NETWORK_ID,
-                                                                           Tables.EDGE_DEVICE.EDGE_ID)
-                                                                   .from(Tables.THING.join(Tables.EDGE_DEVICE)
-                                                                                     .on(Tables.THING.DEVICE_ID.eq(
-                                                                                         Tables.EDGE_DEVICE.DEVICE_ID)))
-                                                                   .where(Tables.THING.ID.eq(pointThing.getThingId()))
-                                                                   .fetchOne();
-        final ThingType type = record.get(Tables.THING.TYPE);
-        final UUID deviceId = record.get(Tables.THING.DEVICE_ID);
-        final UUID networkId = record.get(Tables.EDGE_DEVICE.NETWORK_ID);
-        final UUID edgeId = record.get(Tables.EDGE_DEVICE.EDGE_ID);
-
-        String computedThing = PointThingMetadata.genComputedThing(type, pointThing.getThingId());
-        if (Strings.isNotBlank(computedThing)) {
-            final PointThingRecord r = context.selectFrom(table)
-                                              .where(table.COMPUTED_THING.eq(computedThing))
-                                              .fetchOne();
-            if (Objects.nonNull(r)) {
-                throw new SQLException(SQLStateClass.C23_INTEGRITY_CONSTRAINT_VIOLATION.name(),
-                                       SQLStateClass.C23_INTEGRITY_CONSTRAINT_VIOLATION.className(), new StateException(
-                    Strings.format("Thing {0} with type {1} is already assigned to Point {2}", pointThing.getThingId(),
-                                   type.type(), r.getPointId())));
-            }
-        }
-
-        newRow[3] = computedThing;
-        newRow[4] = deviceId;
-        newRow[5] = networkId;
-        newRow[6] = edgeId;
+        final PointThing pojo = new PointThing().setPointId(table.POINT_ID.getDataType().convert(newRow[1]))
+                                                .setDeviceId(table.DEVICE_ID.getDataType().convert(newRow[2]))
+                                                .setThingId(table.THING_ID.getDataType().convert(newRow[3]));
+        final PointThing computedPointThing = Objects.isNull(pojo.getThingId())
+                                              ? computePointThingWithoutThing(context, pojo)
+                                              : computePointThingWithThing(context, pojo);
+        newRow[2] = computedPointThing.getDeviceId();
+        newRow[3] = computedPointThing.getThingId();
+        newRow[4] = computedPointThing.getComputedThing();
+        newRow[5] = computedPointThing.getNetworkId();
+        newRow[6] = computedPointThing.getEdgeId();
     }
 
     @Override
@@ -72,5 +53,59 @@ public final class PointThingTrigger implements Trigger {
 
     @Override
     public void remove() throws SQLException { }
+
+    private PointThing computePointThingWithoutThing(DSLContext context, PointThing pojo) throws SQLException {
+        if (Objects.isNull(pojo.getDeviceId())) {
+            final NubeException cause = new NubeException(ErrorCode.INVALID_ARGUMENT, "Missing device id");
+            throw new SQLException(SQLStateClass.C22_DATA_EXCEPTION.name(),
+                                   SQLStateClass.C22_DATA_EXCEPTION.className(), cause);
+        }
+        final Record2<UUID, UUID> record = context.select(Tables.EDGE_DEVICE.NETWORK_ID, Tables.EDGE_DEVICE.EDGE_ID)
+                                                  .from(Tables.EDGE_DEVICE)
+                                                  .where(Tables.EDGE_DEVICE.DEVICE_ID.eq(pojo.getDeviceId()))
+                                                  .fetchOne();
+        return new PointThing(pojo).setNetworkId(record.get(Tables.EDGE_DEVICE.NETWORK_ID))
+                                   .setEdgeId(record.get(Tables.EDGE_DEVICE.EDGE_ID));
+    }
+
+    private PointThing computePointThingWithThing(DSLContext context, PointThing pojo) throws SQLException {
+        final Record4<ThingType, UUID, UUID, UUID> record = context.select(Tables.THING.TYPE, Tables.THING.DEVICE_ID,
+                                                                           Tables.EDGE_DEVICE.NETWORK_ID,
+                                                                           Tables.EDGE_DEVICE.EDGE_ID)
+                                                                   .from(Tables.THING.join(Tables.EDGE_DEVICE)
+                                                                                     .on(Tables.THING.DEVICE_ID.eq(
+                                                                                         Tables.EDGE_DEVICE.DEVICE_ID)))
+                                                                   .where(Tables.THING.ID.eq(pojo.getThingId()))
+                                                                   .fetchOne();
+        final UUID deviceId = record.get(Tables.THING.DEVICE_ID);
+        if (Objects.nonNull(pojo.getDeviceId()) && !deviceId.equals(pojo.getDeviceId())) {
+            final NubeException cause = new NubeException(ErrorCode.INVALID_ARGUMENT, Strings.format(
+                "Input device id {0} is unmatched with referenced device id {1} in Thing {2}", pojo.getDeviceId(),
+                deviceId, pojo.getThingId()));
+            throw new SQLException(SQLStateClass.C22_DATA_EXCEPTION.name(),
+                                   SQLStateClass.C22_DATA_EXCEPTION.className(), cause);
+        }
+        final ThingType type = record.get(Tables.THING.TYPE);
+        final PointThing computed = new PointThing().setPointId(pojo.getPointId())
+                                                    .setDeviceId(deviceId)
+                                                    .setThingId(pojo.getThingId())
+                                                    .setNetworkId(record.get(Tables.EDGE_DEVICE.NETWORK_ID))
+                                                    .setEdgeId(record.get(Tables.EDGE_DEVICE.EDGE_ID))
+                                                    .setComputedThing(
+                                                        PointThingMetadata.genComputedThing(type, pojo.getThingId()));
+        if (Strings.isNotBlank(computed.getComputedThing())) {
+            final PointThingRecord r = context.selectFrom(Tables.POINT_THING)
+                                              .where(Tables.POINT_THING.COMPUTED_THING.eq(computed.getComputedThing()))
+                                              .fetchOne();
+            if (Objects.nonNull(r)) {
+                final NubeException cause = new NubeException(ErrorCode.INVALID_ARGUMENT, Strings.format(
+                    "Thing {0} with type {1} is already assigned to Point {2}", pojo.getThingId(), type.type(),
+                    r.getPointId()));
+                throw new SQLException(SQLStateClass.C22_DATA_EXCEPTION.name(),
+                                       SQLStateClass.C22_DATA_EXCEPTION.className(), cause);
+            }
+        }
+        return computed;
+    }
 
 }

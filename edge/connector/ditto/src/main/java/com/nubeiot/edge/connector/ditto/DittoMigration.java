@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.ditto.model;
+package com.nubeiot.edge.connector.ditto;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,6 +17,12 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.edge.connector.ditto.model.DittoDevice;
+import com.nubeiot.edge.connector.ditto.model.DittoEdge;
+import com.nubeiot.edge.connector.ditto.model.DittoHistoryData;
+import com.nubeiot.edge.connector.ditto.model.DittoHistorySetting;
+import com.nubeiot.edge.connector.ditto.model.DittoPoint;
+import com.nubeiot.edge.connector.ditto.model.IDittoModel;
 
 import lombok.NonNull;
 import net.thisptr.jackson.jq.JsonQuery;

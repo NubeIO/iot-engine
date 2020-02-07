@@ -18,13 +18,12 @@ import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointThingMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.ThingMetadata;
 
 import lombok.NonNull;
 
-public final class PointByThingService extends PointThingService {
+public final class PointByDeviceService extends PointThingService {
 
-    PointByThingService(@NonNull EntityHandler entityHandler) {
+    PointByDeviceService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
     }
 
@@ -35,12 +34,12 @@ public final class PointByThingService extends PointThingService {
 
     @Override
     public @NonNull EntityMetadata reference() {
-        return ThingMetadata.INSTANCE;
+        return DeviceMetadata.INSTANCE;
     }
 
     @Override
     public @NonNull List<EntityMetadata> references() {
-        return Arrays.asList(ThingMetadata.INSTANCE, DeviceMetadata.INSTANCE, NetworkMetadata.INSTANCE);
+        return Arrays.asList(DeviceMetadata.INSTANCE, NetworkMetadata.INSTANCE);
     }
 
     @Override
@@ -52,14 +51,13 @@ public final class PointByThingService extends PointThingService {
     public final Set<EventMethodDefinition> definitions() {
         final @NonNull Collection<EventAction> events = getAvailableEvents();
         return Stream.of(super.definitions(),
-                         EntityHttpService.createDefinitions(events, resource(), true, DeviceMetadata.INSTANCE,
-                                                             reference()),
                          EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, events, resource(), true,
                                                              EdgeMetadata.INSTANCE, NetworkMetadata.INSTANCE,
-                                                             DeviceMetadata.INSTANCE, reference()),
+                                                             reference()),
                          EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, events, resource(), true,
-                                                             NetworkMetadata.INSTANCE, DeviceMetadata.INSTANCE,
-                                                             reference()))
+                                                             EdgeMetadata.INSTANCE, reference()),
+                         EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, events, resource(), true,
+                                                             NetworkMetadata.INSTANCE, reference()))
                      .flatMap(Collection::stream)
                      .collect(Collectors.toSet());
     }
