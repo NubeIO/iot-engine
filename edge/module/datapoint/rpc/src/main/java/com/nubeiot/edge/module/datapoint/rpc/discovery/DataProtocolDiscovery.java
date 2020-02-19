@@ -1,9 +1,10 @@
-package com.nubeiot.edge.module.datapoint.rpc;
+package com.nubeiot.edge.module.datapoint.rpc.discovery;
 
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.edge.module.datapoint.rpc.DataProtocolRpcClient;
 
 import lombok.NonNull;
 

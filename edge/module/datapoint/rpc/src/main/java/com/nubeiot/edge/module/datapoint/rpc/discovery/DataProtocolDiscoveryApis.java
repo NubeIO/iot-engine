@@ -1,4 +1,4 @@
-package com.nubeiot.edge.module.datapoint.rpc;
+package com.nubeiot.edge.module.datapoint.rpc.discovery;
 
 import java.util.Collections;
 import java.util.Set;

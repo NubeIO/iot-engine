@@ -1,4 +1,4 @@
-package com.nubeiot.edge.module.datapoint.rpc;
+package com.nubeiot.edge.module.datapoint.rpc.subscriber;
 
 import java.util.Collection;
 
@@ -9,7 +9,7 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
-import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.edge.module.datapoint.rpc.RpcProtocol;
 
 import lombok.NonNull;
 
@@ -22,13 +22,6 @@ import lombok.NonNull;
  * @see VertxPojo
  */
 public interface DataProtocolSubscriber<P extends VertxPojo> extends EventListener, RpcProtocol {
-
-    /**
-     * Declares entity metadata
-     *
-     * @return entity metadata
-     */
-    @NonNull EntityMetadata metadata();
 
     @Override
     default @NonNull Collection<EventAction> getAvailableEvents() {
@@ -50,7 +43,7 @@ public interface DataProtocolSubscriber<P extends VertxPojo> extends EventListen
      *
      * @return {@code true} if global
      * @see #protocol()
-     * @see #metadata()
+     * @see #context()
      */
     default boolean isGlobal() {
         return false;

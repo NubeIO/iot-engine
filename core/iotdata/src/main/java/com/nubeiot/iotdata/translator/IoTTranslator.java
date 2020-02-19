@@ -18,9 +18,9 @@ import lombok.NonNull;
 public interface IoTTranslator<T, U> extends Serializable {
 
     /**
-     * Defines translator for which protocol
+     * Defines translator for which protocol type
      *
-     * @return protocol protocol
+     * @return protocol type
      * @see Protocol
      * @since 1.0.0
      */

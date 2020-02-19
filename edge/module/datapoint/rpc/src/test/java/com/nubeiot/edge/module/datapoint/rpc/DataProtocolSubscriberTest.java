@@ -41,10 +41,10 @@ public class DataProtocolSubscriberTest extends BaseDataPointServiceTest {
 
     @Test
     public void test_dispatch_to_subscriber(TestContext context) {
-        Network network = new Network().setId(UUID.randomUUID())
-                                       .setState(State.ENABLED)
-                                       .setProtocol(Protocol.BACNET)
-                                       .setCode("xxx");
+        final Network network = new Network().setId(UUID.randomUUID())
+                                             .setState(State.ENABLED)
+                                             .setProtocol(Protocol.BACNET)
+                                             .setCode("xxx");
         final JsonObject resource = network.toJson().put("edge", PrimaryKey.EDGE.toString()).put("metadata", metadata);
         resource.remove("sync_audit");
         resource.remove("time_audit");
@@ -57,10 +57,10 @@ public class DataProtocolSubscriberTest extends BaseDataPointServiceTest {
 
     @Test
     public void test_unable_dispatch_due_to_round_robin(TestContext context) {
-        Network network = new Network().setId(UUID.randomUUID())
-                                       .setState(State.ENABLED)
-                                       .setProtocol(Protocol.BACNET)
-                                       .setCode("xxx");
+        final Network network = new Network().setId(UUID.randomUUID())
+                                             .setState(State.ENABLED)
+                                             .setProtocol(Protocol.BACNET)
+                                             .setCode("xxx");
         final JsonObject resource = network.toJson().put("edge", PrimaryKey.EDGE.toString());
         resource.remove("sync_audit");
         resource.remove("time_audit");
@@ -69,8 +69,7 @@ public class DataProtocolSubscriberTest extends BaseDataPointServiceTest {
                                                     .put("resource", resource);
         final JsonObject headers = new JsonObject().put(Headers.X_REQUEST_BY,
                                                         RemoteServiceInvoker.requestBy(Protocol.BACNET.type()));
-        final RequestData reqData = RequestData.builder()
-                                               .body(JsonPojo.from(network).toJson())
+        final RequestData reqData = RequestData.builder().body(JsonPojo.from(network).toJson())
                                                .headers(headers)
                                                .build();
         asserter(context, true, expected, NetworkService.class.getName(), EventAction.CREATE, reqData);

@@ -11,7 +11,7 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 
 @RunWith(VertxUnitRunner.class)
-public class ReferenceEntityServiceTest extends BaseSqlServiceTest {
+public class ReferenceEntityServiceTest extends DefaultSqlServiceTest {
 
     @Test
     public void test_get_list_without_another(TestContext context) {
