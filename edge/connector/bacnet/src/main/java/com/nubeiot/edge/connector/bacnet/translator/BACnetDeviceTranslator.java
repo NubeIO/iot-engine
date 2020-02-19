@@ -55,7 +55,7 @@ public final class BACnetDeviceTranslator implements BACnetTranslator<EdgeDevice
                                           .setLabel(label)
                                           .setMetadata(object.getPropertyValues().toJson());
         return new EdgeDeviceComposite().wrap(new EdgeDevice().setAddress(object.getAddress().toJson()))
-                                        .addDevice(device);
+                                        .setDevice(device);
     }
 
     @Override

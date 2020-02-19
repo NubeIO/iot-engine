@@ -18,8 +18,8 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.ProtocolDispatcher;
 import lombok.NonNull;
 
 /**
- * Represents a register service that registers {@code Subscriber} in {@code Data Point repository} when startup the
- * particular {@code protocol application}
+ * Represents a register service that registers {@code Subscriber} into {@code Data Point repository} in startup phase
+ * of the particular {@code protocol} application
  *
  * @see DataProtocolSubscriber
  */

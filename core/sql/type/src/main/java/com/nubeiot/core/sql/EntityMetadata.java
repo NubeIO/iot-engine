@@ -16,11 +16,11 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.sql.service.EntityService;
 import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.core.sql.type.TimeAudit;
 import com.nubeiot.core.sql.validation.EntityValidation;
 import com.nubeiot.core.utils.Functions;
+import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
@@ -32,7 +32,6 @@ import lombok.NonNull;
  * @param <P> Type of {@code VertxPojo}
  * @param <R> Type of {@code UpdatableRecord}
  * @param <D> Type of {@code VertxDAO}
- * @see EntityService
  * @since 1.0.0
  */
 public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>>
@@ -104,17 +103,6 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      * @since 1.0.0
      */
     @NonNull Class<D> daoClass();
-
-    /**
-     * Create DAO by given entity handler
-     *
-     * @param handler Entity handler
-     * @return DAO that corresponding to {@link #daoClass()}
-     * @since 1.0.0
-     */
-    default @NonNull D dao(@NonNull EntityHandler handler) {
-        return handler.dao(daoClass());
-    }
 
     @Override
     default EntityMetadata context() { return this; }
@@ -193,7 +181,7 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
     @NonNull
     @SuppressWarnings("unchecked")
     default <PP extends P> PP parseFromEntity(@NonNull JsonObject request) throws IllegalArgumentException {
-        return (PP) EntityHandler.parse(modelClass(), request);
+        return (PP) ReflectionClass.createObject(modelClass()).fromJson(request);
     }
 
     /**

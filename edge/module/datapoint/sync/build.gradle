@@ -2,6 +2,8 @@ dependencies {
     compile project(':core:base')
     compile project(":core:auth")
     compile project(':edge:module:datapoint:model')
+    //TODO https://github.com/NubeIO/iot-engine/issues/140
+    compile project(":core:sql")
 
     testCompile project(":core:base").sourceSets.test.output
     testCompile project(":core:sql").sourceSets.test.output
