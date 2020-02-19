@@ -2,7 +2,7 @@ package com.nubeiot.edge.connector.bacnet.service;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 
-import com.nubeiot.edge.module.datapoint.rpc.DataProtocolSubscriber;
+import com.nubeiot.edge.module.datapoint.rpc.subscriber.DataProtocolSubscriber;
 import com.nubeiot.iotdata.dto.Protocol;
 
 /**

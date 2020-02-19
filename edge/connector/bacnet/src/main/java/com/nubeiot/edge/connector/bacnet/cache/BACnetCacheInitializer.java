@@ -6,8 +6,9 @@ import com.nubeiot.core.cache.CacheInitializer;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.BACnetVerticle;
-import com.nubeiot.edge.connector.bacnet.service.BACnetRpcClient;
+import com.nubeiot.edge.module.datapoint.rpc.DataProtocolRpcClient;
 
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -17,11 +18,12 @@ public final class BACnetCacheInitializer implements CacheInitializer<BACnetCach
     public static final String EDGE_NETWORK_CACHE = "EDGE_NETWORK_CACHE";
     public static final String BACNET_DEVICE_CACHE = "BACNET_DEVICE_CACHE";
     @NonNull
+    @Getter
     private final BACnetConfig config;
 
     @Override
     public BACnetCacheInitializer init(@NonNull BACnetVerticle context) {
-        context.addSharedData(BACnetRpcClient.GATEWAY_ADDRESS,
+        context.addSharedData(DataProtocolRpcClient.GATEWAY_ADDRESS,
                               Strings.requireNotBlank(config.getGatewayAddress(), "Missing gateway address config"));
         addBlockingCache(context, EDGE_NETWORK_CACHE, BACnetNetworkCache::init);
         addBlockingCache(context, BACNET_DEVICE_CACHE,

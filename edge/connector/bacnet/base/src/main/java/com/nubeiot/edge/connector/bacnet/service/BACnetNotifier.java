@@ -1,6 +1,6 @@
 package com.nubeiot.edge.connector.bacnet.service;
 
-import com.nubeiot.edge.module.datapoint.rpc.DataProtocolNotifier;
+import com.nubeiot.edge.module.datapoint.rpc.notifier.DataProtocolNotifier;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
 
 /**
@@ -8,4 +8,4 @@ import com.serotonin.bacnet4j.event.DeviceEventListener;
  * service}
  */
 public interface BACnetNotifier<T extends BACnetNotifier>
-    extends BACnetRpcClient<T>, DataProtocolNotifier<T>, DeviceEventListener {}
+    extends BACnetRpcProtocol, DataProtocolNotifier<T>, DeviceEventListener {}
