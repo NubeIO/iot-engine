@@ -60,7 +60,7 @@ public interface CompositePojo<P extends VertxPojo, CP extends CompositePojo> ex
      * Put external properties
      *
      * @param otherKey External key
-     * @param pojos    list of pojo that same kind
+     * @param pojos    list of pojo with same kind
      * @return a reference to this, so the API can be used fluently
      */
     @SuppressWarnings("unchecked")

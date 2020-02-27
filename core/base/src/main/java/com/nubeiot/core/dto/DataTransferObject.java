@@ -36,6 +36,11 @@ public interface DataTransferObject extends Serializable, JsonData {
          */
         public static final String X_REQUEST_BY = "X-Request-By";
 
+        /**
+         * For tracking forwarded for request by service
+         */
+        public static final String X_REQUEST_FORWARDED_FOR = "X-Forwarded-For";
+
     }
 
 

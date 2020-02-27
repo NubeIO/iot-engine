@@ -18,6 +18,8 @@ import lombok.NonNull;
  *
  * @param <P> Type of {@code VertxPojo}
  * @param <M> Type of {@code EntityMetadata}
+ * @see ReferencingEntityService
+ * @see OneToOneEntityMarker
  * @since 1.0.0
  */
 public interface OneToOneChildEntityService<P extends VertxPojo, M extends EntityMetadata>

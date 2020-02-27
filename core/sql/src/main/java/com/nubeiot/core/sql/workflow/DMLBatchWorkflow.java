@@ -10,7 +10,7 @@ import lombok.NonNull;
  * @see SQLWorkflow
  * @since 1.0.0
  */
-public interface DMLBatchWorkflow extends SQLWorkflow {
+public interface DMLBatchWorkflow extends SQLWorkflow, SQLTransactionWorkflow {
 
     /**
      * Declares {@code DML Batch step}
@@ -20,5 +20,10 @@ public interface DMLBatchWorkflow extends SQLWorkflow {
      * @since 1.0.0
      */
     @NonNull DMLBatchStep sqlStep();
+
+    @Override
+    default boolean inTransaction() {
+        return true;
+    }
 
 }

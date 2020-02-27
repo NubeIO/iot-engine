@@ -21,6 +21,7 @@ public final class DefaultDMLWorkflow extends AbstractSQLWorkflow implements DML
 
     @NonNull
     private final DMLStep sqlStep;
+    private final boolean inTransaction;
     @NonNull
     private final BiFunction<RequestData, DMLPojo, Single<JsonObject>> transformer;
 

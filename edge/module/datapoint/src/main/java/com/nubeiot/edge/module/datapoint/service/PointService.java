@@ -75,7 +75,7 @@ public final class PointService
 
     @Override
     public EntityTask postPersistTask() {
-        return new PointReferencedService(entityHandler());
+        return new PointReferencedTask(entityHandler());
     }
 
     @Override
