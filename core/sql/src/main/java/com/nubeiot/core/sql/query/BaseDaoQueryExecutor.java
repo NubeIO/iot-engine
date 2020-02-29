@@ -29,7 +29,9 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.Accessors;
 
+@Accessors(fluent = true)
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @SuppressWarnings("unchecked")
 abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQueryExecutor<P> {
@@ -53,18 +55,16 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQuer
         final Pagination paging = Optional.ofNullable(reqData.pagination()).orElse(Pagination.builder().build());
         final Function<DSLContext, ? extends ResultQuery<? extends Record>> query = queryBuilder().view(
             reqData.filter(), reqData.sort(), paging);
-        return ((Single<List<P>>) entityHandler().dao(metadata.daoClass())
-                                                 .queryExecutor()
-                                                 .findMany(query)).flattenAsObservable(rs -> rs);
+        final VertxDAO dao = dao(metadata.daoClass());
+        return ((Single<List<P>>) dao.queryExecutor().findMany(query)).flattenAsObservable(rs -> rs);
     }
 
     @Override
     public @NonNull Single<DMLPojo> insertReturningPrimary(@NonNull RequestData reqData,
                                                            @NonNull OperationValidator validator) {
-        final VertxDAO dao = entityHandler().dao(metadata.daoClass());
+        final VertxDAO dao = dao(metadata.daoClass());
         return validator.validate(reqData, null).flatMap(pojo -> {
-            final Optional<Object> opt = Optional.ofNullable(pojo.toJson().getValue(metadata.jsonKeyName()))
-                                                 .map(k -> metadata.parseKey(k.toString()));
+            final Optional<Object> opt = Optional.ofNullable(pojo.toJson().getValue(metadata.jsonKeyName())).map(k -> metadata.parseKey(k.toString()));
             return opt.map(key -> fetchExists(queryBuilder().exist(metadata, key)).map(b -> key))
                       .orElse(Maybe.empty())
                       .flatMap(k -> Maybe.error(metadata.alreadyExisted(Strings.kvMsg(metadata.requestKeyName(), k))))
@@ -80,7 +80,7 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQuer
     public @NonNull Single<DMLPojo> modifyReturningPrimary(@NonNull RequestData reqData,
                                                            @NonNull OperationValidator validator) {
         final Object pk = metadata.parseKey(reqData);
-        final VertxDAO dao = entityHandler().dao(metadata.daoClass());
+        final VertxDAO dao = dao(metadata.daoClass());
         //TODO validate unique keys
         return findOneByKey(reqData).flatMap(db -> validator.validate(reqData, db).map(p -> new SimpleEntry<>(db, p)))
                                     .map(entry -> AuditDecorator.addModifiedAudit(reqData, metadata, entry.getKey(),
@@ -93,7 +93,7 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQuer
     @Override
     public Single<P> deleteOneByKey(@NonNull RequestData reqData, @NonNull OperationValidator validator) {
         final Object pk = metadata.parseKey(reqData);
-        final VertxDAO dao = entityHandler().dao(metadata.daoClass());
+        final VertxDAO dao = dao(metadata.daoClass());
         return findOneByKey(reqData).flatMap(dbPojo -> isAbleToDelete(dbPojo, metadata, this::pojoKeyMsg))
                                     .flatMap(dbPojo -> validator.validate(reqData, dbPojo))
                                     .flatMapMaybe(

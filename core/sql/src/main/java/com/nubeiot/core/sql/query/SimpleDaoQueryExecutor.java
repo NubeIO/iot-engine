@@ -25,27 +25,24 @@ class SimpleDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRecord<R
         super(handler, metadata);
     }
 
-    protected EntityMetadata<K, P, R, D> metadata() {
-        return super.getMetadata();
+    public EntityMetadata<K, P, R, D> metadata() {
+        return super.metadata();
     }
 
     @Override
     public Observable<P> findMany(RequestData reqData) {
         final Pagination paging = Optional.ofNullable(reqData.pagination()).orElse(Pagination.builder().build());
-        return entityHandler().dao(metadata().daoClass())
-                              .queryExecutor()
-                              .findMany((Function<DSLContext, ResultQuery<R>>) queryBuilder().view(reqData.filter(),
-                                                                                                   reqData.sort(),
-                                                                                                   paging))
-                              .flattenAsObservable(records -> records);
+        return dao(metadata().daoClass()).queryExecutor()
+                                         .findMany((Function<DSLContext, ResultQuery<R>>) queryBuilder().view(
+                                             reqData.filter(), reqData.sort(), paging))
+                                         .flattenAsObservable(records -> records);
     }
 
     @Override
     public Single<P> findOneByKey(RequestData requestData) {
-        K pk = metadata().parseKey(requestData);
-        return entityHandler().dao(metadata().daoClass())
-                              .findOneById(pk)
-                              .flatMap(o -> o.map(Single::just).orElse(Single.error(metadata().notFound(pk))));
+        final K pk = metadata().parseKey(requestData);
+        final D dao = dao(metadata().daoClass());
+        return dao.findOneById(pk).flatMap(o -> o.map(Single::just).orElse(Single.error(metadata().notFound(pk))));
     }
 
 }

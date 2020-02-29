@@ -194,7 +194,7 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
     }
 
     @Override
-    public EntityMetadata getMetadata() {
+    public EntityMetadata metadata() {
         return base;
     }
 
@@ -218,7 +218,7 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
     }
 
     private VertxDAO dao(@NonNull EntityMetadata metadata) {
-        return handler.dao(metadata.daoClass());
+        return dao(metadata.daoClass());
     }
 
     private Single<? extends CP> doDelete(RequestData reqData, CP pojo) {
@@ -227,7 +227,7 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
             return Single.error(new IllegalArgumentException("Missing " + base.jsonKeyName()));
         }
         Condition c = queryBuilder().conditionByPrimary(base, key);
-        Single<Integer> result = (Single<Integer>) handler.dao(base.daoClass()).deleteByCondition(c);
+        Single<Integer> result = (Single<Integer>) dao(base).deleteByCondition(c);
         return result.filter(r -> r > 0)
                      .map(r -> pojo)
                      .switchIfEmpty(EntityQueryExecutor.unableDelete(base.msg(reqData.filter(), references.keys())));

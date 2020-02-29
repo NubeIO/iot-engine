@@ -33,14 +33,14 @@ final class ReferencingDaoQueryExecutor<K, P extends VertxPojo, R extends Updata
     @Override
     @SuppressWarnings("unchecked")
     public Single<P> findOneByKey(RequestData reqData) {
-        K pk = metadata().parseKey(reqData);
+        final K pk = metadata().parseKey(reqData);
         final JsonObject filter = reqData.filter();
         final Sort sort = reqData.sort();
-        return entityHandler().dao(metadata().daoClass())
-                              .queryExecutor()
-                              .findOne((Function<DSLContext, ResultQuery<R>>) queryBuilder().viewOne(filter, sort))
-                              .flatMap(o -> o.map(Single::just).orElse(Single.error(metadata().notFound(pk))))
-                              .onErrorResumeNext(EntityQueryExecutor::sneakyThrowDBError);
+        final DAO dao = dao(metadata().daoClass());
+        return dao.queryExecutor()
+                  .findOne((Function<DSLContext, ResultQuery<R>>) queryBuilder().viewOne(filter, sort))
+                  .flatMap(o -> o.map(Single::just).orElse(Single.error(metadata().notFound(pk))))
+                  .onErrorResumeNext(EntityQueryExecutor::sneakyThrowDBError);
     }
 
     @Override

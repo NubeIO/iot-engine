@@ -1,7 +1,10 @@
 package com.nubeiot.core.sql;
 
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
+import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.UpdatableRecord;
 
@@ -131,8 +134,13 @@ public interface EntityHandler {
      * @return the instance of DAO
      * @since 1.0.0
      */
-    <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> D dao(
-        @NonNull Class<D> daoClass);
+    default <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> D dao(
+        @NonNull Class<D> daoClass) {
+        Map<Class, Object> input = new LinkedHashMap<>();
+        input.put(Configuration.class, dsl().configuration());
+        input.put(io.vertx.reactivex.core.Vertx.class, io.vertx.reactivex.core.Vertx.newInstance(vertx()));
+        return ReflectionClass.createObject(daoClass, input);
+    }
 
     /**
      * Get generic query executor.
@@ -141,7 +149,10 @@ public interface EntityHandler {
      * @see JDBCRXGenericQueryExecutor
      * @since 1.0.0
      */
-    @NonNull JDBCRXGenericQueryExecutor genericQuery();
+    default @NonNull JDBCRXGenericQueryExecutor genericQuery() {
+        return new JDBCRXGenericQueryExecutor(dsl().configuration(),
+                                              io.vertx.reactivex.core.Vertx.newInstance(vertx()));
+    }
 
     /**
      * Get complex query executor.
@@ -150,7 +161,9 @@ public interface EntityHandler {
      * @see ComplexQueryExecutor
      * @since 1.0.0
      */
-    @NonNull ComplexQueryExecutor complexQuery();
+    default @NonNull ComplexQueryExecutor complexQuery() {
+        return ComplexQueryExecutor.create(this);
+    }
 
     /**
      * Execute any task before setup database
@@ -158,7 +171,9 @@ public interface EntityHandler {
      * @return single of reference to this, so the API can be used fluently
      * @since 1.0.0
      */
-    @NonNull Single<EntityHandler> before();
+    default @NonNull Single<EntityHandler> before() {
+        return Single.just(this);
+    }
 
     /**
      * Get {@code Schema handler}.

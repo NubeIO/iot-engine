@@ -65,7 +65,7 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler {
     public final Single<EntityHandler> before() {
         InstallerConfig installerCfg = sharedData(SHARED_INSTALLER_CFG);
         return super.before().map(handler -> {
-            InstallerRepository.create(handler).setup(installerCfg.getRepoConfig(), dataDir());
+            InstallerRepository.create(handler.vertx()).setup(installerCfg.getRepoConfig(), dataDir());
             return handler;
         });
     }

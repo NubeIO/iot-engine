@@ -19,13 +19,13 @@ interface InternalQueryExecutor<P extends VertxPojo> extends EntityQueryExecutor
      * @see EntityMetadata
      * @since 1.0.0
      */
-    EntityMetadata getMetadata();
+    EntityMetadata metadata();
 
     @Override
     @SuppressWarnings("unchecked")
     default Single<P> lookupByPrimaryKey(@NonNull Object primaryKey) {
-        return lookupByPrimaryKey(getMetadata(), primaryKey).flatMap(
-            o -> o.map(Single::just).orElse(Single.error(getMetadata().notFound(primaryKey)))).map(p -> (P) p);
+        return lookupByPrimaryKey(metadata(), primaryKey).flatMap(
+            o -> o.map(Single::just).orElse(Single.error(metadata().notFound(primaryKey)))).map(p -> (P) p);
     }
 
     /**
@@ -40,7 +40,7 @@ interface InternalQueryExecutor<P extends VertxPojo> extends EntityQueryExecutor
     default Single<Optional<? extends VertxPojo>> lookupByPrimaryKey(@NonNull EntityMetadata metadata, Object key) {
         return Objects.isNull(key)
                ? Single.just(Optional.empty())
-               : (Single<Optional<? extends VertxPojo>>) entityHandler().dao(metadata.daoClass()).findOneById(key);
+               : (Single<Optional<? extends VertxPojo>>) dao(metadata.daoClass()).findOneById(key);
     }
 
 }
