@@ -2,6 +2,8 @@ package com.nubeiot.core.sql.workflow;
 
 import java.util.function.BiFunction;
 
+import org.jooq.Configuration;
+
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
@@ -26,7 +28,7 @@ public final class DefaultDQLWorkflow<T extends VertxPojo> extends AbstractSQLWo
 
     @Override
     @SuppressWarnings("unchecked")
-    public @NonNull Single<JsonObject> run(@NonNull RequestData requestData) {
+    protected @NonNull Single<JsonObject> run(@NonNull RequestData requestData, Configuration runtimeConfig) {
         final RequestData reqData = normalize().apply(requestData);
         return sqlStep().query(reqData, validator().andThen(afterValidation()))
                         .flatMap(pojo -> postExecuter().execute(initSuccessData(reqData, pojo))

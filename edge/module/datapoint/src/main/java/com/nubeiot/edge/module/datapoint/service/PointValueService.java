@@ -135,7 +135,9 @@ public final class PointValueService extends AbstractOneToOneChildEntityService<
         final int priority = Objects.isNull(requestValue.getValue()) ? pv.getPriority() : requestValue.getPriority();
         send(HistoryDataService.class, new PointHistoryData().setPoint(pv.getPoint())
                                                              .setValue(value)
-                                                             .setPriority(priority).setTime(createdTime).toJson());
+                                                             .setPriority(priority)
+                                                             .setTime(createdTime)
+                                                             .toJson());
     }
 
     private void send(@NonNull Class<? extends DataPointService> serviceName, @NonNull JsonObject body) {

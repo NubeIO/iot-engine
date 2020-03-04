@@ -85,7 +85,7 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
     @Test
     public void test_create_directly(TestContext context) {
         final UUID id = UUID.randomUUID();
-        JsonObject data = new JsonObject(
+        final JsonObject data = new JsonObject(
             "{\"id\":\"" + id + "\",\"code\":\"TET_01\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"protocol" +
             "\":\"WIRE\",\"unit\":{\"type\":\"meters_per_second\",\"symbol\":\"m/s\",\"category\":\"VELOCITY\"," +
             "\"alias\":{\"= 10.0\":\"hah\",\"> 10.0\":\"xyz\"}},\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" +

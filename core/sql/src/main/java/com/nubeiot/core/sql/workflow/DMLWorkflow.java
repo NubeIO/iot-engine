@@ -10,7 +10,7 @@ import lombok.NonNull;
  * @see SQLWorkflow
  * @since 1.0.0
  */
-public interface DMLWorkflow extends SQLWorkflow, SQLTransactionWorkflow {
+public interface DMLWorkflow extends SQLWorkflow {
 
     /**
      * Declares {@code DML step}

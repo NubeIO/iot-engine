@@ -114,13 +114,17 @@ public interface EntityHandler {
     /**
      * Create DAO by given entity handler
      *
+     * @param <K>      Type of {@code primary key}
+     * @param <P>      Type of {@code VertxPojo}
+     * @param <R>      Type of {@code UpdatableRecord}
+     * @param <D>      Type of {@code VertxDAO}
      * @param metadata Entity metadata
      * @return the instance of DAO
      * @since 1.0.0
      */
     default @NonNull <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> D dao(
         @NonNull EntityMetadata<K, P, R, D> metadata) {
-        return this.dao(metadata.daoClass());
+        return dao(metadata.daoClass());
     }
 
     /**
@@ -136,8 +140,25 @@ public interface EntityHandler {
      */
     default <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> D dao(
         @NonNull Class<D> daoClass) {
+        return dao(dsl().configuration(), daoClass);
+    }
+
+    /**
+     * Create {@code DAO} by given {@code daoClass} and given {@code jooq configuration}.
+     *
+     * @param <K>           Type of {@code primary key}
+     * @param <P>           Type of {@code VertxPojo}
+     * @param <R>           Type of {@code UpdatableRecord}
+     * @param <D>           Type of {@code VertxDAO}
+     * @param configuration the configuration
+     * @param daoClass      the dao class
+     * @return the d
+     * @since 1.0.0
+     */
+    default <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> D dao(
+        @NonNull Configuration configuration, @NonNull Class<D> daoClass) {
         Map<Class, Object> input = new LinkedHashMap<>();
-        input.put(Configuration.class, dsl().configuration());
+        input.put(Configuration.class, configuration);
         input.put(io.vertx.reactivex.core.Vertx.class, io.vertx.reactivex.core.Vertx.newInstance(vertx()));
         return ReflectionClass.createObject(daoClass, input);
     }
@@ -150,8 +171,19 @@ public interface EntityHandler {
      * @since 1.0.0
      */
     default @NonNull JDBCRXGenericQueryExecutor genericQuery() {
-        return new JDBCRXGenericQueryExecutor(dsl().configuration(),
-                                              io.vertx.reactivex.core.Vertx.newInstance(vertx()));
+        return genericQuery(dsl().configuration());
+    }
+
+    /**
+     * Get generic query executor.
+     *
+     * @param configuration the configuration
+     * @return the generic query executor
+     * @see JDBCRXGenericQueryExecutor
+     * @since 1.0.0
+     */
+    default @NonNull JDBCRXGenericQueryExecutor genericQuery(@NonNull Configuration configuration) {
+        return new JDBCRXGenericQueryExecutor(configuration, io.vertx.reactivex.core.Vertx.newInstance(vertx()));
     }
 
     /**

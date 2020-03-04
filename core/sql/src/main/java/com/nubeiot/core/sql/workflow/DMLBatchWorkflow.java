@@ -22,8 +22,6 @@ public interface DMLBatchWorkflow extends SQLWorkflow, SQLTransactionWorkflow {
     @NonNull DMLBatchStep sqlStep();
 
     @Override
-    default boolean inTransaction() {
-        return true;
-    }
+    boolean continueOnError();
 
 }

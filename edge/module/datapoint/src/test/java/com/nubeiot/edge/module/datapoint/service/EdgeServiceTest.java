@@ -2,20 +2,26 @@ package com.nubeiot.edge.module.datapoint.service;
 
 import java.util.Objects;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
+import io.reactivex.Maybe;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 
+import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.EventbusHelper;
+import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.RequestData.Filters;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.type.SyncAudit;
 import com.nubeiot.core.sql.type.TimeAudit;
@@ -66,6 +72,33 @@ public class EdgeServiceTest extends BaseDataPointServiceTest {
                                            .addPayload(req)
                                            .build();
         controller().fire(event, EventbusHelper.replyAsserter(context, registerAsserter(context)));
+    }
+
+    @Test
+    @Ignore
+    public void test_create_measure_unit(TestContext context) {
+        final JsonObject data = new JsonObject(
+            "{\"type\":\"millimeters_per_second\",\"symbol\":\"mm/s\",\"category\":\"VELOCITY\"}");
+        final RequestData req = RequestData.builder().body(data).build();
+        final RequestData reqGet = RequestData.builder()
+                                              .body(new JsonObject().put("unit_type", "millimeters_per_second"))
+                                              .build();
+        Async async = context.async();
+        controller().request(MeasureUnitService.class.getName(), EventMessage.initial(EventAction.CREATE, req))
+                    .doOnSuccess(msg -> System.out.println(msg.toJson()))
+                    .flatMap(msg -> controller().request(MeasureUnitService.class.getName(),
+                                                         EventMessage.initial(EventAction.GET_ONE, reqGet)))
+                    .filter(EventMessage::isError)
+                    .map(EventMessage::getError)
+                    .map(error -> {
+                        System.out.println("Has error");
+                        JsonHelper.assertJson(context, async, new JsonObject(
+                            "{\"code\":\"NOT_FOUND\"," + "\"message\":\"Not found resource with " +
+                            "unit_type=millimeters_per_second\"}"), error.toJson());
+                        return error.toJson();
+                    })
+                    .switchIfEmpty(Maybe.error(new RuntimeException("Should not here")))
+                    .subscribe(s -> TestHelper.testComplete(async), context::fail);
     }
 
     private Handler<JsonObject> registerAsserter(TestContext context) {

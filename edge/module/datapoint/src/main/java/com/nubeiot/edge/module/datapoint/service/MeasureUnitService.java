@@ -45,4 +45,8 @@ public final class MeasureUnitService extends AbstractEntityService<MeasureUnit,
         return Urls.toPathWithLC(context().modelClass().getSimpleName());
     }
 
+    //    @Override
+    //    public Single<JsonObject> afterCreate(Object key, @NonNull VertxPojo pojo, @NonNull RequestData reqData) {
+    //        return Single.error(new RuntimeException("After Create"));
+    //    }
 }

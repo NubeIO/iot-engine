@@ -3,6 +3,7 @@ package com.nubeiot.core.sql.query;
 import java.util.function.Function;
 
 import org.jooq.Condition;
+import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Table;
 import org.jooq.UpdatableRecord;
@@ -36,7 +37,7 @@ import lombok.NonNull;
  * @param <P> Type of {@code VertxPojo}
  * @since 1.0.0
  */
-//TODO lack unique keys validation
+//TODO lack unique keys validation. https://github.com/NubeIO/iot-engine/issues/321
 public interface EntityQueryExecutor<P extends VertxPojo> {
 
     /**
@@ -78,6 +79,10 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      */
     @NonNull EntityHandler entityHandler();
 
+    @NonNull Configuration runtimeConfiguration();
+
+    @NonNull EntityQueryExecutor runtimeConfiguration(Configuration configuration);
+
     /**
      * Declares query builder.
      *
@@ -98,7 +103,7 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      * @since 1.0.0
      */
     default <K, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> D dao(@NonNull Class<D> daoClass) {
-        return entityHandler().dao(daoClass);
+        return entityHandler().dao(runtimeConfiguration(), daoClass);
     }
 
     /**
@@ -118,19 +123,6 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      * @since 1.0.0
      */
     @NonNull Single<P> findOneByKey(@NonNull RequestData requestData);
-
-    /**
-     * Check whether resource is existed or not
-     *
-     * @param query Given query
-     * @return empty if resource is not existed or {@code true}
-     * @see QueryBuilder#exist(Table, Condition)
-     * @since 1.0.0
-     */
-    @NonNull
-    default Maybe<Boolean> fetchExists(@NonNull Function<DSLContext, Boolean> query) {
-        return executeAny(query).filter(b -> b).switchIfEmpty(Maybe.empty());
-    }
 
     /**
      * Get one resource by {@code primary key}
@@ -167,7 +159,7 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
                                                     @NonNull OperationValidator validator);
 
     /**
-     * Do delete data by primary
+     * Do delete data by {@code primary key}
      *
      * @param requestData Request data
      * @param validator   deletion validator
@@ -175,6 +167,33 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      * @since 1.0.0
      */
     @NonNull Single<P> deleteOneByKey(@NonNull RequestData requestData, @NonNull OperationValidator validator);
+
+    /**
+     * Execute any function
+     *
+     * @param <X>      Type of {@code result}
+     * @param function query function
+     * @return result single
+     * @apiNote Only using it in very complex case or special case
+     * @see QueryBuilder#view(JsonObject, Sort, Pagination)
+     * @see QueryBuilder#viewOne(JsonObject, Sort)
+     * @see QueryBuilder#exist(Table, Condition)
+     * @since 1.0.0
+     */
+    @NonNull <X> Single<X> executeAny(@NonNull Function<DSLContext, X> function);
+
+    /**
+     * Check whether resource is existed or not
+     *
+     * @param query Given query
+     * @return empty if resource is not existed or {@code true}
+     * @see QueryBuilder#exist(Table, Condition)
+     * @since 1.0.0
+     */
+    @NonNull
+    default Maybe<Boolean> fetchExists(@NonNull Function<DSLContext, Boolean> query) {
+        return executeAny(query).filter(b -> b).switchIfEmpty(Maybe.empty());
+    }
 
     /**
      * Check resource is able to delete by scanning reference resource to this resource
@@ -202,19 +221,5 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
                          .defaultIfEmpty(pojo)
                          .singleOrError();
     }
-
-    /**
-     * Execute any function
-     *
-     * @param <X>      Type of {@code result}
-     * @param function query function
-     * @return result single
-     * @apiNote Only using it in very complex case or special case
-     * @see QueryBuilder#view(JsonObject, Sort, Pagination)
-     * @see QueryBuilder#viewOne(JsonObject, Sort)
-     * @see QueryBuilder#exist(Table, Condition)
-     * @since 1.0.0
-     */
-    @NonNull <X> Single<X> executeAny(@NonNull Function<DSLContext, X> function);
 
 }

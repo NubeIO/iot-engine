@@ -2,8 +2,11 @@ package com.nubeiot.core.sql.workflow;
 
 import java.util.function.Function;
 
+import org.jooq.Configuration;
+
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
+import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
@@ -39,6 +42,13 @@ abstract class AbstractSQLWorkflow implements SQLWorkflow {
     private final EntityTaskExecuter.BlockingEntityTaskExecuter postExecuter;
     @NonNull
     private final EntityTaskExecuter.AsyncEntityTaskExecuter asyncPostExecuter;
+
+    @Override
+    public final @NonNull Single<JsonObject> run(@NonNull RequestData requestData) {
+        return run(requestData, null);
+    }
+
+    protected abstract @NonNull Single<JsonObject> run(@NonNull RequestData requestData, Configuration runtimeConfig);
 
     @NonNull OperationValidator afterValidation() {
         return OperationValidator.create(

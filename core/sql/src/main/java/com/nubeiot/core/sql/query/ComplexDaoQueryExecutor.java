@@ -7,6 +7,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.jooq.Condition;
+import org.jooq.Configuration;
 import org.jooq.Record;
 import org.jooq.RecordMapper;
 import org.jooq.ResultQuery;
@@ -32,24 +33,33 @@ import com.nubeiot.core.sql.service.marker.ReferencingEntityMarker;
 import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.core.utils.Strings;
 
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
 @SuppressWarnings("unchecked")
+@Accessors(fluent = true)
 final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGenericQueryExecutor
     implements ComplexQueryExecutor<CP>, InternalQueryExecutor<CP> {
 
-    private final EntityHandler handler;
+    @NonNull
+    @Getter
+    private final EntityHandler entityHandler;
+    @Setter
+    private Configuration runtimeConfiguration;
     private CompositeMetadata base;
     private EntityMetadata context;
+
     private EntityMetadata resource;
     private Predicate<EntityMetadata> existPredicate = m -> Objects.nonNull(context) &&
                                                             !m.singularKeyName().equals(context.singularKeyName());
     private Predicate<EntityMetadata> viewPredicate = existPredicate;
     private EntityReferences references;
 
-    ComplexDaoQueryExecutor(@NonNull EntityHandler handler) {
-        super(handler.dsl().configuration(), io.vertx.reactivex.core.Vertx.newInstance(handler.vertx()));
-        this.handler = handler;
+    ComplexDaoQueryExecutor(@NonNull EntityHandler entityHandler) {
+        super(entityHandler.dsl().configuration(), io.vertx.reactivex.core.Vertx.newInstance(entityHandler.vertx()));
+        this.entityHandler = entityHandler;
     }
 
     @Override
@@ -83,9 +93,8 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
         return this;
     }
 
-    @Override
-    public EntityHandler entityHandler() {
-        return handler;
+    public Configuration runtimeConfiguration() {
+        return Optional.ofNullable(runtimeConfiguration).orElseGet(entityHandler.dsl()::configuration);
     }
 
     @Override
@@ -186,6 +195,11 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
                                     .flatMap(dbEntity -> validator.validate(reqData, dbEntity))
                                     .map(dbEntity -> (CP) dbEntity)
                                     .flatMap(dbEntity -> doDelete(reqData, dbEntity));
+    }
+
+    @Override
+    public Configuration configuration() {
+        return runtimeConfiguration();
     }
 
     @Override

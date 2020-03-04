@@ -2,6 +2,8 @@ package com.nubeiot.core.sql.workflow;
 
 import java.util.function.BiFunction;
 
+import org.jooq.Configuration;
+
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
@@ -21,14 +23,13 @@ public final class DefaultDMLWorkflow extends AbstractSQLWorkflow implements DML
 
     @NonNull
     private final DMLStep sqlStep;
-    private final boolean inTransaction;
     @NonNull
     private final BiFunction<RequestData, DMLPojo, Single<JsonObject>> transformer;
 
     @Override
-    public Single<JsonObject> run(@NonNull RequestData requestData) {
+    protected @NonNull Single<JsonObject> run(@NonNull RequestData requestData, Configuration runtimeConfig) {
         final RequestData reqData = normalize().apply(requestData);
-        return sqlStep().execute(reqData, validator().andThen(afterValidation()))
+        return sqlStep().execute(reqData, validator().andThen(afterValidation()), runtimeConfig)
                         .flatMap(dmlPojo -> postExecuter().execute(initSuccessData(reqData, dmlPojo.dbEntity()))
                                                           .map(pojo -> DMLPojo.clone(dmlPojo, pojo))
                                                           .switchIfEmpty(Single.just(dmlPojo)))

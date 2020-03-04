@@ -5,7 +5,7 @@ import com.nubeiot.core.sql.workflow.step.DQLBatchStep;
 import lombok.NonNull;
 
 /**
- * DML workflow is used for querying list data from database.
+ * DQL workflow is used for querying list data from database.
  *
  * @see DQLWorkflow
  * @since 1.0.0

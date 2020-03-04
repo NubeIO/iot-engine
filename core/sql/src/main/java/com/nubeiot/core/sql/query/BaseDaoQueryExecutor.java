@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
+import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.ResultQuery;
@@ -29,20 +30,24 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
+@Getter
 @Accessors(fluent = true)
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @SuppressWarnings("unchecked")
 abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQueryExecutor<P> {
 
-    private final EntityHandler handler;
-    @Getter(value = AccessLevel.PUBLIC)
+    @NonNull
+    private final EntityHandler entityHandler;
+    @NonNull
     private final EntityMetadata metadata;
+    @Setter
+    private Configuration runtimeConfiguration;
 
-    @Override
-    public final EntityHandler entityHandler() {
-        return handler;
+    public final Configuration runtimeConfiguration() {
+        return Optional.ofNullable(runtimeConfiguration).orElseGet(entityHandler.dsl()::configuration);
     }
 
     @Override
@@ -53,8 +58,7 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQuer
     @Override
     public Observable<P> findMany(@NonNull RequestData reqData) {
         final Pagination paging = Optional.ofNullable(reqData.pagination()).orElse(Pagination.builder().build());
-        final Function<DSLContext, ? extends ResultQuery<? extends Record>> query = queryBuilder().view(
-            reqData.filter(), reqData.sort(), paging);
+        final Function<DSLContext, ? extends ResultQuery<? extends Record>> query = queryBuilder().view(reqData.filter(), reqData.sort(), paging);
         final VertxDAO dao = dao(metadata.daoClass());
         return ((Single<List<P>>) dao.queryExecutor().findMany(query)).flattenAsObservable(rs -> rs);
     }
@@ -64,7 +68,8 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQuer
                                                            @NonNull OperationValidator validator) {
         final VertxDAO dao = dao(metadata.daoClass());
         return validator.validate(reqData, null).flatMap(pojo -> {
-            final Optional<Object> opt = Optional.ofNullable(pojo.toJson().getValue(metadata.jsonKeyName())).map(k -> metadata.parseKey(k.toString()));
+            final Optional<Object> opt = Optional.ofNullable(pojo.toJson().getValue(metadata.jsonKeyName()))
+                                                 .map(k -> metadata.parseKey(k.toString()));
             return opt.map(key -> fetchExists(queryBuilder().exist(metadata, key)).map(b -> key))
                       .orElse(Maybe.empty())
                       .flatMap(k -> Maybe.error(metadata.alreadyExisted(Strings.kvMsg(metadata.requestKeyName(), k))))
@@ -104,7 +109,7 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQuer
 
     @Override
     public final <X> Single<X> executeAny(Function<DSLContext, X> function) {
-        return entityHandler().genericQuery().executeAny(function);
+        return entityHandler().genericQuery(runtimeConfiguration()).executeAny(function);
     }
 
     private String pojoKeyMsg(VertxPojo pojo) {

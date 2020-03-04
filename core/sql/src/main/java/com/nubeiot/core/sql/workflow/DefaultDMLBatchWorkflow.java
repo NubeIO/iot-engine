@@ -1,5 +1,7 @@
 package com.nubeiot.core.sql.workflow;
 
+import org.jooq.Configuration;
+
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
@@ -18,10 +20,10 @@ public final class DefaultDMLBatchWorkflow extends AbstractSQLWorkflow implement
 
     @NonNull
     private final DMLBatchStep sqlStep;
+    private final boolean continueOnError;
 
     @Override
-    public @NonNull Single<JsonObject> run(@NonNull RequestData requestData) {
-        //TODO #292 #293 #294
+    protected @NonNull Single<JsonObject> run(@NonNull RequestData requestData, Configuration runtimeConfig) {
         return Single.error(new UnsupportedOperationException("Not yet implemented"));
     }
 
