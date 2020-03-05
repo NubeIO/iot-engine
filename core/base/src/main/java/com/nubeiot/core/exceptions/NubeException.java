@@ -49,6 +49,7 @@ public class NubeException extends RuntimeException {
         CLUSTER_ERROR,
         EVENT_ERROR,
         DATABASE_ERROR,
+        TRANSACTION_ERROR,
         STATE_ERROR,
         TIMEOUT_ERROR,
         NETWORK_ERROR,

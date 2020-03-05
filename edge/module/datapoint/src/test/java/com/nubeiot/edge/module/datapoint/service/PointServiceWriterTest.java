@@ -2,6 +2,7 @@ package com.nubeiot.edge.module.datapoint.service;
 
 import java.util.UUID;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
@@ -273,6 +274,16 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
                                                    .put("network_id", PrimaryKey.BACNET_NETWORK.toString()))
                                      .build();
         asserter(context, true, expected, PointService.class.getName(), EventAction.PATCH, req);
+    }
+
+    @Test
+    @Ignore
+    public void test_delete_point(TestContext context) {
+        asserter(context, true, new JsonObject(), PointService.class.getName(), EventAction.REMOVE,
+                 RequestData.builder()
+                            .body(new JsonObject().put("point_id", PrimaryKey.P_GPIO_TEMP.toString()))
+                            .filter(new JsonObject().put("_force", true))
+                            .build());
     }
 
 }

@@ -15,6 +15,7 @@ import org.jooq.exception.DataAccessException;
 
 import io.reactivex.Single;
 
+import com.nubeiot.core.exceptions.DatabaseException.TransactionalException;
 import com.nubeiot.core.utils.Functions;
 
 import lombok.AccessLevel;
@@ -44,7 +45,7 @@ final class JDBCRXTransactionExecutorImpl implements JDBCRXTransactionExecutor {
                   .collect(Collectors.toList()));
         return Single.just(context)
                      .map(c -> beginTransaction(c, provider, listeners))
-                     .flatMap(ctx -> Functions.getOrThrow(RuntimeException::new,
+                     .flatMap(ctx -> Functions.getOrThrow(TransactionalException::new,
                                                           () -> transactional.run(ctx.configuration())))
                      .map(r -> {
                          commitTransaction(context, provider, listeners);
@@ -76,8 +77,10 @@ final class JDBCRXTransactionExecutorImpl implements JDBCRXTransactionExecutor {
         }
     }
 
-    private RuntimeException handleRollback(TransactionContext ctx, TransactionProvider provider,
-                                            TransactionListener listeners, Throwable cause) {
+    private RuntimeException handleRollback(@NonNull TransactionContext ctx, @NonNull TransactionProvider provider,
+                                            @NonNull TransactionListener listeners, @NonNull Throwable throwable) {
+        Throwable cause = throwable instanceof TransactionalException ? throwable.getCause() : throwable;
+
         // [#6608] [#7167] Errors are no longer handled differently
         if (cause instanceof Exception) {
             ctx.cause((Exception) cause);
