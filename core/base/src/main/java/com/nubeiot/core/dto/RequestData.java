@@ -142,6 +142,12 @@ public final class RequestData extends AbstractDTO {
          */
         public static final String INCLUDE = "_incl";
 
+        /**
+         * For {@code include}
+         */
+        //TODO handle force delete
+        public static final String FORCE = "_force";
+
     }
 
 }

@@ -41,6 +41,12 @@ public interface DataTransferObject extends Serializable, JsonData {
          */
         public static final String X_REQUEST_FORWARDED_FOR = "X-Forwarded-For";
 
+        /**
+         * For tracking correlation message in distributed message system
+         */
+        //TODO Add Correlation_Id system
+        public static final String X_CORRELATION_ID = "X-Correlation-ID";
+
     }
 
 

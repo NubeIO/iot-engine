@@ -45,33 +45,76 @@ public interface OneToOneParentEntityService<CP extends CompositePojo, CM extend
      * @since 1.0.0
      */
     default Maybe<CP> create(@NonNull RequestData reqData, @NonNull CP pojo, @NonNull Object key) {
+        return invoke(reqData, pojo, key, EventAction.CREATE);
+    }
+
+    /**
+     * Updates list of {@code one-to-one} dependant resources based on the given composite entity
+     *
+     * @param reqData the request data
+     * @param pojo    the composite pojo
+     * @param key     the composite pojo's primary key
+     * @return composite entity in maybe form
+     * @since 1.0.0
+     */
+    default Maybe<CP> update(@NonNull RequestData reqData, @NonNull CP pojo, @NonNull Object key) {
+        return invoke(reqData, pojo, key, EventAction.UPDATE);
+    }
+
+    /**
+     * Patches list of {@code one-to-one} dependant resources based on the given composite entity
+     *
+     * @param reqData the request data
+     * @param pojo    the composite pojo
+     * @param key     the composite pojo's primary key
+     * @return composite entity in maybe form
+     * @since 1.0.0
+     */
+    default Maybe<CP> patch(@NonNull RequestData reqData, @NonNull CP pojo, @NonNull Object key) {
+        return invoke(reqData, pojo, key, EventAction.PATCH);
+    }
+
+    /**
+     * Invokes the {@code one-to-one} dependant resource service based on the given composite entity
+     *
+     * @param reqData the req data
+     * @param pojo    the pojo
+     * @param key     the key
+     * @param action  the action
+     * @return the maybe
+     * @since 1.0.0
+     */
+    default Maybe<CP> invoke(@NonNull RequestData reqData, @NonNull CP pojo, @NonNull Object key,
+                             @NonNull EventAction action) {
         final Object pk = JsonData.checkAndConvert(key);
         return dependantEntities().toObservable()
                                   .flatMapMaybe(
-                                      en -> create(reqData, pojo, new JsonObject().put(en.getValue(), pk), en.getKey()))
+                                      en -> invoke(reqData, pojo, new JsonObject().put(en.getValue(), pk), en.getKey(),
+                                                   action))
                                   .reduce((p1, p2) -> p2)
                                   .defaultIfEmpty(pojo);
     }
 
     /**
-     * Creates {@code one-to-one} dependant resource based on the given composite entity
+     * Invokes the {@code one-to-one} dependant resource service based on the given composite entity
      *
      * @param requestData       the request data
      * @param pojo              the composite pojo
      * @param body              the body includes composite pojo key in dependant resource
      * @param dependantMetadata the dependant entity metadata
+     * @param action            the request action
      * @return composite entity in maybe form
      * @since 1.0.0
      */
-    default Maybe<CP> create(@NonNull RequestData requestData, @NonNull CP pojo, @NonNull JsonObject body,
-                             @NonNull EntityMetadata dependantMetadata) {
+    default Maybe<CP> invoke(@NonNull RequestData requestData, @NonNull CP pojo, @NonNull JsonObject body,
+                             @NonNull EntityMetadata dependantMetadata, @NonNull EventAction action) {
         final JsonObject dependant = requestData.body().getJsonObject(dependantMetadata.singularKeyName());
         if (Objects.isNull(dependant)) {
             return Maybe.just(pojo);
         }
         final JsonObject reqBody = dependant.mergeIn(body);
         final RequestData reqData = RequestData.builder().body(reqBody).headers(requestData.headers()).build();
-        return invoke(pojo, dependantMetadata, EventAction.CREATE, reqData,
+        return invoke(pojo, dependantMetadata, action, reqData,
                       json -> dependantMetadata.parseFromEntity(json.getJsonObject("resource", new JsonObject())));
     }
 
