@@ -1,11 +1,13 @@
 package com.nubeiot.core.workflow;
 
+import io.reactivex.annotations.Experimental;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.event.DeliveryEvent;
 
 import lombok.RequiredArgsConstructor;
 
+@Experimental
 @RequiredArgsConstructor
 public final class EventbusServiceRecord implements ServiceRecord {
 

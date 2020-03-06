@@ -17,7 +17,7 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.workflow.task.EntityDefinitionContext;
 import com.nubeiot.core.sql.workflow.task.EntityRuntimeContext;
-import com.nubeiot.core.sql.workflow.task.EntityTask;
+import com.nubeiot.core.sql.workflow.task.EntityTask.EntityNormalTask;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
 
 import lombok.Getter;
@@ -25,7 +25,8 @@ import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 @Accessors(fluent = true)
-public final class PointReferencedTask implements EntityTask<EntityDefinitionContext, PointComposite, PointComposite> {
+public final class PointReferencedTask
+    implements EntityNormalTask<EntityDefinitionContext, PointComposite, PointComposite> {
 
     private static final Set<EventAction> SUPPORTED_ACTION = new HashSet<>(
         Arrays.asList(EventAction.CREATE, EventAction.PATCH, EventAction.UPDATE, EventAction.GET_ONE));
@@ -41,12 +42,12 @@ public final class PointReferencedTask implements EntityTask<EntityDefinitionCon
     }
 
     @Override
-    public @NonNull Single<Boolean> isExecutable(@NonNull EntityRuntimeContext<PointComposite> executionContext) {
-        final EventAction action = executionContext.getOriginReqAction();
-        if (executionContext.isError() || !SUPPORTED_ACTION.contains(action)) {
+    public @NonNull Single<Boolean> isExecutable(@NonNull EntityRuntimeContext<PointComposite> runtimeContext) {
+        final EventAction action = runtimeContext.getOriginReqAction();
+        if (runtimeContext.isError() || !SUPPORTED_ACTION.contains(action)) {
             return Single.just(false);
         }
-        final RequestData reqData = executionContext.getOriginReqData();
+        final RequestData reqData = runtimeContext.getOriginReqData();
         if (action == EventAction.GET_ONE) {
             final Set<String> dependantKeys = Stream.of(referencedService.dependantEntities().keys(),
                                                         oneToOneService.dependantEntities().keys())
@@ -63,10 +64,10 @@ public final class PointReferencedTask implements EntityTask<EntityDefinitionCon
     }
 
     @Override
-    public @NonNull Maybe<PointComposite> execute(@NonNull EntityRuntimeContext<PointComposite> executionContext) {
-        return executionContext.getOriginReqAction() == EventAction.GET_ONE
-               ? onGet(executionContext)
-               : onDML(executionContext);
+    public @NonNull Maybe<PointComposite> execute(@NonNull EntityRuntimeContext<PointComposite> runtimeContext) {
+        return runtimeContext.getOriginReqAction() == EventAction.GET_ONE
+               ? onGet(runtimeContext)
+               : onDML(runtimeContext);
     }
 
     private Maybe<PointComposite> onDML(@NonNull EntityRuntimeContext<PointComposite> executionContext) {

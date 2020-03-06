@@ -1,5 +1,6 @@
 package com.nubeiot.core.workflow;
 
+import io.reactivex.annotations.Experimental;
 import io.vertx.core.Vertx;
 
 import com.nubeiot.core.component.SharedDataDelegate;
@@ -12,6 +13,7 @@ import lombok.NonNull;
 /**
  * Workflow executor
  */
+@Experimental
 public interface WorkflowExecutor<D extends WorkflowDefinition> {
 
     /**

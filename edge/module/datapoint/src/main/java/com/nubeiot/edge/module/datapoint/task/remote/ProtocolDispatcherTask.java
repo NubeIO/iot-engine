@@ -44,16 +44,16 @@ public final class ProtocolDispatcherTask
     }
 
     @Override
-    public @NonNull Single<Boolean> isExecutable(@NonNull EntityRuntimeContext<VertxPojo> executionContext) {
-        return fromCache(executionContext).isEmpty().map(b -> !b);
+    public @NonNull Single<Boolean> isExecutable(@NonNull EntityRuntimeContext<VertxPojo> runtimeContext) {
+        return fromCache(runtimeContext).isEmpty().map(b -> !b);
     }
 
     @Override
-    public @NonNull Maybe<VertxPojo> execute(@NonNull EntityRuntimeContext<VertxPojo> executionContext) {
-        return fromCache(executionContext).filter(pojo -> isNotRoundRobin(pojo, executionContext.getOriginReqData()))
-                                          .map(ProtocolDispatcher::getAddress)
-                                          .flatMapSingleElement(address -> dispatch(address, executionContext))
-                                          .defaultIfEmpty(executionContext.getData());
+    public @NonNull Maybe<VertxPojo> execute(@NonNull EntityRuntimeContext<VertxPojo> runtimeContext) {
+        return fromCache(runtimeContext).filter(pojo -> isNotRoundRobin(pojo, runtimeContext.getOriginReqData()))
+                                        .map(ProtocolDispatcher::getAddress)
+                                        .flatMapSingleElement(address -> dispatch(address, runtimeContext))
+                                        .defaultIfEmpty(runtimeContext.getData());
     }
 
     private boolean isNotRoundRobin(@NonNull ProtocolDispatcher pojo, @NonNull RequestData originReqData) {

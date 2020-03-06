@@ -7,13 +7,13 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.workflow.TaskExecutionContext;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.experimental.SuperBuilder;
 
 @Getter
-@Builder(builderClassName = "Builder")
-public final class EntityRuntimeContext<D extends VertxPojo> implements TaskExecutionContext<D> {
+@SuperBuilder
+public class EntityRuntimeContext<P extends VertxPojo> implements TaskExecutionContext<P> {
 
     @NonNull
     private final RequestData originReqData;
@@ -21,7 +21,7 @@ public final class EntityRuntimeContext<D extends VertxPojo> implements TaskExec
     private final EventAction originReqAction;
     @NonNull
     private final EntityMetadata metadata;
-    private final D data;
+    private final P data;
     private final Throwable throwable;
 
 }
