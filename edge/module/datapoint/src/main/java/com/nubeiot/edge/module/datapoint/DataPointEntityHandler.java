@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.jooq.Catalog;
 import org.jooq.Configuration;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
@@ -36,6 +37,7 @@ import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter.AsyncEntityTaskExec
 import com.nubeiot.core.utils.Functions;
 import com.nubeiot.edge.module.datapoint.task.sync.SyncServiceFactory;
 import com.nubeiot.iotdata.dto.Protocol;
+import com.nubeiot.iotdata.edge.model.DefaultCatalog;
 import com.nubeiot.iotdata.edge.model.Keys;
 import com.nubeiot.iotdata.edge.model.tables.interfaces.INetwork;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;
@@ -53,6 +55,11 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
     @Override
     public @NonNull Class keyClass() {
         return Keys.class;
+    }
+
+    @Override
+    public @NonNull Catalog catalog() {
+        return DefaultCatalog.DEFAULT_CATALOG;
     }
 
     @Override

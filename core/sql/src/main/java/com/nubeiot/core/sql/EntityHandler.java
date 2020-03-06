@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.jooq.Catalog;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.UpdatableRecord;
@@ -55,6 +56,14 @@ public interface EntityHandler {
     static <P extends VertxPojo> P parse(@NonNull Class<P> pojoClass, @NonNull Object data) {
         return parse(pojoClass, JsonData.tryParse(data).toJson());
     }
+
+    /**
+     * Defines database catalog.
+     *
+     * @return the catalog
+     * @since 1.0.0
+     */
+    @NonNull Catalog catalog();
 
     /**
      * Get Vertx.

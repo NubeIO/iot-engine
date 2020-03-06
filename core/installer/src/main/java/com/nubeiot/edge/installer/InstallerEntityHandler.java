@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.jooq.Catalog;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
@@ -28,6 +29,7 @@ import com.nubeiot.core.sql.SchemaHandler;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.installer.InstallerConfig.RepositoryConfig;
 import com.nubeiot.edge.installer.loader.ModuleTypeRule;
+import com.nubeiot.edge.installer.model.DefaultCatalog;
 import com.nubeiot.edge.installer.model.Tables;
 import com.nubeiot.edge.installer.model.dto.RequestedServiceData;
 import com.nubeiot.edge.installer.model.tables.daos.TblModuleDao;
@@ -57,8 +59,8 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler {
     }
 
     @Override
-    public @NonNull SchemaHandler schemaHandler() {
-        return new InstallerSchemaHandler();
+    public @NonNull Catalog catalog() {
+        return DefaultCatalog.DEFAULT_CATALOG;
     }
 
     @Override
@@ -68,6 +70,11 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler {
             InstallerRepository.create(handler.vertx()).setup(installerCfg.getRepoConfig(), dataDir());
             return handler;
         });
+    }
+
+    @Override
+    public @NonNull SchemaHandler schemaHandler() {
+        return new InstallerSchemaHandler();
     }
 
     public final TblModuleDao moduleDao() {

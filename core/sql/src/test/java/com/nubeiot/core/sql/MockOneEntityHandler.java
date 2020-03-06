@@ -6,6 +6,7 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 
+import org.jooq.Catalog;
 import org.jooq.Configuration;
 
 import io.reactivex.Single;
@@ -13,6 +14,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
+import com.nubeiot.core.sql.mock.oneschema.DefaultCatalog;
 import com.nubeiot.core.sql.mock.oneschema.Keys;
 import com.nubeiot.core.sql.mock.oneschema.Tables;
 import com.nubeiot.core.sql.mock.oneschema.tables.daos.AuthorDao;
@@ -60,8 +62,13 @@ public class MockOneEntityHandler extends AbstractEntityHandler implements Entit
     }
 
     @Override
+    public @NonNull Catalog catalog() {
+        return DefaultCatalog.DEFAULT_CATALOG;
+    }
+
+    @Override
     public @NonNull SchemaHandler schemaHandler() {
-        return createSchemaHandler(entityHandler -> {
+        return createSchemaHandler(handler -> {
             Single<Integer> insert00 = languageDao.insert(lang());
             Single<Integer> insert01 = authorDao.insert(author());
             Single<Integer> insert02 = bookDao.insert(book());

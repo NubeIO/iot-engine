@@ -8,7 +8,6 @@ import com.nubeiot.core.micro.register.EventHttpServiceRegister;
 import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
 import com.nubeiot.edge.module.datapoint.service.DataPointService;
-import com.nubeiot.iotdata.edge.model.DefaultCatalog;
 
 public final class DataPointVerticle extends ContainerVerticle {
 
@@ -25,7 +24,7 @@ public final class DataPointVerticle extends ContainerVerticle {
             .addSharedData(DataPointIndex.BUILTIN_DATA, pointCfg.getBuiltinData().toJson())
             .addSharedData(DataPointIndex.DATA_SYNC_CFG, pointCfg.getDataSyncConfig().toJson())
             .addProvider(new MicroserviceProvider(), ctx -> microCtx = (MicroContext) ctx)
-            .addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, DataPointEntityHandler.class),
+            .addProvider(new SqlProvider<>(DataPointEntityHandler.class),
                          ctx -> entityHandler = ((SqlContext<DataPointEntityHandler>) ctx).getEntityHandler())
             .registerSuccessHandler(v -> successHandler());
     }

@@ -2,7 +2,6 @@ package com.nubeiot.core.sql;
 
 import java.util.Optional;
 
-import org.jooq.Catalog;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.Table;
@@ -78,7 +77,7 @@ public interface SchemaHandler {
     @NonNull SchemaMigrator migrator();
 
     /**
-     * Declares readiness address for notification after {@link #execute(EntityHandler, Catalog)}.
+     * Declares readiness address for notification after {@link #execute(EntityHandler)}.
      *
      * @param entityHandler given handler for helping lookup dynamic {@code address}
      * @return readiness address
@@ -93,17 +92,16 @@ public interface SchemaHandler {
      * Do execute the initialization task or migration task.
      *
      * @param entityHandler the entity handler
-     * @param catalog       the catalog
      * @return the event message in single
      * @see EntityHandler
      * @see #initializer()
      * @see #migrator()
      * @since 1.0.0
      */
-    default @NonNull Single<EventMessage> execute(@NonNull EntityHandler entityHandler, @NonNull Catalog catalog) {
+    default @NonNull Single<EventMessage> execute(@NonNull EntityHandler entityHandler) {
         final Single<EventMessage> result = isNew(entityHandler.dsl())
-                                            ? initializer().execute(entityHandler, catalog)
-                                            : migrator().execute(entityHandler, catalog);
+                                            ? initializer().execute(entityHandler)
+                                            : migrator().execute(entityHandler);
         final EventbusClient c = entityHandler.eventClient();
         final String address = readinessAddress(entityHandler);
         return result.doOnError(t -> c.publish(address, EventMessage.initial(EventAction.NOTIFY_ERROR,

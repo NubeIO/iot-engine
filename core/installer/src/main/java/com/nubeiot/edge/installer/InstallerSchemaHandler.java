@@ -29,7 +29,7 @@ final class InstallerSchemaHandler implements SchemaHandler {
 
     @Override
     public @NonNull SchemaMigrator migrator() {
-        return (entityHandler, catalog) -> {
+        return entityHandler -> {
             InstallerEntityHandler handler = (InstallerEntityHandler) entityHandler;
             return handler.transitionPendingModules().map(r -> EventMessage.success(EventAction.MIGRATE, r));
         };

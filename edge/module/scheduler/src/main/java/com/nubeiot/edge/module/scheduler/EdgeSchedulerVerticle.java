@@ -7,7 +7,6 @@ import com.nubeiot.core.micro.register.EventHttpServiceRegister;
 import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
 import com.nubeiot.edge.module.scheduler.service.SchedulerService;
-import com.nubeiot.iotdata.scheduler.model.DefaultCatalog;
 import com.nubeiot.scheduler.QuartzSchedulerContext;
 import com.nubeiot.scheduler.SchedulerProvider;
 
@@ -30,7 +29,7 @@ public final class EdgeSchedulerVerticle extends ContainerVerticle {
     @SuppressWarnings("unchecked")
     public void start() {
         super.start();
-        this.addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, entityHandlerClass),
+        this.addProvider(new SqlProvider<>(entityHandlerClass),
                          ctx -> entityHandler = ((SqlContext<SchedulerEntityHandler>) ctx).getEntityHandler())
             .addProvider(new MicroserviceProvider(), ctx -> microCtx = (MicroContext) ctx)
             .addProvider(new SchedulerProvider(), ctx -> schedulerCtx = (QuartzSchedulerContext) ctx)

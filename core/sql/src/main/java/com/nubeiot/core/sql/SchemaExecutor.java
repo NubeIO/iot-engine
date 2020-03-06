@@ -1,7 +1,5 @@
 package com.nubeiot.core.sql;
 
-import org.jooq.Catalog;
-
 import io.reactivex.Single;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -31,11 +29,10 @@ public interface SchemaExecutor {
      * Execute task.
      *
      * @param entityHandler entity handler
-     * @param catalog       the catalog
      * @return the result in single
      * @see EntityHandler
      * @since 1.0.0
      */
-    Single<EventMessage> execute(@NonNull EntityHandler entityHandler, @NonNull Catalog catalog);
+    Single<EventMessage> execute(@NonNull EntityHandler entityHandler);
 
 }

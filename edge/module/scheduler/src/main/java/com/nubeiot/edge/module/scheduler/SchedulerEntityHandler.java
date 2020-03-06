@@ -1,5 +1,6 @@
 package com.nubeiot.edge.module.scheduler;
 
+import org.jooq.Catalog;
 import org.jooq.Configuration;
 
 import io.reactivex.Observable;
@@ -20,6 +21,7 @@ import com.nubeiot.edge.module.scheduler.pojos.JobTriggerComposite;
 import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata;
 import com.nubeiot.edge.module.scheduler.utils.SchedulerConverter.JobConverter;
 import com.nubeiot.edge.module.scheduler.utils.SchedulerConverter.TriggerConverter;
+import com.nubeiot.iotdata.scheduler.model.DefaultCatalog;
 import com.nubeiot.iotdata.scheduler.model.Keys;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.JobEntity;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.TriggerEntity;
@@ -35,6 +37,11 @@ class SchedulerEntityHandler extends AbstractEntityHandler
 
     public SchedulerEntityHandler(@NonNull Configuration jooqConfig, @NonNull Vertx vertx) {
         super(jooqConfig, vertx);
+    }
+
+    @Override
+    public @NonNull Catalog catalog() {
+        return DefaultCatalog.DEFAULT_CATALOG;
     }
 
     @Override

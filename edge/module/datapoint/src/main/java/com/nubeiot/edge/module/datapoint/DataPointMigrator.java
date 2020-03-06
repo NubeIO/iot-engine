@@ -2,7 +2,6 @@ package com.nubeiot.edge.module.datapoint;
 
 import java.util.Optional;
 
-import org.jooq.Catalog;
 import org.jooq.impl.DSL;
 
 import io.reactivex.Single;
@@ -20,7 +19,7 @@ import lombok.NonNull;
 final class DataPointMigrator implements SchemaMigrator {
 
     @Override
-    public Single<EventMessage> execute(@NonNull EntityHandler entityHandler, @NonNull Catalog catalog) {
+    public Single<EventMessage> execute(@NonNull EntityHandler entityHandler) {
         final DataPointEntityHandler handler = (DataPointEntityHandler) entityHandler;
         return handler.dao(EdgeMetadata.INSTANCE)
                       .findOneByCondition(DSL.trueCondition())
