@@ -38,7 +38,7 @@ public final class BACnetNetworkCache extends AbstractLocalCache<String, Communi
 
     @Override
     protected String keyLabel() {
-        return String.class.getName();
+        return "Protocol identifier";
     }
 
     @Override

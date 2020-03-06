@@ -1,10 +1,15 @@
 package com.nubeiot.core.cache;
 
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
 public final class ClassGraphCache<K, T> extends AbstractLocalCache<K, Class<T>, ClassGraphCache> {
+
+    private final String keyLabel;
 
     @Override
     protected String keyLabel() {
-        return null;
+        return keyLabel;
     }
 
     @Override

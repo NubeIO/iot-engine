@@ -30,15 +30,18 @@ public abstract class AbstractLocalCache<K, V, C extends AbstractLocalCache> imp
     @Override
     public V get(@NonNull K key) {
         V val = cache.get(key);
-        if (Objects.isNull(discover) || Objects.nonNull(val)) {
+        if (Objects.isNull(discover)) {
+            return val;
+        }
+        if (Objects.nonNull(val)) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Get {} by {} from cache", valueLabel(),
+                logger.debug("Get {} by {}:{} from cache", valueLabel(), keyLabel(),
                              key instanceof JsonData ? ((JsonData) key).toJson() : key);
             }
             return val;
         }
         if (logger.isDebugEnabled()) {
-            logger.debug("Find {} by {} then put into cache", valueLabel(),
+            logger.debug("Find {} by {}:{} then put into cache", valueLabel(), keyLabel(),
                          key instanceof JsonData ? ((JsonData) key).toJson() : key);
         }
         return cache.computeIfAbsent(key, discover);
@@ -61,8 +64,10 @@ public abstract class AbstractLocalCache<K, V, C extends AbstractLocalCache> imp
         return (C) this;
     }
 
+    @NonNull
     protected abstract String keyLabel();
 
+    @NonNull
     protected abstract String valueLabel();
 
 }

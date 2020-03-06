@@ -35,10 +35,11 @@ abstract class AbstractDittoTask<D extends VertxPojo> implements SyncTask<DittoT
 
     AbstractDittoTask(@NonNull DittoTaskContext definitionContext) {
         this.definitionContext = definitionContext;
-        final @NonNull EntityHandler handler = this.definitionContext.entityHandler();
+        final @NonNull EntityHandler handler = definitionContext.entityHandler();
         this.definitionContext.vertx()
                               .executeBlocking(future -> future.complete(
-                                  new ClassGraphCache<EntityMetadata, IDittoModel>().register(IDittoModel::find)),
+                                  new ClassGraphCache<EntityMetadata, IDittoModel>("Entity Metadata").register(
+                                      IDittoModel::find)),
                                                result -> handler.addSharedData(SYNC_CONFIG_CACHE, result.result()));
     }
 

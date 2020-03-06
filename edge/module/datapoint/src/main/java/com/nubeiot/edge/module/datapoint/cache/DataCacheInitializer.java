@@ -19,7 +19,7 @@ public final class DataCacheInitializer implements CacheInitializer<DataCacheIni
 
     @Override
     public DataCacheInitializer init(@NonNull EntityHandler context) {
-        final ClassGraphCache<String, DataJobDefinition> jobDefinitionCache = new ClassGraphCache<>();
+        final ClassGraphCache<String, DataJobDefinition> jobDefinitionCache = new ClassGraphCache<>("Scheduler Job");
         DataJobDefinition.MAPPER.setInjectableValues(new Std().addValue(JOB_CONFIG_CACHE, jobDefinitionCache));
         addBlockingCache(context, JOB_CONFIG_CACHE, () -> jobDefinitionCache.register(DataJobDefinition::find));
         addBlockingCache(context, HISTORIES_DATA_CACHE, PointHistoryCache::new);

@@ -27,8 +27,8 @@ public class IDittoModelTest {
     public void setup() {
         vertx = Vertx.vertx();
         SharedDataDelegate.addLocalDataValue(vertx, this.getClass().getName(), AbstractDittoTask.SYNC_CONFIG_CACHE,
-                                             new ClassGraphCache<EntityMetadata, IDittoModel>().register(
-                                                 IDittoModel::find));
+                                             new ClassGraphCache<EntityMetadata, IDittoModel>(
+                                                 "Entity Metadata").register(IDittoModel::find));
     }
 
     @Test

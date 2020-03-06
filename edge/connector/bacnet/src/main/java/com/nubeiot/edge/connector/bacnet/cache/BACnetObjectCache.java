@@ -13,12 +13,12 @@ public final class BACnetObjectCache extends AbstractLocalCache<CommunicationPro
 
     @Override
     protected String keyLabel() {
-        return null;
+        return CommunicationProtocol.class.getName();
     }
 
     @Override
     protected String valueLabel() {
-        return null;
+        return BACnetDevice.class.getName();
     }
 
     @Override
