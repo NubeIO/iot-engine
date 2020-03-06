@@ -94,7 +94,7 @@ public interface ReferencedEntityService<CP extends CompositePojo, CM extends Co
      * @param filter            the given filter on dependant resource
      * @param dependantMetadata the given dependant metadata
      * @return composite entity in maybe form
-     * @see #get(CompositePojo, Object, Set) #doGet(CompositePojo, Object, Set)
+     * @see #get(CompositePojo, Object, Set)
      * @see EntityMetadata
      * @since 1.0.0
      */

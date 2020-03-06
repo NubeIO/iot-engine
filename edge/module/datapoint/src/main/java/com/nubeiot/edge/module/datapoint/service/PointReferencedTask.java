@@ -2,6 +2,7 @@ package com.nubeiot.edge.module.datapoint.service;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -26,6 +27,8 @@ import lombok.experimental.Accessors;
 @Accessors(fluent = true)
 public final class PointReferencedTask implements EntityTask<EntityDefinitionContext, PointComposite, PointComposite> {
 
+    private static final Set<EventAction> SUPPORTED_ACTION = new HashSet<>(
+        Arrays.asList(EventAction.CREATE, EventAction.PATCH, EventAction.UPDATE, EventAction.GET_ONE));
     @Getter
     private final EntityDefinitionContext definitionContext;
     private final PointReferencedService referencedService;
@@ -40,7 +43,7 @@ public final class PointReferencedTask implements EntityTask<EntityDefinitionCon
     @Override
     public @NonNull Single<Boolean> isExecutable(@NonNull EntityRuntimeContext<PointComposite> executionContext) {
         final EventAction action = executionContext.getOriginReqAction();
-        if (executionContext.isError() || !(action == EventAction.CREATE || action == EventAction.GET_ONE)) {
+        if (executionContext.isError() || !SUPPORTED_ACTION.contains(action)) {
             return Single.just(false);
         }
         final RequestData reqData = executionContext.getOriginReqData();
@@ -63,12 +66,13 @@ public final class PointReferencedTask implements EntityTask<EntityDefinitionCon
     public @NonNull Maybe<PointComposite> execute(@NonNull EntityRuntimeContext<PointComposite> executionContext) {
         return executionContext.getOriginReqAction() == EventAction.GET_ONE
                ? onGet(executionContext)
-               : onCreate(executionContext);
+               : onDML(executionContext);
     }
 
-    private Maybe<PointComposite> onCreate(@NonNull EntityRuntimeContext<PointComposite> executionContext) {
+    private Maybe<PointComposite> onDML(@NonNull EntityRuntimeContext<PointComposite> executionContext) {
         final PointComposite pojo = executionContext.getData();
-        return oneToOneService.create(executionContext.getOriginReqData(), pojo, pojo.getId());
+        return oneToOneService.invoke(executionContext.getOriginReqData(), pojo, pojo.getId(),
+                                      executionContext.getOriginReqAction());
     }
 
     private Maybe<PointComposite> onGet(@NonNull EntityRuntimeContext<PointComposite> executionContext) {
