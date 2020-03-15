@@ -14,10 +14,10 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.dto.Sort;
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.HiddenException.ImplementationError;
@@ -175,8 +175,8 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      * @param function query function
      * @return result single
      * @apiNote Only using it in very complex case or special case
-     * @see QueryBuilder#view(JsonObject, Sort, Pagination)
-     * @see QueryBuilder#viewOne(JsonObject, Sort)
+     * @see QueryBuilder#view(RequestFilter, Sort, Pagination)
+     * @see QueryBuilder#viewOne(RequestFilter, Sort)
      * @see QueryBuilder#exist(Table, Condition)
      * @since 1.0.0
      */

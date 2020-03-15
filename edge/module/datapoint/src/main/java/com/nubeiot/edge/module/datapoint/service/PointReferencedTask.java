@@ -11,7 +11,6 @@ import io.reactivex.Maybe;
 import io.reactivex.Single;
 
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.dto.RequestData.Filters;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
@@ -54,8 +53,7 @@ public final class PointReferencedTask
                                                     .flatMap(Collection::stream)
                                                     .map(EntityMetadata::singularKeyName)
                                                     .collect(Collectors.toSet());
-            return Single.just(Arrays.stream(reqData.filter().getString(Filters.INCLUDE, "").split(","))
-                                     .anyMatch(dependantKeys::contains));
+            return Single.just(reqData.filter().getIncludes().stream().anyMatch(dependantKeys::contains));
         }
         return Single.just(oneToOneService.dependantEntities()
                                           .keys()
@@ -79,8 +77,7 @@ public final class PointReferencedTask
     private Maybe<PointComposite> onGet(@NonNull EntityRuntimeContext<PointComposite> executionContext) {
         final RequestData reqData = executionContext.getOriginReqData();
         final PointComposite pojo = executionContext.getData();
-        final Set<String> dependants = Arrays.stream(reqData.filter().getString(Filters.INCLUDE, "").split(","))
-                                             .collect(Collectors.toSet());
+        final Set<String> dependants = reqData.filter().getIncludes();
         return referencedService.get(pojo, pojo.getId(), dependants)
                                 .flatMap(p -> oneToOneService.get(p, p.getId(), dependants));
     }

@@ -11,6 +11,7 @@ import java.util.function.Function;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.sql.decorator.RequestDecorator;
 import com.nubeiot.core.sql.decorator.RequestDecoratorExtension;
 import com.nubeiot.core.sql.service.AbstractEntityService;
@@ -99,9 +100,9 @@ public interface NetworkExtension extends RequestDecoratorExtension {
     @Override
     @NonNull
     default RequestData optimizeRequestFilter(@NonNull RequestData reqData) {
-        return reqData.filter(
+        return reqData.filter(new RequestFilter(
             optimizeAlias(filterKeys(), getSharedDataValue(DataPointIndex.DEFAULT_NETWORK_ID), reqData.filter(),
-                          false));
+                          false)));
     }
 
 }

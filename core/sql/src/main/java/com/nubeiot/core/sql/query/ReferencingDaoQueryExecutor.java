@@ -9,9 +9,9 @@ import org.jooq.UpdatableRecord;
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
-import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.dto.Sort;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
@@ -34,7 +34,7 @@ final class ReferencingDaoQueryExecutor<K, P extends VertxPojo, R extends Updata
     @SuppressWarnings("unchecked")
     public Single<P> findOneByKey(RequestData reqData) {
         final K pk = metadata().parseKey(reqData);
-        final JsonObject filter = reqData.filter();
+        final RequestFilter filter = reqData.filter();
         final Sort sort = reqData.sort();
         final DAO dao = dao(metadata().daoClass());
         return dao.queryExecutor()

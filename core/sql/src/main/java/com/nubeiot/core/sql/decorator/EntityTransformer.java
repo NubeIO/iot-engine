@@ -14,7 +14,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.dto.RequestData.Filters;
+import com.nubeiot.core.dto.RequestFilter.Filters;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityMetadata;
@@ -93,7 +93,7 @@ public interface EntityTransformer {
      * @since 1.0.0
      */
     default Set<String> ignoreFields(@NonNull RequestData requestData) {
-        return requestData.hasAudit() ? Collections.emptySet() : AUDIT_FIELDS;
+        return requestData.filter().hasAudit() ? Collections.emptySet() : AUDIT_FIELDS;
     }
 
     /**

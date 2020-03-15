@@ -17,7 +17,7 @@ import com.nubeiot.core.TestHelper.EventbusHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.dto.RequestData.Filters;
+import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
@@ -64,7 +64,7 @@ public class EdgeServiceTest extends BaseDataPointServiceTest {
     public void test_get_edge_with_audit(TestContext context) {
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("edge_id", PrimaryKey.EDGE.toString()))
-                                     .filter(new JsonObject().put(Filters.AUDIT, true))
+                                     .filter(new JsonObject().put(RequestFilter.Filters.AUDIT, true))
                                      .build();
         DeliveryEvent event = DeliveryEvent.builder()
                                            .action(EventAction.GET_ONE)

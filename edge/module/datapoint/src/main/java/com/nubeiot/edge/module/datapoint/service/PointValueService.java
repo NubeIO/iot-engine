@@ -13,7 +13,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.dto.RequestData.Filters;
+import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventMessage;
@@ -90,8 +90,8 @@ public final class PointValueService extends AbstractOneToOneChildEntityService<
     @Override
     public JsonObject doTransform(EventAction action, Object key, VertxPojo pojo, RequestData reqData,
                                   BiFunction<VertxPojo, RequestData, JsonObject> converter) {
-        if (Objects.nonNull(reqData.filter()) && reqData.filter().getBoolean(Filters.TEMP_AUDIT, false)) {
-            reqData.filter().remove(Filters.AUDIT);
+        if (Objects.nonNull(reqData.filter()) && reqData.filter().hasTempAudit()) {
+            reqData.filter().remove(RequestFilter.Filters.AUDIT);
         }
         return super.doTransform(action, key, pojo, reqData, converter);
     }
@@ -147,11 +147,11 @@ public final class PointValueService extends AbstractOneToOneChildEntityService<
     }
 
     private @NonNull RequestData recomputeRequestData(RequestData reqData) {
-        JsonObject filter = Optional.ofNullable(reqData.filter()).orElse(new JsonObject());
-        if (!filter.getBoolean(Filters.AUDIT, false)) {
-            filter.put(Filters.TEMP_AUDIT, true);
+        final RequestFilter filter = reqData.filter();
+        if (!filter.hasAudit()) {
+            filter.put(RequestFilter.Filters.TEMP_AUDIT, true);
         }
-        filter.put(Filters.AUDIT, true);
+        filter.put(RequestFilter.Filters.AUDIT, true);
         return RequestData.builder()
                           .headers(reqData.headers())
                           .body(reqData.body())

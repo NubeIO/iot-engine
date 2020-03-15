@@ -22,6 +22,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
@@ -110,7 +111,7 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
 
     @Override
     public Single<CP> findOneByKey(@NonNull RequestData requestData) {
-        final JsonObject filter = requestData.filter();
+        final RequestFilter filter = requestData.filter();
         final Single<? extends ResultQuery<? extends Record>> result = executeAny(
             queryBuilder().viewOne(filter, requestData.sort()));
         return result.map(r -> Optional.ofNullable(r.fetchOne(toMapper())))
@@ -122,7 +123,8 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
 
     @Override
     public Single<CP> lookupByPrimaryKey(@NonNull Object primaryKey) {
-        final JsonObject filter = new JsonObject().put(base.jsonKeyName(), JsonData.checkAndConvert(primaryKey));
+        final RequestFilter filter = (RequestFilter) new RequestFilter().put(base.jsonKeyName(),
+                                                                             JsonData.checkAndConvert(primaryKey));
         return executeAny(queryBuilder().viewOne(filter, null)).map(r -> Optional.ofNullable(r.fetchOne(toMapper())))
                                                                .filter(Optional::isPresent)
                                                                .switchIfEmpty(Single.error(base.notFound(primaryKey)))
@@ -146,7 +148,7 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
                 if (Objects.isNull(sKey)) {
                     throw new IllegalArgumentException("Missing " + resource.singularKeyName() + " data");
                 }
-                final JsonObject filter = reqData.filter();
+                final RequestFilter filter = reqData.filter();
                 return isExist(cKey, sKey, filter).filter(p -> Objects.isNull(p.prop(context.requestKeyName())))
                                                   .switchIfEmpty(Single.error(
                                                       base.alreadyExisted(base.msg(filter, references.keys()))))
@@ -216,7 +218,7 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
         return Optional.ofNullable(data).map(d -> d.getValue(metadata.jsonKeyName())).orElse(null);
     }
 
-    private Single<CP> isExist(@NonNull Object ctxKey, @NonNull Object resourceKey, @NonNull JsonObject filter) {
+    private Single<CP> isExist(@NonNull Object ctxKey, @NonNull Object resourceKey, @NonNull RequestFilter filter) {
         final QueryBuilder queryBuilder = queryBuilder().predicate(existPredicate);
         final Maybe<Boolean> isExist = fetchExists(queryBuilder.exist(context, ctxKey));
         return isExist.switchIfEmpty(Single.error(context.notFound(ctxKey)))

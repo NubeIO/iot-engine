@@ -9,9 +9,9 @@ import java.util.UUID;
 
 import io.reactivex.Maybe;
 import io.reactivex.Single;
-import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
+import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.dto.Sort;
 import com.nubeiot.core.dto.Sort.SortType;
 import com.nubeiot.core.event.EventAction;
@@ -98,8 +98,8 @@ public final class HistoryDataService extends AbstractReferencingEntityService<P
             logger.info("Last history of point {} from cache", point);
             return Maybe.just(his);
         }
-        final JsonObject filter = new JsonObject().put(context().table().POINT.getName(),
-                                                       JsonData.checkAndConvert(point));
+        final RequestFilter filter = (RequestFilter) new RequestFilter().put(context().table().POINT.getName(),
+                                                                             JsonData.checkAndConvert(point));
         final Sort sort = Sort.builder().item(context().table().TIME.getName(), SortType.DESC).build();
         return queryExecutor().executeAny(queryExecutor().queryBuilder().viewOne(filter, sort))
                               .map(rr -> rr.fetchOptionalInto(PointHistoryData.class))

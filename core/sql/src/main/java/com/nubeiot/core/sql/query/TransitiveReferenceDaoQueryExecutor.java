@@ -18,6 +18,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.service.marker.EntityReferences;
@@ -104,6 +105,7 @@ final class TransitiveReferenceDaoQueryExecutor<K, P extends VertxPojo, R extend
                          .collectInto(new JsonObject(),
                                       (json, obj) -> json.put(obj.getKey(), JsonData.checkAndConvert(obj.getValue())))
                          .map(json -> json.put(refField, JsonData.checkAndConvert(referenceKey)))
+                         .map(RequestFilter::new)
                          .flatMap(filter -> fetchExists(queryBuilder.exist(context, filter)).switchIfEmpty(
                              Single.error(reference.notFound(Strings.kvMsg(filter)))));
     }

@@ -9,7 +9,7 @@ import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.TestHelper.EventbusHelper;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.dto.RequestData.Filters;
+import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
@@ -83,7 +83,8 @@ public class ServiceGatewayIndexTest extends BaseMicroServiceTest {
             "\"location\":\"event.address.2\",\"status\":\"UP\"}");
         testSuccess(context, RequestData.builder()
                                         .body(new JsonObject().put(Params.IDENTIFIER, "/xy"))
-                                        .filter(new JsonObject().put(Params.BY, "path").put(Filters.PRETTY, true))
+                                        .filter(new JsonObject().put(Params.BY, "path")
+                                                                .put(RequestFilter.Filters.PRETTY, true))
                                         .build(), EventAction.GET_ONE, expected);
     }
 

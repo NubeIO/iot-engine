@@ -10,7 +10,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.dto.RequestData.Filters;
+import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventListener;
@@ -37,8 +37,8 @@ public final class ServiceGatewayIndex implements EventListener {
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> get(@NonNull RequestData requestData) {
-        final JsonObject filter = Optional.ofNullable(requestData.filter()).orElse(new JsonObject()).copy();
-        filter.remove(Filters.PRETTY);
+        final RequestFilter filter = new RequestFilter(requestData.filter());
+        filter.remove(RequestFilter.Filters.PRETTY);
         final ServiceDiscoveryController controller = getController(filter);
         final RecordView view = RecordView.parse((String) filter.remove(Params.VIEW));
         final String identifier = Optional.ofNullable(requestData.body())
@@ -56,8 +56,8 @@ public final class ServiceGatewayIndex implements EventListener {
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> list(@NonNull RequestData requestData) {
-        JsonObject filter = Optional.ofNullable(requestData.filter()).orElse(new JsonObject()).copy();
-        filter.remove(Filters.PRETTY);
+        final RequestFilter filter = new RequestFilter(requestData.filter());
+        filter.remove(RequestFilter.Filters.PRETTY);
         ServiceDiscoveryController controller = getController(filter);
         RecordTransformer transformer = RecordTransformer.create(RecordView.END_USER);
         return controller.getRx()

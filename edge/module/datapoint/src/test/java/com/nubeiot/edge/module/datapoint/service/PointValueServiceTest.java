@@ -18,7 +18,7 @@ import com.nubeiot.core.TestHelper.EventbusHelper;
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.dto.RequestData.Filters;
+import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
@@ -35,7 +35,9 @@ public class PointValueServiceTest extends BaseDataPointServiceTest {
         final JsonObject data = JsonPojo.from(pv).toJson().put("point_id", pv.getPoint().toString());
         final RequestData reqData = RequestData.builder()
                                                .body(data)
-                                               .filter(hasAudit ? new JsonObject().put(Filters.AUDIT, true) : null)
+                                               .filter(hasAudit
+                                                       ? new JsonObject().put(RequestFilter.Filters.AUDIT, true)
+                                                       : null)
                                                .build();
         return DeliveryEvent.builder()
                             .address(PointValueService.class.getName())
