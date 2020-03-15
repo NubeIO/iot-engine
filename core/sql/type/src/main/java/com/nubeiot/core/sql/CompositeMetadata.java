@@ -39,7 +39,8 @@ import lombok.NonNull;
  * @see CompositeValidation
  * @since 1.0.0
  */
-public interface CompositeMetadata<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>, C extends CompositePojo<P, C>>
+public interface CompositeMetadata<K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>,
+                                      C extends CompositePojo<P, C>>
     extends EntityMetadata<K, P, R, D>, CompositeValidation<P, C> {
 
     @Override

@@ -232,6 +232,18 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
     /**
      * Parse request data key to actual data type to look up in {@code get/update/patch/delete} resource.
      *
+     * @param pojo pojo
+     * @return Actual primary key
+     * @throws IllegalArgumentException if data key is invalid or missing
+     * @since 1.0.0
+     */
+    default @NonNull K parseKey(@NonNull P pojo) throws IllegalArgumentException {
+        return parseKey(Strings.toString(pojo.toJson().getValue(jsonKeyName())));
+    }
+
+    /**
+     * Parse request data key to actual data type to look up in {@code get/update/patch/delete} resource.
+     *
      * @param dataKey Request data key
      * @return Actual primary key
      * @throws IllegalArgumentException if data key is invalid or missing

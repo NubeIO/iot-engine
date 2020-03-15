@@ -2,7 +2,6 @@ dependencies {
     compile project(":core:base")
 
     compile project.deps.database.jpa
-    compile project.deps.database.jta
     compile project.deps.database.jooq
     compile project.deps.database.jooqVertxShared
     compile project.deps.database.jooqVertxRx

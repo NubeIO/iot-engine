@@ -16,6 +16,8 @@ import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.UniqueKey;
 
+import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.core.sql.ReferenceEntityMetadata;
 import com.nubeiot.core.utils.Reflections.ReflectionField;
 
 import lombok.NonNull;
@@ -30,7 +32,7 @@ import lombok.NonNull;
 public interface EntityConstraintHolder {
 
     /**
-     * Declares {@code Key} class that modeling {@code foreign key} relationships and {@code constraints  of  tables} in
+     * Declares {@code Key} class that modeling {@code foreign key} relationships and {@code constraints of tables} in
      * {@code schema}
      *
      * @return {@code Key} class
@@ -99,6 +101,25 @@ public interface EntityConstraintHolder {
                               .filter(key -> key.getTable().equals(table))
                               .map(key -> (List<ForeignKey>) key.getReferences())
                               .flatMap(Collection::stream);
+    }
+
+    /**
+     * Reference to list.
+     *
+     * @param metadata the metadata
+     * @return the list
+     * @since 1.0.0
+     */
+    default List<ReferenceEntityMetadata> referenceTo(@NonNull EntityMetadata metadata) {
+        return referenceTo(metadata.table());
+    }
+
+    default List<ReferenceEntityMetadata> referenceTo(@NonNull Table table) {
+        return ReflectionField.streamConstants(keyClass(), ForeignKey.class)
+                              .filter(fk -> fk.getKey().getTable().equals(table))
+                              .map(fk -> ReferenceEntityMetadata.builder().foreignKey(fk).build())
+                              .filter(ReferenceEntityMetadata::isValid)
+                              .collect(Collectors.toList());
     }
 
 }
