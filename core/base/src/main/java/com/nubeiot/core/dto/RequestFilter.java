@@ -11,29 +11,71 @@ import com.nubeiot.core.utils.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+/**
+ * Represents for Request filter.
+ *
+ * @since 1.0.0
+ */
 @NoArgsConstructor
 public final class RequestFilter extends JsonObject implements JsonData {
 
+    /**
+     * Instantiates a new Request filter.
+     *
+     * @param filter the filter
+     * @since 1.0.0
+     */
     public RequestFilter(JsonObject filter) {
         super(filter.copy().getMap());
     }
 
+    /**
+     * Is pretty.
+     *
+     * @return the boolean
+     * @since 1.0.0
+     */
     public boolean isPretty() {
         return parseBoolean(Filters.PRETTY);
     }
 
+    /**
+     * Has force.
+     *
+     * @return the boolean
+     * @see Filters#FORCE
+     * @since 1.0.0
+     */
     public boolean hasForce() {
         return parseBoolean(Filters.FORCE);
     }
 
+    /**
+     * Has audit.
+     *
+     * @return the boolean
+     * @since 1.0.0
+     */
     public boolean hasAudit() {
         return parseBoolean(Filters.AUDIT);
     }
 
+    /**
+     * Has temp audit.
+     *
+     * @return the boolean
+     * @since 1.0.0
+     */
     public boolean hasTempAudit() {
         return parseBoolean(Filters.TEMP_AUDIT);
     }
 
+    /**
+     * Gets includes.
+     *
+     * @return the includes
+     * @since 1.0.0
+     */
     public Set<String> getIncludes() {
         return Arrays.stream(getString(RequestFilter.Filters.INCLUDE, "").split(",")).collect(Collectors.toSet());
     }
@@ -42,6 +84,11 @@ public final class RequestFilter extends JsonObject implements JsonData {
         return Boolean.parseBoolean(Strings.toString(this.getValue(pretty)));
     }
 
+    /**
+     * Represents for Filters.
+     *
+     * @since 1.0.0
+     */
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class Filters {
 
@@ -88,7 +135,6 @@ public final class RequestFilter extends JsonObject implements JsonData {
         /**
          * For {@code force}
          */
-        //TODO handle force delete
         public static final String FORCE = "_force";
 
     }

@@ -123,7 +123,7 @@ public class EdgeSchedulerCreationTest extends EdgeSchedulerVerticleTest {
         JsonObject expect = new JsonObject().put("code", ErrorCode.ALREADY_EXIST)
                                             .put("message", "Already existed resource with trigger_id=1 and job_id=1");
         assertRestByClient(context, HttpMethod.POST, "/api/s/trigger/1/job", reqData,
-                           ExpectedResponse.builder().expected(expect).code(409).build());
+                           ExpectedResponse.builder().expected(expect).code(422).build());
     }
 
     @Test
@@ -190,7 +190,7 @@ public class EdgeSchedulerCreationTest extends EdgeSchedulerVerticleTest {
         final JsonObject body = JsonPojo.from(new JobTriggerComposite().setEnabled(true)).toJson().put("job", job);
         final RequestData reqData = RequestData.builder().body(body).build();
         assertRestByClient(context, HttpMethod.POST, "/api/s/trigger/1/job", reqData,
-                           ExpectedResponse.builder().expected(expected).code(409).build());
+                           ExpectedResponse.builder().expected(expected).code(422).build());
     }
 
     @Test

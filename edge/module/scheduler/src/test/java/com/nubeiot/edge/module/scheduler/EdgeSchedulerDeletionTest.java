@@ -47,8 +47,8 @@ public class EdgeSchedulerDeletionTest extends EdgeSchedulerVerticleTest {
     @Test
     public void test_delete_existed_job_with_reference(TestContext context) {
         JsonObject expected = new JsonObject().put("message", "Resource with job_id=1 is using by another resource")
-                                              .put("code", ErrorCode.ALREADY_EXIST);
-        assertRestByClient(context, HttpMethod.DELETE, "/api/s/job/1", RequestData.builder().build(), 409, expected);
+                                              .put("code", ErrorCode.BEING_USED);
+        assertRestByClient(context, HttpMethod.DELETE, "/api/s/job/1", RequestData.builder().build(), 422, expected);
     }
 
     @Test

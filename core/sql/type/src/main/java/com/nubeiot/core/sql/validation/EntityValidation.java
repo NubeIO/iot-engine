@@ -8,6 +8,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.exceptions.AlreadyExistException;
+import com.nubeiot.core.exceptions.BeingUsedException;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.JsonPojo;
@@ -152,15 +153,15 @@ public interface EntityValidation<P extends VertxPojo> {
     }
 
     /**
-     * Construct {@code AlreadyExistException exception} by {@code entity key}
+     * Construct {@code BeingUsedException exception} by {@code entity key}
      *
      * @param pojoKey Given pojo key value
      * @return already exist exception
-     * @see AlreadyExistException
+     * @see BeingUsedException
      * @since 1.0.0
      */
-    default AlreadyExistException unableDeleteDueUsing(String pojoKey) {
-        return new AlreadyExistException(Strings.format(RESOURCE_IS_USING_MSG, pojoKey));
+    default BeingUsedException unableDeleteDueUsing(String pojoKey) {
+        return new BeingUsedException(Strings.format(RESOURCE_IS_USING_MSG, pojoKey));
     }
 
 }

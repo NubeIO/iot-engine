@@ -42,7 +42,9 @@ public final class HttpStatusMapping {
         map.put(ErrorCode.INVALID_ARGUMENT, HttpResponseStatus.BAD_REQUEST);
         map.put(ErrorCode.HTTP_ERROR, HttpResponseStatus.BAD_REQUEST);
 
-        map.put(ErrorCode.ALREADY_EXIST, HttpResponseStatus.CONFLICT);
+        map.put(ErrorCode.ALREADY_EXIST, HttpResponseStatus.UNPROCESSABLE_ENTITY);
+        map.put(ErrorCode.BEING_USED, HttpResponseStatus.UNPROCESSABLE_ENTITY);
+
         map.put(ErrorCode.STATE_ERROR, HttpResponseStatus.CONFLICT);
 
         map.put(ErrorCode.AUTHENTICATION_ERROR, HttpResponseStatus.UNAUTHORIZED);
@@ -52,6 +54,7 @@ public final class HttpStatusMapping {
         map.put(ErrorCode.EVENT_ERROR, HttpResponseStatus.SERVICE_UNAVAILABLE);
         map.put(ErrorCode.CLUSTER_ERROR, HttpResponseStatus.SERVICE_UNAVAILABLE);
 
+        map.put(ErrorCode.TIMEOUT_ERROR, HttpResponseStatus.REQUEST_TIMEOUT);
         return Collections.unmodifiableMap(map);
     }
 
