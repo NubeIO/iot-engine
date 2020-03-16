@@ -18,6 +18,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.sql.query.ComplexQueryExecutor;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
@@ -224,5 +225,27 @@ public interface EntityHandler {
      * @since 1.0.0
      */
     @NonNull SchemaHandler schemaHandler();
+
+    /**
+     * Gets {@code entity constraint holder}.
+     *
+     * @return the entity constraint holder. Default is {@link EntityConstraintHolder#BLANK}
+     * @see EntityConstraintHolder
+     * @since 1.0.0
+     */
+    default @NonNull EntityConstraintHolder holder() {
+        return EntityConstraintHolder.BLANK;
+    }
+
+    /**
+     * Gets {@code Metadata index}.
+     *
+     * @return the metadata index. Default is {@link MetadataIndex#BLANK}
+     * @see MetadataIndex
+     * @since 1.0.0
+     */
+    default @NonNull MetadataIndex metadataIndex() {
+        return MetadataIndex.BLANK;
+    }
 
 }

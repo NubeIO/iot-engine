@@ -44,7 +44,7 @@ public interface DataPointService<P extends VertxPojo, M extends EntityMetadata>
     }
 
     default String api() {
-        return DataPointIndex.lookupApiName(context());
+        return DataPointApiService.DEFAULT.lookupApiName(context());
     }
 
     default Set<EventMethodDefinition> definitions() {

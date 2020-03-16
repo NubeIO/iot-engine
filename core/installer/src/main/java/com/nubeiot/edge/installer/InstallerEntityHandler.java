@@ -25,11 +25,14 @@ import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.AbstractEntityHandler;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.MetadataIndex;
 import com.nubeiot.core.sql.SchemaHandler;
+import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.installer.InstallerConfig.RepositoryConfig;
 import com.nubeiot.edge.installer.loader.ModuleTypeRule;
 import com.nubeiot.edge.installer.model.DefaultCatalog;
+import com.nubeiot.edge.installer.model.Keys;
 import com.nubeiot.edge.installer.model.Tables;
 import com.nubeiot.edge.installer.model.dto.RequestedServiceData;
 import com.nubeiot.edge.installer.model.tables.daos.TblModuleDao;
@@ -41,12 +44,14 @@ import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
 import com.nubeiot.edge.installer.model.tables.pojos.TblTransaction;
 import com.nubeiot.edge.installer.repository.InstallerRepository;
 import com.nubeiot.edge.installer.service.AppDeployer;
+import com.nubeiot.edge.installer.service.InstallerApiIndex;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 
-public abstract class InstallerEntityHandler extends AbstractEntityHandler {
+public abstract class InstallerEntityHandler extends AbstractEntityHandler
+    implements InstallerApiIndex, EntityConstraintHolder {
 
     public static final String SHARED_MODULE_RULE = "MODULE_RULE";
     public static final String SHARED_INSTALLER_CFG = "INSTALLER_CFG";
@@ -73,8 +78,18 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler {
     }
 
     @Override
-    public @NonNull SchemaHandler schemaHandler() {
+    public final @NonNull SchemaHandler schemaHandler() {
         return new InstallerSchemaHandler();
+    }
+
+    @Override
+    public final @NonNull EntityConstraintHolder holder() {
+        return this;
+    }
+
+    @Override
+    public final @NonNull MetadataIndex metadataIndex() {
+        return this;
     }
 
     public final TblModuleDao moduleDao() {
@@ -189,6 +204,11 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler {
                                             .orderBy(Tables.TBL_TRANSACTION.ISSUED_AT.desc())
                                             .limit(1))
                          .map(optional -> optional.map(TblTransaction::toJson));
+    }
+
+    @Override
+    public final @NonNull Class keyClass() {
+        return Keys.class;
     }
 
 }

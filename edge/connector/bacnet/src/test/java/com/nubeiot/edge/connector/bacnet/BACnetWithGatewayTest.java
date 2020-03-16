@@ -16,14 +16,14 @@ import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.Microservice;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.edge.connector.bacnet.service.mock.NetworkPersistService;
-import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointApiService;
 
 import lombok.NonNull;
 
 public abstract class BACnetWithGatewayTest extends BaseBACnetVerticleTest {
 
-    protected final String apiName = DataPointIndex.lookupApiName(NetworkMetadata.INSTANCE);
+    protected final String apiName = DataPointApiService.DEFAULT.lookupApiName(NetworkMetadata.INSTANCE);
     protected final String address = NetworkPersistService.class.getName();
 
     protected MicroConfig getMicroConfig() {

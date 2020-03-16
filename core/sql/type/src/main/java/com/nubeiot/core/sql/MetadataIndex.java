@@ -1,5 +1,6 @@
 package com.nubeiot.core.sql;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -19,6 +20,8 @@ import lombok.NonNull;
  * @since 1.0.0
  */
 public interface MetadataIndex {
+
+    MetadataIndex BLANK = Collections::emptyList;
 
     /**
      * Find list of entity metadata by {@code reflection}.

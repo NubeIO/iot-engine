@@ -118,10 +118,6 @@ public interface DataPointIndex extends MetadataIndex {
         return map;
     }
 
-    static String lookupApiName(@NonNull EntityMetadata metadata) {
-        return "bios.datapoint." + metadata.modelClass().getSimpleName();
-    }
-
     @Override
     default List<EntityMetadata> index() {
         return INDEX;

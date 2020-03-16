@@ -28,6 +28,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.AbstractEntityHandler;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.core.sql.MetadataIndex;
 import com.nubeiot.core.sql.SchemaHandler;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
@@ -67,6 +68,16 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
         return new DataPointSchemaHandler();
     }
 
+    @Override
+    public @NonNull EntityConstraintHolder holder() {
+        return this;
+    }
+
+    @Override
+    public @NonNull MetadataIndex metadataIndex() {
+        return this;
+    }
+
     Single<JsonObject> initDataFromConfig(EventAction action) {
         final Map<EntityMetadata, Integer> dep = DataPointIndex.dependencies();
         final JsonObject cfgData = configData();
@@ -74,8 +85,7 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
         final JsonObject data = cfgData.put(EdgeMetadata.INSTANCE.singularKeyName(), edge.toJson())
                                        .put(NetworkMetadata.INSTANCE.singularKeyName(),
                                             initNetwork(cfgData, edge.getId()));
-        return Single.merge(index().stream()
-                                   .filter(meta -> !(meta instanceof PointCompositeMetadata) &&
+        return Single.merge(index().stream().filter(meta -> !(meta instanceof PointCompositeMetadata) &&
                                                    data.containsKey(meta.singularKeyName()))
                                    .sorted(Comparator.comparingInt(m -> dep.getOrDefault(m, 999)))
                                    .map(m -> insert(m, data.getValue(m.singularKeyName())))

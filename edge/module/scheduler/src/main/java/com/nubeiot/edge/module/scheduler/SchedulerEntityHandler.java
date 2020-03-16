@@ -14,6 +14,7 @@ import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.MetadataIndex;
 import com.nubeiot.core.sql.SchemaHandler;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
@@ -47,6 +48,16 @@ class SchedulerEntityHandler extends AbstractEntityHandler
     @Override
     public @NonNull SchemaHandler schemaHandler() {
         return new SchedulerSchemaHandler();
+    }
+
+    @Override
+    public @NonNull EntityConstraintHolder holder() {
+        return this;
+    }
+
+    @Override
+    public @NonNull MetadataIndex metadataIndex() {
+        return this;
     }
 
     @Override

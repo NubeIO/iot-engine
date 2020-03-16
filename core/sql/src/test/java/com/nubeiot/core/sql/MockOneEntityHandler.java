@@ -80,6 +80,11 @@ public class MockOneEntityHandler extends AbstractEntityHandler implements Entit
         });
     }
 
+    @Override
+    public @NonNull EntityConstraintHolder holder() {
+        return this;
+    }
+
     private List<Language> lang() {
         return Arrays.asList(new Language().setId(1).setCd("en").setDescription("English"),
                              new Language().setId(2).setCd("de").setDescription("Deutsch"),
