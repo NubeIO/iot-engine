@@ -19,10 +19,10 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @SuperBuilder
 @Accessors(fluent = true)
-public final class DefaultDMLWorkflow extends AbstractSQLWorkflow implements DMLWorkflow {
+public class DefaultDMLWorkflow<T extends DMLStep> extends AbstractSQLWorkflow implements DMLWorkflow {
 
     @NonNull
-    private final DMLStep sqlStep;
+    private final T sqlStep;
     @NonNull
     private final BiFunction<RequestData, DMLPojo, Single<JsonObject>> transformer;
 

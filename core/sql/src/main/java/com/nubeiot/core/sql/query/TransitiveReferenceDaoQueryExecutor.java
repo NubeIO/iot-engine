@@ -51,9 +51,8 @@ final class TransitiveReferenceDaoQueryExecutor<K, P extends VertxPojo, R extend
         final Pagination paging = Optional.ofNullable(reqData.pagination()).orElse(Pagination.builder().build());
         final Function<DSLContext, ResultQuery<R>> viewFunc
             = (Function<DSLContext, ResultQuery<R>>) queryBuilder().view(reqData.filter(), reqData.sort(), paging);
-        final D dao = dao(metadata().daoClass());
         return checkReferenceExistence(reqData).flatMapObservable(
-            ignore -> dao.queryExecutor().findMany(viewFunc).flattenAsObservable(rs -> rs));
+            ignore -> dao(metadata()).queryExecutor().findMany(viewFunc).flattenAsObservable(rs -> rs));
     }
 
     @Override
@@ -62,14 +61,14 @@ final class TransitiveReferenceDaoQueryExecutor<K, P extends VertxPojo, R extend
         K pk = metadata().parseKey(reqData);
         final Function<DSLContext, ResultQuery<R>> viewOneFunc
             = (Function<DSLContext, ResultQuery<R>>) queryBuilder().viewOne(reqData.filter(), reqData.sort());
-        final D dao = dao(metadata().daoClass());
-        return checkReferenceExistence(reqData).flatMap(i -> dao.queryExecutor()
-                                                                .findOne(viewOneFunc)
-                                                                .flatMap(o -> o.map(Single::just)
-                                                                               .orElse(Single.error(
-                                                                                   metadata().notFound(pk))))
-                                                                .onErrorResumeNext(
-                                                                    EntityQueryExecutor::sneakyThrowDBError));
+        return checkReferenceExistence(reqData).flatMap(i -> dao(metadata()).queryExecutor()
+                                                                            .findOne(viewOneFunc)
+                                                                            .flatMap(o -> o.map(Single::just)
+                                                                                           .orElse(Single.error(
+                                                                                               metadata().notFound(
+                                                                                                   pk))))
+                                                                            .onErrorResumeNext(
+                                                                                EntityQueryExecutor::sneakyThrowDBError));
     }
 
     @Override

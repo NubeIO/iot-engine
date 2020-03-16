@@ -98,12 +98,12 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      * @param <K>      Type of {@code primary key}
      * @param <R>      Type of {@code UpdatableRecord}
      * @param <D>      Type of {@code VertxDAO}
-     * @param daoClass the dao class
+     * @param metadata the entity metadata
      * @return instance of {@code DAO}
      * @since 1.0.0
      */
-    default <K, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> D dao(@NonNull Class<D> daoClass) {
-        return entityHandler().dao(runtimeConfiguration(), daoClass);
+    default <K, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> D dao(EntityMetadata<K, P, R, D> metadata) {
+        return entityHandler().dao(runtimeConfiguration(), metadata.daoClass());
     }
 
     /**
@@ -198,27 +198,26 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
     /**
      * Check resource is able to delete by scanning reference resource to this resource
      *
-     * @param pojo        Resource
-     * @param metadata    Entity metadata
-     * @param keyProvider function to search key from resource
+     * @param pojo     Resource
+     * @param metadata Entity metadata
      * @return single pojo or single existed error
      * @see EntityMetadata#unableDeleteDueUsing(String)
      * @since 1.0.0
      */
     @SuppressWarnings("unchecked")
     @NonNull
-    default Single<P> isAbleToDelete(@NonNull P pojo, @NonNull EntityMetadata metadata,
-                                     @NonNull Function<VertxPojo, String> keyProvider) {
-        if (!(entityHandler() instanceof EntityConstraintHolder)) {
-            return Single.just(pojo);
+    default Single<Boolean> isAbleToDelete(@NonNull P pojo, @NonNull EntityMetadata metadata) {
+        final EntityConstraintHolder holder = entityHandler().holder();
+        if (EntityConstraintHolder.BLANK == holder) {
+            return Single.just(true);
         }
-        final Object pk = pojo.toJson().getValue(metadata.jsonKeyName());
-        final EntityConstraintHolder holder = (EntityConstraintHolder) entityHandler();
-        return Observable.fromIterable(holder.referenceTableKeysTo(metadata.table()))
-                         .flatMapMaybe(e -> fetchExists(queryBuilder().exist(e.getKey(), e.getValue().eq(pk))))
-                         .flatMap(b -> Observable.error(metadata.unableDeleteDueUsing(keyProvider.apply(pojo))))
-                         .map(b -> pojo)
-                         .defaultIfEmpty(pojo)
+        final Object pk = metadata.parseKey(pojo);
+        return Observable.fromIterable(holder.referenceTo(metadata.table()))
+                         .flatMapMaybe(ref -> fetchExists(queryBuilder().exist(ref.getTable(), ref.getField().eq(pk))))
+                         .flatMap(b -> Observable.error(
+                             metadata.unableDeleteDueUsing(metadata.requestKeyAsMessage(pojo, pk))))
+                         .map(Boolean.class::cast)
+                         .defaultIfEmpty(true)
                          .singleOrError();
     }
 

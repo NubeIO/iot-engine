@@ -43,27 +43,33 @@ abstract class AbstractSQLWorkflow implements SQLWorkflow {
     @NonNull
     private final EntityTaskExecuter.AsyncEntityTaskExecuter asyncPostExecuter;
 
+    @NonNull
     @Override
-    public final @NonNull Single<JsonObject> run(@NonNull RequestData requestData) {
+    public final Single<JsonObject> run(@NonNull RequestData requestData) {
         return run(requestData, null);
     }
 
-    protected abstract @NonNull Single<JsonObject> run(@NonNull RequestData requestData, Configuration runtimeConfig);
+    @NonNull
+    protected abstract Single<JsonObject> run(@NonNull RequestData requestData, Configuration runtimeConfig);
 
-    @NonNull OperationValidator afterValidation() {
+    @NonNull
+    protected OperationValidator afterValidation() {
         return OperationValidator.create(
             (req, pojo) -> preExecuter().execute(initSuccessData(req, pojo)).switchIfEmpty(Single.just(pojo)));
     }
 
-    @NonNull EntityRuntimeContext<VertxPojo> initSuccessData(@NonNull RequestData reqData, @NonNull VertxPojo pojo) {
+    @NonNull
+    protected EntityRuntimeContext<VertxPojo> initSuccessData(@NonNull RequestData reqData, @NonNull VertxPojo pojo) {
         return taskData(reqData, pojo, null);
     }
 
-    @NonNull EntityRuntimeContext<VertxPojo> initErrorData(@NonNull RequestData reqData, @NonNull Throwable err) {
+    @NonNull
+    protected EntityRuntimeContext<VertxPojo> initErrorData(@NonNull RequestData reqData, @NonNull Throwable err) {
         return taskData(reqData, null, err);
     }
 
-    @NonNull EntityRuntimeContext<VertxPojo> taskData(@NonNull RequestData reqData, VertxPojo pojo, Throwable t) {
+    @NonNull
+    protected EntityRuntimeContext<VertxPojo> taskData(@NonNull RequestData reqData, VertxPojo pojo, Throwable t) {
         return EntityRuntimeContext.builder()
                                    .originReqData(reqData)
                                    .originReqAction(action())

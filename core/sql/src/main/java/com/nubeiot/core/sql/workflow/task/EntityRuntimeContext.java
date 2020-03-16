@@ -7,13 +7,13 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.workflow.TaskExecutionContext;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.experimental.SuperBuilder;
 
 @Getter
-@SuperBuilder
-public class EntityRuntimeContext<P extends VertxPojo> implements TaskExecutionContext<P> {
+@Builder(builderClassName = "Builder")
+public final class EntityRuntimeContext<P extends VertxPojo> implements TaskExecutionContext<P> {
 
     @NonNull
     private final RequestData originReqData;

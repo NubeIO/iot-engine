@@ -40,7 +40,7 @@ interface InternalQueryExecutor<P extends VertxPojo> extends EntityQueryExecutor
     default Single<Optional<? extends VertxPojo>> lookupByPrimaryKey(@NonNull EntityMetadata metadata, Object key) {
         return Objects.isNull(key)
                ? Single.just(Optional.empty())
-               : (Single<Optional<? extends VertxPojo>>) dao(metadata.daoClass()).findOneById(key);
+               : (Single<Optional<? extends VertxPojo>>) dao(metadata).findOneById(key);
     }
 
 }

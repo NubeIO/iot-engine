@@ -49,10 +49,9 @@ final class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRec
     @SuppressWarnings("unchecked")
     public Observable<CP> findMany(RequestData reqData) {
         final Pagination paging = Optional.ofNullable(reqData.pagination()).orElse(Pagination.builder().build());
-        final VertxDAO dao = dao(metadata().daoClass());
-        final Single<List> many = (Single<List>) dao.queryExecutor()
-                                                    .findMany(
-                                                        queryBuilder().view(reqData.filter(), reqData.sort(), paging));
+        final Single<List> many = (Single<List>) dao(metadata()).queryExecutor()
+                                                                .findMany(queryBuilder().view(reqData.filter(),
+                                                                                              reqData.sort(), paging));
         return many.flattenAsObservable(rs -> rs)
                    .map(pojo -> CompositePojo.create(pojo, groupMetadata.rawClass(), groupMetadata.modelClass()));
     }

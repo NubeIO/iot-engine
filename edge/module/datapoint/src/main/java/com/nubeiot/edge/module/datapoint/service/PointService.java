@@ -79,6 +79,11 @@ public final class PointService
     }
 
     @Override
+    public boolean supportForceDeletion() {
+        return true;
+    }
+
+    @Override
     public @NonNull RequestDecorator requestDecorator() {
         return NetworkExtension.create(EdgeExtension.create(this));
     }
