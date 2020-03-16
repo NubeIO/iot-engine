@@ -4,6 +4,7 @@ import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.register.EventHttpServiceRegister;
+import com.nubeiot.core.micro.register.EventHttpServiceRegister.Builder;
 import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
 import com.nubeiot.edge.module.scheduler.service.SchedulerService;
@@ -37,13 +38,17 @@ public final class EdgeSchedulerVerticle extends ContainerVerticle {
     }
 
     private void successHandler() {
-        EventHttpServiceRegister.create(vertx.getDelegate(), getSharedKey(),
-                                        () -> SchedulerService.createServices(entityHandler, schedulerCtx))
-                                .publish(microCtx.getLocalController())
-                                .flatMapObservable(ignore -> entityHandler.register(schedulerCtx))
-                                .toList()
-                                .doOnSuccess(r -> logger.info("Registered {} schedulers", r.size()))
-                                .subscribe();
+        final Builder<SchedulerService> builder = EventHttpServiceRegister.builder();
+        builder.vertx(vertx)
+               .sharedKey(getSharedKey())
+               .eventServices(() -> SchedulerService.createServices(entityHandler, schedulerCtx))
+               .afterRegisterEventbusAddress(s -> s.address())
+               .build()
+               .publish(microCtx.getLocalController())
+               .flatMapObservable(ignore -> entityHandler.register(schedulerCtx))
+               .toList()
+               .doOnSuccess(r -> logger.info("Registered {} schedulers", r.size()))
+               .subscribe();
     }
 
 }

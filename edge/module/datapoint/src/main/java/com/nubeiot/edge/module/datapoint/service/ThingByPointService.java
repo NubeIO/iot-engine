@@ -58,4 +58,9 @@ public final class ThingByPointService extends PointThingService {
                      .collect(Collectors.toSet());
     }
 
+    @Override
+    public boolean supportForceDeletion() {
+        return false;
+    }
+
 }

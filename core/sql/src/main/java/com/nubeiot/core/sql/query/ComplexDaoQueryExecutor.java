@@ -201,6 +201,13 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
     }
 
     @Override
+    @NonNull
+    public String requestKeyAsMessage(@NonNull EntityMetadata metadata, @NonNull VertxPojo pojo,
+                                      @NonNull Object primaryKey) {
+        return base.msg(pojo.toJson(), references.keys());
+    }
+
+    @Override
     public @NonNull ReferencingEntityMarker marker() {
         throw new UnsupportedOperationException("Not using it in case of many-to-many");
     }

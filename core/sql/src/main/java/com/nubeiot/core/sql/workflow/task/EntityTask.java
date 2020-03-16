@@ -5,7 +5,6 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.sql.pojos.DMLPojo;
 import com.nubeiot.core.sql.query.EntityQueryExecutor;
-import com.nubeiot.core.sql.service.EntityApiService;
 import com.nubeiot.core.workflow.Task;
 
 import lombok.NonNull;
@@ -34,8 +33,8 @@ public interface EntityTask<DC extends EntityDefinitionContext, P extends VertxP
         extends EntityTask<DC, P, R>, ProxyEntityTask<DC, P, R, EventbusClient> {
 
         static <P extends VertxPojo> EntityPurgeTask<PurgeDefinitionContext, P, DMLPojo> create(
-            @NonNull EntityQueryExecutor queryExecutor) {
-            return new DefaultEntityPurgeTask<>(PurgeDefinitionContext.create(queryExecutor));
+            @NonNull EntityQueryExecutor queryExecutor, boolean supportForceDeletion) {
+            return new DefaultEntityPurgeTask<>(PurgeDefinitionContext.create(queryExecutor), supportForceDeletion);
         }
 
         @Override
@@ -43,10 +42,6 @@ public interface EntityTask<DC extends EntityDefinitionContext, P extends VertxP
             return definitionContext().entityHandler().eventClient();
         }
 
-        @NonNull
-        default EntityApiService apiService() {
-            return definitionContext().entityHandler().sharedData(EntityApiService.DATA_KEY);
-        }
 
     }
 

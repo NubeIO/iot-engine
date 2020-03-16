@@ -24,16 +24,12 @@ public final class DefaultDeletionWorkflow extends DefaultDMLWorkflow<DeletionSt
 
     @Override
     protected @NonNull OperationValidator afterValidation() {
-        if (supportForceDeletion) {
-            return super.afterValidation().andThen(OperationValidator.create(this::purgeTask));
-        }
-        return super.afterValidation();
+        return super.afterValidation().andThen(OperationValidator.create(this::purgeTask));
     }
 
     private Single<VertxPojo> purgeTask(@NonNull RequestData reqData, @NonNull VertxPojo pojo) {
-        return TaskExecuter.execute(EntityPurgeTask.create(sqlStep().queryExecutor()), initSuccessData(reqData, pojo))
-                           .map(DMLPojo::request)
-                           .toSingle(pojo);
+        return TaskExecuter.execute(EntityPurgeTask.create(sqlStep().queryExecutor(), supportForceDeletion),
+                                    initSuccessData(reqData, pojo)).map(DMLPojo::request).toSingle(pojo);
     }
 
 }

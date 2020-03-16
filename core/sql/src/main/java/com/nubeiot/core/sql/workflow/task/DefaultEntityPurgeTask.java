@@ -18,9 +18,11 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.ReferenceEntityMetadata;
+import com.nubeiot.core.sql.cache.EntityServiceIndex;
 import com.nubeiot.core.sql.pojos.DMLPojo;
-import com.nubeiot.core.sql.service.EntityApiService;
 import com.nubeiot.core.sql.workflow.task.EntityTask.EntityPurgeTask;
+import com.nubeiot.core.utils.Functions;
+import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -37,6 +39,7 @@ final class DefaultEntityPurgeTask<P extends VertxPojo> implements EntityPurgeTa
     private static final Logger LOGGER = LoggerFactory.getLogger(EntityPurgeTask.class.getName());
     @NonNull
     private final PurgeDefinitionContext definitionContext;
+    private final boolean supportForceDeletion;
 
     @Override
     public @NonNull Single<Boolean> isExecutable(@NonNull EntityRuntimeContext<P> runtimeContext) {
@@ -50,22 +53,38 @@ final class DefaultEntityPurgeTask<P extends VertxPojo> implements EntityPurgeTa
         final P pojo = runtimeContext.getData();
         final Object pk = metadata.parseKey(pojo);
         final DMLPojo dmlPojo = DMLPojo.builder().request(pojo).primaryKey(pk).build();
-        if (!reqData.filter().hasForce()) {
+        if (!supportForceDeletion || !reqData.filter().hasForce()) {
             return definitionContext.queryExecutor().isAbleToDelete(pojo, metadata).map(b -> dmlPojo).toMaybe();
         }
-        final EntityApiService apiService = apiService();
+        final @NonNull EntityServiceIndex index = definitionContext.entityServiceIndex();
         return Observable.fromIterable(definitionContext.entityHandler().holder().referenceTo(metadata))
-                         .flatMapSingle(ref -> invokeReferenceService(apiService, reqData, ref, pk))
+                         .flatMapSingle(ref -> invokeReferenceService(index, reqData, ref, pk))
                          .reduce(Long::sum)
                          .map(t -> new JsonObject().put("total", t))
                          .map(r -> dmlPojo)
                          .defaultIfEmpty(dmlPojo);
     }
 
-    private Single<Long> invokeReferenceService(@NonNull EntityApiService apiService, @NonNull RequestData reqData,
+    private Single<Long> invokeReferenceService(@NonNull EntityServiceIndex index, @NonNull RequestData reqData,
                                                 @NonNull ReferenceEntityMetadata ref, @NonNull Object pk) {
         final EntityMetadata refMetadata = ref.findByTable(definitionContext().entityHandler().metadataIndex());
         final Condition eq = ref.getField().eq(pk);
+        final String address = Functions.getIfThrow(() -> index.lookupApiAddress(refMetadata)).orElse(null);
+        if (Strings.isBlank(address)) {
+            return deleteDirectly(refMetadata, eq);
+        }
+        return invokeRemoteDeletion(reqData, refMetadata, eq, address);
+    }
+
+    //TODO temporary way to batch delete. Not safe. Must implement ASAP https://github.com/NubeIO/iot-engine/issues/294
+    private Single<Long> deleteDirectly(@NonNull EntityMetadata refMetadata, @NonNull Condition eq) {
+        LOGGER.debug("Not safe function when purging resources directly");
+        return ((Single<Integer>) definitionContext().queryExecutor().dao(refMetadata).deleteByCondition(eq)).map(
+            Long::valueOf);
+    }
+
+    private Single<Long> invokeRemoteDeletion(@NonNull RequestData reqData, @NonNull EntityMetadata refMetadata,
+                                              @NonNull Condition eq, @NonNull String address) {
         final Single<List<VertxPojo>> result = (Single<List<VertxPojo>>) definitionContext().queryExecutor()
                                                                                             .dao(refMetadata)
                                                                                             .findManyByCondition(eq);
@@ -76,10 +95,18 @@ final class DefaultEntityPurgeTask<P extends VertxPojo> implements EntityPurgeTa
                                             .body(new JsonObject().put(refMetadata.requestKeyName(),
                                                                        JsonData.checkAndConvert(rpk)))
                                             .build())
-                     .flatMapSingle(req -> transporter().request(apiService.lookupApiName(refMetadata),
-                                                                 EventMessage.initial(EventAction.REMOVE, req)))
-                     .map(EventMessage::getData)
+                     .map(req -> EventMessage.initial(EventAction.REMOVE, req))
+                     .flatMapSingle(msg -> transporter().request(address, msg))
+                     .map(this::handleResult)
                      .count();
+    }
+
+    private JsonObject handleResult(@NonNull EventMessage message) {
+        LOGGER.debug(message.toJson());
+        if (message.isError()) {
+            return message.getError().toJson();
+        }
+        return message.getData();
     }
 
 }

@@ -1,4 +1,4 @@
-package com.nubeiot.core.sql.transaction;
+package com.nubeiot.core.sql.cache;
 
 import org.jooq.Configuration;
 

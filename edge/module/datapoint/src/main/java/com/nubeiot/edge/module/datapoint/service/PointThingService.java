@@ -45,9 +45,4 @@ abstract class PointThingService extends AbstractManyToManyEntityService<PointTh
         return EntityHttpService.createDefinitions(getAvailableEvents(), resource(), reference());
     }
 
-    @Override
-    public boolean supportForceDeletion() {
-        return true;
-    }
-
 }

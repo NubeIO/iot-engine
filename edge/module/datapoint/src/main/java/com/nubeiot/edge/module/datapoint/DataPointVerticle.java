@@ -1,5 +1,8 @@
 package com.nubeiot.edge.module.datapoint;
 
+import java.util.Set;
+import java.util.function.Supplier;
+
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.micro.MicroContext;
@@ -7,9 +10,9 @@ import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.register.EventHttpServiceRegister;
 import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
-import com.nubeiot.core.sql.service.EntityApiService;
-import com.nubeiot.edge.module.datapoint.service.DataPointApiService;
 import com.nubeiot.edge.module.datapoint.service.DataPointService;
+
+import lombok.NonNull;
 
 public final class DataPointVerticle extends ContainerVerticle {
 
@@ -25,7 +28,6 @@ public final class DataPointVerticle extends ContainerVerticle {
         this.addSharedData(LOWDB_MIGRATION, pointCfg.getLowdbMigration())
             .addSharedData(DataPointIndex.BUILTIN_DATA, pointCfg.getBuiltinData().toJson())
             .addSharedData(DataPointIndex.DATA_SYNC_CFG, pointCfg.getDataSyncConfig().toJson())
-            .addSharedData(EntityApiService.DATA_KEY, DataPointApiService.DEFAULT)
             .addProvider(new MicroserviceProvider(), ctx -> microCtx = (MicroContext) ctx)
             .addProvider(new SqlProvider<>(DataPointEntityHandler.class),
                          ctx -> entityHandler = ((SqlContext<DataPointEntityHandler>) ctx).getEntityHandler())
@@ -33,10 +35,13 @@ public final class DataPointVerticle extends ContainerVerticle {
     }
 
     private void successHandler() {
-        EventHttpServiceRegister.create(vertx.getDelegate(), getSharedKey(),
-                                        () -> DataPointService.createServices(entityHandler))
-                                .publish(microCtx.getLocalController())
-                                .subscribe();
+        final @NonNull Supplier<Set<DataPointService>> supplier = () -> DataPointService.createServices(entityHandler);
+        EventHttpServiceRegister.<DataPointService>builder().vertx(vertx)
+                                                            .sharedKey(getSharedKey())
+                                                            .eventServices(supplier)
+                                                            .build()
+                                                            .publish(microCtx.getLocalController())
+                                                            .subscribe();
     }
 
 }

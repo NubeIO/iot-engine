@@ -15,8 +15,8 @@ public abstract class DefaultSqlServiceTest extends BaseSqlServiceTest {
 
     protected void setup(TestContext context) {
         entityHandler = startSQL(context, SchemaTest.OneSchema.CATALOG, MockOneEntityHandler.class);
-        controller().register(AUTHOR_ADDRESS, new AuthorService(entityHandler));
-        controller().register(BOOK_ADDRESS, new BookService(entityHandler));
+        controller().register(AUTHOR_ADDRESS, new AuthorService(entityHandler))
+                    .register(BOOK_ADDRESS, new BookService(entityHandler));
     }
 
 }

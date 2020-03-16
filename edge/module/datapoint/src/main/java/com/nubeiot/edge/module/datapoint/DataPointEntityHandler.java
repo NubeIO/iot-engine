@@ -85,7 +85,8 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
         final JsonObject data = cfgData.put(EdgeMetadata.INSTANCE.singularKeyName(), edge.toJson())
                                        .put(NetworkMetadata.INSTANCE.singularKeyName(),
                                             initNetwork(cfgData, edge.getId()));
-        return Single.merge(index().stream().filter(meta -> !(meta instanceof PointCompositeMetadata) &&
+        return Single.merge(index().stream()
+                                   .filter(meta -> !(meta instanceof PointCompositeMetadata) &&
                                                    data.containsKey(meta.singularKeyName()))
                                    .sorted(Comparator.comparingInt(m -> dep.getOrDefault(m, 999)))
                                    .map(m -> insert(m, data.getValue(m.singularKeyName())))
@@ -165,7 +166,7 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
     }
 
     @SuppressWarnings("unchecked")
-    private Single<Integer> insert(EntityMetadata metadata, @NonNull Object data) {
+    private Single<Integer> insert(@NonNull EntityMetadata metadata, @NonNull Object data) {
         final String createdBy = "SYSTEM_INITIATOR";
         Class<? extends VertxPojo> pClazz = metadata.modelClass();
         VertxDAO dao = dao(metadata);
@@ -184,7 +185,7 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
                                                    .collect(Collectors.toList()))).doOnSuccess(logInsertEvent(pClazz));
     }
 
-    private VertxPojo validate(EntityMetadata metadata, @NonNull Object data) {
+    private VertxPojo validate(@NonNull EntityMetadata metadata, @NonNull Object data) {
         return metadata.onCreating(RequestData.builder().body(JsonData.tryParse(data).toJson()).build());
     }
 

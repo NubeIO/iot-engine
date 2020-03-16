@@ -13,23 +13,36 @@ import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
+import com.nubeiot.core.sql.cache.EntityServiceCacheIndex;
+import com.nubeiot.core.sql.cache.EntityServiceIndex;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.EntityService;
 import com.nubeiot.core.sql.workflow.task.EntityTask;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.edge.module.datapoint.DataPointIndex;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointThingMetadata;
 import com.nubeiot.edge.module.datapoint.task.remote.ProtocolDispatcherTask;
 import com.nubeiot.edge.module.datapoint.task.sync.SyncServiceFactory;
+
+import lombok.NonNull;
 
 public interface DataPointService<P extends VertxPojo, M extends EntityMetadata>
     extends EntityService<P, M>, EventHttpService {
 
-    static Set<? extends DataPointService> createServices(EntityHandler entityHandler) {
+    static Set<DataPointService> createServices(@NonNull EntityHandler entityHandler) {
+        final @NonNull EntityServiceCacheIndex cache = entityHandler.sharedData(EntityServiceIndex.DATA_KEY);
         final Map<Class, Object> inputs = Collections.singletonMap(EntityHandler.class, entityHandler);
         return ReflectionClass.stream(DataPointService.class.getPackage().getName(), DataPointService.class,
                                       ReflectionClass.publicClass())
                               .map(clazz -> ReflectionClass.createObject(clazz, inputs))
                               .filter(Objects::nonNull)
+                              .peek(s -> {
+                                  //TODO: hack due to not yet implemented BATCH_DELETE
+                                  //TODO: https://github.com/NubeIO/iot-engine/issues/294
+                                  if (s.context() != PointThingMetadata.INSTANCE) {
+                                      cache.add(s.context(), s.address());
+                                  }
+                              })
                               .collect(Collectors.toSet());
     }
 

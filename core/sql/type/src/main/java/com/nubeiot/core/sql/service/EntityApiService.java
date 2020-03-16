@@ -1,14 +1,10 @@
 package com.nubeiot.core.sql.service;
 
-import io.vertx.core.shareddata.Shareable;
-
 import com.nubeiot.core.sql.EntityMetadata;
 
 import lombok.NonNull;
 
-public interface EntityApiService extends Shareable {
-
-    String DATA_KEY = "ENTITY_API_SERVICE";
+public interface EntityApiService {
 
     @NonNull String prefixServiceName();
 

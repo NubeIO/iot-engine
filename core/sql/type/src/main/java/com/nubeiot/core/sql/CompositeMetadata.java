@@ -74,12 +74,6 @@ public interface CompositeMetadata<K, P extends VertxPojo, R extends UpdatableRe
         return ((C) ReflectionClass.createObject(modelClass()).fromJson(request)).wrap(sub);
     }
 
-    @Override
-    @NonNull
-    default String requestKeyAsMessage(@NonNull VertxPojo pojo, @NonNull Object primaryKey) {
-        return context().msg(pojo.toJson(), subItems());
-    }
-
     /**
      * Get raw class.
      *

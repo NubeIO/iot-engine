@@ -38,11 +38,6 @@ public final class NetworkService extends AbstractReferencingEntityService<Netwo
     }
 
     @Override
-    public boolean supportForceDeletion() {
-        return true;
-    }
-
-    @Override
     public Set<EventMethodDefinition> definitions() {
         return Stream.concat(DataPointService.super.definitions().stream(),
                              EntityHttpService.createDefinitions(getAvailableEvents(), context(), EdgeMetadata.INSTANCE)

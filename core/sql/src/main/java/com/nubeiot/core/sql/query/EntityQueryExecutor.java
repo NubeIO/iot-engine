@@ -28,6 +28,7 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.sql.pojos.DMLPojo;
 import com.nubeiot.core.sql.validation.OperationValidator;
+import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
@@ -215,10 +216,15 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
         return Observable.fromIterable(holder.referenceTo(metadata.table()))
                          .flatMapMaybe(ref -> fetchExists(queryBuilder().exist(ref.getTable(), ref.getField().eq(pk))))
                          .flatMap(b -> Observable.error(
-                             metadata.unableDeleteDueUsing(metadata.requestKeyAsMessage(pojo, pk))))
+                             metadata.unableDeleteDueUsing(requestKeyAsMessage(metadata, pojo, pk))))
                          .map(Boolean.class::cast)
                          .defaultIfEmpty(true)
                          .singleOrError();
+    }
+
+    default @NonNull String requestKeyAsMessage(@NonNull EntityMetadata metadata, @NonNull VertxPojo pojo,
+                                                @NonNull Object primaryKey) {
+        return Strings.kvMsg(metadata.requestKeyName(), primaryKey);
     }
 
 }

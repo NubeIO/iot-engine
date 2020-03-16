@@ -251,10 +251,6 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
      */
     @NonNull K parseKey(@NonNull String dataKey) throws IllegalArgumentException;
 
-    default @NonNull String requestKeyAsMessage(@NonNull VertxPojo pojo, @NonNull Object primaryKey) {
-        return Strings.kvMsg(requestKeyName(), primaryKey);
-    }
-
     /**
      * Represents entity primary key is in {@code Integer} data type
      *

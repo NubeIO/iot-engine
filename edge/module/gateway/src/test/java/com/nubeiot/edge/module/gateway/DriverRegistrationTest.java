@@ -156,7 +156,7 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
                                             .put("name", "xyz");
         restRequest(context, HttpMethod.POST, "/gw/register", RequestData.builder().body(body).build()).subscribe(
             resp -> {
-                context.assertEquals(409, resp.getStatus().code());
+                context.assertEquals(422, resp.getStatus().code());
                 context.assertEquals(ErrorCode.ALREADY_EXIST.name(), resp.body().getString("code"));
                 this.registration = resp.body().getString("registration");
             });

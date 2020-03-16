@@ -75,8 +75,11 @@ public abstract class InstallerVerticle<T extends InstallerService> extends Cont
     }
 
     private Single<List<Record>> publishApis(MicroContext microContext) {
-        return EventHttpServiceRegister.create(vertx.getDelegate(), getSharedKey(), services(entityHandler))
-                                       .publish(microContext.getLocalController());
+        return EventHttpServiceRegister.<T>builder().vertx(vertx)
+                                                    .sharedKey(getSharedKey())
+                                                    .eventServices(services(entityHandler))
+                                                    .build()
+                                                    .publish(microContext.getLocalController());
     }
 
 }
