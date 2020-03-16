@@ -79,6 +79,7 @@ ext {
 }
 
 dependencies {
+    compile project(":core:cache")
     compile project(":core:sql:type")
     compile("io.vertx:vertx-jdbc-client:$project.versions.vertx") {
         exclude group: "com.mchange", module: "c3p0"
