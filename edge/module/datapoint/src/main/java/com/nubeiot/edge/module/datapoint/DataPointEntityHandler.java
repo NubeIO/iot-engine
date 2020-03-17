@@ -30,12 +30,15 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.MetadataIndex;
 import com.nubeiot.core.sql.SchemaHandler;
+import com.nubeiot.core.sql.cache.EntityServiceCacheIndex;
+import com.nubeiot.core.sql.cache.EntityServiceIndex;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.sql.decorator.EntitySyncHandler;
 import com.nubeiot.core.sql.workflow.task.EntityRuntimeContext;
 import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter.AsyncEntityTaskExecuter;
 import com.nubeiot.core.utils.Functions;
+import com.nubeiot.edge.module.datapoint.service.DataPointService;
 import com.nubeiot.edge.module.datapoint.task.sync.SyncServiceFactory;
 import com.nubeiot.iotdata.dto.Protocol;
 import com.nubeiot.iotdata.edge.model.DefaultCatalog;
@@ -105,6 +108,15 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
             edge.getMetadata().getJsonObject(DataPointConfig.DataSyncConfig.NAME, new JsonObject()), "1.0.0",
             edge.getId()));
         return edge;
+    }
+
+    void addServiceCache(@NonNull DataPointService service) {
+        final @NonNull EntityServiceCacheIndex cache = sharedData(EntityServiceIndex.DATA_KEY);
+        //TODO: hack due to not yet implemented BATCH_DELETE
+        //TODO: https://github.com/NubeIO/iot-engine/issues/294
+        if (service.context() != PointThingMetadata.INSTANCE) {
+            cache.add(service.context(), service.address());
+        }
     }
 
     private JsonObject configData() {

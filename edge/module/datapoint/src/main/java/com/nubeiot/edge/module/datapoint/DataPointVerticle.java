@@ -39,6 +39,8 @@ public final class DataPointVerticle extends ContainerVerticle {
         EventHttpServiceRegister.<DataPointService>builder().vertx(vertx)
                                                             .sharedKey(getSharedKey())
                                                             .eventServices(supplier)
+                                                            .afterRegisterEventbusAddress(
+                                                                s -> entityHandler.addServiceCache(s))
                                                             .build()
                                                             .publish(microCtx.getLocalController())
                                                             .subscribe();
