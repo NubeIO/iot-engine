@@ -2,9 +2,12 @@ package com.nubeiot.edge.module.datapoint.service;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import io.reactivex.Single;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -42,7 +45,10 @@ public final class ProtocolDispatcherService
     }
 
     public Set<EventMethodDefinition> definitions() {
-        return EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, this::servicePath,
+        //TODO temporary. microservice need to refactor to accept `null` HTTP Method a.k.a hide it in public mode
+        final Map<EventAction, HttpMethod> mapping = new HashMap<>(ActionMethodMapping.DQL_MAP.get());
+        mapping.put(EventAction.CREATE_OR_UPDATE, HttpMethod.OTHER);
+        return EntityHttpService.createDefinitions(ActionMethodMapping.create(mapping), this::servicePath,
                                                    context()::requestKeyName, false);
     }
 
@@ -65,7 +71,7 @@ public final class ProtocolDispatcherService
     }
 
     private RequestData toUpdateRequest(ProtocolDispatcher req, JsonArray array) {
-        ProtocolDispatcher db = context().parseFromRequest(array.getJsonObject(0));
+        final ProtocolDispatcher db = context().parseFromRequest(array.getJsonObject(0));
         return RequestData.builder()
                           .body(JsonPojo.from(req).toJson().put(context().requestKeyName(), db.getId()))
                           .build();

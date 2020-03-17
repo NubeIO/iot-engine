@@ -34,6 +34,7 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
         super(vertx, sharedKey);
     }
 
+
     @Override
     public @NonNull String servicePath() {
         return "/network/:" + Fields.networkCode + "/device";
@@ -78,7 +79,7 @@ public final class DeviceDiscovery extends AbstractDiscoveryService implements B
     }
 
     @Override
-    public @NonNull EntityMetadata representation() {
+    public @NonNull EntityMetadata context() {
         return DeviceMetadata.INSTANCE;
     }
 

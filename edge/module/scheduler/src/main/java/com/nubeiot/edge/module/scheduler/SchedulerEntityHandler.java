@@ -1,5 +1,6 @@
 package com.nubeiot.edge.module.scheduler;
 
+import org.jooq.Catalog;
 import org.jooq.Configuration;
 
 import io.reactivex.Observable;
@@ -13,6 +14,7 @@ import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.sql.AbstractEntityHandler;
+import com.nubeiot.core.sql.MetadataIndex;
 import com.nubeiot.core.sql.SchemaHandler;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
@@ -20,6 +22,7 @@ import com.nubeiot.edge.module.scheduler.pojos.JobTriggerComposite;
 import com.nubeiot.edge.module.scheduler.service.SchedulerMetadata;
 import com.nubeiot.edge.module.scheduler.utils.SchedulerConverter.JobConverter;
 import com.nubeiot.edge.module.scheduler.utils.SchedulerConverter.TriggerConverter;
+import com.nubeiot.iotdata.scheduler.model.DefaultCatalog;
 import com.nubeiot.iotdata.scheduler.model.Keys;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.JobEntity;
 import com.nubeiot.iotdata.scheduler.model.tables.pojos.TriggerEntity;
@@ -38,8 +41,23 @@ class SchedulerEntityHandler extends AbstractEntityHandler
     }
 
     @Override
+    public @NonNull Catalog catalog() {
+        return DefaultCatalog.DEFAULT_CATALOG;
+    }
+
+    @Override
     public @NonNull SchemaHandler schemaHandler() {
         return new SchedulerSchemaHandler();
+    }
+
+    @Override
+    public @NonNull EntityConstraintHolder holder() {
+        return this;
+    }
+
+    @Override
+    public @NonNull MetadataIndex metadataIndex() {
+        return this;
     }
 
     @Override

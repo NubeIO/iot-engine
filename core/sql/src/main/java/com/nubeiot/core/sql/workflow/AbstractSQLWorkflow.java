@@ -2,8 +2,11 @@ package com.nubeiot.core.sql.workflow;
 
 import java.util.function.Function;
 
+import org.jooq.Configuration;
+
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Single;
+import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
@@ -40,20 +43,33 @@ abstract class AbstractSQLWorkflow implements SQLWorkflow {
     @NonNull
     private final EntityTaskExecuter.AsyncEntityTaskExecuter asyncPostExecuter;
 
-    @NonNull OperationValidator afterValidation() {
+    @NonNull
+    @Override
+    public final Single<JsonObject> run(@NonNull RequestData requestData) {
+        return run(requestData, null);
+    }
+
+    @NonNull
+    protected abstract Single<JsonObject> run(@NonNull RequestData requestData, Configuration runtimeConfig);
+
+    @NonNull
+    protected OperationValidator afterValidation() {
         return OperationValidator.create(
             (req, pojo) -> preExecuter().execute(initSuccessData(req, pojo)).switchIfEmpty(Single.just(pojo)));
     }
 
-    @NonNull EntityRuntimeContext<VertxPojo> initSuccessData(@NonNull RequestData reqData, @NonNull VertxPojo pojo) {
+    @NonNull
+    protected EntityRuntimeContext<VertxPojo> initSuccessData(@NonNull RequestData reqData, @NonNull VertxPojo pojo) {
         return taskData(reqData, pojo, null);
     }
 
-    @NonNull EntityRuntimeContext<VertxPojo> initErrorData(@NonNull RequestData reqData, @NonNull Throwable err) {
+    @NonNull
+    protected EntityRuntimeContext<VertxPojo> initErrorData(@NonNull RequestData reqData, @NonNull Throwable err) {
         return taskData(reqData, null, err);
     }
 
-    @NonNull EntityRuntimeContext<VertxPojo> taskData(@NonNull RequestData reqData, VertxPojo pojo, Throwable t) {
+    @NonNull
+    protected EntityRuntimeContext<VertxPojo> taskData(@NonNull RequestData reqData, VertxPojo pojo, Throwable t) {
         return EntityRuntimeContext.builder()
                                    .originReqData(reqData)
                                    .originReqAction(action())

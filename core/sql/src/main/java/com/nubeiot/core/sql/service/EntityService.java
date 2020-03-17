@@ -7,6 +7,7 @@ import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
@@ -111,6 +112,17 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
      */
     default EntityTask postPersistAsyncTask() {
         return null;
+    }
+
+    /**
+     * Defines supporting {@code force deletion}.
+     *
+     * @return {@code true} if supported. Default is {@code false}
+     * @see RequestFilter#hasForce()
+     * @since 1.0.0
+     */
+    default boolean supportForceDeletion() {
+        return false;
     }
 
     /**

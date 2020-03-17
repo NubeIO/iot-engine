@@ -7,6 +7,7 @@ import io.vertx.core.Vertx;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.workflow.TaskDefinitionContext;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -67,7 +68,7 @@ public interface EntityDefinitionContext extends TaskDefinitionContext {
      */
     @Getter
     @Accessors(fluent = true)
-    @RequiredArgsConstructor
+    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     class DefaultEntityDefinitionContext implements EntityDefinitionContext {
 
         private final EntityHandler entityHandler;

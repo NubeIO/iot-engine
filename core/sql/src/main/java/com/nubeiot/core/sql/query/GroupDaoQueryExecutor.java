@@ -2,7 +2,11 @@ package com.nubeiot.core.sql.query;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
+import org.jooq.DSLContext;
+import org.jooq.Record;
+import org.jooq.ResultQuery;
 import org.jooq.UpdatableRecord;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
@@ -45,8 +49,7 @@ final class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRec
     @SuppressWarnings("unchecked")
     public Observable<CP> findMany(RequestData reqData) {
         final Pagination paging = Optional.ofNullable(reqData.pagination()).orElse(Pagination.builder().build());
-        final Single<List> many = (Single<List>) entityHandler().dao(getMetadata().daoClass())
-                                                                .queryExecutor()
+        final Single<List> many = (Single<List>) dao(metadata()).queryExecutor()
                                                                 .findMany(queryBuilder().view(reqData.filter(),
                                                                                               reqData.sort(), paging));
         return many.flattenAsObservable(rs -> rs)
@@ -59,20 +62,20 @@ final class GroupDaoQueryExecutor<K, P extends VertxPojo, R extends UpdatableRec
     }
 
     @Override
-    public Single<CP> findOneByKey(RequestData requestData) {
-        return entityHandler().genericQuery()
-                              .executeAny(queryBuilder().viewOne(requestData.filter(), requestData.sort()))
-                              .map(r -> Optional.ofNullable(r.fetchOne(groupMetadata.mapper())))
-                              .filter(Optional::isPresent)
-                              .switchIfEmpty(Single.error(getMetadata().notFound(getMetadata().parseKey(requestData))))
-                              .map(Optional::get)
-                              .onErrorResumeNext(EntityQueryExecutor::sneakyThrowDBError);
+    public Single<CP> findOneByKey(RequestData reqData) {
+        final Function<DSLContext, ? extends ResultQuery<? extends Record>> f = queryBuilder().viewOne(reqData.filter(),
+                                                                                                       reqData.sort());
+        return executeAny(f).map(r -> Optional.ofNullable(r.fetchOne(groupMetadata.mapper())))
+                            .filter(Optional::isPresent)
+                            .switchIfEmpty(Single.error(metadata().notFound(metadata().parseKey(reqData))))
+                            .map(Optional::get)
+                            .onErrorResumeNext(EntityQueryExecutor::sneakyThrowDBError);
     }
 
     @Override
     public Single<CP> lookupByPrimaryKey(@NonNull Object primaryKey) {
-        final JsonObject filter = new JsonObject().put(getMetadata().requestKeyName(), primaryKey.toString())
-                                                  .put(getMetadata().jsonKeyName(), primaryKey.toString());
+        final JsonObject filter = new JsonObject().put(metadata().requestKeyName(), primaryKey.toString())
+                                                  .put(metadata().jsonKeyName(), primaryKey.toString());
         return findOneByKey(RequestData.builder().body(filter).filter(filter).build());
     }
 

@@ -1,5 +1,7 @@
 package com.nubeiot.core.workflow;
 
+import io.reactivex.annotations.Experimental;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
@@ -13,6 +15,7 @@ import lombok.NonNull;
  *
  * @param <A> Type of workflow action
  */
+@Experimental
 @JsonTypeInfo(use = Id.NAME, property = "type")
 public interface WorkflowDefinition<A extends ServiceRecord, E extends WorkflowExecutor> extends JsonData {
 

@@ -13,14 +13,15 @@ import lombok.NonNull;
 
 @Getter
 @Builder(builderClassName = "Builder")
-public final class EntityRuntimeContext<D extends VertxPojo> implements TaskExecutionContext<D> {
+public final class EntityRuntimeContext<P extends VertxPojo> implements TaskExecutionContext<P> {
 
     @NonNull
     private final RequestData originReqData;
     @NonNull
     private final EventAction originReqAction;
+    @NonNull
     private final EntityMetadata metadata;
-    private final D data;
+    private final P data;
     private final Throwable throwable;
 
 }

@@ -19,7 +19,7 @@ import com.nubeiot.core.sql.service.MockEntityService.Metadata.AuthorMetadata;
 import com.nubeiot.core.sql.service.MockEntityService.Metadata.BookMetadata;
 
 @RunWith(VertxUnitRunner.class)
-public class CoreEntityServiceTest extends BaseSqlServiceTest {
+public class CoreEntityServiceTest extends DefaultSqlServiceTest {
 
     @Test
     public void test_get_references(TestContext context) {

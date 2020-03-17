@@ -70,7 +70,7 @@ public class BACnetDeviceTranslatorTest {
                                           .setProtocol(Protocol.BACNET)
                                           .setState(State.ENABLED)
                                           .setType(DeviceType.EQUIPMENT);
-        final EdgeDeviceComposite composite = (EdgeDeviceComposite) new EdgeDeviceComposite().addDevice(device)
+        final EdgeDeviceComposite composite = (EdgeDeviceComposite) new EdgeDeviceComposite().setDevice(device)
                                                                                              .setAddress(addressJson);
         final RemoteDeviceMixin mixin = translator.deserialize(composite);
         Assert.assertNotNull(mixin);

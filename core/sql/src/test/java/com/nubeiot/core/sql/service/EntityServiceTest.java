@@ -19,7 +19,7 @@ import com.nubeiot.core.sql.mock.oneschema.tables.pojos.Author;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 
 @RunWith(VertxUnitRunner.class)
-public class EntityServiceTest extends BaseSqlServiceTest {
+public class EntityServiceTest extends DefaultSqlServiceTest {
 
     @Test
     public void test_get_list_without_filter(TestContext context) {

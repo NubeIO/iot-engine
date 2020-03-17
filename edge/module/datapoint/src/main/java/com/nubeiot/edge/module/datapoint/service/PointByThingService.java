@@ -24,7 +24,7 @@ import lombok.NonNull;
 
 public final class PointByThingService extends PointThingService {
 
-    public PointByThingService(@NonNull EntityHandler entityHandler) {
+    PointByThingService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
     }
 
@@ -51,19 +51,15 @@ public final class PointByThingService extends PointThingService {
     @Override
     public final Set<EventMethodDefinition> definitions() {
         final @NonNull Collection<EventAction> events = getAvailableEvents();
-        return Stream.of(EntityHttpService.createDefinitions(events, resource(), true, EdgeMetadata.INSTANCE,
-                                                             NetworkMetadata.INSTANCE, DeviceMetadata.INSTANCE,
+        return Stream.of(super.definitions(),
+                         EntityHttpService.createDefinitions(events, resource(), true, DeviceMetadata.INSTANCE,
                                                              reference()),
-                         EntityHttpService.createDefinitions(events, resource(), true, NetworkMetadata.INSTANCE,
-                                                             DeviceMetadata.INSTANCE, reference()),
                          EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, events, resource(), true,
                                                              EdgeMetadata.INSTANCE, NetworkMetadata.INSTANCE,
-                                                             DeviceMetadata.INSTANCE),
+                                                             DeviceMetadata.INSTANCE, reference()),
                          EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, events, resource(), true,
-                                                             NetworkMetadata.INSTANCE, DeviceMetadata.INSTANCE),
-                         EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, events, resource(),
-                                                             DeviceMetadata.INSTANCE),
-                         EntityHttpService.createDefinitions(events, resource(), DeviceMetadata.INSTANCE, reference()))
+                                                             NetworkMetadata.INSTANCE, DeviceMetadata.INSTANCE,
+                                                             reference()))
                      .flatMap(Collection::stream)
                      .collect(Collectors.toSet());
     }

@@ -2,6 +2,8 @@ dependencies {
     compile project(":core:httpclient")
     compile project(":core:cache")
     compile project(":edge:module:datapoint:sync")
+    //TODO https://github.com/NubeIO/iot-engine/issues/140
+    compile project(":core:sql")
     compile 'net.thisptr:jackson-jq:0.0.10'
 
     testCompile project(":core:base").sourceSets.test.output

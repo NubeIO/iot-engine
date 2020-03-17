@@ -1,7 +1,5 @@
 package com.nubeiot.core.sql;
 
-import org.jooq.Catalog;
-
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
@@ -17,10 +15,10 @@ import lombok.NonNull;
  */
 public interface SchemaMigrator extends SchemaExecutor {
 
-    SchemaMigrator NON_MIGRATOR = (entityHandler, catalog) -> Single.just(
+    SchemaMigrator NON_MIGRATOR = entityHandler -> Single.just(
         EventMessage.success(EventAction.MIGRATE, new JsonObject().put("records", "No migrate")));
 
     @Override
-    Single<EventMessage> execute(@NonNull EntityHandler entityHandler, @NonNull Catalog catalog);
+    Single<EventMessage> execute(@NonNull EntityHandler entityHandler);
 
 }

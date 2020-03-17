@@ -33,8 +33,7 @@ import org.jooq.impl.DSL;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.Pagination;
-import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.dto.RequestData.Filters;
+import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.dto.Sort;
 import com.nubeiot.core.dto.Sort.SortType;
 import com.nubeiot.core.sql.EntityMetadata;
@@ -145,12 +144,11 @@ public final class QueryBuilder {
      * @return query function
      * @see Sort
      * @see Pagination
-     * @see RequestData#filter() RequestData#filter()
-     * @see Filters
+     * @see RequestFilter
      * @since 1.0.0
      */
     @SuppressWarnings("unchecked")
-    public Function<DSLContext, ? extends ResultQuery<? extends Record>> view(JsonObject filter, Sort sort,
+    public Function<DSLContext, ? extends ResultQuery<? extends Record>> view(RequestFilter filter, Sort sort,
                                                                               Pagination pagination) {
         final @NonNull JsonTable<? extends Record> table = base.table();
         return context -> {
@@ -171,11 +169,11 @@ public final class QueryBuilder {
      * @param filter Request filter
      * @param sort   Sort
      * @return query function
+     * @see RequestFilter
      * @see Sort
-     * @see RequestData#filter() RequestData#filter()
      * @since 1.0.0
      */
-    public Function<DSLContext, ? extends ResultQuery<? extends Record>> viewOne(JsonObject filter, Sort sort) {
+    public Function<DSLContext, ? extends ResultQuery<? extends Record>> viewOne(RequestFilter filter, Sort sort) {
         return view(filter, sort, Pagination.oneValue());
     }
 
@@ -199,7 +197,7 @@ public final class QueryBuilder {
      * @return the function
      * @since 1.0.0
      */
-    public Function<DSLContext, Boolean> exist(@NonNull EntityMetadata metadata, @NonNull JsonObject filter) {
+    public Function<DSLContext, Boolean> exist(@NonNull EntityMetadata metadata, @NonNull RequestFilter filter) {
         return dsl -> dsl.fetchExists(metadata.table(), condition(metadata, filter));
     }
 
@@ -211,16 +209,18 @@ public final class QueryBuilder {
      * @since 1.0.0
      */
     @SuppressWarnings("unchecked")
-    public Function<DSLContext, ? extends ResultQuery<? extends Record>> existQueryByJoin(@NonNull JsonObject filter) {
+    public Function<DSLContext, ? extends ResultQuery<? extends Record>> existQueryByJoin(
+        @NonNull RequestFilter filter) {
         final @NonNull JsonTable<? extends Record> table = base.table();
         final JsonObject nullable = new JsonObject();
         return context -> {
             final SelectJoinStep<Record> query = context.select(onlyPrimaryKeys()).from(table);
             if (Objects.nonNull(references)) {
-                references.stream().peek(meta -> {
-                    if (!predicate.test(meta)) {
-                        nullable.put(meta.requestKeyName(), filter.getValue(meta.requestKeyName()));
-                    }
+                references.stream()
+                          .peek(meta -> {
+                              if (!predicate.test(meta)) {
+                                  nullable.put(meta.requestKeyName(), filter.getValue(meta.requestKeyName()));
+                              }
                           })
                           .filter(predicate)
                           .forEach(meta -> doJoin(query, meta, new JsonObject().put(meta.jsonKeyName(), filter.getValue(
@@ -301,7 +301,7 @@ public final class QueryBuilder {
         return sql.orderBy(sortFields.filter(Objects::nonNull).toArray(OrderField[]::new));
     }
 
-    private OrderField<?> sortField(EntityMetadata meta, Entry<String, Object> entry) {
+    private OrderField<?> sortField(@NonNull EntityMetadata meta, @NonNull Entry<String, Object> entry) {
         final SortType type = SortType.parse(Strings.toString(entry.getValue()));
         if (type == null) {
             return null;

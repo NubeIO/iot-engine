@@ -16,6 +16,7 @@ import io.vertx.reactivex.core.Vertx;
 
 import com.nubeiot.core.TestHelper;
 import com.nubeiot.core.TestHelper.VertxHelper;
+import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.mock.MockConfig;
 import com.nubeiot.core.utils.mock.MockProvider;
 
@@ -73,23 +74,33 @@ public class ContainerVerticleTest {
     public void test_container_throw_exception_cannot_start(TestContext context) {
         containerVerticle.setError(true);
         addDummyUnit();
+        assertDeployError(context, new RuntimeException("Error when starting"));
+    }
 
-        Async async = context.async();
-        VertxHelper.deployFailed(vertx.getDelegate(), context, new DeploymentOptions(), containerVerticle, deployId -> {
-            TestHelper.testComplete(async);
-            Assert.assertEquals(0, vertx.deploymentIDs().size());
-        });
+    @Test
+    public void test_container_throw_exception_in_handler_cannot_start(TestContext context) {
+        containerVerticle.setErrorInHandler(true);
+        addDummyUnit();
+        assertDeployError(context, new NubeException("Error in success handler"));
     }
 
     @Test
     public void test_unit_throw_exception_cannot_start(TestContext context) {
         addDummyUnit();
         addMockUnitHavingException();
+        assertDeployError(context, new NubeException("UNKNOWN_ERROR | Cause: Error when starting Unit Verticle"));
+    }
 
+    private void assertDeployError(TestContext context, Throwable error) {
         Async async = context.async();
-        VertxHelper.deployFailed(vertx.getDelegate(), context, new DeploymentOptions(), containerVerticle, deployId -> {
-            TestHelper.testComplete(async);
-            Assert.assertEquals(0, vertx.deploymentIDs().size());
+        VertxHelper.deployFailed(vertx.getDelegate(), context, new DeploymentOptions(), containerVerticle, t -> {
+            try {
+                Assert.assertTrue(error.getClass().isInstance(t));
+                Assert.assertEquals(error.getMessage(), t.getMessage());
+                Assert.assertEquals(0, vertx.deploymentIDs().size());
+            } finally {
+                TestHelper.testComplete(async);
+            }
         });
     }
 

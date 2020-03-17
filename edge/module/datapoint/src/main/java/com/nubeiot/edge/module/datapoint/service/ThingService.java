@@ -62,4 +62,9 @@ public final class ThingService extends AbstractTransitiveEntityService<Thing, T
         return NetworkExtension.create(this);
     }
 
+    @Override
+    public boolean supportForceDeletion() {
+        return true;
+    }
+
 }

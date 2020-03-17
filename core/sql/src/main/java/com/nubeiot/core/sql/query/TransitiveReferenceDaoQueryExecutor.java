@@ -18,6 +18,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.service.marker.EntityReferences;
@@ -50,11 +51,8 @@ final class TransitiveReferenceDaoQueryExecutor<K, P extends VertxPojo, R extend
         final Pagination paging = Optional.ofNullable(reqData.pagination()).orElse(Pagination.builder().build());
         final Function<DSLContext, ResultQuery<R>> viewFunc
             = (Function<DSLContext, ResultQuery<R>>) queryBuilder().view(reqData.filter(), reqData.sort(), paging);
-        final EntityHandler handler = entityHandler();
-        return checkReferenceExistence(reqData).flatMapObservable(ignore -> handler.dao(metadata().daoClass())
-                                                                                   .queryExecutor()
-                                                                                   .findMany(viewFunc)
-                                                                                   .flattenAsObservable(rs -> rs));
+        return checkReferenceExistence(reqData).flatMapObservable(
+            ignore -> dao(metadata()).queryExecutor().findMany(viewFunc).flattenAsObservable(rs -> rs));
     }
 
     @Override
@@ -63,15 +61,14 @@ final class TransitiveReferenceDaoQueryExecutor<K, P extends VertxPojo, R extend
         K pk = metadata().parseKey(reqData);
         final Function<DSLContext, ResultQuery<R>> viewOneFunc
             = (Function<DSLContext, ResultQuery<R>>) queryBuilder().viewOne(reqData.filter(), reqData.sort());
-        final EntityHandler handler = entityHandler();
-        return checkReferenceExistence(reqData).flatMap(i -> handler.dao(metadata().daoClass())
-                                                                    .queryExecutor()
-                                                                    .findOne(viewOneFunc)
-                                                                    .flatMap(o -> o.map(Single::just)
-                                                                                   .orElse(Single.error(
-                                                                                       metadata().notFound(pk))))
-                                                                    .onErrorResumeNext(
-                                                                        EntityQueryExecutor::sneakyThrowDBError));
+        return checkReferenceExistence(reqData).flatMap(i -> dao(metadata()).queryExecutor()
+                                                                            .findOne(viewOneFunc)
+                                                                            .flatMap(o -> o.map(Single::just)
+                                                                                           .orElse(Single.error(
+                                                                                               metadata().notFound(
+                                                                                                   pk))))
+                                                                            .onErrorResumeNext(
+                                                                                EntityQueryExecutor::sneakyThrowDBError));
     }
 
     @Override
@@ -107,6 +104,7 @@ final class TransitiveReferenceDaoQueryExecutor<K, P extends VertxPojo, R extend
                          .collectInto(new JsonObject(),
                                       (json, obj) -> json.put(obj.getKey(), JsonData.checkAndConvert(obj.getValue())))
                          .map(json -> json.put(refField, JsonData.checkAndConvert(referenceKey)))
+                         .map(RequestFilter::new)
                          .flatMap(filter -> fetchExists(queryBuilder.exist(context, filter)).switchIfEmpty(
                              Single.error(reference.notFound(Strings.kvMsg(filter)))));
     }

@@ -2,6 +2,8 @@ package com.nubeiot.core.sql.workflow.step;
 
 import java.util.Objects;
 
+import org.jooq.Configuration;
+
 import io.reactivex.Single;
 
 import com.nubeiot.core.dto.RequestData;
@@ -27,11 +29,13 @@ public final class ModificationStep extends AbstractSQLStep implements CreateOrU
     private TripleConsumer<RequestData, EventAction, DMLPojo> onSuccess;
 
     @Override
-    public Single<DMLPojo> execute(@NonNull RequestData reqData, @NonNull OperationValidator validator) {
-        final Single<DMLPojo> result = queryExecutor().modifyReturningPrimary(reqData, validator)
+    public Single<DMLPojo> execute(@NonNull RequestData requestData, @NonNull OperationValidator validator,
+                                   Configuration configuration) {
+        final Single<DMLPojo> result = queryExecutor().runtimeConfiguration(configuration)
+                                                      .modifyReturningPrimary(requestData, validator)
                                                       .flatMap(dmlPojo -> lookup((DMLPojo) dmlPojo));
         if (Objects.nonNull(onSuccess)) {
-            return result.doOnSuccess(keyPojo -> onSuccess.accept(reqData, action(), keyPojo));
+            return result.doOnSuccess(keyPojo -> onSuccess.accept(requestData, action(), keyPojo));
         }
         return result;
     }

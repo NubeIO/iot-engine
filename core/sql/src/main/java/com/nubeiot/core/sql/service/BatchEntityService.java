@@ -40,7 +40,7 @@ public interface BatchEntityService<P extends VertxPojo, M extends EntityMetadat
      * @see EventAction#BATCH_CREATE EventAction#BATCH_CREATE
      * @since 1.0.0
      */
-    Single<JsonObject> batchCreate(RequestData requestData);
+    Single<JsonObject> batchCreate(@NonNull RequestData requestData);
 
     /**
      * Defines listener for updating existing resources in batch
@@ -50,7 +50,7 @@ public interface BatchEntityService<P extends VertxPojo, M extends EntityMetadat
      * @see EventAction#BATCH_UPDATE EventAction#BATCH_UPDATE
      * @since 1.0.0
      */
-    Single<JsonObject> batchUpdate(RequestData requestData);
+    Single<JsonObject> batchUpdate(@NonNull RequestData requestData);
 
     /**
      * Defines listener for patching existing resources in batch
@@ -60,7 +60,7 @@ public interface BatchEntityService<P extends VertxPojo, M extends EntityMetadat
      * @see EventAction#BATCH_PATCH EventAction#BATCH_PATCH
      * @since 1.0.0
      */
-    Single<JsonObject> batchPatch(RequestData requestData);
+    Single<JsonObject> batchPatch(@NonNull RequestData requestData);
 
     /**
      * Defines listener for deleting existing resources in batch
@@ -70,6 +70,6 @@ public interface BatchEntityService<P extends VertxPojo, M extends EntityMetadat
      * @see EventAction#BATCH_DELETE EventAction#BATCH_DELETE
      * @since 1.0.0
      */
-    Single<JsonObject> batchDelete(RequestData requestData);
+    Single<JsonObject> batchDelete(@NonNull RequestData requestData);
 
 }

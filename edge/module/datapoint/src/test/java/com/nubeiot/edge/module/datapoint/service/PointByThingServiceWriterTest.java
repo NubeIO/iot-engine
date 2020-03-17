@@ -9,6 +9,7 @@ import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.module.datapoint.BaseDataPointServiceTest;
@@ -43,10 +44,10 @@ public class PointByThingServiceWriterTest extends BaseDataPointServiceTest {
     public void test_create_point_by_duplicate_sensor(TestContext context) {
         final UUID uuid = UUID.randomUUID();
         final Point newOne = MockData.search(PrimaryKey.P_BACNET_TEMP).setId(uuid).setCode("NEW_TEMP");
-        final JsonObject expected = new JsonObject(
-            "{\"code\":\"DATABASE_ERROR\",\"message\":\"Database error. Code: C23_INTEGRITY_CONSTRAINT_VIOLATION | " +
-            "Cause:Thing " + PrimaryKey.THING_TEMP_HVAC + " with type SENSOR is already assigned to Point " +
-            PrimaryKey.P_BACNET_TEMP + "\"}}");
+        final JsonObject expected = new JsonObject().put("code", ErrorCode.INVALID_ARGUMENT)
+                                                    .put("message", "Thing " + PrimaryKey.THING_TEMP_HVAC +
+                                                                    " with type SENSOR is already assigned to Point " +
+                                                                    PrimaryKey.P_BACNET_TEMP);
         final JsonObject reqBody = new JsonObject().put("thing_id", UUID64.uuidToBase64(PrimaryKey.THING_TEMP_HVAC))
                                                    .put("point", JsonPojo.from(newOne).toJson());
         asserter(context, false, expected, PointByThingService.class.getName(), EventAction.CREATE,

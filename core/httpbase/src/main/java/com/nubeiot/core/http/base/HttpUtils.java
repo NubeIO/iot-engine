@@ -23,7 +23,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.Pagination;
-import com.nubeiot.core.dto.RequestData.Filters;
+import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.dto.Sort;
 import com.nubeiot.core.utils.Strings;
 
@@ -42,7 +42,7 @@ public final class HttpUtils {
                       HttpMethod.HEAD, HttpMethod.OPTIONS)));
 
     private static boolean isPretty(HttpServerRequest request) {
-        return Boolean.parseBoolean(request.getParam(Filters.PRETTY));
+        return Boolean.parseBoolean(request.getParam(RequestFilter.Filters.PRETTY));
     }
 
     @SuppressWarnings("unchecked")
@@ -113,7 +113,7 @@ public final class HttpUtils {
         private static final String SEPARATE = "&";
 
         public static String language(@NonNull HttpServerRequest request) {
-            String lang = request.getParam(Filters.LANG);
+            String lang = request.getParam(RequestFilter.Filters.LANG);
             if (Strings.isBlank(lang)) {
                 return "en";
             }
@@ -123,8 +123,8 @@ public final class HttpUtils {
         public static Pagination pagination(@NonNull HttpServerRequest request) {
             if (request.method() == HttpMethod.GET) {
                 return Pagination.builder()
-                                 .page(request.getParam(Filters.PAGE))
-                                 .perPage(request.getParam(Filters.PER_PAGE))
+                                 .page(request.getParam(RequestFilter.Filters.PAGE))
+                                 .perPage(request.getParam(RequestFilter.Filters.PER_PAGE))
                                  .build();
             }
             return null;
@@ -132,7 +132,8 @@ public final class HttpUtils {
 
         public static Sort sort(@NonNull HttpServerRequest request) {
             if (request.method() == HttpMethod.GET) {
-                return Sort.from(Urls.decode(Optional.ofNullable(request.getParam(Filters.SORT)).orElse("")));
+                return Sort.from(
+                    Urls.decode(Optional.ofNullable(request.getParam(RequestFilter.Filters.SORT)).orElse("")));
             }
             return null;
         }
@@ -147,7 +148,7 @@ public final class HttpUtils {
             for (String property : query.split("\\" + SEPARATE)) {
                 String[] keyValues = property.split("\\" + EQUAL);
                 String propKey = Urls.decode(keyValues[0]);
-                if (Filters.AUDIT.equals(propKey) || Filters.PRETTY.equals(propKey)) {
+                if (RequestFilter.Filters.AUDIT.equals(propKey) || RequestFilter.Filters.PRETTY.equals(propKey)) {
                     map.put(propKey, true);
                     continue;
                 }

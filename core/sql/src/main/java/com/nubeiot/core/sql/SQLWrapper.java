@@ -4,7 +4,6 @@ import java.sql.SQLException;
 import java.util.Objects;
 import javax.sql.DataSource;
 
-import org.jooq.Catalog;
 import org.jooq.Configuration;
 import org.jooq.impl.DefaultConfiguration;
 
@@ -25,12 +24,10 @@ import com.zaxxer.hikari.HikariDataSource;
 
 public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlConfig, SqlContext<T>> {
 
-    private final Catalog catalog;
     private DataSource dataSource;
 
-    SQLWrapper(Catalog catalog, Class<T> handlerClass) {
+    SQLWrapper(Class<T> handlerClass) {
         super(new SqlContext<>(handlerClass));
-        this.catalog = catalog;
     }
 
     @Override
@@ -82,7 +79,7 @@ public final class SQLWrapper<T extends EntityHandler> extends UnitVerticle<SqlC
         final T handler = ((AbstractEntityHandler) getContext().createHandler(jooqConfig, vertx)).registerSharedKey(k);
         return handler.before()
                       .map(EntityHandler::schemaHandler)
-                      .flatMap(schemaHandler -> schemaHandler.execute(handler, catalog))
+                      .flatMap(schemaHandler -> schemaHandler.execute(handler))
                       .onErrorResumeNext(throwable -> Single.error(
                           new InitializerError("Unknown error when initializing database", throwable)));
     }

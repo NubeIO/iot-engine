@@ -10,7 +10,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.dto.RequestData.Filters;
+import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventListener;
@@ -37,8 +37,8 @@ public final class ServiceGatewayIndex implements EventListener {
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> get(@NonNull RequestData requestData) {
-        final JsonObject filter = Optional.ofNullable(requestData.filter()).orElse(new JsonObject()).copy();
-        filter.remove(Filters.PRETTY);
+        final RequestFilter filter = new RequestFilter(requestData.filter());
+        filter.remove(RequestFilter.Filters.PRETTY);
         final ServiceDiscoveryController controller = getController(filter);
         final RecordView view = RecordView.parse((String) filter.remove(Params.VIEW));
         final String identifier = Optional.ofNullable(requestData.body())
@@ -49,14 +49,15 @@ public final class ServiceGatewayIndex implements EventListener {
                          .rxGetRecord(RecordPredicate.filter(filter, EventAction.GET_ONE))
                          .map(RecordTransformer.create(view)::transform)
                          .map(RecordOutput::toJson)
-                         .switchIfEmpty(
-                             Single.error(new ServiceNotFoundException("Not found service by given parameters")));
+                         .switchIfEmpty(Single.error(new ServiceNotFoundException(
+                             "Not found service by given parameters: " +
+                             requestData.filter().put(Params.IDENTIFIER, identifier).encode())));
     }
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> list(@NonNull RequestData requestData) {
-        JsonObject filter = Optional.ofNullable(requestData.filter()).orElse(new JsonObject()).copy();
-        filter.remove(Filters.PRETTY);
+        final RequestFilter filter = new RequestFilter(requestData.filter());
+        filter.remove(RequestFilter.Filters.PRETTY);
         ServiceDiscoveryController controller = getController(filter);
         RecordTransformer transformer = RecordTransformer.create(RecordView.END_USER);
         return controller.getRx()
@@ -75,12 +76,12 @@ public final class ServiceGatewayIndex implements EventListener {
     public static final class Params {
 
         public static final String IDENTIFIER = "identifier";
-        public static final String TYPE = "type";
-        public static final String STATUS = "status";
-        public static final String SCOPE = "scope";
-        public static final String BY = "by";
-        public static final String VIEW = "view";
-        public static final String KIND = "kind";
+        public static final String TYPE = "_type";
+        public static final String STATUS = "_status";
+        public static final String SCOPE = "_scope";
+        public static final String BY = "_by";
+        public static final String VIEW = "_view";
+        public static final String KIND = "_kind";
 
         public static final String ACTION = "_action";
 

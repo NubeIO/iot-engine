@@ -20,15 +20,15 @@ public final class DittoInitialSyncTask extends AbstractDittoTask<Edge>
     }
 
     @Override
-    public @NonNull Single<Boolean> isExecutable(@NonNull EntityRuntimeContext<Edge> executionContext) {
+    public @NonNull Single<Boolean> isExecutable(@NonNull EntityRuntimeContext<Edge> runtimeContext) {
         return Single.just(true);
     }
 
     @Override
-    public @NonNull Maybe<JsonObject> execute(@NonNull EntityRuntimeContext<Edge> executionContext) {
-        final DittoEdge ditto = new DittoEdge(executionContext.getData());
-        return doSyncOnSuccess(executionContext.getMetadata(), ditto.creationEndpoint(thingId(definitionContext())),
-                               createReqBody(ditto), executionContext.getData());
+    public @NonNull Maybe<JsonObject> execute(@NonNull EntityRuntimeContext<Edge> runtimeContext) {
+        final DittoEdge ditto = new DittoEdge(runtimeContext.getData());
+        return doSyncOnSuccess(runtimeContext.getMetadata(), ditto.creationEndpoint(thingId(definitionContext())),
+                               createReqBody(ditto), runtimeContext.getData());
     }
 
     private JsonObject createReqBody(@NonNull DittoEdge pojo) {

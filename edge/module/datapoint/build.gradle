@@ -10,6 +10,8 @@ dependencies {
     compile project(":core:iotdata")
     compile project(":edge:module:datapoint:model")
     compile project(":edge:module:datapoint:sync")
+    compile project(":core:sql")
+    compile project.deps.database.h2
     //    TODO temp
     compile project(":edge:connector:ditto")
 

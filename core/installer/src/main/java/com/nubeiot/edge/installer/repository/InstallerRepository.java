@@ -13,7 +13,6 @@ import io.vertx.maven.MavenVerticleFactory;
 import io.vertx.maven.ResolverOptions;
 
 import com.nubeiot.auth.ExternalServer;
-import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.installer.InstallerConfig.RepositoryConfig;
 import com.nubeiot.edge.installer.InstallerConfig.RepositoryConfig.RemoteRepositoryConfig;
@@ -30,18 +29,15 @@ public final class InstallerRepository {
 
     private final Vertx vertx;
 
-    public static InstallerRepository create(@NonNull EntityHandler handler) {
-        return new InstallerRepository(handler.vertx());
+    public static InstallerRepository create(@NonNull Vertx vertx) {
+        return new InstallerRepository(vertx);
     }
 
     public void setup(@NonNull RepositoryConfig repositoryCfg, @NonNull Path dataDir) {
         LOGGER.info("Setting up service local and remote repository");
         RemoteRepositoryConfig remoteConfig = repositoryCfg.getRemoteConfig();
         LOGGER.info("URLs" + remoteConfig.getUrls());
-        remoteConfig.getUrls()
-                    .entrySet()
-                    .stream()
-                    .parallel()
+        remoteConfig.getUrls().entrySet().stream().parallel()
                     .forEach(entry -> handleVerticleFactory(dataDir, repositoryCfg.getLocal(), entry));
     }
 

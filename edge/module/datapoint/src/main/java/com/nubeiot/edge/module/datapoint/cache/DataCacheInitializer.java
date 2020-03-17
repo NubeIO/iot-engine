@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.InjectableValues.Std;
 import com.nubeiot.core.cache.CacheInitializer;
 import com.nubeiot.core.cache.ClassGraphCache;
 import com.nubeiot.core.sql.EntityHandler;
+import com.nubeiot.core.sql.cache.EntityServiceCacheIndex;
+import com.nubeiot.core.sql.cache.EntityServiceIndex;
 import com.nubeiot.edge.module.datapoint.scheduler.DataJobDefinition;
 
 import lombok.NonNull;
@@ -19,8 +21,9 @@ public final class DataCacheInitializer implements CacheInitializer<DataCacheIni
 
     @Override
     public DataCacheInitializer init(@NonNull EntityHandler context) {
-        final ClassGraphCache<String, DataJobDefinition> jobDefinitionCache = new ClassGraphCache<>();
+        final ClassGraphCache<String, DataJobDefinition> jobDefinitionCache = new ClassGraphCache<>("Scheduler Job");
         DataJobDefinition.MAPPER.setInjectableValues(new Std().addValue(JOB_CONFIG_CACHE, jobDefinitionCache));
+        addBlockingCache(context, EntityServiceIndex.DATA_KEY, EntityServiceCacheIndex::create);
         addBlockingCache(context, JOB_CONFIG_CACHE, () -> jobDefinitionCache.register(DataJobDefinition::find));
         addBlockingCache(context, HISTORIES_DATA_CACHE, PointHistoryCache::new);
         addBlockingCache(context, PROTOCOL_DISPATCHER_CACHE, () -> ProtocolDispatcherCache.init(context));

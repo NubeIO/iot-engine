@@ -19,6 +19,7 @@ import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.core.sql.workflow.DefaultDMLWorkflow;
 import com.nubeiot.core.sql.workflow.DefaultDQLBatchWorkflow;
 import com.nubeiot.core.sql.workflow.DefaultDQLWorkflow;
+import com.nubeiot.core.sql.workflow.DefaultDeletionWorkflow;
 import com.nubeiot.core.sql.workflow.step.CreationStep;
 import com.nubeiot.core.sql.workflow.step.DeletionStep;
 import com.nubeiot.core.sql.workflow.step.GetManyStep;
@@ -144,18 +145,19 @@ public abstract class AbstractEntityService<P extends VertxPojo, M extends Entit
 
     @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
     public Single<JsonObject> delete(RequestData requestData) {
-        return DefaultDMLWorkflow.builder()
-                                 .action(EventAction.REMOVE)
-                                 .metadata(context())
-                                 .normalize(requestDecorator()::onDeletingOneResource)
-                                 .validator(initDeletionValidator())
-                                 .preTask(prePersistTask())
-                                 .sqlStep(initDeletionStep())
-                                 .postTask(postPersistTask())
-                                 .asyncPostTask(postPersistAsyncTask())
-                                 .transformer((req, re) -> transformer().afterDelete(re.dbEntity(), req))
-                                 .build()
-                                 .run(requestData);
+        return DefaultDeletionWorkflow.builder()
+                                      .action(EventAction.REMOVE)
+                                      .metadata(context())
+                                      .supportForceDeletion(supportForceDeletion())
+                                      .normalize(requestDecorator()::onDeletingOneResource)
+                                      .validator(initDeletionValidator())
+                                      .preTask(prePersistTask())
+                                      .sqlStep(initDeletionStep())
+                                      .postTask(postPersistTask())
+                                      .asyncPostTask(postPersistAsyncTask())
+                                      .transformer((req, re) -> transformer().afterDelete(re.dbEntity(), req))
+                                      .build()
+                                      .run(requestData);
     }
 
     @Override

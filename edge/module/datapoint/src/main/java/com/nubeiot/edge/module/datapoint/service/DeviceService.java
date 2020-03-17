@@ -19,4 +19,9 @@ public final class DeviceService extends AbstractEntityService<Device, DeviceMet
         return DeviceMetadata.INSTANCE;
     }
 
+    @Override
+    public boolean supportForceDeletion() {
+        return true;
+    }
+
 }

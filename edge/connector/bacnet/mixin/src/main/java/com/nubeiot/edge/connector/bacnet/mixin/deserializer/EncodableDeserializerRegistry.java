@@ -41,7 +41,9 @@ public final class EncodableDeserializerRegistry {
         if (Objects.nonNull(deserializer)) {
             return deserializer;
         }
-        return DESERIALIZERS.entrySet().stream().filter(entry -> ReflectionClass.assertDataType(clazz, entry.getKey()))
+        return DESERIALIZERS.entrySet()
+                            .stream()
+                            .filter(entry -> ReflectionClass.assertDataType(clazz, entry.getKey()))
                             .map(Entry::getValue)
                             .findFirst()
                             .orElseGet(() -> fallback(clazz));

@@ -151,10 +151,11 @@ public interface SchemaInitializer extends SchemaExecutor {
     @NonNull Single<JsonObject> initData(@NonNull EntityHandler entityHandler);
 
     @Override
-    default Single<EventMessage> execute(@NonNull EntityHandler entityHandler, @NonNull Catalog catalog) {
+    default Single<EventMessage> execute(@NonNull EntityHandler entityHandler) {
         logger().info("SQL::Creating database model...");
         logger().info("SQL::Creating schema...");
         final DSLContext dsl = entityHandler.dsl();
+        final Catalog catalog = entityHandler.catalog();
         catalog.schemaStream()
                .map(schema -> createSchema(dsl, schema))
                .map(Schema::getTables)

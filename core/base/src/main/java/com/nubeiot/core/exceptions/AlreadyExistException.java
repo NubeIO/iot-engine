@@ -1,6 +1,6 @@
 package com.nubeiot.core.exceptions;
 
-public class AlreadyExistException extends NubeException {
+public final class AlreadyExistException extends NubeException {
 
     public AlreadyExistException(String message, Throwable e) {
         super(ErrorCode.ALREADY_EXIST, message, e);

@@ -27,8 +27,8 @@ public class IDittoModelTest {
     public void setup() {
         vertx = Vertx.vertx();
         SharedDataDelegate.addLocalDataValue(vertx, this.getClass().getName(), AbstractDittoTask.SYNC_CONFIG_CACHE,
-                                             new ClassGraphCache<EntityMetadata, IDittoModel>().register(
-                                                 IDittoModel::find));
+                                             new ClassGraphCache<EntityMetadata, IDittoModel>(
+                                                 "Entity Metadata").register(IDittoModel::find));
     }
 
     @Test
@@ -38,7 +38,6 @@ public class IDittoModelTest {
                                                 !(metadata instanceof CompositeMetadata ||
                                                   metadata instanceof PointMetadata))
                             .filter(metadata -> !(Tables.EDGE_DEVICE.equals(metadata.table()) ||
-                                                  Tables.POINT_THING.equals(metadata.table()) ||
                                                   Tables.PROTOCOL_DISPATCHER.equals(metadata.table()) ||
                                                   Tables.SYNC_DISPATCHER.equals(metadata.table())))
                             .map(IDittoModel::find)

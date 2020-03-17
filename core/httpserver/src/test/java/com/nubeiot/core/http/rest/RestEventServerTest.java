@@ -38,7 +38,7 @@ public class RestEventServerTest extends HttpServerTestBase {
     public void test_api_eventbus_error_unexpected(TestContext context) {
         MockEventBusErrorListener.create(this.vertx.eventBus()).start();
         String path = "/api/test/events";
-        //TODO need to check again??
+        //TODO need to check error message: Duplicate `cause`??
         JsonObject expected = new JsonObject().put("code", ErrorCode.UNKNOWN_ERROR)
                                               .put("message", "UNKNOWN_ERROR | Cause: xxx | Cause: xxx");
         startServer(context, new HttpServerRouter().registerEventBusApi(MockApiDefinition.MockRestEventApi.class));

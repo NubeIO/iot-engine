@@ -1,6 +1,9 @@
 package com.nubeiot.edge.connector.ditto;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Maybe;
@@ -19,24 +22,28 @@ import lombok.NonNull;
 
 public final class DittoSyncTask extends AbstractDittoTask<VertxPojo> {
 
+    //TODO need to exclude REMOVE
+    public static final Set<EventAction> UNSUPPORTED_SYNC_ACTION = new HashSet<>(
+        Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.REMOVE));
+
     public DittoSyncTask(@NonNull DittoTaskContext definitionContext) {
         super(definitionContext);
     }
 
     @Override
-    public @NonNull Single<Boolean> isExecutable(@NonNull EntityRuntimeContext<VertxPojo> executionContext) {
-        final EventAction action = executionContext.getOriginReqAction();
+    public @NonNull Single<Boolean> isExecutable(@NonNull EntityRuntimeContext<VertxPojo> runtimeContext) {
+        final EventAction action = runtimeContext.getOriginReqAction();
         return Single.just(definitionContext().entityHandler() instanceof EntitySyncHandler &&
-                           !(action == EventAction.GET_LIST || action == EventAction.GET_ONE ||
-                             action == EventAction.REMOVE));
+                           !UNSUPPORTED_SYNC_ACTION.contains(action));
     }
 
     @Override
-    public @NonNull Maybe<JsonObject> execute(@NonNull EntityRuntimeContext<VertxPojo> executionContext) {
-        if (executionContext.isError()) {
-            return doOnError(executionContext.getThrowable());
+    public @NonNull Maybe<JsonObject> execute(@NonNull EntityRuntimeContext<VertxPojo> runtimeContext) {
+        if (runtimeContext.isError()) {
+            return doOnError(runtimeContext.getThrowable(), runtimeContext.getOriginReqAction(),
+                             runtimeContext.getMetadata());
         }
-        return transform(executionContext).flatMap(syncData -> doOnSuccess(executionContext.getMetadata(), syncData));
+        return transform(runtimeContext).flatMap(syncData -> doOnSuccess(runtimeContext.getMetadata(), syncData));
     }
 
     private @NonNull Maybe<IDittoModel<VertxPojo>> transform(@NonNull EntityRuntimeContext<VertxPojo> data) {
@@ -51,12 +58,13 @@ public final class DittoSyncTask extends AbstractDittoTask<VertxPojo> {
                                syncData.get());
     }
 
-    private Maybe<JsonObject> doOnError(Throwable throwable) {
+    private Maybe<JsonObject> doOnError(@NonNull Throwable throwable, @NonNull EventAction action,
+                                        @NonNull EntityMetadata metadata) {
         if (logger.isDebugEnabled()) {
             if (throwable instanceof DesiredException) {
-                logger.debug("Not sync due to previous error", throwable);
+                logger.debug("Not sync {}::{} due to previous error", throwable, metadata.table().getName(), action);
             }
-            logger.error("Not sync due to previous error", throwable);
+            logger.warn("Not sync {}::{} due to previous error", throwable, metadata.table().getName(), action);
         }
         return Maybe.empty();
     }

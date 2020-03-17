@@ -8,6 +8,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.RequestFilter.Filters;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
@@ -85,7 +86,7 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
     @Test
     public void test_create_directly(TestContext context) {
         final UUID id = UUID.randomUUID();
-        JsonObject data = new JsonObject(
+        final JsonObject data = new JsonObject(
             "{\"id\":\"" + id + "\",\"code\":\"TET_01\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"protocol" +
             "\":\"WIRE\",\"unit\":{\"type\":\"meters_per_second\",\"symbol\":\"m/s\",\"category\":\"VELOCITY\"," +
             "\"alias\":{\"= 10.0\":\"hah\",\"> 10.0\":\"xyz\"}},\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" +
@@ -273,6 +274,37 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
                                                    .put("network_id", PrimaryKey.BACNET_NETWORK.toString()))
                                      .build();
         asserter(context, true, expected, PointService.class.getName(), EventAction.PATCH, req);
+    }
+
+    @Test
+    public void test_delete_point_without_force(TestContext context) {
+        final JsonObject expected = new JsonObject().put("code", ErrorCode.BEING_USED)
+                                                    .put("message", "Resource with point_id=" + PrimaryKey.P_GPIO_TEMP +
+                                                                    " is using by another resource");
+        final RequestData req = RequestData.builder()
+                                           .body(new JsonObject().put("point_id", PrimaryKey.P_GPIO_TEMP.toString()))
+                                           .build();
+        asserter(context, false, expected, PointService.class.getName(), EventAction.REMOVE, req);
+    }
+
+    @Test
+    public void test_delete_point_with_force(TestContext context) {
+        final JsonObject body = new JsonObject(
+            "{\"id\":\"1efaf662-1333-48d1-a60f-8fc60f259f0e\",\"code\":\"2CB2B763_TEMP\"," +
+            "\"edge\":\"d7cd3f57-a188-4462-b959-df7a23994c92\"," +
+            "\"network\":\"e3eab951-932e-4fcc-a925-08b31e1014a0\",\"label\":null," +
+            "\"enabled\":true,\"protocol\":\"WIRE\",\"kind\":\"INPUT\"," +
+            "\"type\":\"DIGITAL\",\"min_scale\":null,\"max_scale\":null," +
+            "\"precision\":3,\"offset\":0,\"version\":null,\"metadata\":null," +
+            "\"unit\":{\"type\":\"celsius\",\"category\":\"TEMPERATURE\",\"symbol\":\"°C\",\"label\":null}}");
+        final JsonObject expected = new JsonObject().put("action", EventAction.REMOVE)
+                                                    .put("status", Status.SUCCESS)
+                                                    .put("resource", body);
+        final RequestData req = RequestData.builder()
+                                           .body(new JsonObject().put("point_id", PrimaryKey.P_GPIO_TEMP.toString()))
+                                           .filter(new JsonObject().put(Filters.FORCE, true))
+                                           .build();
+        asserter(context, true, expected, PointService.class.getName(), EventAction.REMOVE, req);
     }
 
 }

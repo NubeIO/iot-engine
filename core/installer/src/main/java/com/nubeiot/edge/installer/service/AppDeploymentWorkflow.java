@@ -139,7 +139,7 @@ public final class AppDeploymentWorkflow {
         final OffsetDateTime now = DateTimes.now();
         final String transactionId = UUID.randomUUID().toString();
         final JsonObject metadata = module.toJson();
-        // TODO: replace with POJO constant later
+        // TODO replace with POJO constant later
         metadata.remove("system_config");
         metadata.remove("app_config");
         final TblTransaction transaction = new TblTransaction().setTransactionId(transactionId)

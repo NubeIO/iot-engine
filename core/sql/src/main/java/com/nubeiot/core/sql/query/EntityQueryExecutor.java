@@ -3,6 +3,7 @@ package com.nubeiot.core.sql.query;
 import java.util.function.Function;
 
 import org.jooq.Condition;
+import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Table;
 import org.jooq.UpdatableRecord;
@@ -13,10 +14,10 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.dto.Sort;
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.HiddenException.ImplementationError;
@@ -27,6 +28,7 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.sql.pojos.DMLPojo;
 import com.nubeiot.core.sql.validation.OperationValidator;
+import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
@@ -36,7 +38,7 @@ import lombok.NonNull;
  * @param <P> Type of {@code VertxPojo}
  * @since 1.0.0
  */
-//TODO lack unique keys validation
+//TODO lack unique keys validation. https://github.com/NubeIO/iot-engine/issues/321
 public interface EntityQueryExecutor<P extends VertxPojo> {
 
     /**
@@ -78,6 +80,10 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      */
     @NonNull EntityHandler entityHandler();
 
+    @NonNull Configuration runtimeConfiguration();
+
+    @NonNull EntityQueryExecutor runtimeConfiguration(Configuration configuration);
+
     /**
      * Declares query builder.
      *
@@ -93,12 +99,12 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      * @param <K>      Type of {@code primary key}
      * @param <R>      Type of {@code UpdatableRecord}
      * @param <D>      Type of {@code VertxDAO}
-     * @param daoClass the dao class
+     * @param metadata the entity metadata
      * @return instance of {@code DAO}
      * @since 1.0.0
      */
-    default <K, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> D dao(@NonNull Class<D> daoClass) {
-        return entityHandler().dao(daoClass);
+    default <K, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> D dao(EntityMetadata<K, P, R, D> metadata) {
+        return entityHandler().dao(runtimeConfiguration(), metadata.daoClass());
     }
 
     /**
@@ -118,19 +124,6 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
      * @since 1.0.0
      */
     @NonNull Single<P> findOneByKey(@NonNull RequestData requestData);
-
-    /**
-     * Check whether resource is existed or not
-     *
-     * @param query Given query
-     * @return empty if resource is not existed or {@code true}
-     * @see QueryBuilder#exist(Table, Condition)
-     * @since 1.0.0
-     */
-    @NonNull
-    default Maybe<Boolean> fetchExists(@NonNull Function<DSLContext, Boolean> query) {
-        return executeAny(query).filter(b -> b).switchIfEmpty(Maybe.empty());
-    }
 
     /**
      * Get one resource by {@code primary key}
@@ -167,7 +160,7 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
                                                     @NonNull OperationValidator validator);
 
     /**
-     * Do delete data by primary
+     * Do delete data by {@code primary key}
      *
      * @param requestData Request data
      * @param validator   deletion validator
@@ -177,44 +170,61 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
     @NonNull Single<P> deleteOneByKey(@NonNull RequestData requestData, @NonNull OperationValidator validator);
 
     /**
-     * Check resource is able to delete by scanning reference resource to this resource
-     *
-     * @param pojo        Resource
-     * @param metadata    Entity metadata
-     * @param keyProvider function to search key from resource
-     * @return single pojo or single existed error
-     * @see EntityMetadata#unableDeleteDueUsing(String)
-     * @since 1.0.0
-     */
-    @SuppressWarnings("unchecked")
-    @NonNull
-    default Single<P> isAbleToDelete(@NonNull P pojo, @NonNull EntityMetadata metadata,
-                                     @NonNull Function<VertxPojo, String> keyProvider) {
-        if (!(entityHandler() instanceof EntityConstraintHolder)) {
-            return Single.just(pojo);
-        }
-        final Object pk = pojo.toJson().getValue(metadata.jsonKeyName());
-        final EntityConstraintHolder holder = (EntityConstraintHolder) entityHandler();
-        return Observable.fromIterable(holder.referenceTableKeysTo(metadata.table()))
-                         .flatMapMaybe(e -> fetchExists(queryBuilder().exist(e.getKey(), e.getValue().eq(pk))))
-                         .flatMap(b -> Observable.error(metadata.unableDeleteDueUsing(keyProvider.apply(pojo))))
-                         .map(b -> pojo)
-                         .defaultIfEmpty(pojo)
-                         .singleOrError();
-    }
-
-    /**
      * Execute any function
      *
      * @param <X>      Type of {@code result}
      * @param function query function
      * @return result single
      * @apiNote Only using it in very complex case or special case
-     * @see QueryBuilder#view(JsonObject, Sort, Pagination)
-     * @see QueryBuilder#viewOne(JsonObject, Sort)
+     * @see QueryBuilder#view(RequestFilter, Sort, Pagination)
+     * @see QueryBuilder#viewOne(RequestFilter, Sort)
      * @see QueryBuilder#exist(Table, Condition)
      * @since 1.0.0
      */
     @NonNull <X> Single<X> executeAny(@NonNull Function<DSLContext, X> function);
+
+    /**
+     * Check whether resource is existed or not
+     *
+     * @param query Given query
+     * @return empty if resource is not existed or {@code true}
+     * @see QueryBuilder#exist(Table, Condition)
+     * @since 1.0.0
+     */
+    @NonNull
+    default Maybe<Boolean> fetchExists(@NonNull Function<DSLContext, Boolean> query) {
+        return executeAny(query).filter(b -> b).switchIfEmpty(Maybe.empty());
+    }
+
+    /**
+     * Check resource is able to delete by scanning reference resource to this resource
+     *
+     * @param pojo     Resource
+     * @param metadata Entity metadata
+     * @return single pojo or single existed error
+     * @see EntityMetadata#unableDeleteDueUsing(String)
+     * @since 1.0.0
+     */
+    @SuppressWarnings("unchecked")
+    @NonNull
+    default Single<Boolean> isAbleToDelete(@NonNull P pojo, @NonNull EntityMetadata metadata) {
+        final EntityConstraintHolder holder = entityHandler().holder();
+        if (EntityConstraintHolder.BLANK == holder) {
+            return Single.just(true);
+        }
+        final Object pk = metadata.parseKey(pojo);
+        return Observable.fromIterable(holder.referenceTo(metadata.table()))
+                         .flatMapMaybe(ref -> fetchExists(queryBuilder().exist(ref.getTable(), ref.getField().eq(pk))))
+                         .flatMap(b -> Observable.error(
+                             metadata.unableDeleteDueUsing(requestKeyAsMessage(metadata, pojo, pk))))
+                         .map(Boolean.class::cast)
+                         .defaultIfEmpty(true)
+                         .singleOrError();
+    }
+
+    default @NonNull String requestKeyAsMessage(@NonNull EntityMetadata metadata, @NonNull VertxPojo pojo,
+                                                @NonNull Object primaryKey) {
+        return Strings.kvMsg(metadata.requestKeyName(), primaryKey);
+    }
 
 }

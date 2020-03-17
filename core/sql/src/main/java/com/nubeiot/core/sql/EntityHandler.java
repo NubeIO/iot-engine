@@ -1,7 +1,11 @@
 package com.nubeiot.core.sql;
 
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
+import org.jooq.Catalog;
+import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.UpdatableRecord;
 
@@ -14,6 +18,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.sql.query.ComplexQueryExecutor;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
@@ -52,6 +57,14 @@ public interface EntityHandler {
     static <P extends VertxPojo> P parse(@NonNull Class<P> pojoClass, @NonNull Object data) {
         return parse(pojoClass, JsonData.tryParse(data).toJson());
     }
+
+    /**
+     * Defines database catalog.
+     *
+     * @return the catalog
+     * @since 1.0.0
+     */
+    @NonNull Catalog catalog();
 
     /**
      * Get Vertx.
@@ -109,18 +122,56 @@ public interface EntityHandler {
     @NonNull DSLContext dsl();
 
     /**
+     * Create DAO by given entity handler
+     *
+     * @param <K>      Type of {@code primary key}
+     * @param <P>      Type of {@code VertxPojo}
+     * @param <R>      Type of {@code UpdatableRecord}
+     * @param <D>      Type of {@code VertxDAO}
+     * @param metadata Entity metadata
+     * @return the instance of DAO
+     * @since 1.0.0
+     */
+    default @NonNull <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> D dao(
+        @NonNull EntityMetadata<K, P, R, D> metadata) {
+        return dao(metadata.daoClass());
+    }
+
+    /**
      * Create {@code DAO} by given {@code daoClass}.
      *
      * @param <K>      Type of {@code primary key}
-     * @param <M>      Type of {@code VertxPojo}
+     * @param <P>      Type of {@code VertxPojo}
      * @param <R>      Type of {@code UpdatableRecord}
      * @param <D>      Type of {@code VertxDAO}
      * @param daoClass the dao class
      * @return the instance of DAO
      * @since 1.0.0
      */
-    <K, M extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, M, K>> D dao(
-        @NonNull Class<D> daoClass);
+    default <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> D dao(
+        @NonNull Class<D> daoClass) {
+        return dao(dsl().configuration(), daoClass);
+    }
+
+    /**
+     * Create {@code DAO} by given {@code daoClass} and given {@code jooq configuration}.
+     *
+     * @param <K>           Type of {@code primary key}
+     * @param <P>           Type of {@code VertxPojo}
+     * @param <R>           Type of {@code UpdatableRecord}
+     * @param <D>           Type of {@code VertxDAO}
+     * @param configuration the configuration
+     * @param daoClass      the dao class
+     * @return the d
+     * @since 1.0.0
+     */
+    default <K, P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, K>> D dao(
+        @NonNull Configuration configuration, @NonNull Class<D> daoClass) {
+        Map<Class, Object> input = new LinkedHashMap<>();
+        input.put(Configuration.class, configuration);
+        input.put(io.vertx.reactivex.core.Vertx.class, io.vertx.reactivex.core.Vertx.newInstance(vertx()));
+        return ReflectionClass.createObject(daoClass, input);
+    }
 
     /**
      * Get generic query executor.
@@ -129,7 +180,21 @@ public interface EntityHandler {
      * @see JDBCRXGenericQueryExecutor
      * @since 1.0.0
      */
-    @NonNull JDBCRXGenericQueryExecutor genericQuery();
+    default @NonNull JDBCRXGenericQueryExecutor genericQuery() {
+        return genericQuery(dsl().configuration());
+    }
+
+    /**
+     * Get generic query executor.
+     *
+     * @param configuration the configuration
+     * @return the generic query executor
+     * @see JDBCRXGenericQueryExecutor
+     * @since 1.0.0
+     */
+    default @NonNull JDBCRXGenericQueryExecutor genericQuery(@NonNull Configuration configuration) {
+        return new JDBCRXGenericQueryExecutor(configuration, io.vertx.reactivex.core.Vertx.newInstance(vertx()));
+    }
 
     /**
      * Get complex query executor.
@@ -138,7 +203,9 @@ public interface EntityHandler {
      * @see ComplexQueryExecutor
      * @since 1.0.0
      */
-    @NonNull ComplexQueryExecutor complexQuery();
+    default @NonNull ComplexQueryExecutor complexQuery() {
+        return ComplexQueryExecutor.create(this);
+    }
 
     /**
      * Execute any task before setup database
@@ -146,7 +213,9 @@ public interface EntityHandler {
      * @return single of reference to this, so the API can be used fluently
      * @since 1.0.0
      */
-    @NonNull Single<EntityHandler> before();
+    default @NonNull Single<EntityHandler> before() {
+        return Single.just(this);
+    }
 
     /**
      * Get {@code Schema handler}.
@@ -156,5 +225,27 @@ public interface EntityHandler {
      * @since 1.0.0
      */
     @NonNull SchemaHandler schemaHandler();
+
+    /**
+     * Gets {@code entity constraint holder}.
+     *
+     * @return the entity constraint holder. Default is {@link EntityConstraintHolder#BLANK}
+     * @see EntityConstraintHolder
+     * @since 1.0.0
+     */
+    default @NonNull EntityConstraintHolder holder() {
+        return EntityConstraintHolder.BLANK;
+    }
+
+    /**
+     * Gets {@code Metadata index}.
+     *
+     * @return the metadata index. Default is {@link MetadataIndex#BLANK}
+     * @see MetadataIndex
+     * @since 1.0.0
+     */
+    default @NonNull MetadataIndex metadataIndex() {
+        return MetadataIndex.BLANK;
+    }
 
 }

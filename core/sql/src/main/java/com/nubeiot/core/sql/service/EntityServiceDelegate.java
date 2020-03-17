@@ -98,6 +98,11 @@ public abstract class EntityServiceDelegate<P extends VertxPojo, M extends Entit
     }
 
     @Override
+    public boolean supportForceDeletion() {
+        return unwrap().supportForceDeletion();
+    }
+
+    @Override
     public Single<JsonObject> list(RequestData requestData) {
         return unwrap().list(requestData);
     }

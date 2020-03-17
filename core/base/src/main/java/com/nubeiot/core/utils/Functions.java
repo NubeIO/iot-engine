@@ -27,7 +27,7 @@ public final class Functions {
     public static <T> Optional<T> getIfThrow(Consumer<Throwable> consumer, @NonNull Provider<T> provider) {
         try {
             return Optional.ofNullable(provider.get());
-        } catch (Exception t) {
+        } catch (Throwable t) {
             consumer.accept(t);
             return Optional.empty();
         }
@@ -37,7 +37,7 @@ public final class Functions {
                                    @NonNull Provider<T> provider) {
         try {
             return provider.get();
-        } catch (Exception t) {
+        } catch (Throwable t) {
             throw override.apply(t);
         }
     }
@@ -91,7 +91,7 @@ public final class Functions {
     public static <T> T getOrDefault(T def, @NonNull Provider<T> provider) {
         try {
             return provider.get();
-        } catch (Exception t) {
+        } catch (Throwable t) {
             if (logger.isTraceEnabled()) {
                 logger.trace("Fallback default", t);
             }
@@ -132,7 +132,7 @@ public final class Functions {
     @FunctionalInterface
     public interface Provider<T> {
 
-        T get() throws Exception;
+        T get() throws Throwable;
 
     }
 

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
+import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.ResultQuery;
@@ -14,7 +15,6 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestData;
@@ -29,18 +29,24 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
+@Getter
+@Accessors(fluent = true)
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 @SuppressWarnings("unchecked")
 abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQueryExecutor<P> {
 
-    private final EntityHandler handler;
-    @Getter(value = AccessLevel.PUBLIC)
+    @NonNull
+    private final EntityHandler entityHandler;
+    @NonNull
     private final EntityMetadata metadata;
+    @Setter
+    private Configuration runtimeConfiguration;
 
-    @Override
-    public final EntityHandler entityHandler() {
-        return handler;
+    public final Configuration runtimeConfiguration() {
+        return Optional.ofNullable(runtimeConfiguration).orElseGet(entityHandler.dsl()::configuration);
     }
 
     @Override
@@ -53,15 +59,13 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQuer
         final Pagination paging = Optional.ofNullable(reqData.pagination()).orElse(Pagination.builder().build());
         final Function<DSLContext, ? extends ResultQuery<? extends Record>> query = queryBuilder().view(
             reqData.filter(), reqData.sort(), paging);
-        return ((Single<List<P>>) entityHandler().dao(metadata.daoClass())
-                                                 .queryExecutor()
-                                                 .findMany(query)).flattenAsObservable(rs -> rs);
+        return ((Single<List<P>>) dao(metadata).queryExecutor().findMany(query)).flattenAsObservable(rs -> rs);
     }
 
     @Override
     public @NonNull Single<DMLPojo> insertReturningPrimary(@NonNull RequestData reqData,
                                                            @NonNull OperationValidator validator) {
-        final VertxDAO dao = entityHandler().dao(metadata.daoClass());
+        final VertxDAO dao = dao(metadata);
         return validator.validate(reqData, null).flatMap(pojo -> {
             final Optional<Object> opt = Optional.ofNullable(pojo.toJson().getValue(metadata.jsonKeyName()))
                                                  .map(k -> metadata.parseKey(k.toString()));
@@ -80,7 +84,7 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQuer
     public @NonNull Single<DMLPojo> modifyReturningPrimary(@NonNull RequestData reqData,
                                                            @NonNull OperationValidator validator) {
         final Object pk = metadata.parseKey(reqData);
-        final VertxDAO dao = entityHandler().dao(metadata.daoClass());
+        final VertxDAO dao = dao(metadata);
         //TODO validate unique keys
         return findOneByKey(reqData).flatMap(db -> validator.validate(reqData, db).map(p -> new SimpleEntry<>(db, p)))
                                     .map(entry -> AuditDecorator.addModifiedAudit(reqData, metadata, entry.getKey(),
@@ -92,26 +96,20 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQuer
 
     @Override
     public Single<P> deleteOneByKey(@NonNull RequestData reqData, @NonNull OperationValidator validator) {
-        final Object pk = metadata.parseKey(reqData);
-        final VertxDAO dao = entityHandler().dao(metadata.daoClass());
-        return findOneByKey(reqData).flatMap(dbPojo -> isAbleToDelete(dbPojo, metadata, this::pojoKeyMsg))
-                                    .flatMap(dbPojo -> validator.validate(reqData, dbPojo))
-                                    .flatMapMaybe(
-                                        p -> ((Single<Integer>) dao.deleteById(pk)).filter(r -> r > 0).map(r -> p))
-                                    .switchIfEmpty(
-                                        EntityQueryExecutor.unableDelete(Strings.kvMsg(metadata.requestKeyName(), pk)));
+        return findOneByKey(reqData).flatMap(db -> validator.validate(reqData, db)).flatMap(db -> doDelete((P) db));
     }
 
     @Override
-    public final <X> Single<X> executeAny(Function<DSLContext, X> function) {
-        return entityHandler().genericQuery().executeAny(function);
+    public final <X> Single<X> executeAny(@NonNull Function<DSLContext, X> function) {
+        return entityHandler().genericQuery(runtimeConfiguration()).executeAny(function);
     }
 
-    private String pojoKeyMsg(VertxPojo pojo) {
-        final JsonObject json = pojo.toJson();
-        final Object value = json.getValue(metadata.jsonKeyName());
-        return Strings.kvMsg(metadata.requestKeyName(),
-                             Optional.ofNullable(value).orElse(json.getValue(metadata.requestKeyName())));
+    private Single<P> doDelete(@NonNull P dbEntity) {
+        final Object pk = metadata.parseKey(dbEntity);
+        final Single<Integer> delete = (Single<Integer>) dao(metadata).deleteById(pk);
+        return delete.filter(r -> r > 0)
+                     .map(r -> dbEntity)
+                     .switchIfEmpty(EntityQueryExecutor.unableDelete(Strings.kvMsg(metadata.requestKeyName(), pk)));
     }
 
 }

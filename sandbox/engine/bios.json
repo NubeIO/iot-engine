@@ -60,10 +60,7 @@
                 "url": "http://nexus:8081/repository/maven-central/"
               },
               {
-                "url": "http://45.63.30.129:8081/repository/maven-releases/"
-              },
-              {
-                "url": "http://45.63.30.129:8081/repository/maven-releases/"
+                "url": "http://45.63.30.129:8081/repository/maven-public/"
               }
             ]
           }
@@ -138,10 +135,7 @@
                         "url": "http://nexus:8081/repository/maven-central/"
                       },
                       {
-                        "url": "http://45.63.30.129:8081/repository/maven-releases/"
-                      },
-                      {
-                        "url": "http://45.63.30.129:8081/repository/maven-releases/"
+                        "url": "http://45.63.30.129:8081/repository/maven-public/"
                       }
                     ]
                   }

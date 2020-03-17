@@ -13,13 +13,13 @@ import io.vertx.core.Vertx;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.edge.connector.bacnet.service.BACnetApis;
-import com.nubeiot.edge.connector.bacnet.service.BACnetRpcClient;
-import com.nubeiot.edge.module.datapoint.rpc.DataProtocolDiscoveryApis;
+import com.nubeiot.edge.connector.bacnet.service.BACnetRpcProtocol;
+import com.nubeiot.edge.module.datapoint.rpc.discovery.DataProtocolDiscoveryApis;
 
 import lombok.NonNull;
 
 public interface BACnetDiscoveryService
-    extends BACnetApis, BACnetRpcClient<AbstractDiscoveryService>, DataProtocolDiscoveryApis<AbstractDiscoveryService> {
+    extends BACnetApis, BACnetRpcProtocol, DataProtocolDiscoveryApis<AbstractDiscoveryService> {
 
     static Set<? extends BACnetDiscoveryService> createServices(@NonNull Vertx vertx, @NonNull String sharedKey) {
         final Map<Class, Object> inputs = new LinkedHashMap<>();

@@ -6,8 +6,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.decorator.RequestDecorator;
+import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractManyToManyEntityService;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointThingMetadata;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointThingComposite;
@@ -36,6 +38,11 @@ abstract class PointThingService extends AbstractManyToManyEntityService<PointTh
                                        table.getJsonField(table.EDGE_ID), table.getJsonField(table.COMPUTED_THING)))
                      .flatMap(Collection::stream)
                      .collect(Collectors.toSet());
+    }
+
+    @Override
+    public Set<EventMethodDefinition> definitions() {
+        return EntityHttpService.createDefinitions(getAvailableEvents(), resource(), reference());
     }
 
 }

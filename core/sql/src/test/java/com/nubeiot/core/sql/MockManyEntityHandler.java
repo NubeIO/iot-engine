@@ -7,6 +7,7 @@ import java.time.OffsetDateTime;
 import java.time.Period;
 import java.time.ZoneOffset;
 
+import org.jooq.Catalog;
 import org.jooq.Configuration;
 
 import io.reactivex.Single;
@@ -15,6 +16,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.exceptions.DatabaseException;
 import com.nubeiot.core.exceptions.InitializerError.MigrationError;
+import com.nubeiot.core.sql.mock.manyschema.DefaultCatalog;
 import com.nubeiot.core.sql.mock.manyschema.mock0.Tables;
 import com.nubeiot.core.sql.mock.manyschema.mock0.tables.daos.TblSample_00Dao;
 import com.nubeiot.core.sql.mock.manyschema.mock0.tables.pojos.TblSample_00;
@@ -38,6 +40,11 @@ public class MockManyEntityHandler extends AbstractEntityHandler {
 
     static SchemaHandler createSchemaHandler(SchemaInitializer initializer, SchemaMigrator migrator) {
         return BaseSqlTest.createSchemaHandler(Tables.TBL_SAMPLE_00, initializer, migrator);
+    }
+
+    @Override
+    public @NonNull Catalog catalog() {
+        return DefaultCatalog.DEFAULT_CATALOG;
     }
 
     @Override
@@ -75,7 +82,7 @@ public class MockManyEntityHandler extends AbstractEntityHandler {
         @Override
         public @NonNull SchemaHandler schemaHandler() {
             return createSchemaHandler(handler -> Single.error(new DatabaseException("Init error")),
-                                       (entityHandler, catalog) -> Single.error(new MigrationError("Migrate error")));
+                                       handler -> Single.error(new MigrationError("Migrate error")));
         }
 
     }

@@ -79,13 +79,12 @@ ext {
 }
 
 dependencies {
-    compile project(":core:base")
+    compile project(":core:cache")
+    compile project(":core:sql:type")
     compile("io.vertx:vertx-jdbc-client:$project.versions.vertx") {
         exclude group: "com.mchange", module: "c3p0"
     }
     compile project.deps.database.hikari
-    compile project.deps.database.jpa
-    compile project.deps.database.jooq
     compile project.deps.database.jooqMeta
     compile project(":ext:rx-jdbc")
     compileOnly project(":core:httpbase")

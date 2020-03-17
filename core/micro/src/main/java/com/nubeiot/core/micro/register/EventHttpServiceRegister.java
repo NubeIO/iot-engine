@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import io.reactivex.Observable;
@@ -19,9 +20,8 @@ import com.nubeiot.core.http.base.EventHttpService;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.core.utils.ExecutorHelpers;
 
-import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
 /**
  * Represents for Event http service register.
@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
  * @see EventHttpService
  * @since 1.0.0
  */
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder(builderClassName = "Builder")
 public final class EventHttpServiceRegister<S extends EventHttpService> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EventHttpServiceRegister.class);
@@ -41,22 +41,7 @@ public final class EventHttpServiceRegister<S extends EventHttpService> {
     private final String sharedKey;
     @NonNull
     private final Supplier<Set<S>> eventServices;
-
-    /**
-     * Create event http service register.
-     *
-     * @param <S>              Type of {@code EventHttpService}
-     * @param vertx            the vertx
-     * @param sharedKey        the shared key
-     * @param servicesProvider the services provider
-     * @return the register
-     * @since 1.0.0
-     */
-    public static <S extends EventHttpService> EventHttpServiceRegister<S> create(@NonNull Vertx vertx,
-                                                                                  @NonNull String sharedKey,
-                                                                                  @NonNull Supplier<Set<S>> servicesProvider) {
-        return new EventHttpServiceRegister<S>(vertx, sharedKey, servicesProvider);
-    }
+    private Consumer<S> afterRegisterEventbusAddress;
 
     /**
      * Publish services to external API and register event listener by address at the same time.
@@ -71,11 +56,16 @@ public final class EventHttpServiceRegister<S extends EventHttpService> {
         return ExecutorHelpers.blocking(vertx, eventServices::get)
                               .flattenAsObservable(s -> s)
                               .doOnEach(s -> Optional.ofNullable(s.getValue())
-                                                     .ifPresent(service -> client.register(service.address(), service)))
+                                                     .ifPresent(service -> registerEventbusAddress(client, service)))
                               .filter(s -> Objects.nonNull(s.definitions()))
                               .flatMap(s -> registerEndpoint(discovery, s))
                               .toList()
                               .doOnSuccess(r -> LOGGER.info("Published {} Service API(s)", r.size()));
+    }
+
+    private void registerEventbusAddress(@NonNull EventbusClient client, @NonNull S service) {
+        client.register(service.address(), service);
+        Optional.ofNullable(afterRegisterEventbusAddress).ifPresent(func -> func.accept(service));
     }
 
     private Observable<Record> registerEndpoint(@NonNull ServiceDiscoveryController discovery, @NonNull S service) {
@@ -84,6 +74,20 @@ public final class EventHttpServiceRegister<S extends EventHttpService> {
         }
         return Observable.fromIterable(service.definitions())
                          .flatMapSingle(e -> discovery.addEventMessageRecord(service.api(), service.address(), e));
+    }
+
+    public static class Builder<S extends EventHttpService> {
+
+        public Builder<S> vertx(@NonNull Vertx vertx) {
+            this.vertx = vertx;
+            return this;
+        }
+
+        public Builder<S> vertx(@NonNull io.vertx.reactivex.core.Vertx vertx) {
+            this.vertx = vertx.getDelegate();
+            return this;
+        }
+
     }
 
 }

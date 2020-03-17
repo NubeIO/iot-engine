@@ -20,8 +20,10 @@ public abstract class BaseDataPointServiceTest extends BaseSqlServiceTest {
         DataPointEntityHandler entityHandler = startSQL(context, DefaultCatalog.DEFAULT_CATALOG,
                                                         DataPointEntityHandler.class);
         EventbusClient controller = controller();
-        DataPointService.createServices(entityHandler)
-                        .forEach(service -> controller.register(service.address(), service));
+        DataPointService.createServices(entityHandler).forEach(service -> {
+            controller.register(service.address(), service);
+            entityHandler.addServiceCache(service);
+        });
     }
 
     protected abstract JsonObject testData();

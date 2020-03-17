@@ -21,10 +21,12 @@ import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.task.remote.ProtocolDispatcherTask;
 import com.nubeiot.edge.module.datapoint.task.sync.SyncServiceFactory;
 
+import lombok.NonNull;
+
 public interface DataPointService<P extends VertxPojo, M extends EntityMetadata>
     extends EntityService<P, M>, EventHttpService {
 
-    static Set<? extends DataPointService> createServices(EntityHandler entityHandler) {
+    static Set<DataPointService> createServices(@NonNull EntityHandler entityHandler) {
         final Map<Class, Object> inputs = Collections.singletonMap(EntityHandler.class, entityHandler);
         return ReflectionClass.stream(DataPointService.class.getPackage().getName(), DataPointService.class,
                                       ReflectionClass.publicClass())
@@ -44,7 +46,7 @@ public interface DataPointService<P extends VertxPojo, M extends EntityMetadata>
     }
 
     default String api() {
-        return DataPointIndex.lookupApiName(context());
+        return DataPointApiService.DEFAULT.lookupApiName(context());
     }
 
     default Set<EventMethodDefinition> definitions() {

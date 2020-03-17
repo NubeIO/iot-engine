@@ -101,7 +101,7 @@ public abstract class BaseSqlTest {
     protected <T extends AbstractEntityHandler> T startSQL(TestContext context, Catalog catalog,
                                                            Class<T> handlerClass) {
         SQLWrapper<T> v = VertxHelper.deploy(vertx, context, options,
-                                             new SQLWrapper<>(catalog, handlerClass).registerSharedKey(sharedKey),
+                                             new SQLWrapper<>(handlerClass).registerSharedKey(sharedKey),
                                              TestHelper.TEST_TIMEOUT_SEC * 2);
         deployId = v.deploymentID();
         return v.getContext().getEntityHandler();
@@ -110,7 +110,7 @@ public abstract class BaseSqlTest {
     protected <T extends AbstractEntityHandler> void startSQLFailed(TestContext context, Catalog catalog,
                                                                     Class<T> handlerClass,
                                                                     Handler<Throwable> consumer) {
-        VertxHelper.deployFailed(vertx, context, options, new SQLWrapper<>(catalog, handlerClass), consumer);
+        VertxHelper.deployFailed(vertx, context, options, new SQLWrapper<>(handlerClass), consumer);
     }
 
 }

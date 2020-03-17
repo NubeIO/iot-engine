@@ -1,7 +1,6 @@
 package com.nubeiot.core.dto;
 
 import java.util.Objects;
-import java.util.Optional;
 
 import io.vertx.core.json.JsonObject;
 
@@ -10,9 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.dto.DataTransferObject.AbstractDTO;
 import com.nubeiot.core.event.EventMessage;
 
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -22,8 +19,9 @@ import lombok.experimental.Accessors;
 @Accessors(fluent = true)
 public final class RequestData extends AbstractDTO {
 
+    @NonNull
     @JsonProperty(value = "filter")
-    private JsonObject filter;
+    private RequestFilter filter;
     @JsonProperty(value = "pagination")
     private Pagination pagination;
     @JsonProperty(value = "sort")
@@ -36,7 +34,7 @@ public final class RequestData extends AbstractDTO {
                         @JsonProperty(value = "pagination") Pagination pagination,
                         @JsonProperty(value = "sort") Sort sort) {
         super(headers, body);
-        this.filter = Objects.nonNull(filter) ? filter : new JsonObject();
+        this.filter = new RequestFilter(Objects.nonNull(filter) ? filter : new JsonObject());
         this.pagination = pagination;
         this.sort = sort;
     }
@@ -45,10 +43,6 @@ public final class RequestData extends AbstractDTO {
 
     public static RequestData from(@NonNull EventMessage msg) {
         return builder().body(msg.getData()).build();
-    }
-
-    public boolean hasAudit() {
-        return Optional.ofNullable(this.filter()).map(o -> o.containsKey(Filters.AUDIT)).orElse(false);
     }
 
     @Override
@@ -95,52 +89,6 @@ public final class RequestData extends AbstractDTO {
         public RequestData build() {
             return new RequestData(headers, body, filter, pagination, sort);
         }
-
-    }
-
-
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static final class Filters {
-
-        /**
-         * To {@code prettify} response
-         */
-        public static final String PRETTY = "_pretty";
-
-        /**
-         * For {@code language}
-         */
-        public static final String LANG = "_lang";
-
-        /**
-         * For {@code pagination}
-         */
-        public static final String PAGE = "page";
-
-        /**
-         * For {@code pagination}
-         */
-        public static final String PER_PAGE = "per_page";
-
-        /**
-         * For {@code audit}
-         */
-        public static final String AUDIT = "_audit";
-
-        /**
-         * For {@code audit} in temporary
-         */
-        public static final String TEMP_AUDIT = "_temp_audit";
-
-        /**
-         * For {@code sort}
-         */
-        public static final String SORT = "_sort";
-
-        /**
-         * For {@code include}
-         */
-        public static final String INCLUDE = "_incl";
 
     }
 

@@ -67,7 +67,7 @@ public final class NetworkDiscovery extends AbstractDiscoveryService implements 
     }
 
     @Override
-    public @NonNull EntityMetadata representation() {
+    public @NonNull EntityMetadata context() {
         return NetworkMetadata.INSTANCE;
     }
 

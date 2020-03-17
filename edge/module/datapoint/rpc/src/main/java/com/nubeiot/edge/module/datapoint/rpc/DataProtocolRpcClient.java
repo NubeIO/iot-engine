@@ -3,8 +3,7 @@ package com.nubeiot.edge.module.datapoint.rpc;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.micro.discovery.GatewayServiceInvoker;
-import com.nubeiot.core.sql.EntityMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex;
+import com.nubeiot.edge.module.datapoint.service.DataPointApiService;
 import com.nubeiot.iotdata.dto.Protocol;
 
 import lombok.NonNull;
@@ -30,7 +29,7 @@ public interface DataProtocolRpcClient<T extends DataProtocolRpcClient>
 
     @Override
     default @NonNull String destination() {
-        return DataPointIndex.lookupApiName(representation());
+        return DataPointApiService.DEFAULT.lookupApiName(context());
     }
 
     @Override
@@ -40,21 +39,13 @@ public interface DataProtocolRpcClient<T extends DataProtocolRpcClient>
     }
 
     @Override
-    default EventbusClient transporter() {
-        return getSharedDataValue(SHARED_EVENTBUS);
-    }
-
-    @Override
     default String serviceLabel() {
         return "Edge data-point service";
     }
 
-    /**
-     * Declares discovery service represents for what entity model
-     *
-     * @return entity metadata
-     * @see EntityMetadata
-     */
-    @NonNull EntityMetadata representation();
+    @Override
+    default EventbusClient transporter() {
+        return getSharedDataValue(SHARED_EVENTBUS);
+    }
 
 }

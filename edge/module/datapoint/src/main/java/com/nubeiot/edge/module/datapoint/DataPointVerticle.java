@@ -1,5 +1,8 @@
 package com.nubeiot.edge.module.datapoint;
 
+import java.util.Set;
+import java.util.function.Supplier;
+
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.component.ContainerVerticle;
 import com.nubeiot.core.micro.MicroContext;
@@ -8,7 +11,8 @@ import com.nubeiot.core.micro.register.EventHttpServiceRegister;
 import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
 import com.nubeiot.edge.module.datapoint.service.DataPointService;
-import com.nubeiot.iotdata.edge.model.DefaultCatalog;
+
+import lombok.NonNull;
 
 public final class DataPointVerticle extends ContainerVerticle {
 
@@ -25,16 +29,21 @@ public final class DataPointVerticle extends ContainerVerticle {
             .addSharedData(DataPointIndex.BUILTIN_DATA, pointCfg.getBuiltinData().toJson())
             .addSharedData(DataPointIndex.DATA_SYNC_CFG, pointCfg.getDataSyncConfig().toJson())
             .addProvider(new MicroserviceProvider(), ctx -> microCtx = (MicroContext) ctx)
-            .addProvider(new SqlProvider<>(DefaultCatalog.DEFAULT_CATALOG, DataPointEntityHandler.class),
+            .addProvider(new SqlProvider<>(DataPointEntityHandler.class),
                          ctx -> entityHandler = ((SqlContext<DataPointEntityHandler>) ctx).getEntityHandler())
             .registerSuccessHandler(v -> successHandler());
     }
 
     private void successHandler() {
-        EventHttpServiceRegister.create(vertx.getDelegate(), getSharedKey(),
-                                        () -> DataPointService.createServices(entityHandler))
-                                .publish(microCtx.getLocalController())
-                                .subscribe();
+        final @NonNull Supplier<Set<DataPointService>> supplier = () -> DataPointService.createServices(entityHandler);
+        EventHttpServiceRegister.<DataPointService>builder().vertx(vertx)
+                                                            .sharedKey(getSharedKey())
+                                                            .eventServices(supplier)
+                                                            .afterRegisterEventbusAddress(
+                                                                s -> entityHandler.addServiceCache(s))
+                                                            .build()
+                                                            .publish(microCtx.getLocalController())
+                                                            .subscribe();
     }
 
 }

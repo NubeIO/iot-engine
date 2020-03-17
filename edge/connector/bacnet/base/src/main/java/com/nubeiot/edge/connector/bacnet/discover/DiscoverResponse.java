@@ -2,6 +2,7 @@ package com.nubeiot.edge.connector.bacnet.discover;
 
 import java.util.List;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.protocol.CommunicationProtocol;
@@ -17,6 +18,7 @@ import lombok.experimental.FieldNameConstants;
 @Getter
 @FieldNameConstants
 @Builder(builderClassName = "Builder")
+@JsonDeserialize(builder = DiscoverResponse.Builder.class)
 public final class DiscoverResponse implements JsonData {
 
     private CommunicationProtocol network;

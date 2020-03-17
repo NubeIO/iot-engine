@@ -12,6 +12,7 @@ def versions = [
         jooqVertx: "4.1.0",
         hikari   : "3.2.0",
         jpa      : "2.2",
+        jta      : "1.3",
         h2       : "1.4.199",
         pgsql    : "42.2.5",
     ],
@@ -21,7 +22,7 @@ def versions = [
         "sonar" : "2.7",
     ],
     tests   : [
-        junit: "4.12",
+        junit : "4.12",
         jacoco: "0.8.4"
     ],
 ]
@@ -56,11 +57,13 @@ ext.deps = [
         pgsql           : "org.postgresql:postgresql:$versions.database.pgsql",
         hikari          : "com.zaxxer:HikariCP:$versions.database.hikari",
         jpa             : "javax.persistence:javax.persistence-api:$versions.database.jpa",
+        jta             : "javax.transaction:javax.transaction-api:$versions.database.jta",
         jooq            : "org.jooq:jooq:$versions.database.jooq",
         jooqMeta        : "org.jooq:jooq-meta:$versions.database.jooq",
         jooqMetaExt     : "org.jooq:jooq-meta-extensions:$versions.database.jooq",
         jooqCodegen     : "org.jooq:jooq-codegen:$versions.database.jooq",
         jooqVertxRx     : "io.github.jklingsporn:vertx-jooq-rx:$versions.database.jooqVertx",
+        jooqVertxShared : "io.github.jklingsporn:vertx-jooq-shared:$versions.database.jooqVertx",
         jooqVertxCodegen: "io.github.jklingsporn:vertx-jooq-generate:$versions.database.jooqVertx"
     ],
     tests   : [
