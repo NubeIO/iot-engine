@@ -19,8 +19,8 @@ import com.nubeiot.core.http.base.EventHttpService;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.pojos.JsonPojo;
-import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.ProtocolDispatcherMetadata;
+import com.nubeiot.edge.module.datapoint.service.DataPointApiService;
 import com.nubeiot.iotdata.edge.model.tables.pojos.ProtocolDispatcher;
 
 import lombok.NonNull;
@@ -31,7 +31,7 @@ public class MockProtocolDispatcherService implements EventListener, EventHttpSe
 
     @Override
     public String api() {
-        return DataPointIndex.lookupApiName(ProtocolDispatcherMetadata.INSTANCE);
+        return DataPointApiService.DEFAULT.lookupApiName(ProtocolDispatcherMetadata.INSTANCE);
     }
 
     @Override

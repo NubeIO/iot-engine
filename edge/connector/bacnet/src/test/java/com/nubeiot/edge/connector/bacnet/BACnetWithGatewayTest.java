@@ -53,7 +53,11 @@ public abstract class BACnetWithGatewayTest extends BaseBACnetVerticleTest {
     protected abstract Set<EventHttpService> serviceDefinitions();
 
     private Single<List<Record>> registerMockService(@NonNull MicroContext microContext) {
-        return EventHttpServiceRegister.create(vertx, BACnetVerticle.class.getName(), this::serviceDefinitions)
+        return EventHttpServiceRegister.builder()
+                                       .vertx(vertx)
+                                       .sharedKey(BACnetVerticle.class.getName())
+                                       .eventServices(this::serviceDefinitions)
+                                       .build()
                                        .publish(microContext.getLocalController());
     }
 
