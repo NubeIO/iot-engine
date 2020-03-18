@@ -38,6 +38,8 @@ include ':edge:module:datapoint:model'
 include ':edge:module:datapoint:rpc'
 include ':edge:module:datapoint:sync'
 include ':edge:module:scheduler'
+
+include ':edge:connector:nginx'
 include ':edge:connector:network'
 include ':edge:connector:ditto'
 include ':edge:connector:bacnet'
