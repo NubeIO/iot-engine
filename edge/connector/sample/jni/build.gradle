@@ -1,0 +1,24 @@
+dependencies {
+    compile project(':core:cluster:hazelcast')
+    compile project(':core:jni')
+}
+
+
+import com.nubeiot.buildscript.nativelib.NativeHeadersGenerateTask
+import com.nubeiot.buildscript.nativelib.NativeLibsGenerateTask
+
+task nativeHeaderGen(type: NativeHeadersGenerateTask) {
+    projectDir = project.projectDir
+    srcFiles = sourceSets.main.java.srcDirs
+    nativeHeaderDir = project.genProps.nativeHeaderDir
+}
+
+task nativeLibGen(type: NativeLibsGenerateTask) {
+    projectDir = project.projectDir
+    nativeLibDir = project.genProps.nativeLibDir
+}
+
+task nativeGen {
+    dependsOn nativeHeaderGen
+    dependsOn nativeLibGen
+}

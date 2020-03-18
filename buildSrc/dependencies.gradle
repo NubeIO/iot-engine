@@ -87,6 +87,8 @@ ext.genProps = [
     testDir        : "$genDir/test",
     javaTestSrcDir : "$genDir/test/java",
     testResourceDir: "$genDir/test/resources",
+    nativeHeaderDir: "$genDir/main/native/headers",
+    nativeLibDir   : "~/.nubeio/",
 ]
 
 ext.repos = {

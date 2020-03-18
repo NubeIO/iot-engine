@@ -52,4 +52,5 @@ include ':eventbus:edge:datapoint'
 include ':eventbus:edge:gateway'
 
 include ':ext:rx-jdbc'
-
+include ':core:jni'
+include ':edge:connector:sample:jni'
