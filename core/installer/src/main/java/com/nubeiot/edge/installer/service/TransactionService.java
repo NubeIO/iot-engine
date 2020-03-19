@@ -29,8 +29,7 @@ public abstract class TransactionService implements InstallerService {
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
     public Single<JsonObject> getOne(RequestData data) {
-        JsonObject filter = data.filter();
-        boolean systemCfg = Boolean.parseBoolean(filter.getString("system_cfg"));
+        boolean systemCfg = data.filter().parseBoolean("system_cfg");
         ITblTransaction transaction = new TblTransaction().fromJson(data.body());
         if (Strings.isBlank(transaction.getTransactionId())) {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Transaction Id cannot be blank");
@@ -50,7 +49,7 @@ public abstract class TransactionService implements InstallerService {
 
     @Override
     public final String servicePath() {
-        return "/transactions";
+        return "/transaction";
     }
 
     @Override

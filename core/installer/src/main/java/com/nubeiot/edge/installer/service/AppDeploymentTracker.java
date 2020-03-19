@@ -57,7 +57,7 @@ class AppDeploymentTracker implements DeploymentService {
                                             ? handleError(result)
                                             : handleSuccess(result);
         final EventbusClient client = sharedData(SharedDataDelegate.SHARED_EVENTBUS);
-        final AppDeployer deployer = sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
+        final AppDeployerDefinition deployer = sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
         return last.doOnSuccess(res -> client.fire(
             DeliveryEvent.from(deployer.getFinisherEvent(), new JsonObject().put("result", res.toJson()))));
     }

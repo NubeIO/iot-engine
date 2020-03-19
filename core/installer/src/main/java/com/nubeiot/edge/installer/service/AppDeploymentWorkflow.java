@@ -38,11 +38,11 @@ public final class AppDeploymentWorkflow {
     private static final Logger LOGGER = LoggerFactory.getLogger(AppDeploymentWorkflow.class);
 
     private final InstallerEntityHandler entityHandler;
-    private final AppDeployer deployer;
+    private final AppDeployerDefinition definition;
 
     public AppDeploymentWorkflow(InstallerEntityHandler entityHandler) {
         this.entityHandler = entityHandler;
-        this.deployer = entityHandler.sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
+        this.definition = entityHandler.sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
     }
 
     public Single<JsonObject> process(ITblModule module, EventAction action) {
@@ -103,7 +103,7 @@ public final class AppDeploymentWorkflow {
         LOGGER.info("INSTALLER trigger deploying for {}::::{}", action, preDeployResult.getServiceId());
         preDeployResult.setSilent(EventAction.REMOVE == action && State.DISABLED == preDeployResult.getPrevState());
         entityHandler.eventClient()
-                     .fire(DeliveryEvent.from(deployer.getLoaderEvent(), action, preDeployResult.toRequestData()));
+                     .fire(DeliveryEvent.from(definition.getLoaderEvent(), action, preDeployResult.toRequestData()));
     }
 
     private PreDeploymentResult createPreDeployResult(ITblModule module, String transactionId, EventAction action,

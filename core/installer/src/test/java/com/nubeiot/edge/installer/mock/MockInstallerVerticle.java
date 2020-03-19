@@ -12,7 +12,7 @@ import com.nubeiot.edge.installer.loader.ModuleType;
 import com.nubeiot.edge.installer.loader.ModuleTypeRule;
 import com.nubeiot.edge.installer.mock.MockInstallerService.MockModuleService;
 import com.nubeiot.edge.installer.mock.MockInstallerService.MockTransactionService;
-import com.nubeiot.edge.installer.service.AppDeployer;
+import com.nubeiot.edge.installer.service.AppDeployerDefinition;
 import com.nubeiot.edge.installer.service.InstallerService;
 
 import lombok.AllArgsConstructor;
@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 @AllArgsConstructor
 public class MockInstallerVerticle extends InstallerVerticle {
 
-    private final AppDeployer appDeployer;
+    private final AppDeployerDefinition definition;
     private String configFile = "mock-installer.json";
 
     @Override
@@ -38,8 +38,8 @@ public class MockInstallerVerticle extends InstallerVerticle {
     }
 
     @Override
-    protected @NonNull AppDeployer appDeployer() {
-        return appDeployer;
+    protected @NonNull AppDeployerDefinition appDeployerDefinition() {
+        return definition;
     }
 
     @Override

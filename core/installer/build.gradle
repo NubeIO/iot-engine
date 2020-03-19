@@ -13,6 +13,7 @@ dependencies {
     compile project(':eventbus:edge')
     compile project.deps.database.h2
     compile "io.vertx:vertx-maven-service-factory:$project.versions.vertx"
+    compile "net.lingala.zip4j:zip4j:2.5.0"
 
     testCompile project(":core:base").sourceSets.test.output
 }

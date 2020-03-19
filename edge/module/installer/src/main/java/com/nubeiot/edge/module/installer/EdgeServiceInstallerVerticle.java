@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.InstallerVerticle;
 import com.nubeiot.edge.installer.loader.ModuleTypeRule;
-import com.nubeiot.edge.installer.service.AppDeployer;
+import com.nubeiot.edge.installer.service.AppDeployerDefinition;
 import com.nubeiot.edge.installer.service.InstallerService;
 import com.nubeiot.edge.module.installer.service.EdgeInstallerService;
 import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
@@ -26,10 +26,10 @@ public final class EdgeServiceInstallerVerticle extends InstallerVerticle<EdgeIn
     }
 
     @Override
-    protected @NonNull AppDeployer appDeployer() {
-        return AppDeployer.create(InstallerEventModel.SERVICE_DEPLOYMENT,
-                                  InstallerEventModel.SERVICE_DEPLOYMENT_TRACKER,
-                                  InstallerEventModel.SERVICE_DEPLOYMENT_FINISHER);
+    protected @NonNull AppDeployerDefinition appDeployerDefinition() {
+        return AppDeployerDefinition.create(InstallerEventModel.SERVICE_DEPLOYMENT,
+                                            InstallerEventModel.SERVICE_DEPLOYMENT_TRACKER,
+                                            InstallerEventModel.SERVICE_DEPLOYMENT_FINISHER);
     }
 
     @Override

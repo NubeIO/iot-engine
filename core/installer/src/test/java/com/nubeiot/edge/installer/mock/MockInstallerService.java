@@ -13,7 +13,7 @@ public interface MockInstallerService extends InstallerService {
         return "mock.installer." + this.getClass().getSimpleName();
     }
 
-    default String rootPath() {
+    default String appPath() {
         return "/modules";
     }
 

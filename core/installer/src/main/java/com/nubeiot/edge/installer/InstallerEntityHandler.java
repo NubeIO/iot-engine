@@ -43,7 +43,7 @@ import com.nubeiot.edge.installer.model.tables.interfaces.ITblRemoveHistory;
 import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
 import com.nubeiot.edge.installer.model.tables.pojos.TblTransaction;
 import com.nubeiot.edge.installer.repository.InstallerRepository;
-import com.nubeiot.edge.installer.service.AppDeployer;
+import com.nubeiot.edge.installer.service.AppDeployerDefinition;
 import com.nubeiot.edge.installer.service.InstallerApiIndex;
 
 import lombok.AccessLevel;
@@ -105,8 +105,8 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler
     }
 
     final InstallerEntityHandler initDeployer() {
-        final AppDeployer appDeployer = sharedData(SHARED_APP_DEPLOYER_CFG);
-        appDeployer.register(this);
+        final AppDeployerDefinition definition = sharedData(SHARED_APP_DEPLOYER_CFG);
+        definition.register(this);
         return this;
     }
 
