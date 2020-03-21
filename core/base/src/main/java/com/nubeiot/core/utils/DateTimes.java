@@ -30,6 +30,53 @@ public final class DateTimes {
 
     private static final Logger logger = LoggerFactory.getLogger(DateTimes.class);
 
+    public static LocalDateTime nowUTC() {
+        return fromUTC(Instant.now());
+    }
+
+    public static LocalDateTime fromUTC(@NonNull Instant instant) {
+        return LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
+    }
+
+    public static ZonedDateTime toUTC(@NonNull Date date) {
+        return DateTimes.toUTC(date.toInstant());
+    }
+
+    public static ZonedDateTime toUTC(@NonNull Instant date) {
+        return DateTimes.toUTC(date.atZone(ZoneId.systemDefault()));
+    }
+
+    public static ZonedDateTime toUTC(@NonNull LocalDateTime time) {
+        return DateTimes.toUTC(time, ZoneId.systemDefault());
+    }
+
+    public static ZonedDateTime toUTC(@NonNull LocalDateTime time, @NonNull ZoneId zoneId) {
+        return DateTimes.toUTC(time.atZone(zoneId));
+    }
+
+    public static ZonedDateTime toUTC(@NonNull ZonedDateTime dateTime) {
+        return DateTimes.toZone(dateTime, ZoneOffset.UTC);
+    }
+
+    public static ZonedDateTime toZone(@NonNull ZonedDateTime dateTime, @NonNull ZoneId toZone) {
+        return dateTime.withZoneSameInstant(toZone);
+    }
+
+    public static OffsetDateTime now() {
+        return from(Instant.now());
+    }
+
+    public static long nowMilli() {
+        return Instant.now().toEpochMilli();
+    }
+
+    public static OffsetDateTime from(@NonNull Instant instant) {
+        return OffsetDateTime.ofInstant(instant, ZoneOffset.UTC);
+    }
+
+    public static OffsetDateTime from(long milliseconds) {
+        return from(Instant.ofEpochMilli(milliseconds));
+    }
 
     /**
      * Utilities class for parsing {@code date/time/datetime} in {@code iso8601} to appropriate {@code java data type}
@@ -108,50 +155,6 @@ public final class DateTimes {
             return new JsonObject().put("local", format(zonedDateTime)).put("utc", format(utcTime));
         }
 
-    }
-
-    public static LocalDateTime nowUTC() {
-        return fromUTC(Instant.now());
-    }
-
-    public static LocalDateTime fromUTC(@NonNull Instant instant) {
-        return LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
-    }
-
-    public static ZonedDateTime toUTC(@NonNull Date date) {
-        return DateTimes.toUTC(date.toInstant());
-    }
-
-    public static ZonedDateTime toUTC(@NonNull Instant date) {
-        return DateTimes.toUTC(date.atZone(ZoneId.systemDefault()));
-    }
-
-    public static ZonedDateTime toUTC(@NonNull LocalDateTime time) {
-        return DateTimes.toUTC(time, ZoneId.systemDefault());
-    }
-
-    public static ZonedDateTime toUTC(@NonNull LocalDateTime time, @NonNull ZoneId zoneId) {
-        return DateTimes.toUTC(time.atZone(zoneId));
-    }
-
-    public static ZonedDateTime toUTC(@NonNull ZonedDateTime dateTime) {
-        return DateTimes.toZone(dateTime, ZoneOffset.UTC);
-    }
-
-    public static ZonedDateTime toZone(@NonNull ZonedDateTime dateTime, @NonNull ZoneId toZone) {
-        return dateTime.withZoneSameInstant(toZone);
-    }
-
-    public static OffsetDateTime now() {
-        return from(Instant.now());
-    }
-
-    public static long nowMilli() {
-        return Instant.now().toEpochMilli();
-    }
-
-    public static OffsetDateTime from(@NonNull Instant instant) {
-        return OffsetDateTime.ofInstant(instant, ZoneOffset.UTC);
     }
 
 }

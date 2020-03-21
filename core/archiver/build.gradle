@@ -1,0 +1,6 @@
+dependencies {
+    compile project(':core:base')
+    compile "net.lingala.zip4j:zip4j:2.5.0"
+
+    testCompile project(":core:base").sourceSets.test.output
+}
