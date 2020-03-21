@@ -31,37 +31,36 @@ public final class AsyncZipFolder implements AsyncZip {
     private final EventbusClient transporter;
     @NonNull
     private final String notifiedAddress;
-    @NonNull
-    private final ZipArgument zipArgument;
 
     @Override
-    public void run(@NonNull File destFolder, @NonNull File tobeZipped) {
-        ExecutorHelpers.blocking(transporter.getVertx(), () -> doRun(destFolder, tobeZipped));
+    public void run(@NonNull ZipArgument argument, @NonNull File destFolder, @NonNull File tobeZipped) {
+        ExecutorHelpers.blocking(transporter.getVertx(), () -> doRun(argument, destFolder, tobeZipped));
     }
 
-    private void doRun(@NonNull File destFolder, @NonNull File tobeZipped) {
+    private void doRun(@NonNull ZipArgument argument, @NonNull File destFolder, @NonNull File tobeZipped) {
         try {
-            final ZipFile zipFile = createZipFile(destFolder, tobeZipped);
+            final ZipFile zipFile = createZipFile(argument, destFolder, tobeZipped);
             final ProgressMonitor progressMonitor = zipFile.getProgressMonitor();
-            zipFile.addFolder(tobeZipped, zipArgument().zipParameters());
+            zipFile.addFolder(tobeZipped, argument.zipParameters());
             transporter.getVertx()
-                       .setPeriodic(zipArgument().watcherDelayInMilli(),
-                                    id -> watch(id, progressMonitor, zipFile.getFile()));
+                       .setPeriodic(argument.watcherDelayInMilli(),
+                                    id -> watch(id, argument, progressMonitor, zipFile.getFile()));
         } catch (ZipException e) {
             onError(e);
         }
     }
 
-    private ZipFile createZipFile(@NonNull File destinationFolder, @NonNull File origin) {
-        final String destination = destinationFolder.toPath().resolve(zipArgument().getZipFileName(origin)).toString();
-        final String password = zipArgument().password();
-        final ZipFile zipFile = new ZipFile(AsyncZip.ext(destination),
+    private ZipFile createZipFile(@NonNull ZipArgument argument, @NonNull File destination, @NonNull File origin) {
+        final String dest = destination.toPath().resolve(argument.getZipFileName(origin)).toString();
+        final String password = argument.password();
+        final ZipFile zipFile = new ZipFile(AsyncZip.ext(dest),
                                             Strings.isBlank(password) ? null : password.toCharArray());
         zipFile.setRunInThread(true);
         return zipFile;
     }
 
-    private void watch(long timerId, @NonNull ProgressMonitor progressMonitor, @NonNull File archiveFile) {
+    private void watch(long timerId, @NonNull ZipArgument argument, @NonNull ProgressMonitor progressMonitor,
+                       @NonNull File archiveFile) {
         final Path path = archiveFile.toPath();
         if (progressMonitor.getState().equals(State.BUSY)) {
             LOGGER.info("Zipping: {} | Progress: {}% | Current file: {} | Current task: {}", path,
@@ -77,6 +76,7 @@ public final class AsyncZipFolder implements AsyncZip {
                                .zipFile(path.toString())
                                .size(archiveFile.length())
                                .lastModified(archiveFile.lastModified())
+                               .trackingInfo(argument.trackingInfo())
                                .build());
             return;
         }

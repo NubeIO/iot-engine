@@ -1,5 +1,6 @@
 package com.nubeiot.edge.installer.service;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
@@ -38,13 +39,6 @@ public interface InstallerService extends EventHttpService {
                               .collect(Collectors.toSet());
     }
 
-    @Override
-    default Set<EventMethodDefinition> definitions() {
-        final String fullPath = Urls.combinePath(rootPath(), appPath(), servicePath());
-        return Collections.singleton(
-            EventMethodDefinition.create(fullPath, paramPath(), ActionMethodMapping.byCRUD(getAvailableEvents())));
-    }
-
     /**
      * Defines Root path.
      *
@@ -78,5 +72,22 @@ public interface InstallerService extends EventHttpService {
      * @since 1.0.0
      */
     String paramPath();
+
+    @Override
+    default Set<EventMethodDefinition> definitions() {
+        final String fullPath = Urls.combinePath(rootPath(), appPath(), servicePath());
+        return Collections.singleton(EventMethodDefinition.create(fullPath, paramPath(), methodMapping()));
+    }
+
+    /**
+     * Creates Event action Method mapping.
+     *
+     * @return the action method mapping. Defaults: {@link ActionMethodMapping#byCRUD(Collection)}
+     * @see ActionMethodMapping
+     * @since 1.0.0
+     */
+    default ActionMethodMapping methodMapping() {
+        return ActionMethodMapping.byCRUD(getAvailableEvents());
+    }
 
 }

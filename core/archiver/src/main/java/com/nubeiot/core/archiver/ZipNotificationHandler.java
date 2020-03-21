@@ -3,8 +3,6 @@ package com.nubeiot.core.archiver;
 import java.util.Arrays;
 import java.util.Collection;
 
-import io.vertx.core.json.JsonObject;
-
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventListener;
@@ -20,7 +18,7 @@ public interface ZipNotificationHandler extends EventListener {
     }
 
     @EventContractor(action = EventAction.NOTIFY, returnType = boolean.class)
-    boolean success(@NonNull JsonObject requestData);
+    boolean success(@NonNull ZipOutput result);
 
     @EventContractor(action = EventAction.NOTIFY_ERROR, returnType = boolean.class)
     boolean error(@NonNull ErrorData error);

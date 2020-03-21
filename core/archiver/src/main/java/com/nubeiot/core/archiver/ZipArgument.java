@@ -3,6 +3,8 @@ package com.nubeiot.core.archiver;
 import java.io.File;
 import java.nio.file.Path;
 
+import io.vertx.core.json.JsonObject;
+
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.Strings;
@@ -18,6 +20,7 @@ import net.lingala.zip4j.model.ZipParameters;
 @Builder(builderClassName = "Builder")
 public final class ZipArgument implements JsonData {
 
+    private final JsonObject trackingInfo;
     private final boolean appendTimestamp;
     private final String overriddenDestFileName;
     private final String password;
@@ -25,8 +28,9 @@ public final class ZipArgument implements JsonData {
     @NonNull
     private final ZipParameters zipParameters;
 
-    public static ZipArgument createDefault() {
+    public static ZipArgument createDefault(JsonObject trackingInfo) {
         return ZipArgument.builder()
+                          .trackingInfo(trackingInfo)
                           .appendTimestamp(true)
                           .watcherDelayInMilli(100)
                           .zipParameters(defaultZipParameters())
@@ -34,7 +38,12 @@ public final class ZipArgument implements JsonData {
     }
 
     public static ZipArgument noTimestamp() {
+        return noTimestamp(null);
+    }
+
+    public static ZipArgument noTimestamp(JsonObject trackingInfo) {
         return ZipArgument.builder()
+                          .trackingInfo(trackingInfo)
                           .appendTimestamp(false)
                           .watcherDelayInMilli(100)
                           .zipParameters(defaultZipParameters())

@@ -26,6 +26,21 @@ public abstract class TransactionByAppService implements InstallerService {
     @NonNull
     private final InstallerEntityHandler entityHandler;
 
+    @Override
+    public @NonNull Collection<EventAction> getAvailableEvents() {
+        return Collections.singleton(EventAction.GET_LIST);
+    }
+
+    @Override
+    public String servicePath() {
+        return "/:module_id/transaction";
+    }
+
+    @Override
+    public String paramPath() {
+        return null;
+    }
+
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> getList(RequestData data) {
         final ITblTransaction transaction = new TblTransaction().fromJson(data.body());
@@ -50,21 +65,6 @@ public abstract class TransactionByAppService implements InstallerService {
     private JsonObject removePrevSystemConfig(JsonObject transaction) {
         transaction.remove("prev_system_config");
         return transaction;
-    }
-
-    @Override
-    public @NonNull Collection<EventAction> getAvailableEvents() {
-        return Collections.singleton(EventAction.GET_LIST);
-    }
-
-    @Override
-    public String servicePath() {
-        return "/:module_id/transaction";
-    }
-
-    @Override
-    public String paramPath() {
-        return null;
     }
 
 }

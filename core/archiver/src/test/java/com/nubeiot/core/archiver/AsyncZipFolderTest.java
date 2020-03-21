@@ -45,9 +45,8 @@ public class AsyncZipFolderTest {
         AsyncZipFolder.builder()
                       .transporter(client)
                       .notifiedAddress("xxx")
-                      .zipArgument(ZipArgument.noTimestamp())
                       .build()
-                      .run(dest, origin);
+                      .run(ZipArgument.noTimestamp(), dest, origin);
     }
 
 }

@@ -60,7 +60,8 @@ public abstract class ModuleService implements InstallerService {
         if (Strings.isBlank(serviceId)) {
             throw new IllegalArgumentException("Service id is mandatory");
         }
-        return entityHandler.dao(TblModuleDao.class).findOneById(serviceId)
+        return entityHandler.dao(TblModuleDao.class)
+                            .findOneById(serviceId)
                             .map(o -> o.map(this::removeCredentialsInAppConfig))
                             .filter(Optional::isPresent)
                             .map(Optional::get)

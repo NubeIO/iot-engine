@@ -22,6 +22,7 @@ public enum EventAction implements Serializable {
     GET_ONE,
     GET_LIST,
     CREATE_OR_UPDATE,
+    BACKUP,
     RETURN,
     MIGRATE,
     UNKNOWN,

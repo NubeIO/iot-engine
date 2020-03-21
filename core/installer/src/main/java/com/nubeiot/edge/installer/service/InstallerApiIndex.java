@@ -35,9 +35,9 @@ public interface InstallerApiIndex extends MetadataIndex {
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class AppServiceMetadata implements StringKeyEntity<TblModule, TblModuleRecord, TblModuleDao> {
+    final class ApplicationMetadata implements StringKeyEntity<TblModule, TblModuleRecord, TblModuleDao> {
 
-        public static final AppServiceMetadata INSTANCE = new AppServiceMetadata();
+        public static final ApplicationMetadata INSTANCE = new ApplicationMetadata();
 
         @Override
         public @NonNull com.nubeiot.edge.installer.model.tables.TblModule table() {
@@ -55,10 +55,10 @@ public interface InstallerApiIndex extends MetadataIndex {
         }
 
         @Override
-        public @NonNull String requestKeyName() { return "transaction_id"; }
+        public @NonNull String requestKeyName() { return "service_id"; }
 
         @Override
-        public @NonNull String singularKeyName() { return "transaction"; }
+        public @NonNull String singularKeyName() { return "app"; }
 
         @Override
         public @NonNull List<OrderField<?>> orderFields() {

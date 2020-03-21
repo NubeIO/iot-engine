@@ -26,17 +26,15 @@ public interface AsyncZip extends EventClientProxy {
 
     @NonNull String notifiedAddress();
 
-    @NonNull ZipArgument zipArgument();
-
-    default void run(@NonNull String destFolder, @NonNull String tobeZipped) {
-        run(Paths.get(destFolder), Paths.get(tobeZipped));
+    default void run(@NonNull ZipArgument argument, @NonNull String destFolder, @NonNull String tobeZipped) {
+        run(argument, Paths.get(destFolder), Paths.get(tobeZipped));
     }
 
-    default void run(@NonNull Path destFolder, @NonNull Path tobeZipped) {
-        run(destFolder.toFile(), tobeZipped.toFile());
+    default void run(@NonNull ZipArgument argument, @NonNull Path destFolder, @NonNull Path tobeZipped) {
+        run(argument, destFolder.toFile(), tobeZipped.toFile());
     }
 
-    void run(@NonNull File destFolder, @NonNull File tobeZipped);
+    void run(@NonNull ZipArgument argument, @NonNull File destFolder, @NonNull File tobeZipped);
 
     default void onSuccess(@NonNull ZipOutput information) {
         transporter().publish(notifiedAddress(), EventMessage.success(EventAction.NOTIFY, information.toJson()));

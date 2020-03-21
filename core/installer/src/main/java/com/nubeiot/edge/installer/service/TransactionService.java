@@ -27,26 +27,6 @@ public abstract class TransactionService implements InstallerService {
     @NonNull
     private final InstallerEntityHandler entityHandler;
 
-    @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
-    public Single<JsonObject> getOne(RequestData data) {
-        boolean systemCfg = data.filter().parseBoolean("system_cfg");
-        ITblTransaction transaction = new TblTransaction().fromJson(data.body());
-        if (Strings.isBlank(transaction.getTransactionId())) {
-            throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Transaction Id cannot be blank");
-        }
-        return this.entityHandler.findTransactionById(transaction.getTransactionId())
-                                 .map(o -> o.orElseThrow(() -> new NotFoundException(
-                                     Strings.format("Not found transaction id '{0}'", transaction.getTransactionId()))))
-                                 .map(trans -> removePrevSystemConfig(trans, systemCfg));
-    }
-
-    private JsonObject removePrevSystemConfig(JsonObject transaction, boolean systemCfg) {
-        if (!systemCfg) {
-            transaction.remove("prev_system_config");
-        }
-        return transaction;
-    }
-
     @Override
     public final String servicePath() {
         return "/transaction";
@@ -60,6 +40,26 @@ public abstract class TransactionService implements InstallerService {
     @Override
     public @NonNull List<EventAction> getAvailableEvents() {
         return Collections.singletonList(EventAction.GET_ONE);
+    }
+
+    @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
+    public Single<JsonObject> getOne(RequestData data) {
+        final boolean includeSystemCfg = data.filter().parseBoolean("system_cfg");
+        final ITblTransaction transaction = new TblTransaction().fromJson(data.body());
+        if (Strings.isBlank(transaction.getTransactionId())) {
+            throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Transaction Id cannot be blank");
+        }
+        return this.entityHandler.findTransactionById(transaction.getTransactionId())
+                                 .map(o -> o.orElseThrow(() -> new NotFoundException(
+                                     Strings.format("Not found transaction id '{0}'", transaction.getTransactionId()))))
+                                 .map(trans -> removePrevSystemConfig(trans, includeSystemCfg));
+    }
+
+    private JsonObject removePrevSystemConfig(JsonObject transaction, boolean includeSystemCfg) {
+        if (!includeSystemCfg) {
+            transaction.remove("prev_system_config");
+        }
+        return transaction;
     }
 
 }
