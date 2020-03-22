@@ -5,9 +5,9 @@ import com.nubeiot.edge.installer.service.TransactionByAppService;
 
 import lombok.NonNull;
 
-public final class EdgeTransactionByModuleService extends TransactionByAppService implements EdgeInstallerService {
+public final class EdgeTransactionByAppService extends TransactionByAppService implements EdgeInstallerService {
 
-    public EdgeTransactionByModuleService(@NonNull InstallerEntityHandler entityHandler) {
+    public EdgeTransactionByAppService(@NonNull InstallerEntityHandler entityHandler) {
         super(entityHandler);
     }
 

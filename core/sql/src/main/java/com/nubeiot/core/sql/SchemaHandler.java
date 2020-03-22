@@ -104,8 +104,8 @@ public interface SchemaHandler {
                                             : migrator().execute(entityHandler);
         final EventbusClient c = entityHandler.eventClient();
         final String address = readinessAddress(entityHandler);
-        return result.doOnError(t -> c.publish(address, EventMessage.initial(EventAction.NOTIFY_ERROR,
-                                                                             ErrorData.builder().throwable(t).build())))
+        return result.doOnError(t -> c.publish(address, EventMessage.error(EventAction.NOTIFY_ERROR,
+                                                                           ErrorData.builder().throwable(t).build())))
                      .doOnSuccess(msg -> {
                          final JsonObject headers = new JsonObject().put("status", msg.getStatus())
                                                                     .put("action", msg.getAction());

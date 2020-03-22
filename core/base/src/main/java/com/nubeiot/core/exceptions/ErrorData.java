@@ -17,7 +17,7 @@ import lombok.experimental.Accessors;
 @Getter
 @Builder(builderClassName = "Builder")
 @JsonDeserialize(builder = ErrorData.Builder.class)
-public class ErrorData implements JsonData {
+public final class ErrorData implements JsonData {
 
     @NonNull
     private final ErrorMessage error;

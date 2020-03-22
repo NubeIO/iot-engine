@@ -24,7 +24,7 @@ public final class TestZipNotifier implements ZipNotificationHandler {
 
     @Override
     @EventContractor(action = EventAction.NOTIFY, returnType = boolean.class)
-    public boolean success(ZipOutput response) {
+    public boolean success(@NonNull ZipOutput response) {
         JsonHelper.assertJson(testContext, async, expected, response.toJson(), JsonHelper.ignore("lastModified"));
         return true;
     }

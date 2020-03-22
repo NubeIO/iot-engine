@@ -36,10 +36,10 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.sql.SqlConfig;
 import com.nubeiot.core.statemachine.StateMachine;
-import com.nubeiot.edge.bios.service.BiosModuleService;
+import com.nubeiot.edge.bios.service.BiosApplicationService;
 import com.nubeiot.edge.installer.InstallerVerticle;
-import com.nubeiot.edge.installer.model.tables.daos.TblModuleDao;
-import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
+import com.nubeiot.edge.installer.model.tables.daos.ApplicationDao;
+import com.nubeiot.edge.installer.model.tables.pojos.Application;
 
 import lombok.NonNull;
 
@@ -113,9 +113,9 @@ public abstract class BaseInstallerVerticleTest {
         return nubeConfig;
     }
 
-    protected void insertModule(TestContext context, TblModule module) {
+    protected void insertModule(TestContext context, Application module) {
         Async async = context.async(1);
-        installerVerticle.getEntityHandler().moduleDao().insert(module).subscribe(result -> {
+        installerVerticle.getEntityHandler().applicationDao().insert(module).subscribe(result -> {
             System.out.println("Insert module successfully!");
             TestHelper.testComplete(async);
         }, error -> {
@@ -143,8 +143,9 @@ public abstract class BaseInstallerVerticleTest {
 
     private void assertTransaction(TestContext context, Status expectedTransactionStatus, Async async,
                                    CountDownLatch latch) {
-        installerVerticle.getEntityHandler().transDao()
-                         .findManyByModuleId(Collections.singletonList(BaseInstallerVerticleTest.MODULE_ID))
+        installerVerticle.getEntityHandler()
+                         .transDao()
+                         .findManyByAppId(Collections.singletonList(BaseInstallerVerticleTest.MODULE_ID))
                          .subscribe(result -> {
                              context.assertNotNull(result);
                              context.assertFalse(result.isEmpty());
@@ -164,16 +165,17 @@ public abstract class BaseInstallerVerticleTest {
 
     private void assertModule(TestContext context, State expectedModuleState, JsonObject expectedConfig, Async async,
                               CountDownLatch latch) {
-        installerVerticle.getEntityHandler().moduleDao()
+        installerVerticle.getEntityHandler()
+                         .applicationDao()
                          .findOneById(BaseInstallerVerticleTest.MODULE_ID)
                          .subscribe(result -> {
-                             TblModule tblModule = result.orElse(null);
-                             context.assertNotNull(tblModule);
-                             if (tblModule.getState() != State.PENDING) {
+                             Application application = result.orElse(null);
+                             context.assertNotNull(application);
+                             if (application.getState() != State.PENDING) {
                                  latch.countDown();
                                  System.out.println("Ready. Testing module");
-                                 context.assertEquals(tblModule.getState(), expectedModuleState);
-                                 JsonObject actualConfig = IConfig.from(tblModule.getAppConfig(), AppConfig.class)
+                                 context.assertEquals(application.getState(), expectedModuleState);
+                                 JsonObject actualConfig = IConfig.from(application.getAppConfig(), AppConfig.class)
                                                                   .toJson();
                                  JsonHelper.assertJson(context, async, expectedConfig, actualConfig,
                                                        JSONCompareMode.STRICT);
@@ -188,21 +190,21 @@ public abstract class BaseInstallerVerticleTest {
 
     void executeThenAssert(EventAction action, TestContext context, JsonObject body, Handler<JsonObject> handler) {
         installerVerticle.getEventbusClient()
-                         .fire(DeliveryEvent.from(BiosModuleService.class.getName(), EventPattern.REQUEST_RESPONSE,
+                         .fire(DeliveryEvent.from(BiosApplicationService.class.getName(), EventPattern.REQUEST_RESPONSE,
                                                   action, RequestData.builder().body(body).build().toJson()),
                                EventbusHelper.replyAsserter(context, handler));
     }
 
     protected void assertModuleState(TestContext context, Async async, State expectedState, String moduleId) {
-        final TblModuleDao moduleDao = this.installerVerticle.getEntityHandler().moduleDao();
+        final ApplicationDao moduleDao = this.installerVerticle.getEntityHandler().applicationDao();
         CountDownLatch latch = new CountDownLatch(1);
         long timer = this.vertx.setPeriodic(1000, event -> moduleDao.findOneById(moduleId).subscribe(result -> {
-            TblModule tblModule = result.orElse(null);
-            context.assertNotNull(tblModule);
-            if (tblModule.getState() != State.PENDING) {
+            Application application = result.orElse(null);
+            context.assertNotNull(application);
+            if (application.getState() != State.PENDING) {
                 System.out.println("Checking state of " + moduleId);
                 if (Objects.nonNull(expectedState)) {
-                    context.assertEquals(tblModule.getState(), expectedState);
+                    context.assertEquals(application.getState(), expectedState);
                 }
                 latch.countDown();
                 TestHelper.testComplete(async);

@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.Status;
+import com.nubeiot.core.exceptions.ErrorData;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
@@ -85,8 +86,17 @@ public final class EventMessage implements Serializable, JsonData {
         this(status, action, prevAction, Objects.isNull(data) ? null : data.getMap(), null, null);
     }
 
-    public static EventMessage error(EventAction action, @NonNull Throwable throwable) {
+    public static EventMessage error(@NonNull EventAction action, @NonNull Throwable throwable) {
         return new EventMessage(Status.FAILED, action, ErrorMessage.parse(throwable));
+    }
+
+    public static EventMessage error(@NonNull EventAction action, @NonNull Throwable throwable, JsonObject extra) {
+        return new EventMessage(Status.FAILED, action,
+                                ErrorData.builder().throwable(throwable).extraInfo(extra).build());
+    }
+
+    public static EventMessage error(@NonNull EventAction action, @NonNull ErrorData errorData) {
+        return new EventMessage(Status.FAILED, action, errorData);
     }
 
     public static EventMessage error(@NonNull EventAction action, @NonNull ErrorCode code, @NonNull String message) {
