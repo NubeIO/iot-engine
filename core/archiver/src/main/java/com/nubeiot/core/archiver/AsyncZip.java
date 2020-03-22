@@ -40,8 +40,9 @@ public interface AsyncZip extends EventClientProxy {
         transporter().publish(notifiedAddress(), EventMessage.success(EventAction.NOTIFY, information.toJson()));
     }
 
-    default void onError(@NonNull Throwable throwable) {
-        transporter().publish(notifiedAddress(), EventMessage.error(EventAction.NOTIFY_ERROR, throwable));
+    default void onError(@NonNull ZipArgument argument, @NonNull Throwable throwable) {
+        transporter().publish(notifiedAddress(),
+                              EventMessage.error(EventAction.NOTIFY_ERROR, throwable, argument.trackingInfo()));
     }
 
 }

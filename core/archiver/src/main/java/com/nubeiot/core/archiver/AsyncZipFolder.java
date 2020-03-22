@@ -46,7 +46,7 @@ public final class AsyncZipFolder implements AsyncZip {
                        .setPeriodic(argument.watcherDelayInMilli(),
                                     id -> watch(id, argument, progressMonitor, zipFile.getFile()));
         } catch (ZipException e) {
-            onError(e);
+            onError(argument, e);
         }
     }
 
@@ -80,7 +80,7 @@ public final class AsyncZipFolder implements AsyncZip {
                                .build());
             return;
         }
-        onError(progressMonitor.getException());
+        onError(argument, progressMonitor.getException());
     }
 
 }
