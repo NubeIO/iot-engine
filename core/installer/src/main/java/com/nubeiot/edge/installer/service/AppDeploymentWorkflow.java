@@ -27,9 +27,9 @@ import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.installer.InstallerConfig;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.model.dto.PreDeploymentResult;
-import com.nubeiot.edge.installer.model.tables.interfaces.ITblModule;
-import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
-import com.nubeiot.edge.installer.model.tables.pojos.TblTransaction;
+import com.nubeiot.edge.installer.model.tables.interfaces.IApplication;
+import com.nubeiot.edge.installer.model.tables.pojos.Application;
+import com.nubeiot.edge.installer.model.tables.pojos.DeployTransaction;
 
 import lombok.NonNull;
 
@@ -38,28 +38,28 @@ public final class AppDeploymentWorkflow {
     private static final Logger LOGGER = LoggerFactory.getLogger(AppDeploymentWorkflow.class);
 
     private final InstallerEntityHandler entityHandler;
-    private final AppDeployer deployer;
+    private final AppDeployerDefinition definition;
 
     public AppDeploymentWorkflow(InstallerEntityHandler entityHandler) {
         this.entityHandler = entityHandler;
-        this.deployer = entityHandler.sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
+        this.definition = entityHandler.sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
     }
 
-    public Single<JsonObject> process(ITblModule module, EventAction action) {
+    public Single<JsonObject> process(IApplication module, EventAction action) {
         return process(Collections.singleton(module), action).firstOrError();
     }
 
-    public Observable<JsonObject> process(Collection<? extends ITblModule> modules, EventAction action) {
+    public Observable<JsonObject> process(Collection<? extends IApplication> modules, EventAction action) {
         return Observable.fromIterable(modules).flatMapSingle(module -> processDeployment(module, action));
     }
 
-    private Single<JsonObject> processDeployment(ITblModule module, EventAction action) {
-        LOGGER.info("INSTALLER handle for {}::::{}", action, module.getServiceId());
+    private Single<JsonObject> processDeployment(IApplication module, EventAction action) {
+        LOGGER.info("INSTALLER handle for {}::::{}", action, module.getAppId());
         return createPreDeployment(module, action).doOnSuccess(this::deployModule).map(PreDeploymentResult::toResponse);
     }
 
-    private Single<PreDeploymentResult> createPreDeployment(ITblModule req, EventAction action) {
-        LOGGER.info("INSTALLER create pre-deployment for {}::::{}", action, req.getServiceId());
+    private Single<PreDeploymentResult> createPreDeployment(IApplication req, EventAction action) {
+        LOGGER.info("INSTALLER create pre-deployment for {}::::{}", action, req.getAppId());
         InstallerConfig config = entityHandler.sharedData(InstallerEntityHandler.SHARED_INSTALLER_CFG);
         if (EventAction.CREATE == action || EventAction.INIT == action ||
             (EventAction.MIGRATE == action && State.PENDING == req.getState())) {
@@ -75,12 +75,13 @@ public final class AppDeploymentWorkflow {
                                                .flatMapSingle(m -> persistPreDeployResult(req, action, m));
     }
 
-    private Single<PreDeploymentResult> persistPreDeployResult(@NonNull ITblModule request, @NonNull EventAction action,
-                                                               @NonNull ITblModule dbEntity) {
-        final TblModule cloneDb = new TblModule(dbEntity);
+    private Single<PreDeploymentResult> persistPreDeployResult(@NonNull IApplication request,
+                                                               @NonNull EventAction action,
+                                                               @NonNull IApplication dbEntity) {
+        final Application cloneDb = new Application(dbEntity);
         final State prevState = EventAction.CREATE == action ? State.NONE : dbEntity.getState();
         final State toState = Optional.ofNullable(request.getState()).orElse(dbEntity.getState());
-        Maybe<ITblModule> into = Maybe.empty();
+        Maybe<IApplication> into = Maybe.empty();
         if (EventAction.CREATE == action) {
             into = Maybe.fromSingle(markModuleInsert(cloneDb));
         }
@@ -103,19 +104,19 @@ public final class AppDeploymentWorkflow {
         LOGGER.info("INSTALLER trigger deploying for {}::::{}", action, preDeployResult.getServiceId());
         preDeployResult.setSilent(EventAction.REMOVE == action && State.DISABLED == preDeployResult.getPrevState());
         entityHandler.eventClient()
-                     .fire(DeliveryEvent.from(deployer.getLoaderEvent(), action, preDeployResult.toRequestData()));
+                     .fire(DeliveryEvent.from(definition.getLoaderEvent(), action, preDeployResult.toRequestData()));
     }
 
-    private PreDeploymentResult createPreDeployResult(ITblModule module, String transactionId, EventAction action,
+    private PreDeploymentResult createPreDeployResult(IApplication module, String transactionId, EventAction action,
                                                       State prevState, State targetState) {
         return PreDeploymentResult.builder()
                                   .transactionId(transactionId)
                                   .action(action == EventAction.MIGRATE ? EventAction.UPDATE : action)
                                   .prevState(prevState)
                                   .targetState(targetState)
-                                  .serviceId(module.getServiceId())
+                                  .serviceId(module.getAppId())
                                   .serviceFQN(module.getServiceType()
-                                                    .generateFQN(module.getServiceId(), module.getVersion(),
+                                                    .generateFQN(module.getAppId(), module.getVersion(),
                                                                  module.getServiceName()))
                                   .deployId(module.getDeployId())
                                   .appConfig(module.getAppConfig())
@@ -124,15 +125,15 @@ public final class AppDeploymentWorkflow {
                                   .build();
     }
 
-    private Single<Optional<ITblModule>> validateModuleState(ITblModule module, EventAction action) {
-        LOGGER.info("INSTALLER validate service state {}::::{}", action, module.getServiceId());
-        return entityHandler.moduleDao()
-                            .findOneById(module.getServiceId())
+    private Single<Optional<IApplication>> validateModuleState(IApplication module, EventAction action) {
+        LOGGER.info("INSTALLER validate service state {}::::{}", action, module.getAppId());
+        return entityHandler.applicationDao()
+                            .findOneById(module.getAppId())
                             .map(o -> validateModuleState(o.orElse(null), action, module.getState()));
     }
 
-    private Single<String> createTransaction(EventAction action, ITblModule module) {
-        LOGGER.info("INSTALLER create transaction for {}::::{}", action, module.getServiceId());
+    private Single<String> createTransaction(EventAction action, IApplication module) {
+        LOGGER.info("INSTALLER create transaction for {}::::{}", action, module.getAppId());
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("INSTALLER previous module state: {}", module.toJson());
         }
@@ -142,43 +143,43 @@ public final class AppDeploymentWorkflow {
         // TODO replace with POJO constant later
         metadata.remove("system_config");
         metadata.remove("app_config");
-        final TblTransaction transaction = new TblTransaction().setTransactionId(transactionId)
-                                                               .setModuleId(module.getServiceId())
-                                                               .setStatus(Status.WIP)
-                                                               .setEvent(action)
-                                                               .setIssuedAt(now)
-                                                               .setModifiedAt(now)
-                                                               .setRetry(0)
-                                                               .setPrevMetadata(metadata)
-                                                               .setPrevSystemConfig(module.getSystemConfig())
-                                                               .setPrevAppConfig(module.getAppConfig());
+        final DeployTransaction transaction = new DeployTransaction().setTransactionId(transactionId)
+                                                                     .setAppId(module.getAppId())
+                                                                     .setStatus(Status.WIP)
+                                                                     .setEvent(action)
+                                                                     .setIssuedAt(now)
+                                                                     .setModifiedAt(now)
+                                                                     .setRetry(0)
+                                                                     .setPrevMetadata(metadata)
+                                                                     .setPrevSystemConfig(module.getSystemConfig())
+                                                                     .setPrevAppConfig(module.getAppConfig());
         return entityHandler.transDao().insert(transaction).map(i -> transactionId);
     }
 
-    private Single<ITblModule> markModuleInsert(ITblModule module) {
-        LOGGER.debug("INSTALLER mark service {} to create...", module.getServiceId());
+    private Single<IApplication> markModuleInsert(IApplication module) {
+        LOGGER.debug("INSTALLER mark service {} to create...", module.getAppId());
         OffsetDateTime now = DateTimes.now();
-        return entityHandler.moduleDao()
-                            .insert((TblModule) module.setCreatedAt(now).setModifiedAt(now).setState(State.PENDING))
+        return entityHandler.applicationDao()
+                            .insert((Application) module.setCreatedAt(now).setModifiedAt(now).setState(State.PENDING))
                             .map(i -> module);
     }
 
-    private Single<ITblModule> markModuleModify(ITblModule module, ITblModule oldOne, boolean isUpdated) {
-        LOGGER.debug("INSTALLER mark service {} to modify...", module.getServiceId());
-        ITblModule into = updateModule(oldOne, module, isUpdated);
-        return entityHandler.moduleDao()
-                            .update((TblModule) into.setState(State.PENDING).setModifiedAt(DateTimes.now()))
+    private Single<IApplication> markModuleModify(IApplication module, IApplication oldOne, boolean isUpdated) {
+        LOGGER.debug("INSTALLER mark service {} to modify...", module.getAppId());
+        IApplication into = updateModule(oldOne, module, isUpdated);
+        return entityHandler.applicationDao()
+                            .update((Application) into.setState(State.PENDING).setModifiedAt(DateTimes.now()))
                             .map(ignore -> oldOne);
     }
 
-    private Single<ITblModule> markModuleDelete(ITblModule module) {
-        LOGGER.debug("INSTALLER mark service {} to delete...", module.getServiceId());
-        return entityHandler.moduleDao()
-                            .update((TblModule) module.setState(State.PENDING).setModifiedAt(DateTimes.now()))
+    private Single<IApplication> markModuleDelete(IApplication module) {
+        LOGGER.debug("INSTALLER mark service {} to delete...", module.getAppId());
+        return entityHandler.applicationDao()
+                            .update((Application) module.setState(State.PENDING).setModifiedAt(DateTimes.now()))
                             .map(ignore -> module);
     }
 
-    private ITblModule updateModule(@NonNull ITblModule old, @NonNull ITblModule newOne, boolean isUpdated) {
+    private IApplication updateModule(@NonNull IApplication old, @NonNull IApplication newOne, boolean isUpdated) {
         if (Strings.isBlank(newOne.getVersion()) && isUpdated) {
             throw new IllegalArgumentException("Service version is mandatory");
         }
@@ -194,15 +195,14 @@ public final class AppDeploymentWorkflow {
         return old;
     }
 
-    private Optional<ITblModule> validateModuleState(ITblModule findModule, EventAction action, State targetState) {
+    private Optional<IApplication> validateModuleState(IApplication findModule, EventAction action, State targetState) {
         StateMachine.instance().validate(findModule, action, "service");
         if (Objects.nonNull(findModule)) {
             final State target = action == EventAction.INIT
                                  ? State.ENABLED
                                  : Optional.ofNullable(targetState).orElse(findModule.getState());
             StateMachine.instance()
-                        .validateConflict(findModule.getState(), action, "service " + findModule.getServiceId(),
-                                          target);
+                        .validateConflict(findModule.getState(), action, "service " + findModule.getAppId(), target);
             return Optional.of(findModule);
         }
         return Optional.empty();

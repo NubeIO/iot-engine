@@ -15,7 +15,7 @@ public class MockDeploymentService extends AppDeploymentService {
     @NonNull
     private final UUID mockDeployId;
 
-    MockDeploymentService(@NonNull InstallerEntityHandler entityHandler, @NonNull UUID mockDeployId) {
+    protected MockDeploymentService(@NonNull InstallerEntityHandler entityHandler, @NonNull UUID mockDeployId) {
         super(entityHandler);
         this.mockDeployId = mockDeployId;
     }

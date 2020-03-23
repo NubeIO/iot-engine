@@ -10,6 +10,7 @@ import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 /**
  * Represents for Request filter.
@@ -80,8 +81,8 @@ public final class RequestFilter extends JsonObject implements JsonData {
         return Arrays.stream(getString(RequestFilter.Filters.INCLUDE, "").split(",")).collect(Collectors.toSet());
     }
 
-    private boolean parseBoolean(String pretty) {
-        return Boolean.parseBoolean(Strings.toString(this.getValue(pretty)));
+    public boolean parseBoolean(@NonNull String param) {
+        return Boolean.parseBoolean(Strings.toString(this.getValue(param)));
     }
 
     /**

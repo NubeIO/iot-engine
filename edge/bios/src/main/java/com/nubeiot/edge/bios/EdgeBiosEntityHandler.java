@@ -10,8 +10,8 @@ import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.edge.installer.InstallerConfig;
 import com.nubeiot.edge.installer.InstallerConfig.RepositoryConfig;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
-import com.nubeiot.edge.installer.model.tables.interfaces.ITblModule;
-import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
+import com.nubeiot.edge.installer.model.tables.interfaces.IApplication;
+import com.nubeiot.edge.installer.model.tables.pojos.Application;
 
 public final class EdgeBiosEntityHandler extends InstallerEntityHandler {
 
@@ -19,8 +19,8 @@ public final class EdgeBiosEntityHandler extends InstallerEntityHandler {
         super(configuration, vertx);
     }
 
-    protected AppConfig transformAppConfig(RepositoryConfig repoConfig, ITblModule tblModule, AppConfig appConfig) {
-        if (String.format("%s:%s", "com.nubeiot.edge.module", "installer").equals(tblModule.getServiceId())) {
+    protected AppConfig transformAppConfig(RepositoryConfig repoConfig, IApplication application, AppConfig appConfig) {
+        if (String.format("%s:%s", "com.nubeiot.edge.module", "installer").equals(application.getAppId())) {
             InstallerConfig installerConfig = new InstallerConfig();
             installerConfig.setRepoConfig(repoConfig);
             return IConfig.merge(new JsonObject().put(installerConfig.key(), installerConfig.toJson()), appConfig,
@@ -29,7 +29,7 @@ public final class EdgeBiosEntityHandler extends InstallerEntityHandler {
         return appConfig;
     }
 
-    protected TblModule decorateModule(TblModule m) {
+    protected Application decorateModule(Application m) {
         return super.decorateModule(m).setPublishedBy("NubeIO");
     }
 

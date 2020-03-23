@@ -17,9 +17,9 @@ import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.loader.ModuleTypeRule;
 import com.nubeiot.edge.installer.model.dto.PreDeploymentResult;
 import com.nubeiot.edge.installer.model.dto.RequestedServiceData;
-import com.nubeiot.edge.installer.model.tables.daos.TblModuleDao;
-import com.nubeiot.edge.installer.model.tables.interfaces.ITblModule;
-import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
+import com.nubeiot.edge.installer.model.tables.daos.ApplicationDao;
+import com.nubeiot.edge.installer.model.tables.interfaces.IApplication;
+import com.nubeiot.edge.installer.model.tables.pojos.Application;
 import com.nubeiot.edge.installer.search.LocalServiceSearch;
 
 import lombok.AccessLevel;
@@ -27,7 +27,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
-public abstract class ModuleService implements InstallerService {
+public abstract class ApplicationService implements InstallerService {
 
     @NonNull
     private final InstallerEntityHandler entityHandler;
@@ -37,7 +37,7 @@ public abstract class ModuleService implements InstallerService {
     }
 
     public final String paramPath() {
-        return "service_id";
+        return "app_id";
     }
 
     @Override
@@ -60,7 +60,8 @@ public abstract class ModuleService implements InstallerService {
         if (Strings.isBlank(serviceId)) {
             throw new IllegalArgumentException("Service id is mandatory");
         }
-        return entityHandler.dao(TblModuleDao.class).findOneById(serviceId)
+        return entityHandler.dao(ApplicationDao.class)
+                            .findOneById(serviceId)
                             .map(o -> o.map(this::removeCredentialsInAppConfig))
                             .filter(Optional::isPresent)
                             .map(Optional::get)
@@ -70,8 +71,8 @@ public abstract class ModuleService implements InstallerService {
 
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
     public Single<JsonObject> patch(RequestData data) {
-        ITblModule module = createTblModule(data.body());
-        if (Strings.isBlank(module.getServiceId())) {
+        IApplication module = createTblModule(data.body());
+        if (Strings.isBlank(module.getAppId())) {
             throw new IllegalArgumentException("Service id is mandatory");
         }
         return new AppDeploymentWorkflow(entityHandler).process(module, EventAction.PATCH);
@@ -79,8 +80,8 @@ public abstract class ModuleService implements InstallerService {
 
     @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
     public Single<JsonObject> update(RequestData data) {
-        ITblModule module = validate(data.body());
-        if (Strings.isBlank(module.getServiceName()) && Strings.isBlank(module.getServiceId())) {
+        IApplication module = validate(data.body());
+        if (Strings.isBlank(module.getServiceName()) && Strings.isBlank(module.getAppId())) {
             throw new IllegalArgumentException("Provide at least service id or service name");
         }
         return new AppDeploymentWorkflow(entityHandler).process(module, EventAction.UPDATE);
@@ -88,8 +89,8 @@ public abstract class ModuleService implements InstallerService {
 
     @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
     public Single<JsonObject> remove(RequestData data) {
-        ITblModule module = new TblModule().setServiceId(data.body().getString(paramPath()));
-        if (Strings.isBlank(module.getServiceId())) {
+        IApplication module = new Application().setAppId(data.body().getString(paramPath()));
+        if (Strings.isBlank(module.getAppId())) {
             throw new IllegalArgumentException("Service id is mandatory");
         }
         return new AppDeploymentWorkflow(entityHandler).process(module, EventAction.REMOVE);
@@ -100,13 +101,13 @@ public abstract class ModuleService implements InstallerService {
         return new AppDeploymentWorkflow(entityHandler).process(validate(data.body()), EventAction.CREATE);
     }
 
-    private JsonObject removeCredentialsInAppConfig(TblModule record) {
-        record.setAppConfig(PreDeploymentResult.filterOutSensitiveConfig(record.getServiceId(), record.getAppConfig()));
+    private JsonObject removeCredentialsInAppConfig(Application record) {
+        record.setAppConfig(PreDeploymentResult.filterOutSensitiveConfig(record.getAppId(), record.getAppConfig()));
         return record.toJson();
     }
 
-    private ITblModule validate(@NonNull JsonObject body) {
-        ITblModule module = createTblModule(body);
+    private IApplication validate(@NonNull JsonObject body) {
+        IApplication module = createTblModule(body);
         if (Strings.isBlank(module.getServiceName())) {
             throw new IllegalArgumentException("Service name is mandatory");
         }
@@ -116,7 +117,7 @@ public abstract class ModuleService implements InstallerService {
         return module;
     }
 
-    private ITblModule createTblModule(JsonObject body) {
+    private IApplication createTblModule(JsonObject body) {
         String serviceId = body.getString(paramPath());
         body.remove(paramPath());
         RequestedServiceData serviceData = body.isEmpty()

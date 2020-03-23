@@ -1,14 +1,12 @@
 package com.nubeiot.edge.installer.service;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import io.vertx.core.http.HttpMethod;
-
-import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.http.base.EventHttpService;
 import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
@@ -16,8 +14,22 @@ import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 
+/**
+ * Represents Installer service.
+ *
+ * @since 1.0.0
+ */
 public interface InstallerService extends EventHttpService {
 
+    /**
+     * Create services.
+     *
+     * @param <T>           Type of {@code InstallerService}
+     * @param entityHandler the entity handler
+     * @param serviceClazz  the service clazz
+     * @return set of {@code InstallerService}
+     * @since 1.0.0
+     */
     static <T extends InstallerService> Set<T> createServices(InstallerEntityHandler entityHandler,
                                                               Class<T> serviceClazz) {
         final Map<Class, Object> inputs = Collections.singletonMap(InstallerEntityHandler.class, entityHandler);
@@ -27,19 +39,55 @@ public interface InstallerService extends EventHttpService {
                               .collect(Collectors.toSet());
     }
 
-    @Override
-    default Set<EventMethodDefinition> definitions() {
-        Map<EventAction, HttpMethod> map = ActionMethodMapping.CRUD_MAP.get();
-        ActionMethodMapping actionMethodMap = ActionMethodMapping.create(
-            getAvailableEvents().stream().filter(map::containsKey).collect(Collectors.toMap(e -> e, map::get)));
-        return Collections.singleton(
-            EventMethodDefinition.create(Urls.combinePath(rootPath(), servicePath()), paramPath(), actionMethodMap));
+    /**
+     * Defines Root path.
+     *
+     * @return Root path
+     * @since 1.0.0
+     */
+    default String rootPath() {
+        return "/installer";
     }
 
-    String rootPath();
+    /**
+     * Defines Application path.
+     *
+     * @return Application path
+     * @since 1.0.0
+     */
+    String appPath();
 
+    /**
+     * Defines Service path.
+     *
+     * @return Service path
+     * @since 1.0.0
+     */
     String servicePath();
 
+    /**
+     * Defines Param path.
+     *
+     * @return Param path
+     * @since 1.0.0
+     */
     String paramPath();
+
+    @Override
+    default Set<EventMethodDefinition> definitions() {
+        final String fullPath = Urls.combinePath(rootPath(), appPath(), servicePath());
+        return Collections.singleton(EventMethodDefinition.create(fullPath, paramPath(), methodMapping()));
+    }
+
+    /**
+     * Creates Event action Method mapping.
+     *
+     * @return the action method mapping. Defaults: {@link ActionMethodMapping#byCRUD(Collection)}
+     * @see ActionMethodMapping
+     * @since 1.0.0
+     */
+    default ActionMethodMapping methodMapping() {
+        return ActionMethodMapping.byCRUD(getAvailableEvents());
+    }
 
 }

@@ -8,8 +8,8 @@ public interface BiosInstallerService extends InstallerService {
         return "bios.installer." + this.getClass().getSimpleName();
     }
 
-    default String rootPath() {
-        return "/modules";
+    default String appPath() {
+        return "/app";
     }
 
 }

@@ -137,7 +137,9 @@ final class AnnotationHandler<T extends EventListener> {
         if (params.isEmpty()) {
             return new Object[] {};
         }
-        JsonObject data = message.isError() ? message.getError().toJson() : message.getData();
+        JsonObject data = message.isError() && Objects.nonNull(message.getError())
+                          ? message.getError().toJson()
+                          : message.getData();
         if (Objects.isNull(data)) {
             throw new NubeException(ErrorCode.INVALID_ARGUMENT,
                                     Strings.format("Event Message Data is null: {0}", message.toJson()));

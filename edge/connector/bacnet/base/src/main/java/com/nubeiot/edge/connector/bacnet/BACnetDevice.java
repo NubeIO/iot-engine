@@ -147,8 +147,8 @@ public final class BACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
                                                      .localDevice(metadata)
                                                      .build()
                                                      .toJson();
-        return EventMessage.initial(EventAction.NOTIFY_ERROR,
-                                    ErrorData.builder().throwable(t).extraInfo(extraInfo).build());
+        return EventMessage.error(EventAction.NOTIFY_ERROR,
+                                  ErrorData.builder().throwable(t).extraInfo(extraInfo).build());
     }
 
 }

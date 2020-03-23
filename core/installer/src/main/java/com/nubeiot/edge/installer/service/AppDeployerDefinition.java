@@ -9,18 +9,30 @@ import lombok.NonNull;
 
 /**
  * Application service deployer definition
+ *
+ * @since 1.0.0
  */
-public interface AppDeployer extends Shareable {
+public interface AppDeployerDefinition extends Shareable {
 
-    static AppDeployer create(@NonNull EventModel loaderEvent, @NonNull EventModel trackerEvent,
-                              @NonNull EventModel finisherEvent) {
-        return new DefaultAppDeployer(loaderEvent, trackerEvent, finisherEvent);
+    /**
+     * Create app deployer definition.
+     *
+     * @param loaderEvent   the loader event
+     * @param trackerEvent  the tracker event
+     * @param finisherEvent the finisher event
+     * @return the app deployer
+     * @since 1.0.0
+     */
+    static AppDeployerDefinition create(@NonNull EventModel loaderEvent, @NonNull EventModel trackerEvent,
+                                        @NonNull EventModel finisherEvent) {
+        return new DefaultAppDeployerDefinition(loaderEvent, trackerEvent, finisherEvent);
     }
 
     /**
      * Defines deployment loader event
      *
      * @return loader event
+     * @since 1.0.0
      */
     @NonNull EventModel getLoaderEvent();
 
@@ -28,6 +40,7 @@ public interface AppDeployer extends Shareable {
      * Defines tracker event after finish deploying
      *
      * @return tracker event
+     * @since 1.0.0
      */
     @NonNull EventModel getTrackerEvent();
 
@@ -35,6 +48,7 @@ public interface AppDeployer extends Shareable {
      * Defines finisher event after finish deploy and update database
      *
      * @return finisher event
+     * @since 1.0.0
      */
     @NonNull EventModel getFinisherEvent();
 
@@ -42,6 +56,7 @@ public interface AppDeployer extends Shareable {
      * Register event service
      *
      * @param entityHandler Entity handler
+     * @since 1.0.0
      */
     void register(@NonNull InstallerEntityHandler entityHandler);
 
