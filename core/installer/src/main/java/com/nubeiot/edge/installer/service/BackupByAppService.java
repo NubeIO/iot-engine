@@ -150,7 +150,7 @@ public abstract class BackupByAppService extends AbstractReferencingEntityServic
         final String dataDirField = jsonField(context().table().DATA_DIR);
         //        zipper.run(ZipArgument.createDefault(info.put("type", installationDirField)), backupFolder(),
         //                   Paths.get(installationDirField));
-        zipper.run(ZipArgument.createDefault(info.put("type", dataDirField)), backupFolder(), Paths.get(dataDirField));
+        zipper.zip(ZipArgument.createDefault(info.put("type", dataDirField)), backupFolder(), Paths.get(dataDirField));
     }
 
     private String jsonField(Field installation_dir) {

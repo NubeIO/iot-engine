@@ -1,12 +1,8 @@
 package com.nubeiot.core.archiver;
 
-import java.io.File;
-import java.nio.file.Path;
-
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.Strings;
 
 import lombok.Builder;
@@ -45,23 +41,17 @@ public final class ZipArgument implements JsonData {
         return ZipArgument.builder()
                           .trackingInfo(trackingInfo)
                           .appendTimestamp(false)
-                          .watcherDelayInMilli(100)
-                          .zipParameters(defaultZipParameters())
-                          .build();
+                          .watcherDelayInMilli(100).zipParameters(defaultZipParameters()).build();
     }
 
     static @NonNull ZipParameters defaultZipParameters() {
         ZipParameters parameters = new ZipParameters();
-        parameters.setIncludeRootFolder(true);
+        parameters.setIncludeRootFolder(false);
         return parameters;
     }
 
-    public String getZipFileName(@NonNull File toZippedFile) {
-        if (Strings.isNotBlank(overriddenDestFileName)) {
-            return overriddenDestFileName;
-        }
-        final Path fileName = toZippedFile.toPath().getFileName();
-        return appendTimestamp ? fileName.toString() + "-" + DateTimes.nowMilli() : fileName.toString();
+    public char[] toPassword() {
+        return Strings.isBlank(password) ? null : password.toCharArray();
     }
 
 }

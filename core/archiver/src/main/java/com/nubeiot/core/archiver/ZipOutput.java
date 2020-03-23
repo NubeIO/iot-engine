@@ -19,8 +19,8 @@ import lombok.Getter;
 public final class ZipOutput implements JsonData {
 
     private final JsonObject trackingInfo;
-    private final String originFile;
-    private final String zipFile;
+    private final String inputPath;
+    private final String outputPath;
     private final long size;
     private final OffsetDateTime lastModified;
 

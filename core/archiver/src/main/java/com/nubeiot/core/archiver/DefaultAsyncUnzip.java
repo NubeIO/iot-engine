@@ -1,6 +1,7 @@
 package com.nubeiot.core.archiver;
 
 import java.io.File;
+import java.nio.file.Paths;
 
 import com.nubeiot.core.utils.ExecutorHelpers;
 
@@ -11,39 +12,38 @@ import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.progress.ProgressMonitor;
 
 @SuperBuilder
-public final class AsyncZipFolder extends AbstractAsyncArchiver implements AsyncZip {
+public final class DefaultAsyncUnzip extends AbstractAsyncArchiver implements AsyncUnzip {
 
     @Override
-    public void zip(@NonNull ZipArgument argument, @NonNull File destFolder, @NonNull File tobeZipped) {
-        ExecutorHelpers.blocking(transporter().getVertx(), () -> execute(argument, destFolder, tobeZipped));
+    public void extract(@NonNull ZipArgument argument, @NonNull File destFolder, @NonNull File zipFile) {
+        ExecutorHelpers.blocking(transporter().getVertx(), () -> execute(argument, destFolder, zipFile));
     }
 
     @Override
     protected ZipFile createZipFile(@NonNull ZipArgument argument, @NonNull File destination,
                                     @NonNull File originFile) {
-        return new ZipFile(destination.toPath().resolve(computeZipName(argument, originFile)).toString(),
-                           argument.toPassword());
+        return new ZipFile(originFile, argument.toPassword());
     }
 
     @Override
-    protected void run(@NonNull ZipArgument argument, ZipFile zipFile, @NonNull File destination,
+    protected void run(@NonNull ZipArgument argument, @NonNull ZipFile zipFile, @NonNull File destination,
                        @NonNull File originFile) throws ZipException {
-        zipFile.addFolder(originFile, argument.zipParameters());
+        zipFile.extractAll(destination.toPath().resolve(computeExtractedFolder(argument, originFile)).toString());
     }
 
     @Override
     protected String action() {
-        return "Compressing";
+        return "Extracting";
     }
 
     @Override
     protected ZipOutput createOutput(@NonNull ZipArgument argument, @NonNull ZipFile zipFile,
                                      @NonNull ProgressMonitor progressMonitor, @NonNull File originFile) {
+        final File outputFile = Paths.get(progressMonitor.getFileName()).getParent().toFile();
         return ZipOutput.builder()
                         .inputPath(originFile.getPath())
-                        .outputPath(zipFile.getFile().toString())
-                        .size(zipFile.getFile().length())
-                        .lastModified(zipFile.getFile().lastModified())
+                        .outputPath(outputFile.getPath())
+                        .lastModified(outputFile.lastModified())
                         .trackingInfo(argument.trackingInfo())
                         .build();
     }

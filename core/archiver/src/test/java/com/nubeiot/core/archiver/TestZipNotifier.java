@@ -1,5 +1,8 @@
 package com.nubeiot.core.archiver;
 
+import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -21,18 +24,29 @@ public final class TestZipNotifier implements ZipNotificationHandler {
     private final Async async;
     @NonNull
     private final JsonObject expected;
+    private final CountDownLatch latch;
 
     @Override
     @EventContractor(action = EventAction.NOTIFY, returnType = boolean.class)
     public boolean success(@NonNull ZipOutput response) {
-        JsonHelper.assertJson(testContext, async, expected, response.toJson(), JsonHelper.ignore("lastModified"));
+        try {
+            System.out.println(response.toJson());
+            JsonHelper.assertJson(testContext, async, expected, response.toJson(), JsonHelper.ignore("lastModified"));
+        } finally {
+            Optional.ofNullable(latch).ifPresent(CountDownLatch::countDown);
+        }
         return true;
     }
 
     @Override
     @EventContractor(action = EventAction.NOTIFY_ERROR, returnType = boolean.class)
     public boolean error(@NonNull ErrorData error) {
-        JsonHelper.assertJson(testContext, async, expected, error.toJson());
+        try {
+            System.out.println(error.toJson());
+            JsonHelper.assertJson(testContext, async, expected, error.getError().toJson());
+        } finally {
+            Optional.ofNullable(latch).ifPresent(CountDownLatch::countDown);
+        }
         return true;
     }
 
