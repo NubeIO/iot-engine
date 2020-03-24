@@ -9,8 +9,8 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.nubeiot.edge.installer.loader.ModuleType;
 import com.nubeiot.edge.installer.loader.ModuleTypeRule;
+import com.nubeiot.edge.installer.loader.VertxModuleType;
 
 public class EdgeBiosRuleProviderTest {
 
@@ -23,20 +23,20 @@ public class EdgeBiosRuleProviderTest {
 
     @Test
     public void test_ModuleTypeJAVA_success() {
-        assertTrue(rule.getRule(ModuleType.JAVA).test("com.nubeiot.edge.module.xyz"));
-        final List<String> searchPattern = rule.getSearchPattern(ModuleType.JAVA);
+        assertTrue(rule.getRule(VertxModuleType.JAVA).test("com.nubeiot.edge.module.xyz"));
+        final List<String> searchPattern = rule.getSearchPattern(VertxModuleType.JAVA);
         assertEquals(1, searchPattern.size());
         assertTrue(searchPattern.contains("com.nubeiot.edge.module"));
     }
 
     @Test
     public void test_ModuleTypeJAVA_failed() {
-        assertFalse(rule.getRule(ModuleType.JAVA).test("com.nubeiot.edge.ccc.xyz"));
+        assertFalse(rule.getRule(VertxModuleType.JAVA).test("com.nubeiot.edge.ccc.xyz"));
     }
 
     @Test
     public void test_ModuleTypeJAVAScript() {
-        assertFalse(rule.getRule(ModuleType.JAVASCRIPT).test("olala"));
+        assertFalse(rule.getRule(VertxModuleType.JAVASCRIPT).test("olala"));
     }
 
 }

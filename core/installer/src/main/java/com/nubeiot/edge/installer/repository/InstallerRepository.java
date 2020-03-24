@@ -17,6 +17,7 @@ import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.installer.InstallerConfig.RepositoryConfig;
 import com.nubeiot.edge.installer.InstallerConfig.RepositoryConfig.RemoteRepositoryConfig;
 import com.nubeiot.edge.installer.loader.ModuleType;
+import com.nubeiot.edge.installer.loader.VertxModuleType;
 
 import lombok.AccessLevel;
 import lombok.NonNull;
@@ -47,7 +48,7 @@ public final class InstallerRepository {
         final String localDir = RepositoryConfig.DEFAULT_LOCAL.equals(local)
                                 ? dataDir.resolve(local).toString()
                                 : local;
-        if (ModuleType.JAVA == type) {
+        if (VertxModuleType.JAVA == type) {
             List<ExternalServer> externalServers = entry.getValue();
             String javaLocal = FileUtils.createFolder(localDir, type.name().toLowerCase(Locale.ENGLISH));
             LOGGER.info("{} local repositories: {}", type, javaLocal);

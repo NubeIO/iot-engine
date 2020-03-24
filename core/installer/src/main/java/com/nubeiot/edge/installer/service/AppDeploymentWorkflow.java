@@ -45,17 +45,18 @@ public final class AppDeploymentWorkflow {
         this.definition = entityHandler.sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
     }
 
-    public Single<JsonObject> process(IApplication module, EventAction action) {
-        return process(Collections.singleton(module), action).firstOrError();
+    public Single<JsonObject> process(IApplication application, EventAction action) {
+        return process(Collections.singleton(application), action).firstOrError();
     }
 
-    public Observable<JsonObject> process(Collection<? extends IApplication> modules, EventAction action) {
-        return Observable.fromIterable(modules).flatMapSingle(module -> processDeployment(module, action));
+    public Observable<JsonObject> process(Collection<? extends IApplication> applications, EventAction action) {
+        return Observable.fromIterable(applications).flatMapSingle(module -> processDeployment(module, action));
     }
 
-    private Single<JsonObject> processDeployment(IApplication module, EventAction action) {
-        LOGGER.info("INSTALLER handle for {}::::{}", action, module.getAppId());
-        return createPreDeployment(module, action).doOnSuccess(this::deployModule).map(PreDeploymentResult::toResponse);
+    private Single<JsonObject> processDeployment(IApplication application, EventAction action) {
+        LOGGER.info("INSTALLER handle for {}::::{}", action, application.getAppId());
+        return createPreDeployment(application, action).doOnSuccess(this::deployModule)
+                                                       .map(PreDeploymentResult::toResponse);
     }
 
     private Single<PreDeploymentResult> createPreDeployment(IApplication req, EventAction action) {

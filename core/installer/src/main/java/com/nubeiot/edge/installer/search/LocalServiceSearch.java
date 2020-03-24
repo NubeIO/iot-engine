@@ -27,7 +27,7 @@ import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.DateTimes.Iso8601Parser;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
-import com.nubeiot.edge.installer.loader.ModuleType;
+import com.nubeiot.edge.installer.loader.VertxModuleType;
 import com.nubeiot.edge.installer.model.Tables;
 import com.nubeiot.edge.installer.model.dto.PreDeploymentResult;
 import com.nubeiot.edge.installer.model.tables.records.ApplicationRecord;
@@ -90,7 +90,7 @@ public final class LocalServiceSearch implements IServiceSearch {
     private List<ApplicationRecord> filter(JsonObject filter, Pagination pagination, DSLContext context) {
         SelectConditionStep<ApplicationRecord> sql = context.selectFrom(Tables.APPLICATION)
                                                             .where(DSL.field(Tables.APPLICATION.SERVICE_TYPE)
-                                                                      .eq(ModuleType.JAVA));
+                                                                      .eq(VertxModuleType.JAVA));
         Set<String> fieldNames = Arrays.stream(Tables.APPLICATION.fields())
                                        .map(Field::getName)
                                        .collect(Collectors.toSet());

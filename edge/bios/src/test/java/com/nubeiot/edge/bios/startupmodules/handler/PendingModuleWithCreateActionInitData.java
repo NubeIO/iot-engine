@@ -12,7 +12,7 @@ import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.utils.DateTimes;
-import com.nubeiot.edge.installer.loader.ModuleType;
+import com.nubeiot.edge.installer.loader.VertxModuleType;
 import com.nubeiot.edge.installer.model.tables.pojos.Application;
 import com.nubeiot.edge.installer.model.tables.pojos.DeployTransaction;
 
@@ -27,7 +27,7 @@ public class PendingModuleWithCreateActionInitData extends MockInitDataEntityHan
         Single<Integer> insert02 = applicationDao.insert(
             new Application().setAppId("pending-service-with-transaction-is-wip-prestate-action-is-create")
                              .setServiceName("service2")
-                             .setServiceType(ModuleType.JAVA)
+                             .setServiceType(VertxModuleType.JAVA)
                              .setVersion("1.0.0")
                              .setState(State.PENDING)
                              .setCreatedAt(DateTimes.now())

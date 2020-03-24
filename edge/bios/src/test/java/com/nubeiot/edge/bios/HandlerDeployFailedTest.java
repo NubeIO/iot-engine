@@ -12,7 +12,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.bios.loader.DeploymentAsserter;
 import com.nubeiot.edge.installer.InstallerVerticle;
-import com.nubeiot.edge.installer.loader.ModuleType;
+import com.nubeiot.edge.installer.loader.VertxModuleType;
 import com.nubeiot.edge.installer.model.tables.pojos.Application;
 
 @Ignore
@@ -82,7 +82,7 @@ public class HandlerDeployFailedTest extends BaseInstallerVerticleTest {
 
     private void createService(TestContext context) {
         this.insertModule(context, new Application().setAppId(MODULE_ID)
-                                                    .setServiceType(ModuleType.JAVA)
+                                                    .setServiceType(VertxModuleType.JAVA)
                                                     .setServiceName(SERVICE_NAME)
                                                     .setState(State.ENABLED)
                                                     .setVersion(VERSION)

@@ -8,8 +8,8 @@ import java.util.stream.Stream;
 
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.InstallerVerticle;
-import com.nubeiot.edge.installer.loader.ModuleType;
 import com.nubeiot.edge.installer.loader.ModuleTypeRule;
+import com.nubeiot.edge.installer.loader.VertxModuleType;
 import com.nubeiot.edge.installer.mock.MockInstallerService.MockApplicationService;
 import com.nubeiot.edge.installer.mock.MockInstallerService.MockTransactionService;
 import com.nubeiot.edge.installer.service.AppDeployerDefinition;
@@ -33,7 +33,7 @@ public class MockInstallerVerticle extends InstallerVerticle {
 
     @Override
     protected @NonNull Supplier<ModuleTypeRule> getModuleRuleProvider() {
-        return () -> new ModuleTypeRule().registerRule(ModuleType.JAVA,
+        return () -> new ModuleTypeRule().registerRule(VertxModuleType.JAVA,
                                                        Collections.singletonList("com.nubeiot.edge.module"));
     }
 

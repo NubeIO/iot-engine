@@ -16,6 +16,7 @@ import com.nubeiot.core.IConfig;
 import com.nubeiot.core.TestHelper.OSHelper;
 import com.nubeiot.edge.installer.InstallerConfig.RepositoryConfig.RemoteRepositoryConfig;
 import com.nubeiot.edge.installer.loader.ModuleType;
+import com.nubeiot.edge.installer.loader.VertxModuleType;
 import com.nubeiot.edge.installer.model.dto.RequestedServiceData;
 
 public class InstallerConfigTest {
@@ -33,7 +34,7 @@ public class InstallerConfigTest {
         InstallerConfig installerConfig = new InstallerConfig();
         RemoteRepositoryConfig remoteConfig = installerConfig.getRepoConfig().getRemoteConfig();
         remoteConfig.setCredential(new BasicCredential(CredentialType.BASIC, "user", "password"));
-        remoteConfig.addUrl(ModuleType.JAVA, new ExternalServer("abc"));
+        remoteConfig.addUrl(VertxModuleType.JAVA, new ExternalServer("abc"));
         Assert.assertTrue(installerConfig.getBuiltinApps().isEmpty());
         JsonObject jsonObject = installerConfig.toJson();
         System.out.println(jsonObject.encodePrettily());
@@ -67,7 +68,7 @@ public class InstallerConfigTest {
         Assert.assertEquals("password", ((BasicCredential) credential).getPassword());
 
         Map<ModuleType, List<ExternalServer>> urls = installerConfig.getRepoConfig().getRemoteConfig().getUrls();
-        List<ExternalServer> externalServers = urls.get(ModuleType.JAVA);
+        List<ExternalServer> externalServers = urls.get(VertxModuleType.JAVA);
         Assert.assertEquals(2, externalServers.size());
         Assert.assertEquals("abc", externalServers.get(0).getUrl());
         Assert.assertNull(externalServers.get(0).getCredential());

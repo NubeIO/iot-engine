@@ -40,7 +40,7 @@ public final class ModuleTypeRule implements Shareable {
 
     public IApplication parse(JsonObject metadata) {
         ModuleType moduleType = ModuleType.factory(metadata.getString("service_type"));
-        String serviceId = metadata.getString("service_id");
+        String serviceId = metadata.getString("app_id");
         JsonObject module = Objects.isNull(serviceId) ? moduleType.serialize(metadata, this) : metadata;
         return new Application().fromJson(module);
     }

@@ -14,7 +14,7 @@ import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.utils.DateTimes;
-import com.nubeiot.edge.installer.loader.ModuleType;
+import com.nubeiot.edge.installer.loader.VertxModuleType;
 import com.nubeiot.edge.installer.model.tables.pojos.Application;
 import com.nubeiot.edge.installer.model.tables.pojos.DeployTransaction;
 
@@ -29,7 +29,7 @@ public class InvalidModulesInitData extends MockInitDataEntityHandler {
         final Application service5 = new Application().setAppId(
             "pending-service-with-transaction-is-wip-prestate-action-is-update-disabled")
                                                       .setServiceName("service5")
-                                                      .setServiceType(ModuleType.JAVA)
+                                                      .setServiceType(VertxModuleType.JAVA)
                                                       .setVersion("1.0.0")
                                                       .setState(State.PENDING)
                                                       .setCreatedAt(DateTimes.now())
@@ -54,7 +54,7 @@ public class InvalidModulesInitData extends MockInitDataEntityHandler {
         final Application service6 = new Application().setAppId(
             "pending-service-with-transaction-is-wip-prestate-action-is-patch-disabled")
                                                       .setServiceName("service6")
-                                                      .setServiceType(ModuleType.JAVA)
+                                                      .setServiceType(VertxModuleType.JAVA)
                                                       .setVersion("1.0.0")
                                                       .setState(State.PENDING)
                                                       .setCreatedAt(DateTimes.now())
@@ -79,7 +79,7 @@ public class InvalidModulesInitData extends MockInitDataEntityHandler {
 
         Single<Integer> insert07 = applicationDao.insert(new Application().setAppId("disabled-module")
                                                                           .setServiceName("service7")
-                                                                          .setServiceType(ModuleType.JAVA)
+                                                                          .setServiceType(VertxModuleType.JAVA)
                                                                           .setVersion("1.0.0")
                                                                           .setState(State.DISABLED)
                                                                           .setCreatedAt(DateTimes.now())
@@ -90,7 +90,7 @@ public class InvalidModulesInitData extends MockInitDataEntityHandler {
         Single<Integer> insert09 = applicationDao.insert(
             new Application().setAppId("pending_module_with_two_transactions_invalid")
                              .setServiceName("service9")
-                             .setServiceType(ModuleType.JAVA)
+                             .setServiceType(VertxModuleType.JAVA)
                              .setVersion("1.0.0")
                              .setState(State.PENDING)
                              .setCreatedAt(DateTimes.now())
@@ -120,7 +120,7 @@ public class InvalidModulesInitData extends MockInitDataEntityHandler {
 
         Single<Integer> insert10 = applicationDao.insert(new Application().setAppId("pending-but-failed-module")
                                                                           .setServiceName("service10")
-                                                                          .setServiceType(ModuleType.JAVA)
+                                                                          .setServiceType(VertxModuleType.JAVA)
                                                                           .setVersion("1.0.0")
                                                                           .setState(State.PENDING)
                                                                           .setCreatedAt(DateTimes.now())
