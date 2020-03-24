@@ -35,15 +35,15 @@ import com.nubeiot.edge.installer.model.DefaultCatalog;
 import com.nubeiot.edge.installer.model.Keys;
 import com.nubeiot.edge.installer.model.Tables;
 import com.nubeiot.edge.installer.model.dto.RequestedServiceData;
-import com.nubeiot.edge.installer.model.tables.daos.TblModuleDao;
-import com.nubeiot.edge.installer.model.tables.daos.TblRemoveHistoryDao;
-import com.nubeiot.edge.installer.model.tables.daos.TblTransactionDao;
-import com.nubeiot.edge.installer.model.tables.interfaces.ITblModule;
-import com.nubeiot.edge.installer.model.tables.interfaces.ITblRemoveHistory;
-import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
-import com.nubeiot.edge.installer.model.tables.pojos.TblTransaction;
+import com.nubeiot.edge.installer.model.tables.daos.ApplicationDao;
+import com.nubeiot.edge.installer.model.tables.daos.ApplicationHistoryDao;
+import com.nubeiot.edge.installer.model.tables.daos.DeployTransactionDao;
+import com.nubeiot.edge.installer.model.tables.interfaces.IApplication;
+import com.nubeiot.edge.installer.model.tables.interfaces.IApplicationHistory;
+import com.nubeiot.edge.installer.model.tables.pojos.Application;
+import com.nubeiot.edge.installer.model.tables.pojos.DeployTransaction;
 import com.nubeiot.edge.installer.repository.InstallerRepository;
-import com.nubeiot.edge.installer.service.AppDeployer;
+import com.nubeiot.edge.installer.service.AppDeployerDefinition;
 import com.nubeiot.edge.installer.service.InstallerApiIndex;
 
 import lombok.AccessLevel;
@@ -92,29 +92,29 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler
         return this;
     }
 
-    public final TblModuleDao moduleDao() {
-        return dao(TblModuleDao.class);
+    public final ApplicationDao applicationDao() {
+        return dao(ApplicationDao.class);
     }
 
-    public final TblTransactionDao transDao() {
-        return dao(TblTransactionDao.class);
+    public final DeployTransactionDao transDao() {
+        return dao(DeployTransactionDao.class);
     }
 
-    final Single<List<TblModule>> getModulesWhenBootstrap() {
-        return moduleDao().findManyByState(Arrays.asList(State.NONE, State.ENABLED));
+    final Single<List<Application>> getModulesWhenBootstrap() {
+        return applicationDao().findManyByState(Arrays.asList(State.NONE, State.ENABLED));
     }
 
     final InstallerEntityHandler initDeployer() {
-        final AppDeployer appDeployer = sharedData(SHARED_APP_DEPLOYER_CFG);
-        appDeployer.register(this);
+        final AppDeployerDefinition definition = sharedData(SHARED_APP_DEPLOYER_CFG);
+        definition.register(this);
         return this;
     }
 
-    protected AppConfig transformAppConfig(RepositoryConfig repoConfig, ITblModule tblModule, AppConfig appConfig) {
+    protected AppConfig transformAppConfig(RepositoryConfig repoConfig, IApplication tblModule, AppConfig appConfig) {
         return appConfig;
     }
 
-    protected TblModule decorateModule(TblModule module) {
+    protected Application decorateModule(Application module) {
         final OffsetDateTime now = DateTimes.now();
         return module.setCreatedAt(now).setModifiedAt(now);
     }
@@ -128,21 +128,21 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler
         return Observable.fromIterable(config.getBuiltinApps())
                          .map(serviceData -> createTblModule(dataDir, config.getRepoConfig(), serviceData))
                          .map(this::decorateModule)
-                         .collect(ArrayList<TblModule>::new, ArrayList::add)
-                         .flatMap(list -> dao(TblModuleDao.class).insert(list))
+                         .collect(ArrayList<Application>::new, ArrayList::add)
+                         .flatMap(list -> dao(ApplicationDao.class).insert(list))
                          .map(r -> new JsonObject().put("results", "Inserted " + r + " app module record(s)"));
     }
 
-    private TblModule createTblModule(Path dataDir, RepositoryConfig repoConfig, RequestedServiceData serviceData) {
+    private Application createTblModule(Path dataDir, RepositoryConfig repoConfig, RequestedServiceData serviceData) {
         ModuleTypeRule rule = sharedData(SHARED_MODULE_RULE);
-        ITblModule tblModule = rule.parse(serviceData.getMetadata());
+        IApplication tblModule = rule.parse(serviceData.getMetadata());
         AppConfig appConfig = transformAppConfig(repoConfig, tblModule, serviceData.getAppConfig());
-        return (TblModule) rule.parse(dataDir, tblModule, appConfig).setState(State.NONE);
+        return (Application) rule.parse(dataDir, tblModule, appConfig).setState(State.NONE);
     }
 
     Single<JsonObject> transitionPendingModules() {
         bootstrap = EventAction.MIGRATE;
-        final TblModuleDao dao = moduleDao();
+        final ApplicationDao dao = applicationDao();
         return dao.findManyByState(Collections.singletonList(State.PENDING))
                   .flattenAsObservable(pendingModules -> pendingModules)
                   .flatMapMaybe(m -> genericQuery().executeAny(context -> getLastWipTransaction(m, context))
@@ -154,17 +154,17 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler
                   .map(r -> new JsonObject().put("results", r));
     }
 
-    private Optional<TblTransaction> getLastWipTransaction(TblModule module, DSLContext dsl) {
+    private Optional<DeployTransaction> getLastWipTransaction(Application module, DSLContext dsl) {
         return Optional.ofNullable(dsl.select()
-                                      .from(Tables.TBL_TRANSACTION)
-                                      .where(DSL.field(Tables.TBL_TRANSACTION.MODULE_ID).eq(module.getServiceId()))
-                                      .and(DSL.field(Tables.TBL_TRANSACTION.STATUS).eq(Status.WIP))
-                                      .orderBy(Tables.TBL_TRANSACTION.MODIFIED_AT.desc())
+                                      .from(Tables.APPLICATION)
+                                      .where(DSL.field(Tables.APPLICATION.APP_ID).eq(module.getAppId()))
+                                      .and(DSL.field(Tables.DEPLOY_TRANSACTION.STATUS).eq(Status.WIP))
+                                      .orderBy(Tables.DEPLOY_TRANSACTION.MODIFIED_AT.desc())
                                       .limit(1)
-                                      .fetchOneInto(TblTransaction.class));
+                                      .fetchOneInto(DeployTransaction.class));
     }
 
-    private TblModule checkingTransaction(TblModule module, TblTransaction transaction) {
+    private Application checkingTransaction(Application module, DeployTransaction transaction) {
         if (transaction.getEvent() == EventAction.CREATE || transaction.getEvent() == EventAction.INIT) {
             return module.setState(State.ENABLED);
         }
@@ -173,14 +173,15 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler
             if (Objects.isNull(prevMeta)) {
                 return module.setState(State.ENABLED);
             }
-            return module.setState(new TblModule(prevMeta).getState() == State.DISABLED ? State.DISABLED : State.NONE);
+            return module.setState(
+                new Application(prevMeta).getState() == State.DISABLED ? State.DISABLED : State.NONE);
         }
         return module.setState(State.DISABLED);
     }
 
     private Single<Optional<JsonObject>> findHistoryTransactionById(String transactionId) {
-        return dao(TblRemoveHistoryDao.class).findOneById(transactionId)
-                                             .map(optional -> optional.map(ITblRemoveHistory::toJson));
+        return dao(ApplicationHistoryDao.class).findOneById(transactionId)
+                                               .map(optional -> optional.map(IApplicationHistory::toJson));
     }
 
     public final Single<Optional<JsonObject>> findTransactionById(String transactionId) {
@@ -190,20 +191,20 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler
                                               : this.findHistoryTransactionById(transactionId));
     }
 
-    public final Single<List<TblTransaction>> findTransactionByModuleId(String moduleId) {
+    public final Single<List<DeployTransaction>> findTransactionByModuleId(String moduleId) {
         return transDao().queryExecutor()
-                         .findMany(dsl -> dsl.selectFrom(Tables.TBL_TRANSACTION)
-                                             .where(DSL.field(Tables.TBL_TRANSACTION.MODULE_ID).eq(moduleId))
-                                             .orderBy(Tables.TBL_TRANSACTION.ISSUED_AT.desc()));
+                         .findMany(dsl -> dsl.selectFrom(Tables.DEPLOY_TRANSACTION)
+                                             .where(DSL.field(Tables.DEPLOY_TRANSACTION.APP_ID).eq(moduleId))
+                                             .orderBy(Tables.DEPLOY_TRANSACTION.ISSUED_AT.desc()));
     }
 
     public final Single<Optional<JsonObject>> findOneTransactionByModuleId(String moduleId) {
         return transDao().queryExecutor()
-                         .findOne(dsl -> dsl.selectFrom(Tables.TBL_TRANSACTION)
-                                            .where(DSL.field(Tables.TBL_TRANSACTION.MODULE_ID).eq(moduleId))
-                                            .orderBy(Tables.TBL_TRANSACTION.ISSUED_AT.desc())
+                         .findOne(dsl -> dsl.selectFrom(Tables.DEPLOY_TRANSACTION)
+                                            .where(DSL.field(Tables.DEPLOY_TRANSACTION.APP_ID).eq(moduleId))
+                                            .orderBy(Tables.DEPLOY_TRANSACTION.ISSUED_AT.desc())
                                             .limit(1))
-                         .map(optional -> optional.map(TblTransaction::toJson));
+                         .map(optional -> optional.map(DeployTransaction::toJson));
     }
 
     @Override

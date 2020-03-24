@@ -15,8 +15,8 @@ import io.vertx.core.shareddata.Shareable;
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.utils.FileUtils;
-import com.nubeiot.edge.installer.model.tables.interfaces.ITblModule;
-import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
+import com.nubeiot.edge.installer.model.tables.interfaces.IApplication;
+import com.nubeiot.edge.installer.model.tables.pojos.Application;
 
 import lombok.AccessLevel;
 import lombok.NonNull;
@@ -31,24 +31,24 @@ public final class ModuleTypeRule implements Shareable {
         rules = new HashMap<>();
     }
 
-    public ITblModule parse(@NonNull Path dataDir, @NonNull JsonObject metadata, AppConfig appConfig) {
-        ITblModule tblModule = parse(metadata);
-        tblModule = tblModule.setAppConfig(appConfig.toJson());
-        tblModule = tblModule.setSystemConfig(computeAppSystemConfig(dataDir, tblModule.getServiceId()));
-        return tblModule;
+    public IApplication parse(@NonNull Path dataDir, @NonNull JsonObject metadata, AppConfig appConfig) {
+        IApplication application = parse(metadata);
+        application = application.setAppConfig(appConfig.toJson());
+        application = application.setSystemConfig(computeAppSystemConfig(dataDir, application.getAppId()));
+        return application;
     }
 
-    public ITblModule parse(JsonObject metadata) {
+    public IApplication parse(JsonObject metadata) {
         ModuleType moduleType = ModuleType.factory(metadata.getString("service_type"));
-        String serviceId = metadata.getString("service_id");
+        String serviceId = metadata.getString("app_id");
         JsonObject module = Objects.isNull(serviceId) ? moduleType.serialize(metadata, this) : metadata;
-        return new TblModule().fromJson(module);
+        return new Application().fromJson(module);
     }
 
-    public ITblModule parse(@NonNull Path dataDir, @NonNull ITblModule tblModule, AppConfig appConfig) {
-        tblModule = tblModule.setAppConfig(appConfig.toJson());
-        tblModule = tblModule.setSystemConfig(computeAppSystemConfig(dataDir, tblModule.getServiceId()));
-        return tblModule;
+    public IApplication parse(@NonNull Path dataDir, @NonNull IApplication application, AppConfig appConfig) {
+        application = application.setAppConfig(appConfig.toJson());
+        application = application.setSystemConfig(computeAppSystemConfig(dataDir, application.getAppId()));
+        return application;
     }
 
     private JsonObject computeAppSystemConfig(@NonNull Path parentDataDir, String serviceId) {

@@ -98,7 +98,7 @@ public final class FileUtils {
         return Strings.isBlank(filePath) ? getClasspathFile(classpathFile) : toPath(filePath);
     }
 
-    private static Path getClasspathFile(String classpathFile) {
+    public static Path getClasspathFile(String classpathFile) {
         final Path fileInWorkingDir = Paths.get(".", classpathFile);
         if (fileInWorkingDir.toFile().exists()) {
             return fileInWorkingDir;
@@ -307,6 +307,13 @@ public final class FileUtils {
         return Optional.ofNullable(filename)
                        .filter(f -> f.contains("."))
                        .map(f -> f.substring(filename.lastIndexOf(".") + 1))
+                       .orElse("");
+    }
+
+    public static String withoutExtension(String filename) {
+        return Optional.ofNullable(filename)
+                       .filter(f -> f.contains("."))
+                       .map(f -> f.substring(0, filename.lastIndexOf(".")))
                        .orElse("");
     }
 

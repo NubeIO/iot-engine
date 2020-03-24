@@ -1,5 +1,5 @@
-CREATE TABLE IF NOT EXISTS tbl_module (
-	service_id                      varchar(127) NOT NULL,
+CREATE TABLE IF NOT EXISTS application (
+	app_id                          varchar(127) NOT NULL,
 	service_name                    varchar(127) NOT NULL,
 	service_type                    varchar(15) NOT NULL,
 	version                         varchar(31) NOT NULL,
@@ -11,13 +11,13 @@ CREATE TABLE IF NOT EXISTS tbl_module (
 	app_config_json                 text,
 	system_config_json              text,
 	deploy_location                 varchar(500),
-	CONSTRAINT Pk_tbl_module PRIMARY KEY ( service_id ),
-	CONSTRAINT Unique_tbl_module UNIQUE ( service_name, service_type )
+	CONSTRAINT Pk_application PRIMARY KEY ( app_id ),
+	CONSTRAINT Unique_application UNIQUE ( service_name, service_type )
  );
 
-CREATE TABLE IF NOT EXISTS tbl_transaction (
+CREATE TABLE IF NOT EXISTS deploy_transaction (
 	transaction_id                  varchar(63) NOT NULL,
-	module_id                       varchar(127) NOT NULL,
+	app_id                          varchar(127) NOT NULL,
 	event                           varchar(15) NOT NULL,
 	status                          varchar(15) NOT NULL,
 	issued_at                       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -29,17 +29,17 @@ CREATE TABLE IF NOT EXISTS tbl_transaction (
 	prev_system_config_json         text,
 	last_error_json                 text,
 	retry                           integer NOT NULL DEFAULT 0,
-	CONSTRAINT Pk_tbl_transaction PRIMARY KEY ( transaction_id ),
-	FOREIGN KEY ( module_id ) REFERENCES tbl_module( service_id )
+	CONSTRAINT Pk_deploy_transaction PRIMARY KEY ( transaction_id ),
+	FOREIGN KEY ( app_id ) REFERENCES application( app_id )
  );
 
-CREATE INDEX IF NOT EXISTS Idx_tbl_transaction_module_id ON tbl_transaction ( module_id );
+CREATE INDEX IF NOT EXISTS Idx_deploy_transaction_app_id ON deploy_transaction ( app_id );
 
-CREATE INDEX IF NOT EXISTS Idx_tbl_transaction_module_lifetime ON tbl_transaction ( module_id, issued_at );
+CREATE INDEX IF NOT EXISTS Idx_deploy_transaction_module_lifetime ON deploy_transaction ( app_id, issued_at );
 
-CREATE TABLE IF NOT EXISTS tbl_remove_history (
+CREATE TABLE IF NOT EXISTS application_history (
 	transaction_id                  varchar(63) NOT NULL,
-	module_id                       varchar(127) NOT NULL,
+	app_id                          varchar(127) NOT NULL,
 	event                           varchar(15) NOT NULL,
 	status                          varchar(15) NOT NULL,
 	issued_at                       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -50,5 +50,17 @@ CREATE TABLE IF NOT EXISTS tbl_remove_history (
 	prev_app_config_json            text,
 	prev_system_config_json         text,
 	retry                           integer NOT NULL DEFAULT 0,
-	CONSTRAINT Pk_tbl_remove_history PRIMARY KEY ( transaction_id )
+	CONSTRAINT Pk_application_history PRIMARY KEY ( transaction_id )
+ );
+
+ CREATE TABLE IF NOT EXISTS APPLICATION_BACKUP (
+	ID                      uuid   NOT NULL,
+	APP_ID                  varchar(127)   ,
+	STATUS                  varchar(15) NOT NULL,
+	DATA_DIR_JSON           text,
+	INSTALLATION_DIR_JSON   text,
+	ERROR_JSON              text,
+	TIME_AUDIT              varchar(500)   ,
+	SYNC_AUDIT              clob(2147483647)   ,
+	CONSTRAINT PK_APPLICATION_BACKUP PRIMARY KEY ( ID )
  );

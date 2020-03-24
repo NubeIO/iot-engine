@@ -25,10 +25,10 @@ import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.bios.loader.DeploymentAsserter;
-import com.nubeiot.edge.bios.service.BiosModuleService;
+import com.nubeiot.edge.bios.service.BiosApplicationService;
 import com.nubeiot.edge.installer.InstallerVerticle;
-import com.nubeiot.edge.installer.loader.ModuleType;
-import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
+import com.nubeiot.edge.installer.loader.VertxModuleType;
+import com.nubeiot.edge.installer.model.tables.pojos.Application;
 
 @Ignore
 public class HandlerDeleteTest extends BaseInstallerVerticleTest {
@@ -36,14 +36,14 @@ public class HandlerDeleteTest extends BaseInstallerVerticleTest {
     @Before
     public void before(TestContext context) {
         super.before(context);
-        this.insertModule(context, new TblModule().setServiceId(MODULE_ID)
-                                                  .setServiceType(ModuleType.JAVA)
-                                                  .setServiceName(SERVICE_NAME)
-                                                  .setState(State.ENABLED)
-                                                  .setVersion(VERSION)
-                                                  .setSystemConfig(APP_SYSTEM_CONFIG)
-                                                  .setAppConfig(APP_CONFIG)
-                                                  .setModifiedAt(DateTimes.now()));
+        this.insertModule(context, new Application().setAppId(MODULE_ID)
+                                                    .setServiceType(VertxModuleType.JAVA)
+                                                    .setServiceName(SERVICE_NAME)
+                                                    .setState(State.ENABLED)
+                                                    .setVersion(VERSION)
+                                                    .setSystemConfig(APP_SYSTEM_CONFIG)
+                                                    .setAppConfig(APP_CONFIG)
+                                                    .setModifiedAt(DateTimes.now()));
     }
 
     @Override
@@ -56,24 +56,24 @@ public class HandlerDeleteTest extends BaseInstallerVerticleTest {
         JsonObject body = new JsonObject().put("service_id", MODULE_ID);
         Async async = context.async();
         installerVerticle.getEventbusClient()
-                         .fire(DeliveryEvent.from(BiosModuleService.class.getName(), EventPattern.REQUEST_RESPONSE,
+                         .fire(DeliveryEvent.from(BiosApplicationService.class.getName(), EventPattern.REQUEST_RESPONSE,
                                                   EventAction.REMOVE,
                                                   RequestData.builder().body(body).build().toJson()),
                                EventbusHelper.replyAsserter(context, resp -> {
-                                 System.out.println(resp);
-                                 context.assertEquals(resp.getString("status"), Status.SUCCESS.name());
-                                 TestHelper.testComplete(async);
-                             }));
+                                   System.out.println(resp);
+                                   context.assertEquals(resp.getString("status"), Status.SUCCESS.name());
+                                   TestHelper.testComplete(async);
+                               }));
         CountDownLatch latch = new CountDownLatch(2);
         Async async2 = context.async(2);
         //Event module is deployed/updated successfully, we still have a gap for DB update.
         long timer = this.vertx.setPeriodic(1000, event -> {
-            installerVerticle.getEntityHandler().moduleDao().findOneById(GROUP_ID).subscribe(result -> {
-                TblModule tblModule = result.orElse(null);
-                if (Objects.nonNull(tblModule) && tblModule.getState() != State.PENDING) {
+            installerVerticle.getEntityHandler().applicationDao().findOneById(GROUP_ID).subscribe(result -> {
+                Application application = result.orElse(null);
+                if (Objects.nonNull(application) && application.getState() != State.PENDING) {
                     return;
                 }
-                context.assertNull(tblModule);
+                context.assertNull(application);
                 TestHelper.testComplete(async2);
                 latch.countDown();
             }, error -> {
@@ -81,19 +81,20 @@ public class HandlerDeleteTest extends BaseInstallerVerticleTest {
                 context.fail(error);
                 TestHelper.testComplete(async2);
             });
-            installerVerticle.getEntityHandler().transDao()
-                             .findManyByModuleId(Collections.singletonList(MODULE_ID))
+            installerVerticle.getEntityHandler()
+                             .transDao()
+                             .findManyByAppId(Collections.singletonList(MODULE_ID))
                              .subscribe(result -> {
-                            if (!Objects.nonNull(result) || result.isEmpty() ||
-                                result.get(0).getStatus() != Status.WIP) {
-                                TestHelper.testComplete(async2);
-                                latch.countDown();
-                            }
-                        }, error -> {
-                            latch.countDown();
-                            context.fail(error);
-                            TestHelper.testComplete(async2);
-                        });
+                                 if (!Objects.nonNull(result) || result.isEmpty() ||
+                                     result.get(0).getStatus() != Status.WIP) {
+                                     TestHelper.testComplete(async2);
+                                     latch.countDown();
+                                 }
+                             }, error -> {
+                                 latch.countDown();
+                                 context.fail(error);
+                                 TestHelper.testComplete(async2);
+                             });
         });
         stopTimer(context, latch, timer);
     }

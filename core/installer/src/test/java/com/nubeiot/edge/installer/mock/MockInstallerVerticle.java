@@ -8,11 +8,11 @@ import java.util.stream.Stream;
 
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.InstallerVerticle;
-import com.nubeiot.edge.installer.loader.ModuleType;
 import com.nubeiot.edge.installer.loader.ModuleTypeRule;
-import com.nubeiot.edge.installer.mock.MockInstallerService.MockModuleService;
+import com.nubeiot.edge.installer.loader.VertxModuleType;
+import com.nubeiot.edge.installer.mock.MockInstallerService.MockApplicationService;
 import com.nubeiot.edge.installer.mock.MockInstallerService.MockTransactionService;
-import com.nubeiot.edge.installer.service.AppDeployer;
+import com.nubeiot.edge.installer.service.AppDeployerDefinition;
 import com.nubeiot.edge.installer.service.InstallerService;
 
 import lombok.AllArgsConstructor;
@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 @AllArgsConstructor
 public class MockInstallerVerticle extends InstallerVerticle {
 
-    private final AppDeployer appDeployer;
+    private final AppDeployerDefinition definition;
     private String configFile = "mock-installer.json";
 
     @Override
@@ -33,18 +33,18 @@ public class MockInstallerVerticle extends InstallerVerticle {
 
     @Override
     protected @NonNull Supplier<ModuleTypeRule> getModuleRuleProvider() {
-        return () -> new ModuleTypeRule().registerRule(ModuleType.JAVA,
+        return () -> new ModuleTypeRule().registerRule(VertxModuleType.JAVA,
                                                        Collections.singletonList("com.nubeiot.edge.module"));
     }
 
     @Override
-    protected @NonNull AppDeployer appDeployer() {
-        return appDeployer;
+    protected @NonNull AppDeployerDefinition appDeployerDefinition() {
+        return definition;
     }
 
     @Override
     protected @NonNull Supplier<Set<? extends InstallerService>> services(@NonNull InstallerEntityHandler handler) {
-        return () -> Stream.of(new MockModuleService(handler), new MockTransactionService(handler))
+        return () -> Stream.of(new MockApplicationService(handler), new MockTransactionService(handler))
                            .collect(Collectors.toSet());
     }
 

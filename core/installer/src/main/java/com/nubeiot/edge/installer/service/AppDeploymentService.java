@@ -104,7 +104,7 @@ class AppDeploymentService implements DeploymentService {
 
     private void publishResult(PreDeploymentResult preResult, AsyncResult<String> async) {
         final EventbusClient client = sharedData(SharedDataDelegate.SHARED_EVENTBUS);
-        final AppDeployer deployer = sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
+        final AppDeployerDefinition deployer = sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
         final JsonObject error = async.succeeded() ? new JsonObject() : ErrorMessage.parse(async.cause()).toJson();
         final PostDeploymentResult pr = PostDeploymentResult.from(preResult, async.result(), error);
         client.fire(DeliveryEvent.from(deployer.getTrackerEvent(), new JsonObject().put("result", pr.toJson())));

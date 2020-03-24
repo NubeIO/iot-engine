@@ -9,8 +9,8 @@ public interface EdgeInstallerService extends InstallerService {
     }
 
     @Override
-    default String rootPath() {
-        return "/services";
+    default String appPath() {
+        return "/service";
     }
 
 }

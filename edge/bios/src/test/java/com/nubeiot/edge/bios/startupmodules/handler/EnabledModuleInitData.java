@@ -8,8 +8,8 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.utils.DateTimes;
-import com.nubeiot.edge.installer.loader.ModuleType;
-import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
+import com.nubeiot.edge.installer.loader.VertxModuleType;
+import com.nubeiot.edge.installer.model.tables.pojos.Application;
 
 public class EnabledModuleInitData extends MockInitDataEntityHandler {
 
@@ -19,15 +19,15 @@ public class EnabledModuleInitData extends MockInitDataEntityHandler {
 
     @Override
     protected Single<Integer> initModules() {
-        return tblModuleDao.insert(new TblModule().setServiceId("enabled-service")
-                                                  .setServiceName("service0")
-                                                  .setServiceType(ModuleType.JAVA)
-                                                  .setVersion("1.0.0")
-                                                  .setState(State.ENABLED)
-                                                  .setCreatedAt(DateTimes.now())
-                                                  .setModifiedAt(DateTimes.now())
-                                                  .setSystemConfig(new JsonObject())
-                                                  .setAppConfig(new JsonObject()));
+        return applicationDao.insert(new Application().setAppId("enabled-service")
+                                                      .setServiceName("service0")
+                                                      .setServiceType(VertxModuleType.JAVA)
+                                                      .setVersion("1.0.0")
+                                                      .setState(State.ENABLED)
+                                                      .setCreatedAt(DateTimes.now())
+                                                      .setModifiedAt(DateTimes.now())
+                                                      .setSystemConfig(new JsonObject())
+                                                      .setAppConfig(new JsonObject()));
     }
 
 }

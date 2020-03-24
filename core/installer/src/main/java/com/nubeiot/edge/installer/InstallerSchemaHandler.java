@@ -15,7 +15,7 @@ final class InstallerSchemaHandler implements SchemaHandler {
 
     @Override
     public @NonNull Table table() {
-        return Tables.TBL_MODULE;
+        return Tables.APPLICATION;
     }
 
     @Override

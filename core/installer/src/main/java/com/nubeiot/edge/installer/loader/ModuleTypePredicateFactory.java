@@ -13,23 +13,23 @@ final class ModuleTypePredicateFactory {
 
     static ModuleTypePredicate factory(ModuleType moduleType, List<String> searchPattern) {
         List<String> patterns = searchPattern.stream().filter(Strings::isNotBlank).collect(Collectors.toList());
-        if (ModuleType.JAVASCRIPT == moduleType) {
+        if (VertxModuleType.JAVASCRIPT == moduleType) {
             return new ModuleTypePredicate.JavascriptPredicate(patterns);
         }
 
-        if (ModuleType.GROOVY == moduleType) {
+        if (VertxModuleType.GROOVY == moduleType) {
             return new ModuleTypePredicate.GroovyPredicate(patterns);
         }
 
-        if (ModuleType.SCALA == moduleType) {
+        if (VertxModuleType.SCALA == moduleType) {
             return new ModuleTypePredicate.ScalaPredicate(patterns);
         }
 
-        if (ModuleType.KOTLIN == moduleType) {
+        if (VertxModuleType.KOTLIN == moduleType) {
             return new ModuleTypePredicate.KotlinPredicate(patterns);
         }
 
-        if (ModuleType.RUBY == moduleType) {
+        if (VertxModuleType.RUBY == moduleType) {
             return new ModuleTypePredicate.RubyPredicate(patterns);
         }
 

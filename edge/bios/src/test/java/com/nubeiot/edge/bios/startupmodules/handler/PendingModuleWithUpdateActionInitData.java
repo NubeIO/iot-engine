@@ -12,9 +12,9 @@ import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.utils.DateTimes;
-import com.nubeiot.edge.installer.loader.ModuleType;
-import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
-import com.nubeiot.edge.installer.model.tables.pojos.TblTransaction;
+import com.nubeiot.edge.installer.loader.VertxModuleType;
+import com.nubeiot.edge.installer.model.tables.pojos.Application;
+import com.nubeiot.edge.installer.model.tables.pojos.DeployTransaction;
 
 public class PendingModuleWithUpdateActionInitData extends MockInitDataEntityHandler {
 
@@ -24,31 +24,31 @@ public class PendingModuleWithUpdateActionInitData extends MockInitDataEntityHan
 
     @Override
     protected Single<Integer> initModules() {
-        Single<Integer> insert03 = tblModuleDao.insert(
-            new TblModule().setServiceId("pending-service-with-transaction-is-wip-prestate-action-is-update")
-                           .setServiceName("service3")
-                           .setServiceType(ModuleType.JAVA)
-                           .setVersion("1.0.0")
-                           .setState(State.PENDING)
-                           .setCreatedAt(DateTimes.now())
-                           .setModifiedAt(DateTimes.now())
-                           .setSystemConfig(new JsonObject())
-                           .setAppConfig(new JsonObject()));
+        Single<Integer> insert03 = applicationDao.insert(
+            new Application().setAppId("pending-service-with-transaction-is-wip-prestate-action-is-update")
+                             .setServiceName("service3")
+                             .setServiceType(VertxModuleType.JAVA)
+                             .setVersion("1.0.0")
+                             .setState(State.PENDING)
+                             .setCreatedAt(DateTimes.now())
+                             .setModifiedAt(DateTimes.now())
+                             .setSystemConfig(new JsonObject())
+                             .setAppConfig(new JsonObject()));
 
         Single<Integer> insertTransaction03 = tblTransactionDao.insert(
-            new TblTransaction().setTransactionId(UUID.randomUUID().toString())
-                                .setModuleId("pending-service-with-transaction-is-wip-prestate-action-is-update")
-                                .setStatus(Status.WIP)
-                                .setEvent(EventAction.UPDATE)
-                                .setModifiedAt(DateTimes.now())
-                                .setPrevMetadata(new JsonObject(
-                                    "{\"service_id\":\"pending-service-with-transaction-is-wip" +
-                                    "-prestate-action-is-update\"," +
-                                    "\"service_name\":\"service3\",\"service_type\":\"JAVA\"," +
-                                    "\"version\":\"1.0.0\",\"published_by\":null," + "\"state\":\"PENDING\"," +
-                                    "\"created_at\":\"2019-05-02T09:15:37.230Z\"," +
-                                    "\"modified_at\":\"2019-05-02T09:15:37.230Z\"," +
-                                    "\"deploy_id\":null,\"deploy_config\":{}," + "\"deploy_location\":null}\t")));
+            new DeployTransaction().setTransactionId(UUID.randomUUID().toString())
+                                   .setAppId("pending-service-with-transaction-is-wip-prestate-action-is-update")
+                                   .setStatus(Status.WIP)
+                                   .setEvent(EventAction.UPDATE)
+                                   .setModifiedAt(DateTimes.now())
+                                   .setPrevMetadata(new JsonObject(
+                                       "{\"service_id\":\"pending-service-with-transaction-is-wip" +
+                                       "-prestate-action-is-update\"," +
+                                       "\"service_name\":\"service3\",\"service_type\":\"JAVA\"," +
+                                       "\"version\":\"1.0.0\",\"published_by\":null," + "\"state\":\"PENDING\"," +
+                                       "\"created_at\":\"2019-05-02T09:15:37.230Z\"," +
+                                       "\"modified_at\":\"2019-05-02T09:15:37.230Z\"," +
+                                       "\"deploy_id\":null,\"deploy_config\":{}," + "\"deploy_location\":null}\t")));
         return Single.zip(insert03, insertTransaction03, Integer::sum);
     }
 

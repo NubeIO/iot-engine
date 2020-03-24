@@ -29,12 +29,12 @@ import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.model.Tables;
 import com.nubeiot.edge.installer.model.dto.PostDeploymentResult;
-import com.nubeiot.edge.installer.model.tables.daos.TblRemoveHistoryDao;
-import com.nubeiot.edge.installer.model.tables.daos.TblTransactionDao;
-import com.nubeiot.edge.installer.model.tables.interfaces.ITblRemoveHistory;
-import com.nubeiot.edge.installer.model.tables.interfaces.ITblTransaction;
-import com.nubeiot.edge.installer.model.tables.pojos.TblRemoveHistory;
-import com.nubeiot.edge.installer.model.tables.pojos.TblTransaction;
+import com.nubeiot.edge.installer.model.tables.daos.ApplicationHistoryDao;
+import com.nubeiot.edge.installer.model.tables.daos.DeployTransactionDao;
+import com.nubeiot.edge.installer.model.tables.interfaces.IApplicationHistory;
+import com.nubeiot.edge.installer.model.tables.interfaces.IDeployTransaction;
+import com.nubeiot.edge.installer.model.tables.pojos.ApplicationHistory;
+import com.nubeiot.edge.installer.model.tables.pojos.DeployTransaction;
 
 import lombok.AccessLevel;
 import lombok.NonNull;
@@ -57,7 +57,7 @@ class AppDeploymentTracker implements DeploymentService {
                                             ? handleError(result)
                                             : handleSuccess(result);
         final EventbusClient client = sharedData(SharedDataDelegate.SHARED_EVENTBUS);
-        final AppDeployer deployer = sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
+        final AppDeployerDefinition deployer = sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
         return last.doOnSuccess(res -> client.fire(
             DeliveryEvent.from(deployer.getFinisherEvent(), new JsonObject().put("result", res.toJson()))));
     }
@@ -68,20 +68,20 @@ class AppDeploymentTracker implements DeploymentService {
         final State state = StateMachine.instance().transition(res.getAction(), status, res.getToState());
         final String serviceId = res.getServiceId();
         if (State.UNAVAILABLE == state) {
-            final TblTransactionDao dao = entityHandler.transDao();
+            final DeployTransactionDao dao = entityHandler.transDao();
             LOGGER.info("INSTALLER::Removing service '{}' and its transactions...", serviceId);
             return dao.findOneById(res.getTransactionId())
                       .filter(Optional::isPresent)
                       .map(Optional::get)
-                      .defaultIfEmpty(new TblTransaction().setTransactionId(res.getTransactionId())
-                                                          .setModuleId(serviceId)
-                                                          .setEvent(res.getAction()))
+                      .defaultIfEmpty(new DeployTransaction().setTransactionId(res.getTransactionId())
+                                                             .setAppId(serviceId)
+                                                             .setEvent(res.getAction()))
                       .flatMapSingle(r -> createHistoryRecord(r.setStatus(status)))
-                      .flatMap(his -> dao.deleteByCondition(Tables.TBL_TRANSACTION.MODULE_ID.eq(serviceId)))
-                      .flatMap(r -> entityHandler.moduleDao().deleteById(serviceId).map(n -> r + n + 1))
+                      .flatMap(his -> dao.deleteByCondition(Tables.DEPLOY_TRANSACTION.APP_ID.eq(serviceId)))
+                      .flatMap(r -> entityHandler.applicationDao().deleteById(serviceId).map(n -> r + n + 1))
                       .map(records -> PostDeploymentResult.from(res, state, records));
         }
-        Map<TableField, String> v = Collections.singletonMap(Tables.TBL_MODULE.DEPLOY_ID, res.getDeployId());
+        Map<TableField, String> v = Collections.singletonMap(Tables.APPLICATION.DEPLOY_ID, res.getDeployId());
         final JDBCRXGenericQueryExecutor queryExecutor = entityHandler.genericQuery();
         return queryExecutor.executeAny(c -> updateTransStatus(c, res.getTransactionId(), status, null))
                             .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, serviceId, state, v))
@@ -92,38 +92,38 @@ class AppDeploymentTracker implements DeploymentService {
     private Single<PostDeploymentResult> handleError(@NonNull PostDeploymentResult res) {
         LOGGER.error("INSTALLER::Handle entities after error deployment...");
         final JDBCRXGenericQueryExecutor query = entityHandler.genericQuery();
-        final Map<?, ?> values = Collections.singletonMap(Tables.TBL_TRANSACTION.LAST_ERROR, res.getError());
+        final Map<?, ?> values = Collections.singletonMap(Tables.DEPLOY_TRANSACTION.LAST_ERROR, res.getError());
         return query.executeAny(c -> updateTransStatus(c, res.getTransactionId(), Status.FAILED, values))
                     .flatMap(r1 -> query.executeAny(c -> updateModuleState(c, res.getServiceId(), State.DISABLED, null))
                                         .map(r2 -> r1 + r2))
                     .map(records -> PostDeploymentResult.from(res, State.DISABLED, records));
     }
 
-    private Single<ITblRemoveHistory> createHistoryRecord(ITblTransaction transaction) {
-        ITblRemoveHistory history = this.convertToHistory(transaction);
-        return entityHandler.dao(TblRemoveHistoryDao.class).insert((TblRemoveHistory) history).map(i -> history);
+    private Single<IApplicationHistory> createHistoryRecord(IDeployTransaction transaction) {
+        IApplicationHistory history = this.convertToHistory(transaction);
+        return entityHandler.dao(ApplicationHistoryDao.class).insert((ApplicationHistory) history).map(i -> history);
     }
 
     private int updateModuleState(DSLContext context, String serviceId, State state, Map<?, ?> values) {
-        return context.update(Tables.TBL_MODULE)
-                      .set(Tables.TBL_MODULE.STATE, state)
-                      .set(Tables.TBL_MODULE.MODIFIED_AT, DateTimes.now())
+        return context.update(Tables.APPLICATION)
+                      .set(Tables.APPLICATION.STATE, state)
+                      .set(Tables.APPLICATION.MODIFIED_AT, DateTimes.now())
                       .set(Objects.isNull(values) ? new HashMap<>() : values)
-                      .where(Tables.TBL_MODULE.SERVICE_ID.eq(serviceId))
+                      .where(Tables.APPLICATION.APP_ID.eq(serviceId))
                       .execute();
     }
 
     private int updateTransStatus(DSLContext context, String transId, Status status, Map<?, ?> values) {
-        return context.update(Tables.TBL_TRANSACTION)
-                      .set(Tables.TBL_TRANSACTION.STATUS, status)
-                      .set(Tables.TBL_TRANSACTION.MODIFIED_AT, DateTimes.now())
+        return context.update(Tables.DEPLOY_TRANSACTION)
+                      .set(Tables.DEPLOY_TRANSACTION.STATUS, status)
+                      .set(Tables.DEPLOY_TRANSACTION.MODIFIED_AT, DateTimes.now())
                       .set(Objects.isNull(values) ? new HashMap<>() : values)
-                      .where(Tables.TBL_TRANSACTION.TRANSACTION_ID.eq(transId))
+                      .where(Tables.DEPLOY_TRANSACTION.TRANSACTION_ID.eq(transId))
                       .execute();
     }
 
-    private ITblRemoveHistory convertToHistory(ITblTransaction transaction) {
-        ITblRemoveHistory history = new TblRemoveHistory().fromJson(transaction.toJson());
+    private IApplicationHistory convertToHistory(IDeployTransaction transaction) {
+        IApplicationHistory history = new ApplicationHistory().fromJson(transaction.toJson());
         if (Objects.isNull(history.getIssuedAt())) {
             history.setIssuedAt(DateTimes.now());
         }

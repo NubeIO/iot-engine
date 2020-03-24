@@ -66,8 +66,8 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
 
     private void readinessHandler(@NonNull C config, JsonObject d, Throwable e) {
         final EventMessage msg = Objects.nonNull(e)
-                                 ? EventMessage.initial(EventAction.NOTIFY_ERROR,
-                                                        ErrorData.builder().throwable(e).build())
+                                 ? EventMessage.error(EventAction.NOTIFY_ERROR,
+                                                      ErrorData.builder().throwable(e).build())
                                  : EventMessage.initial(EventAction.NOTIFY, RequestData.builder().body(d).build());
         getEventbusClient().publish(config.getReadinessAddress(), msg);
     }

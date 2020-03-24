@@ -27,10 +27,10 @@ import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.DateTimes.Iso8601Parser;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
-import com.nubeiot.edge.installer.loader.ModuleType;
+import com.nubeiot.edge.installer.loader.VertxModuleType;
 import com.nubeiot.edge.installer.model.Tables;
 import com.nubeiot.edge.installer.model.dto.PreDeploymentResult;
-import com.nubeiot.edge.installer.model.tables.records.TblModuleRecord;
+import com.nubeiot.edge.installer.model.tables.records.ApplicationRecord;
 
 import lombok.NonNull;
 
@@ -57,18 +57,18 @@ public final class LocalServiceSearch implements IServiceSearch {
                                  .map(results -> new JsonObject().put("services", results));
     }
 
-    private Single<JsonObject> excludeData(TblModuleRecord rec) {
-        final JsonObject cfg = PreDeploymentResult.filterOutSensitiveConfig(rec.getServiceId(), rec.getAppConfig());
+    private Single<JsonObject> excludeData(ApplicationRecord rec) {
+        final JsonObject cfg = PreDeploymentResult.filterOutSensitiveConfig(rec.getAppId(), rec.getAppConfig());
         return Single.just(rec.setAppConfig(cfg).setSystemConfig(null).toJson());
     }
 
     private JsonObject validateFilter(JsonObject filter) {
         //TODO fields name, depends object -> validate method
         JsonObject sqlData = new JsonObject(filter.getMap());
-        String state = filter.getString(Tables.TBL_MODULE.STATE.getName().toLowerCase());
+        String state = filter.getString(Tables.APPLICATION.STATE.getName().toLowerCase());
         if (Strings.isNotBlank(state)) {
             try {
-                sqlData.put(Tables.TBL_MODULE.STATE.getName().toLowerCase(), State.valueOf(state));
+                sqlData.put(Tables.APPLICATION.STATE.getName().toLowerCase(), State.valueOf(state));
             } catch (IllegalArgumentException e) {
                 throw new NubeException(ErrorCode.INVALID_ARGUMENT, "Invalid state", e);
             }
@@ -87,11 +87,11 @@ public final class LocalServiceSearch implements IServiceSearch {
     }
 
     @SuppressWarnings( {"unchecked", "rawtypes"})
-    private List<TblModuleRecord> filter(JsonObject filter, Pagination pagination, DSLContext context) {
-        SelectConditionStep<TblModuleRecord> sql = context.selectFrom(Tables.TBL_MODULE)
-                                                          .where(DSL.field(Tables.TBL_MODULE.SERVICE_TYPE)
-                                                                    .eq(ModuleType.JAVA));
-        Set<String> fieldNames = Arrays.stream(Tables.TBL_MODULE.fields())
+    private List<ApplicationRecord> filter(JsonObject filter, Pagination pagination, DSLContext context) {
+        SelectConditionStep<ApplicationRecord> sql = context.selectFrom(Tables.APPLICATION)
+                                                            .where(DSL.field(Tables.APPLICATION.SERVICE_TYPE)
+                                                                      .eq(VertxModuleType.JAVA));
+        Set<String> fieldNames = Arrays.stream(Tables.APPLICATION.fields())
                                        .map(Field::getName)
                                        .collect(Collectors.toSet());
         filter.getMap()
@@ -99,22 +99,22 @@ public final class LocalServiceSearch implements IServiceSearch {
               .parallelStream()
               .filter(entry -> fieldNames.contains(entry.getKey()))
               .forEach(entry -> {
-                  Field field = Tables.TBL_MODULE.field(entry.getKey());
+                  Field field = Tables.APPLICATION.field(entry.getKey());
                   sql.and(field.eq(entry.getValue()));
               });
         final Instant from = filter.getInstant("from");
         if (Objects.nonNull(from)) {
-            sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).gt(DateTimes.from(from)));
+            sql.and(DSL.field(Tables.APPLICATION.CREATED_AT).gt(DateTimes.from(from)));
         }
 
         final Instant to = filter.getInstant("to");
         if (Objects.nonNull(to)) {
-            sql.and(DSL.field(Tables.TBL_MODULE.CREATED_AT).lt(DateTimes.from(to)));
+            sql.and(DSL.field(Tables.APPLICATION.CREATED_AT).lt(DateTimes.from(to)));
         }
 
         return sql.limit(pagination.getPerPage())
                   .offset(((pagination.getPage() - 1) * pagination.getPerPage()))
-                  .fetchInto(TblModuleRecord.class);
+                  .fetchInto(ApplicationRecord.class);
     }
 
 }

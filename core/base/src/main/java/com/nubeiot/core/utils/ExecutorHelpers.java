@@ -16,6 +16,18 @@ import lombok.NonNull;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ExecutorHelpers {
 
+    public static void blocking(@NonNull Vertx vertx, @NonNull Runnable callable) {
+        vertx.executeBlocking(future -> {
+            try {
+                callable.run();
+            } catch (RuntimeException e) {
+                future.fail(e);
+            } finally {
+                future.complete();
+            }
+        }, res -> {});
+    }
+
     public static <T> Single<T> blocking(@NonNull Vertx vertx, @NonNull Callable<T> callable) {
         return Single.fromCallable(callable).subscribeOn(RxHelper.blockingScheduler(vertx));
     }
