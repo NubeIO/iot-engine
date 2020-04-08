@@ -90,6 +90,15 @@ public class DeviceByNetworkServiceTest extends BaseDataPointServiceTest {
     }
 
     @Test
+    public void test_create_device_by_network_implicit_edge(TestContext context) {
+        final Device device = new Device().setId(UUID.randomUUID()).setType(DeviceType.MACHINE).setCode("MACHINE_01");
+        final JsonObject address = new JsonObject().put("pin", "01");
+        final JsonObject reqBody = new JsonObject().put("device", JsonPojo.from(new Device(device)).toJson())
+                                                   .put("address", address);
+        createThenAssert(context, device.setProtocol(Protocol.UNKNOWN).setState(State.NONE), address, reqBody);
+    }
+
+    @Test
     public void test_create_device_by_edge_implicit_network(TestContext context) {
         final Device device = new Device().setId(UUID.randomUUID()).setType(DeviceType.MACHINE).setCode("MACHINE_01");
         final JsonObject address = new JsonObject().put("pin", "01");

@@ -114,7 +114,7 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
         final @NonNull EntityServiceCacheIndex cache = sharedData(EntityServiceIndex.DATA_KEY);
         //TODO: hack due to not yet implemented BATCH_DELETE
         //TODO: https://github.com/NubeIO/iot-engine/issues/294
-        if (service.context() != PointThingMetadata.INSTANCE) {
+        if (service.context() != PointThingMetadata.INSTANCE && service.context() != EdgeDeviceMetadata.INSTANCE) {
             cache.add(service.context(), service.address());
         }
     }
