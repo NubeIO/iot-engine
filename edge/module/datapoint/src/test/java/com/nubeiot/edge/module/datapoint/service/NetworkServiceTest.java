@@ -96,11 +96,7 @@ public class NetworkServiceTest extends BaseDataPointServiceTest {
     }
 
     private void createThenAssert(TestContext context, Network response, Network request) {
-        final JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
-                                                    .put("status", Status.SUCCESS)
-                                                    .put("resource", JsonPojo.from(response)
-                                                                             .toJson(JsonData.MAPPER,
-                                                                                     EntityTransformer.AUDIT_FIELDS));
+        final JsonObject expected = createResponseExpected(response);
         final RequestData req = RequestData.builder().body(JsonPojo.from(request).toJson()).build();
         asserter(context, true, expected, NetworkService.class.getName(), EventAction.CREATE, req);
     }
@@ -112,6 +108,13 @@ public class NetworkServiceTest extends BaseDataPointServiceTest {
         final JsonObject expected = new JsonObject().put("networks", networks);
         asserter(context, true, expected, NetworkService.class.getName(), EventAction.GET_LIST, reqData,
                  JSONCompareMode.LENIENT);
+    }
+
+    private JsonObject createResponseExpected(Network response) {
+        return new JsonObject().put("action", EventAction.CREATE)
+                               .put("status", Status.SUCCESS)
+                               .put("resource",
+                                    JsonPojo.from(response).toJson(JsonData.MAPPER, EntityTransformer.AUDIT_FIELDS));
     }
 
 }

@@ -11,6 +11,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.exceptions.SecurityException.InsufficientPermissionError;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.decorator.RequestDecorator;
@@ -18,6 +19,7 @@ import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractReferencingEntityService;
 import com.nubeiot.core.sql.service.marker.EntityReferences;
+import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.service.extension.EdgeExtension;
@@ -50,8 +52,25 @@ public final class NetworkService extends AbstractReferencingEntityService<Netwo
     }
 
     @Override
+    protected @NonNull OperationValidator initDeletionValidator() {
+        return super.initDeletionValidator().andThen(OperationValidator.create((requestData, pojo) -> {
+            Network network = (Network) pojo;
+            if (NetworkMetadata.DEFAULT_CODE.equals(network.getCode())) {
+                return Single.error(
+                    new InsufficientPermissionError("Network code " + network.getCode() + " is read-only"));
+            }
+            return Single.just(pojo);
+        }));
+    }
+
+    @Override
     public @NonNull EntityReferences referencedEntities() {
         return new EntityReferences().add(EdgeMetadata.INSTANCE, EdgeMetadata.INSTANCE.singularKeyName());
+    }
+
+    @Override
+    public boolean supportForceDeletion() {
+        return true;
     }
 
     @Override

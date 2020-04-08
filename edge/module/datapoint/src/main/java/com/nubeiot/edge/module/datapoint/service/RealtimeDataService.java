@@ -44,7 +44,7 @@ public final class RealtimeDataService extends AbstractReferencingEntityService<
 
     @Override
     public @NonNull Collection<EventAction> getAvailableEvents() {
-        return Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.CREATE);
+        return Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.CREATE, EventAction.REMOVE);
     }
 
     @Override
