@@ -3,6 +3,7 @@ package com.nubeiot.edge.installer.model.dto;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -98,7 +99,7 @@ public final class PreDeploymentResult implements JsonData, IRequestData {
 
         private JsonObject appConfig;
         private JsonObject systemConfig;
-        private Path dataDir = FileUtils.DEFAULT_DATADIR;
+        private Path dataDir;
 
         @JsonProperty("app_config")
         public Builder appConfig(Map<String, Object> appConfig) {
@@ -131,7 +132,9 @@ public final class PreDeploymentResult implements JsonData, IRequestData {
 
             NubeConfig systemConfig = IConfig.parseConfig(this.systemConfig, NubeConfig.class,
                                                           () -> NubeConfig.blank(this.systemConfig));
-            systemConfig.setDataDir(FileUtils.recomputeDataDir(dataDir, FileUtils.normalize(serviceId)));
+            final Path dataDir = FileUtils.recomputeDataDir(
+                Optional.ofNullable(this.dataDir).orElse(FileUtils.DEFAULT_DATADIR), FileUtils.normalize(serviceId));
+            systemConfig.setDataDir(dataDir);
             return new PreDeploymentResult(transactionId, action, Objects.isNull(prevState) ? State.NONE : prevState,
                                            Objects.isNull(targetState) ? State.NONE : targetState, serviceId,
                                            serviceFQN, deployId, appConfig, systemConfig, silent);

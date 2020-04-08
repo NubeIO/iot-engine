@@ -1,9 +1,10 @@
 package com.nubeiot.edge.installer.service;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.DeploymentOptions;
@@ -31,17 +32,17 @@ import com.nubeiot.edge.installer.model.dto.PreDeploymentResult;
 
 import lombok.NonNull;
 
-class AppDeploymentService implements DeploymentService {
+class AppDeploymentExecuter implements DeploymentService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AppDeploymentService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AppDeploymentExecuter.class);
     private final Vertx vertx;
     private final Function<String, Object> sharedDataFunc;
     private final WorkerExecutor worker;
 
-    AppDeploymentService(@NonNull InstallerEntityHandler entityHandler) {
+    AppDeploymentExecuter(@NonNull InstallerEntityHandler entityHandler) {
         this.vertx = entityHandler.vertx();
         this.sharedDataFunc = entityHandler::sharedData;
-        this.worker = vertx.createSharedWorkerExecutor("installer", 1, 3, TimeUnit.MINUTES);
+        this.worker = vertx.createSharedWorkerExecutor("installer", 2, 3, TimeUnit.MINUTES);
     }
 
     @EventContractor(action = {EventAction.CREATE, EventAction.INIT})
@@ -63,7 +64,7 @@ class AppDeploymentService implements DeploymentService {
         return new JsonObject();
     }
 
-    @EventContractor(action = {EventAction.UPDATE, EventAction.PATCH})
+    @EventContractor(action = {EventAction.UPDATE, EventAction.MIGRATE, EventAction.PATCH})
     public JsonObject reload(RequestData data) {
         PreDeploymentResult preResult = JsonData.from(data.body(), PreDeploymentResult.class);
         if (preResult.getTargetState() == State.DISABLED) {
@@ -77,8 +78,9 @@ class AppDeploymentService implements DeploymentService {
 
     @Override
     public @NonNull Collection<EventAction> getAvailableEvents() {
-        return Arrays.asList(EventAction.INIT, EventAction.CREATE, EventAction.UPDATE, EventAction.HALT,
-                             EventAction.PATCH, EventAction.REMOVE);
+        return Stream.of(InstallerAction.install(), InstallerAction.update(), InstallerAction.uninstall())
+                     .flatMap(Collection::stream)
+                     .collect(Collectors.toSet());
     }
 
     void doDeploy(PreDeploymentResult preResult, Future<String> future) {
@@ -107,7 +109,7 @@ class AppDeploymentService implements DeploymentService {
         final AppDeployerDefinition deployer = sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
         final JsonObject error = async.succeeded() ? new JsonObject() : ErrorMessage.parse(async.cause()).toJson();
         final PostDeploymentResult pr = PostDeploymentResult.from(preResult, async.result(), error);
-        client.fire(DeliveryEvent.from(deployer.getTrackerEvent(), new JsonObject().put("result", pr.toJson())));
+        client.fire(DeliveryEvent.from(deployer.getSupervisorEvent(), new JsonObject().put("result", pr.toJson())));
     }
 
     @Override

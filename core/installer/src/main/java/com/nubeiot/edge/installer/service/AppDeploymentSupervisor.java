@@ -16,7 +16,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.DeliveryEvent;
@@ -41,9 +40,9 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-class AppDeploymentTracker implements DeploymentService {
+class AppDeploymentSupervisor implements DeploymentService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AppDeploymentTracker.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AppDeploymentSupervisor.class);
     private final InstallerEntityHandler entityHandler;
 
     @Override
@@ -56,10 +55,10 @@ class AppDeploymentTracker implements DeploymentService {
         Single<PostDeploymentResult> last = Status.FAILED == result.getStatus()
                                             ? handleError(result)
                                             : handleSuccess(result);
-        final EventbusClient client = sharedData(SharedDataDelegate.SHARED_EVENTBUS);
+        final EventbusClient client = entityHandler.eventClient();
         final AppDeployerDefinition deployer = sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
         return last.doOnSuccess(res -> client.fire(
-            DeliveryEvent.from(deployer.getFinisherEvent(), new JsonObject().put("result", res.toJson()))));
+            DeliveryEvent.from(deployer.getReporterEvent(), new JsonObject().put("result", res.toJson()))));
     }
 
     private Single<PostDeploymentResult> handleSuccess(@NonNull PostDeploymentResult res) {
@@ -84,7 +83,7 @@ class AppDeploymentTracker implements DeploymentService {
         Map<TableField, String> v = Collections.singletonMap(Tables.APPLICATION.DEPLOY_ID, res.getDeployId());
         final JDBCRXGenericQueryExecutor queryExecutor = entityHandler.genericQuery();
         return queryExecutor.executeAny(c -> updateTransStatus(c, res.getTransactionId(), status, null))
-                            .flatMap(r1 -> queryExecutor.executeAny(c -> updateModuleState(c, serviceId, state, v))
+                            .flatMap(r1 -> queryExecutor.executeAny(c -> updateAppState(c, serviceId, state, v))
                                                         .map(r2 -> r1 + r2))
                             .map(records -> PostDeploymentResult.from(res, state, records));
     }
@@ -94,7 +93,7 @@ class AppDeploymentTracker implements DeploymentService {
         final JDBCRXGenericQueryExecutor query = entityHandler.genericQuery();
         final Map<?, ?> values = Collections.singletonMap(Tables.DEPLOY_TRANSACTION.LAST_ERROR, res.getError());
         return query.executeAny(c -> updateTransStatus(c, res.getTransactionId(), Status.FAILED, values))
-                    .flatMap(r1 -> query.executeAny(c -> updateModuleState(c, res.getServiceId(), State.DISABLED, null))
+                    .flatMap(r1 -> query.executeAny(c -> updateAppState(c, res.getServiceId(), State.DISABLED, null))
                                         .map(r2 -> r1 + r2))
                     .map(records -> PostDeploymentResult.from(res, State.DISABLED, records));
     }
@@ -104,7 +103,7 @@ class AppDeploymentTracker implements DeploymentService {
         return entityHandler.dao(ApplicationHistoryDao.class).insert((ApplicationHistory) history).map(i -> history);
     }
 
-    private int updateModuleState(DSLContext context, String serviceId, State state, Map<?, ?> values) {
+    private int updateAppState(DSLContext context, String serviceId, State state, Map<?, ?> values) {
         return context.update(Tables.APPLICATION)
                       .set(Tables.APPLICATION.STATE, state)
                       .set(Tables.APPLICATION.MODIFIED_AT, DateTimes.now())
@@ -124,16 +123,9 @@ class AppDeploymentTracker implements DeploymentService {
 
     private IApplicationHistory convertToHistory(IDeployTransaction transaction) {
         IApplicationHistory history = new ApplicationHistory().fromJson(transaction.toJson());
-        if (Objects.isNull(history.getIssuedAt())) {
-            history.setIssuedAt(DateTimes.now());
-        }
-        if (Objects.isNull(history.getModifiedAt())) {
-            history.setModifiedAt(DateTimes.now());
-        }
-        if (Objects.isNull(history.getRetry())) {
-            history.setRetry(0);
-        }
-        return history;
+        return history.setIssuedAt(Optional.ofNullable(history.getIssuedAt()).orElseGet(DateTimes::now))
+                      .setModifiedAt(Optional.ofNullable(history.getModifiedAt()).orElseGet(DateTimes::now))
+                      .setRetry(Optional.ofNullable(history.getRetry()).orElse(0));
     }
 
     @Override

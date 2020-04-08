@@ -3,9 +3,9 @@ package com.nubeiot.edge.installer.service;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 
 //TODO extends this for success/failed/timeout case and assert PostDeploymentResult
-public class MockFinisherService extends AppDeploymentFinisher {
+public class MockReporterService extends AppDeploymentReporter {
 
-    protected MockFinisherService(InstallerEntityHandler entityHandler) {
+    protected MockReporterService(InstallerEntityHandler entityHandler) {
         super(entityHandler);
     }
 

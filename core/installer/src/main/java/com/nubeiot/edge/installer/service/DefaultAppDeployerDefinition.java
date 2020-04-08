@@ -5,25 +5,31 @@ import com.nubeiot.edge.installer.InstallerEntityHandler;
 
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
 final class DefaultAppDeployerDefinition implements AppDeployerDefinition {
 
     @NonNull
-    private final EventModel loaderEvent;
+    private final EventModel executerEvent;
     @NonNull
-    private final EventModel trackerEvent;
+    private final EventModel supervisorEvent;
     @NonNull
-    private final EventModel finisherEvent;
+    private final EventModel reporterEvent;
+
+    public DefaultAppDeployerDefinition(@NonNull String executerAddress, @NonNull String supervisorAddress,
+                                        @NonNull String reporterAddress) {
+        this.executerEvent = AppDeployerDefinition.createExecuterEvent(executerAddress);
+        this.supervisorEvent = AppDeployerDefinition.createSupervisorEvent(supervisorAddress);
+        this.reporterEvent = AppDeployerDefinition.createReporterEvent(reporterAddress);
+    }
 
     @Override
-    public void register(@NonNull InstallerEntityHandler entityHandler) {
+    public AppDeployerDefinition register(@NonNull InstallerEntityHandler entityHandler) {
         entityHandler.eventClient()
-                     .register(getLoaderEvent(), new AppDeploymentService(entityHandler))
-                     .register(getTrackerEvent(), new AppDeploymentTracker(entityHandler))
-                     .register(getFinisherEvent(), new AppDeploymentFinisher(entityHandler));
+                     .register(executerEvent, new AppDeploymentExecuter(entityHandler))
+                     .register(supervisorEvent, new AppDeploymentSupervisor(entityHandler))
+                     .register(reporterEvent, new AppDeploymentReporter(entityHandler));
+        return this;
     }
 
 }

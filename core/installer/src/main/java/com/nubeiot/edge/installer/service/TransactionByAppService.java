@@ -42,7 +42,7 @@ public abstract class TransactionByAppService implements InstallerService {
     }
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
-    public Single<JsonObject> getList(RequestData data) {
+    public Single<JsonObject> list(RequestData data) {
         final IDeployTransaction transaction = new DeployTransaction().fromJson(data.body());
         if (Strings.isBlank(transaction.getAppId())) {
             throw new IllegalArgumentException("Service id is mandatory");

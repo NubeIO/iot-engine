@@ -9,7 +9,6 @@ import com.nubeiot.edge.installer.InstallerVerticle;
 import com.nubeiot.edge.installer.loader.ModuleTypeRule;
 import com.nubeiot.edge.installer.service.AppDeployerDefinition;
 import com.nubeiot.edge.installer.service.InstallerService;
-import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 import lombok.NonNull;
 
@@ -27,9 +26,7 @@ public class EdgeBiosVerticle extends InstallerVerticle<BiosInstallerService> {
 
     @Override
     protected @NonNull AppDeployerDefinition appDeployerDefinition() {
-        return AppDeployerDefinition.create(InstallerEventModel.BIOS_DEPLOYMENT,
-                                            InstallerEventModel.BIOS_DEPLOYMENT_TRACKER,
-                                            InstallerEventModel.BIOS_DEPLOYMENT_FINISHER);
+        return AppDeployerDefinition.create("bios");
     }
 
     @Override

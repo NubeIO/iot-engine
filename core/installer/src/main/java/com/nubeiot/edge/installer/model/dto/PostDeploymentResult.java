@@ -23,7 +23,7 @@ import lombok.NonNull;
 @JsonNaming(value = PropertyNamingStrategy.SnakeCaseStrategy.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonDeserialize(builder = PostDeploymentResult.Builder.class)
-public class PostDeploymentResult implements JsonData {
+public final class PostDeploymentResult implements JsonData {
 
     private String serviceId;
     private String transactionId;

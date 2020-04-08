@@ -29,8 +29,8 @@ public final class EdgeBiosEntityHandler extends InstallerEntityHandler {
         return appConfig;
     }
 
-    protected Application decorateModule(Application m) {
-        return super.decorateModule(m).setPublishedBy("NubeIO");
+    protected Application decorateApp(Application m) {
+        return super.decorateApp(m).setPublishedBy("NubeIO");
     }
 
 }

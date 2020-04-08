@@ -20,12 +20,13 @@ import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.bios.BaseInstallerVerticleTest;
 import com.nubeiot.edge.installer.InstallerVerticle;
 import com.nubeiot.edge.installer.loader.VertxModuleType;
 import com.nubeiot.edge.installer.model.tables.pojos.Application;
-import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
+import com.nubeiot.edge.installer.service.AppDeployerDefinition;
 
 @Ignore
 public class HandlerTimeoutTest extends BaseInstallerVerticleTest {
@@ -72,12 +73,12 @@ public class HandlerTimeoutTest extends BaseInstallerVerticleTest {
         final JsonObject expected = new JsonObject().put("status", Status.SUCCESS)
                                                     .put("action", EventAction.PATCH)
                                                     .put("data", expectedBody);
-        this.installerVerticle.getEventbusClient().fire(
-                                  DeliveryEvent.from(MockTimeoutVerticle.MOCK_TIME_OUT_INSTALLER, EventAction.PATCH,
-                                                     RequestData.builder().body(body).build().toJson()),
-                                  EventbusHelper.replyAsserter(context, async, expected,
-                                                               JsonHelper.ignore("data.transaction_id"),
-                                                               JsonHelper.ignore("data.system_config")));
+        this.installerVerticle.getEventbusClient()
+                              .fire(DeliveryEvent.from(MockTimeoutVerticle.MOCK_TIME_OUT_INSTALLER, EventAction.PATCH,
+                                                       RequestData.builder().body(body).build().toJson()),
+                                    EventbusHelper.replyAsserter(context, async, expected,
+                                                                 JsonHelper.ignore("data.transaction_id"),
+                                                                 JsonHelper.ignore("data.system_config")));
         this.testingDBUpdated(context, State.ENABLED, Status.SUCCESS, APP_CONFIG);
     }
 
@@ -93,8 +94,10 @@ public class HandlerTimeoutTest extends BaseInstallerVerticleTest {
         final JsonObject expected = new JsonObject().put("status", Status.SUCCESS)
                                                     .put("action", EventAction.PATCH)
                                                     .put("data", new JsonObject("{\"abc\":\"123\"}"));
+        final EventModel event = AppDeployerDefinition.createExecuterEvent(
+            AppDeployerDefinition.createExecuterAddr("bios"));
         this.installerVerticle.getEventbusClient()
-                              .fire(DeliveryEvent.from(InstallerEventModel.BIOS_DEPLOYMENT, EventAction.PATCH,
+                              .fire(DeliveryEvent.from(event, EventAction.PATCH,
                                                        RequestData.builder().body(body).build().toJson()),
                                     EventbusHelper.replyAsserter(context, async, expected));
     }
@@ -106,7 +109,9 @@ public class HandlerTimeoutTest extends BaseInstallerVerticleTest {
                                               .put("version", VERSION);
         JsonObject body = new JsonObject().put("metadata", metadata).put("appConfig", APP_CONFIG);
         Async async = context.async();
-        final DeliveryEvent deliveryEvent = DeliveryEvent.from(InstallerEventModel.BIOS_DEPLOYMENT, EventAction.CREATE,
+        final EventModel event = AppDeployerDefinition.createExecuterEvent(
+            AppDeployerDefinition.createExecuterAddr("bios"));
+        final DeliveryEvent deliveryEvent = DeliveryEvent.from(event, EventAction.CREATE,
                                                                RequestData.builder().body(body).build().toJson());
         //create loading takes 9 seconds when timeout is 3 seconds
         this.installerVerticle.getEventbusClient().fire(deliveryEvent, context.asyncAssertFailure(throwable -> {

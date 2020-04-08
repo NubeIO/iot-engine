@@ -46,7 +46,7 @@ public abstract class ApplicationService implements InstallerService {
     }
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
-    public Single<JsonObject> getList(RequestData data) {
+    public Single<JsonObject> list(RequestData data) {
         JsonObject filter = data.filter();
         if (filter.getBoolean("available", Boolean.FALSE)) {
             return Single.just(new JsonObject());
@@ -55,7 +55,7 @@ public abstract class ApplicationService implements InstallerService {
     }
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
-    public Single<JsonObject> getOne(RequestData data) {
+    public Single<JsonObject> get(RequestData data) {
         String serviceId = data.body().getString(paramPath());
         if (Strings.isBlank(serviceId)) {
             throw new IllegalArgumentException("Service id is mandatory");
@@ -71,29 +71,29 @@ public abstract class ApplicationService implements InstallerService {
 
     @EventContractor(action = EventAction.PATCH, returnType = Single.class)
     public Single<JsonObject> patch(RequestData data) {
-        IApplication module = createTblModule(data.body());
-        if (Strings.isBlank(module.getAppId())) {
+        IApplication app = createApplication(data.body());
+        if (Strings.isBlank(app.getAppId())) {
             throw new IllegalArgumentException("Service id is mandatory");
         }
-        return new AppDeploymentWorkflow(entityHandler).process(module, EventAction.PATCH);
+        return new AppDeploymentWorkflow(entityHandler).process(app, EventAction.PATCH);
     }
 
     @EventContractor(action = EventAction.UPDATE, returnType = Single.class)
     public Single<JsonObject> update(RequestData data) {
-        IApplication module = validate(data.body());
-        if (Strings.isBlank(module.getServiceName()) && Strings.isBlank(module.getAppId())) {
+        IApplication app = validate(data.body());
+        if (Strings.isBlank(app.getServiceName()) && Strings.isBlank(app.getAppId())) {
             throw new IllegalArgumentException("Provide at least service id or service name");
         }
-        return new AppDeploymentWorkflow(entityHandler).process(module, EventAction.UPDATE);
+        return new AppDeploymentWorkflow(entityHandler).process(app, EventAction.UPDATE);
     }
 
     @EventContractor(action = EventAction.REMOVE, returnType = Single.class)
     public Single<JsonObject> remove(RequestData data) {
-        IApplication module = new Application().setAppId(data.body().getString(paramPath()));
-        if (Strings.isBlank(module.getAppId())) {
+        IApplication app = new Application().setAppId(data.body().getString(paramPath()));
+        if (Strings.isBlank(app.getAppId())) {
             throw new IllegalArgumentException("Service id is mandatory");
         }
-        return new AppDeploymentWorkflow(entityHandler).process(module, EventAction.REMOVE);
+        return new AppDeploymentWorkflow(entityHandler).process(app, EventAction.REMOVE);
     }
 
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
@@ -107,24 +107,24 @@ public abstract class ApplicationService implements InstallerService {
     }
 
     private IApplication validate(@NonNull JsonObject body) {
-        IApplication module = createTblModule(body);
-        if (Strings.isBlank(module.getServiceName())) {
+        IApplication application = createApplication(body);
+        if (Strings.isBlank(application.getServiceName())) {
             throw new IllegalArgumentException("Service name is mandatory");
         }
-        if (Strings.isBlank(module.getVersion())) {
+        if (Strings.isBlank(application.getVersion())) {
             throw new IllegalArgumentException("Service version is mandatory");
         }
-        return module;
+        return application;
     }
 
-    private IApplication createTblModule(JsonObject body) {
-        String serviceId = body.getString(paramPath());
+    private IApplication createApplication(JsonObject body) {
+        String appId = body.getString(paramPath());
         body.remove(paramPath());
         RequestedServiceData serviceData = body.isEmpty()
                                            ? new RequestedServiceData()
                                            : JsonData.from(body, RequestedServiceData.class);
-        if (Strings.isNotBlank(serviceId)) {
-            serviceData.getMetadata().put(paramPath(), serviceId);
+        if (Strings.isNotBlank(appId)) {
+            serviceData.getMetadata().put(paramPath(), appId);
         }
         final ModuleTypeRule rule = entityHandler.sharedData(InstallerEntityHandler.SHARED_MODULE_RULE);
         return rule.parse(entityHandler.dataDir(), serviceData.getMetadata(), serviceData.getAppConfig());

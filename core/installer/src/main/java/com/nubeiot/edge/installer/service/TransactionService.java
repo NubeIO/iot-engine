@@ -41,7 +41,7 @@ public abstract class TransactionService implements InstallerService {
     }
 
     @EventContractor(action = EventAction.GET_ONE, returnType = Single.class)
-    public Single<JsonObject> getOne(RequestData data) {
+    public Single<JsonObject> get(RequestData data) {
         final boolean includeSystemCfg = data.filter().parseBoolean("system_cfg");
         final IDeployTransaction transaction = new DeployTransaction().fromJson(data.body());
         final String transactionId = Strings.requireNotBlank(transaction.getTransactionId(),

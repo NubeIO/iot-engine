@@ -10,12 +10,12 @@ import com.nubeiot.edge.installer.model.dto.PreDeploymentResult;
 import lombok.NonNull;
 
 //TODO extends this for success/failed/timeout case and assert PreDeploymentResult
-public class MockDeploymentService extends AppDeploymentService {
+public class MockDeploymentExecuter extends AppDeploymentExecuter {
 
     @NonNull
     private final UUID mockDeployId;
 
-    protected MockDeploymentService(@NonNull InstallerEntityHandler entityHandler, @NonNull UUID mockDeployId) {
+    protected MockDeploymentExecuter(@NonNull InstallerEntityHandler entityHandler, @NonNull UUID mockDeployId) {
         super(entityHandler);
         this.mockDeployId = mockDeployId;
     }

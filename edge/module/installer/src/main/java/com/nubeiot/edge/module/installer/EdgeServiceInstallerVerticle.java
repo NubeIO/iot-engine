@@ -9,7 +9,6 @@ import com.nubeiot.edge.installer.loader.ModuleTypeRule;
 import com.nubeiot.edge.installer.service.AppDeployerDefinition;
 import com.nubeiot.edge.installer.service.InstallerService;
 import com.nubeiot.edge.module.installer.service.EdgeInstallerService;
-import com.nubeiot.eventbus.edge.installer.InstallerEventModel;
 
 import lombok.NonNull;
 
@@ -27,9 +26,7 @@ public final class EdgeServiceInstallerVerticle extends InstallerVerticle<EdgeIn
 
     @Override
     protected @NonNull AppDeployerDefinition appDeployerDefinition() {
-        return AppDeployerDefinition.create(InstallerEventModel.SERVICE_DEPLOYMENT,
-                                            InstallerEventModel.SERVICE_DEPLOYMENT_TRACKER,
-                                            InstallerEventModel.SERVICE_DEPLOYMENT_FINISHER);
+        return AppDeployerDefinition.create("app");
     }
 
     @Override

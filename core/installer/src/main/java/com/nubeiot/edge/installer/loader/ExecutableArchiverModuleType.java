@@ -22,12 +22,12 @@ public interface ExecutableArchiverModuleType extends ExecutableBinaryModuleType
 
         @Override
         public String generateFQN(String appId, String version, String serviceName) {
-            return null;
+            return binaryType().generateFQN(appId, version, serviceName);
         }
 
         @Override
         public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
-            return null;
+            return binaryType().serialize(input, rule);
         }
     };
 
@@ -36,6 +36,6 @@ public interface ExecutableArchiverModuleType extends ExecutableBinaryModuleType
         return AbstractModuleType.factory(type, ExecutableArchiverModuleType.class);
     }
 
-    ExecutableBinaryModuleType binaryType();
+    @NonNull ExecutableBinaryModuleType binaryType();
 
 }

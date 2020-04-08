@@ -44,6 +44,7 @@ import com.nubeiot.edge.installer.model.tables.pojos.Application;
 import com.nubeiot.edge.installer.model.tables.pojos.DeployTransaction;
 import com.nubeiot.edge.installer.repository.InstallerRepository;
 import com.nubeiot.edge.installer.service.AppDeployerDefinition;
+import com.nubeiot.edge.installer.service.InstallerAction;
 import com.nubeiot.edge.installer.service.InstallerApiIndex;
 
 import lombok.AccessLevel;
@@ -105,8 +106,7 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler
     }
 
     final InstallerEntityHandler initDeployer() {
-        final AppDeployerDefinition definition = sharedData(SHARED_APP_DEPLOYER_CFG);
-        definition.register(this);
+        ((AppDeployerDefinition) sharedData(SHARED_APP_DEPLOYER_CFG)).register(this);
         return this;
     }
 
@@ -114,7 +114,7 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler
         return appConfig;
     }
 
-    protected Application decorateModule(Application module) {
+    protected Application decorateApp(Application module) {
         final OffsetDateTime now = DateTimes.now();
         return module.setCreatedAt(now).setModifiedAt(now);
     }
@@ -126,14 +126,14 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler
         }
         final Path dataDir = dataDir();
         return Observable.fromIterable(config.getBuiltinApps())
-                         .map(serviceData -> createTblModule(dataDir, config.getRepoConfig(), serviceData))
-                         .map(this::decorateModule)
+                         .map(serviceData -> createApplication(dataDir, config.getRepoConfig(), serviceData))
+                         .map(this::decorateApp)
                          .collect(ArrayList<Application>::new, ArrayList::add)
                          .flatMap(list -> dao(ApplicationDao.class).insert(list))
                          .map(r -> new JsonObject().put("results", "Inserted " + r + " app module record(s)"));
     }
 
-    private Application createTblModule(Path dataDir, RepositoryConfig repoConfig, RequestedServiceData serviceData) {
+    private Application createApplication(Path dataDir, RepositoryConfig repoConfig, RequestedServiceData serviceData) {
         ModuleTypeRule rule = sharedData(SHARED_MODULE_RULE);
         IApplication tblModule = rule.parse(serviceData.getMetadata());
         AppConfig appConfig = transformAppConfig(repoConfig, tblModule, serviceData.getAppConfig());
@@ -165,10 +165,10 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler
     }
 
     private Application checkingTransaction(Application module, DeployTransaction transaction) {
-        if (transaction.getEvent() == EventAction.CREATE || transaction.getEvent() == EventAction.INIT) {
+        if (InstallerAction.isInstall(transaction.getEvent())) {
             return module.setState(State.ENABLED);
         }
-        if (transaction.getEvent() == EventAction.UPDATE || transaction.getEvent() == EventAction.PATCH) {
+        if (InstallerAction.isUpdate(transaction.getEvent())) {
             JsonObject prevMeta = transaction.getPrevMetadata();
             if (Objects.isNull(prevMeta)) {
                 return module.setState(State.ENABLED);

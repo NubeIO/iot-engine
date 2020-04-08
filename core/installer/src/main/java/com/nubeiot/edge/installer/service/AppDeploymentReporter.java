@@ -17,9 +17,9 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-class AppDeploymentFinisher implements DeploymentService {
+class AppDeploymentReporter implements DeploymentService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AppDeploymentFinisher.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AppDeploymentReporter.class);
     private final InstallerEntityHandler entityHandler;
 
     @Override

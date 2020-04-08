@@ -40,16 +40,17 @@ public final class AppDeploymentWorkflow {
     private final InstallerEntityHandler entityHandler;
     private final AppDeployerDefinition definition;
 
-    public AppDeploymentWorkflow(InstallerEntityHandler entityHandler) {
+    public AppDeploymentWorkflow(@NonNull InstallerEntityHandler entityHandler) {
         this.entityHandler = entityHandler;
         this.definition = entityHandler.sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
     }
 
-    public Single<JsonObject> process(IApplication application, EventAction action) {
+    public Single<JsonObject> process(@NonNull IApplication application, @NonNull EventAction action) {
         return process(Collections.singleton(application), action).firstOrError();
     }
 
-    public Observable<JsonObject> process(Collection<? extends IApplication> applications, EventAction action) {
+    public Observable<JsonObject> process(@NonNull Collection<? extends IApplication> applications,
+                                          @NonNull EventAction action) {
         return Observable.fromIterable(applications).flatMapSingle(module -> processDeployment(module, action));
     }
 
@@ -62,8 +63,7 @@ public final class AppDeploymentWorkflow {
     private Single<PreDeploymentResult> createPreDeployment(IApplication req, EventAction action) {
         LOGGER.info("INSTALLER create pre-deployment for {}::::{}", action, req.getAppId());
         InstallerConfig config = entityHandler.sharedData(InstallerEntityHandler.SHARED_INSTALLER_CFG);
-        if (EventAction.CREATE == action || EventAction.INIT == action ||
-            (EventAction.MIGRATE == action && State.PENDING == req.getState())) {
+        if (EventAction.CREATE == action || InstallerAction.isInternal(action) && State.PENDING == req.getState()) {
             req.setState(State.ENABLED);
         }
         if (EventAction.REMOVE == action) {
@@ -83,16 +83,16 @@ public final class AppDeploymentWorkflow {
         final State prevState = EventAction.CREATE == action ? State.NONE : dbEntity.getState();
         final State toState = Optional.ofNullable(request.getState()).orElse(dbEntity.getState());
         Maybe<IApplication> into = Maybe.empty();
-        if (EventAction.CREATE == action) {
+        if (InstallerAction.isInstall(action)) {
             into = Maybe.fromSingle(markModuleInsert(cloneDb));
         }
-        if (EventAction.INIT == action || EventAction.UPDATE == action || EventAction.MIGRATE == action) {
+        if (InstallerAction.isUpdate(action) && !InstallerAction.isPatch(action)) {
             into = Maybe.fromSingle(markModuleModify(request, cloneDb, true));
         }
-        if (EventAction.PATCH == action) {
+        if (InstallerAction.isPatch(action)) {
             into = Maybe.fromSingle(markModuleModify(request, cloneDb, false));
         }
-        if (EventAction.REMOVE == action) {
+        if (InstallerAction.isUninstall(action)) {
             into = Maybe.fromSingle(markModuleDelete(cloneDb));
         }
         return into.switchIfEmpty(Single.error(new UnsupportedOperationException("Unsupported event " + action)))
@@ -105,23 +105,22 @@ public final class AppDeploymentWorkflow {
         LOGGER.info("INSTALLER trigger deploying for {}::::{}", action, preDeployResult.getServiceId());
         preDeployResult.setSilent(EventAction.REMOVE == action && State.DISABLED == preDeployResult.getPrevState());
         entityHandler.eventClient()
-                     .fire(DeliveryEvent.from(definition.getLoaderEvent(), action, preDeployResult.toRequestData()));
+                     .fire(DeliveryEvent.from(definition.getExecuterEvent(), action, preDeployResult.toRequestData()));
     }
 
-    private PreDeploymentResult createPreDeployResult(IApplication module, String transactionId, EventAction action,
+    private PreDeploymentResult createPreDeployResult(IApplication app, String transactionId, EventAction action,
                                                       State prevState, State targetState) {
         return PreDeploymentResult.builder()
                                   .transactionId(transactionId)
-                                  .action(action == EventAction.MIGRATE ? EventAction.UPDATE : action)
+                                  .action(action)
                                   .prevState(prevState)
                                   .targetState(targetState)
-                                  .serviceId(module.getAppId())
-                                  .serviceFQN(module.getServiceType()
-                                                    .generateFQN(module.getAppId(), module.getVersion(),
-                                                                 module.getServiceName()))
-                                  .deployId(module.getDeployId())
-                                  .appConfig(module.getAppConfig())
-                                  .systemConfig(module.getSystemConfig())
+                                  .serviceId(app.getAppId())
+                                  .serviceFQN(app.getServiceType()
+                                                 .generateFQN(app.getAppId(), app.getVersion(), app.getServiceName()))
+                                  .deployId(app.getDeployId())
+                                  .appConfig(app.getAppConfig())
+                                  .systemConfig(app.getSystemConfig())
                                   .dataDir(entityHandler.dataDir().toString())
                                   .build();
     }
@@ -157,12 +156,12 @@ public final class AppDeploymentWorkflow {
         return entityHandler.transDao().insert(transaction).map(i -> transactionId);
     }
 
-    private Single<IApplication> markModuleInsert(IApplication module) {
-        LOGGER.debug("INSTALLER mark service {} to create...", module.getAppId());
+    private Single<IApplication> markModuleInsert(IApplication app) {
+        LOGGER.debug("INSTALLER mark service {} to create...", app.getAppId());
         OffsetDateTime now = DateTimes.now();
         return entityHandler.applicationDao()
-                            .insert((Application) module.setCreatedAt(now).setModifiedAt(now).setState(State.PENDING))
-                            .map(i -> module);
+                            .insert((Application) app.setCreatedAt(now).setModifiedAt(now).setState(State.PENDING))
+                            .map(i -> app);
     }
 
     private Single<IApplication> markModuleModify(IApplication module, IApplication oldOne, boolean isUpdated) {
@@ -187,8 +186,8 @@ public final class AppDeploymentWorkflow {
         if (Objects.isNull(newOne.getState()) && isUpdated) {
             throw new IllegalArgumentException("Service state is mandatory");
         }
-        old.setVersion(Strings.isBlank(newOne.getVersion()) ? old.getVersion() : newOne.getVersion());
-        old.setPublishedBy(Strings.isBlank(newOne.getPublishedBy()) ? old.getPublishedBy() : newOne.getPublishedBy());
+        old.setVersion(Strings.fallback(newOne.getVersion(), old.getVersion()));
+        old.setPublishedBy(Strings.fallback(newOne.getPublishedBy(), old.getPublishedBy()));
         old.setState(Objects.isNull(newOne.getState()) ? old.getState() : newOne.getState());
         old.setSystemConfig(
             IConfig.merge(old.getSystemConfig(), newOne.getSystemConfig(), isUpdated, NubeConfig.class).toJson());

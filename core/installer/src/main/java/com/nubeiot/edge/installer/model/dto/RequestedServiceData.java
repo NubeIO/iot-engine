@@ -10,8 +10,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.dto.JsonData;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.experimental.FieldNameConstants;
 
+@FieldNameConstants(level = AccessLevel.PRIVATE)
 public final class RequestedServiceData implements JsonData {
 
     @Getter
@@ -25,8 +28,8 @@ public final class RequestedServiceData implements JsonData {
     }
 
     @JsonCreator
-    public RequestedServiceData(@JsonProperty(value = "metadata") Map<String, Object> metadata,
-                                @JsonProperty(value = "appConfig") AppConfig appConfig) {
+    public RequestedServiceData(@JsonProperty(value = Fields.metadata) Map<String, Object> metadata,
+                                @JsonProperty(value = Fields.appConfig) AppConfig appConfig) {
         this.metadata = Objects.isNull(metadata) ? new JsonObject() : new JsonObject(metadata);
         this.appConfig = Objects.isNull(appConfig) ? new AppConfig() : appConfig;
     }
