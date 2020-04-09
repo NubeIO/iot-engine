@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 import com.nubeiot.edge.bios.service.BiosInstallerService;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.InstallerVerticle;
-import com.nubeiot.edge.installer.loader.ModuleTypeRule;
+import com.nubeiot.edge.installer.loader.RuleRepository;
 import com.nubeiot.edge.installer.service.AppDeployerDefinition;
 import com.nubeiot.edge.installer.service.InstallerService;
 
@@ -20,13 +20,13 @@ public class EdgeBiosVerticle extends InstallerVerticle<BiosInstallerService> {
     }
 
     @Override
-    protected Supplier<ModuleTypeRule> getModuleRuleProvider() {
-        return new EdgeBiosRuleProvider();
+    protected @NonNull AppDeployerDefinition appDeployerDefinition() {
+        return AppDeployerDefinition.create("bios");
     }
 
     @Override
-    protected @NonNull AppDeployerDefinition appDeployerDefinition() {
-        return AppDeployerDefinition.create("bios");
+    protected @NonNull RuleRepository ruleRepository() {
+        return RuleRepository.createJVMRule("com.nubeiot.edge.module");
     }
 
     @Override

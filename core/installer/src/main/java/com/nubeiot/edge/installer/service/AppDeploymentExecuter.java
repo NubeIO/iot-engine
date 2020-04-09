@@ -26,6 +26,7 @@ import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.exceptions.EngineException;
 import com.nubeiot.core.exceptions.ErrorMessage;
+import com.nubeiot.edge.installer.InstallerCacheInitializer;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.model.dto.PostDeploymentResult;
 import com.nubeiot.edge.installer.model.dto.PreDeploymentResult;
@@ -106,7 +107,7 @@ class AppDeploymentExecuter implements DeploymentService {
 
     private void publishResult(PreDeploymentResult preResult, AsyncResult<String> async) {
         final EventbusClient client = sharedData(SharedDataDelegate.SHARED_EVENTBUS);
-        final AppDeployerDefinition deployer = sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
+        final AppDeployerDefinition deployer = sharedData(InstallerCacheInitializer.SHARED_APP_DEPLOYER_CFG);
         final JsonObject error = async.succeeded() ? new JsonObject() : ErrorMessage.parse(async.cause()).toJson();
         final PostDeploymentResult pr = PostDeploymentResult.from(preResult, async.result(), error);
         client.fire(DeliveryEvent.from(deployer.getSupervisorEvent(), new JsonObject().put("result", pr.toJson())));

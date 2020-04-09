@@ -38,7 +38,10 @@ public final class InstallerRepository {
         LOGGER.info("Setting up service local and remote repository");
         RemoteRepositoryConfig remoteConfig = repositoryCfg.getRemoteConfig();
         LOGGER.info("URLs" + remoteConfig.getUrls());
-        remoteConfig.getUrls().entrySet().stream().parallel()
+        remoteConfig.getUrls()
+                    .entrySet()
+                    .stream()
+                    .parallel()
                     .forEach(entry -> handleVerticleFactory(dataDir, repositoryCfg.getLocal(), entry));
     }
 
@@ -50,7 +53,7 @@ public final class InstallerRepository {
                                 : local;
         if (VertxModuleType.JAVA == type) {
             List<ExternalServer> externalServers = entry.getValue();
-            String javaLocal = FileUtils.createFolder(localDir, type.name().toLowerCase(Locale.ENGLISH));
+            String javaLocal = FileUtils.createFolder(localDir, type.type().toLowerCase(Locale.ENGLISH));
             LOGGER.info("{} local repositories: {}", type, javaLocal);
             LOGGER.info("{} remote repositories: {}", type, externalServers);
             ResolverOptions resolver = new ResolverOptions().setRemoteRepositories(

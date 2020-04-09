@@ -8,13 +8,14 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
-import com.nubeiot.edge.installer.loader.ModuleTypeRule;
+import com.nubeiot.edge.installer.loader.ApplicationParser;
 import com.nubeiot.edge.installer.model.dto.PreDeploymentResult;
 import com.nubeiot.edge.installer.model.dto.RequestedServiceData;
 import com.nubeiot.edge.installer.model.tables.daos.ApplicationDao;
@@ -47,8 +48,8 @@ public abstract class ApplicationService implements InstallerService {
 
     @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
     public Single<JsonObject> list(RequestData data) {
-        JsonObject filter = data.filter();
-        if (filter.getBoolean("available", Boolean.FALSE)) {
+        RequestFilter filter = data.filter();
+        if (filter.parseBoolean("_available")) {
             return Single.just(new JsonObject());
         }
         return new LocalServiceSearch(entityHandler).search(data);
@@ -126,8 +127,7 @@ public abstract class ApplicationService implements InstallerService {
         if (Strings.isNotBlank(appId)) {
             serviceData.getMetadata().put(paramPath(), appId);
         }
-        final ModuleTypeRule rule = entityHandler.sharedData(InstallerEntityHandler.SHARED_MODULE_RULE);
-        return rule.parse(entityHandler.dataDir(), serviceData.getMetadata(), serviceData.getAppConfig());
+        return ApplicationParser.create(entityHandler::sharedData).parse(serviceData);
     }
 
 }

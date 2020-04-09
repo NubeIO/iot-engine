@@ -1,151 +1,86 @@
 package com.nubeiot.edge.installer.loader;
 
-import java.util.Objects;
+import java.util.Arrays;
+import java.util.function.Predicate;
 
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.nubeiot.core.utils.Strings;
-import com.nubeiot.edge.installer.loader.AbstractModuleType.AbstractVertxModuleType;
+import com.nubeiot.edge.installer.model.tables.interfaces.IApplication;
+import com.nubeiot.edge.installer.model.tables.pojos.Application;
+import com.nubeiot.edge.installer.service.InstallerApiIndex.ApplicationMetadata;
 
 import lombok.NonNull;
 
 /**
- * Represents {@code Vertx}  polyglot module type.
+ * Represents {@code Vertx} polyglot module type.
  *
  * @since 1.0.0
  */
 public interface VertxModuleType extends ModuleType {
 
     /**
+     * The constant DEFAULT_VERSION.
+     */
+    String DEFAULT_VERSION = "1.0.0";
+
+    /**
      * The constant JAVA.
      */
-    VertxModuleType JAVA = new AbstractVertxModuleType() {
+    VertxModuleType JAVA = (JVMModuleType) () -> "JAVA";
 
-        private static final String DEFAULT_GROUP_ID = "com.nubeiot.edge.connector";
-        private static final String DEFAULT_VERSION = "1.0.0";
+    /**
+     * The constant GROOVY.
+     */
+    VertxModuleType GROOVY = (JVMModuleType) () -> "GROOVY";
 
-        @Override
-        public String name() {
-            return "JAVA";
-        }
+    /**
+     * The constant KOTLIN.
+     */
+    VertxModuleType KOTLIN = (JVMModuleType) () -> "KOTLIN";
 
-        @Override
-        public String generateFQN(String appId, String version, String serviceName) {
-            return String.format("maven:%s:%s::%s", appId, Strings.isBlank(version) ? DEFAULT_VERSION : version,
-                                 serviceName);
-        }
+    /**
+     * The constant SCALA.
+     */
+    VertxModuleType SCALA = (JVMModuleType) () -> "SCALA";
 
-        @Override
-        public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
-            final String artifactId = input.getString("artifact_id");
-            final String groupId = input.getString("group_id", DEFAULT_GROUP_ID);
-            final String serviceName = input.getString("service_name", artifactId);
-            if (Strings.isBlank(artifactId)) {
-                throw new InvalidModuleType("Missing artifact_id");
-            }
-            if (Objects.nonNull(rule) && !rule.getRule(this).test(groupId + "." + artifactId)) {
-                throw new InvalidModuleType("Artifact is not valid");
-            }
-            String serviceId = String.format("%s:%s", groupId, artifactId);
-            return input.mergeIn(new JsonObject(), true)
-                        .put("app_id", serviceId)
-                        .put("service_name", serviceName)
-                        .put("service_type", name());
-        }
-    };
     /**
      * The constant JAVASCRIPT.
      */
-    VertxModuleType JAVASCRIPT = new AbstractVertxModuleType() {
+    VertxModuleType JAVASCRIPT = new VertxModuleType() {
         @Override
-        public String name() {
+        public String type() {
             return "JAVASCRIPT";
         }
 
         @Override
-        public String generateFQN(String appId, String version, String serviceName) {
+        public String protocol() {
             return null;
-        }
-
-        @Override
-        public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
-            return null;
-        }
-    };
-    /**
-     * The constant GROOVY.
-     */
-    VertxModuleType GROOVY = new AbstractVertxModuleType() {
-        @Override
-        public String name() {
-            return "GROOVY";
         }
 
         @Override
         public String generateFQN(String appId, String version, String serviceName) {
             return null;
         }
-
-        @Override
-        public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
-            return null;
-        }
     };
-    /**
-     * The constant SCALA.
-     */
-    VertxModuleType SCALA = new AbstractVertxModuleType() {
-        @Override
-        public String name() {
-            return "SCALA";
-        }
 
-        @Override
-        public String generateFQN(String appId, String version, String serviceName) {
-            return null;
-        }
-
-        @Override
-        public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
-            return null;
-        }
-    };
-    /**
-     * The constant KOTLIN.
-     */
-    VertxModuleType KOTLIN = new AbstractVertxModuleType() {
-        @Override
-        public String name() {
-            return "KOTLIN";
-        }
-
-        @Override
-        public String generateFQN(String appId, String version, String serviceName) {
-            return null;
-        }
-
-        @Override
-        public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
-            return null;
-        }
-    };
     /**
      * The constant RUBY.
      */
-    VertxModuleType RUBY = new AbstractVertxModuleType() {
+    VertxModuleType RUBY = new VertxModuleType() {
         @Override
-        public String name() {
+        public String type() {
             return "RUBY";
         }
 
         @Override
-        public String generateFQN(String appId, String version, String serviceName) {
+        public String protocol() {
             return null;
         }
 
         @Override
-        public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
+        public String generateFQN(String appId, String version, String serviceName) {
             return null;
         }
     };
@@ -159,7 +94,60 @@ public interface VertxModuleType extends ModuleType {
      */
     @JsonCreator
     static VertxModuleType factory(@NonNull String type) {
-        return AbstractModuleType.factory(type, VertxModuleType.class);
+        return ModuleTypeFactory.factory(type, VertxModuleType.class);
+    }
+
+    /**
+     * The interface {@code JVM} module type.
+     *
+     * @since 1.0.0
+     */
+    interface JVMModuleType extends VertxModuleType {
+
+        String DEFAULT_GROUP_ID = "com.nubeiot.edge.connector";
+
+        static Predicate<String> rulePredicate(@NonNull String... artifactGroups) {
+            return appId -> {
+                if (Strings.isBlank(appId)) {
+                    return false;
+                }
+                final String group = appId.replaceAll(":", ".");
+                return Arrays.stream(artifactGroups).parallel().anyMatch(group::startsWith);
+            };
+        }
+
+        @Override
+        default String protocol() {
+            return "maven";
+        }
+
+        @Override
+        default String generateFQN(String appId, String version, String serviceName) {
+            return String.format("%s:%s:%s::%s", protocol(), appId,
+                                 Strings.isBlank(version) ? DEFAULT_VERSION : version, serviceName);
+        }
+
+        @Override
+        default IApplication serialize(@NonNull JsonObject request) throws InvalidModuleType {
+            final com.nubeiot.edge.installer.model.tables.@NonNull Application table
+                = ApplicationMetadata.INSTANCE.table();
+            final String idField = table.getJsonField(table.APP_ID);
+            final String serviceId = request.getString(idField);
+            if (Strings.isNotBlank(serviceId)) {
+                return VertxModuleType.super.serialize(request);
+            }
+            final String artifactId = request.getString("artifact_id");
+            final String groupId = request.getString("group_id", DEFAULT_GROUP_ID);
+            final String serviceName = request.getString("service_name", artifactId);
+            if (Strings.isBlank(artifactId)) {
+                throw new InvalidModuleType("Missing artifact_id");
+            }
+            return new Application(request.mergeIn(new JsonObject(), true)
+                                          .put(idField, String.format("%s:%s", groupId, artifactId))
+                                          .put(table.getJsonField(table.SERVICE_NAME), serviceName)
+                                          .put(table.getJsonField(table.SERVICE_TYPE), type())).setServiceType(this);
+        }
+
     }
 
 }

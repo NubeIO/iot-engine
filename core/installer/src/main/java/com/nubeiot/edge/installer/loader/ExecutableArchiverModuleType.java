@@ -2,40 +2,22 @@ package com.nubeiot.edge.installer.loader;
 
 import io.vertx.core.json.JsonObject;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.nubeiot.edge.installer.loader.AbstractModuleType.AbstractExecutableArchiverVertxModuleType;
+import com.nubeiot.edge.installer.model.tables.interfaces.IApplication;
 
 import lombok.NonNull;
 
 public interface ExecutableArchiverModuleType extends ExecutableBinaryModuleType {
 
-    ExecutableArchiverModuleType JAVASCRIPT_ARCHIVER = new AbstractExecutableArchiverVertxModuleType() {
-        @Override
-        public ExecutableBinaryModuleType binaryType() {
-            return ExecutableBinaryModuleType.JAVASCRIPT_BINARY;
-        }
+    @NonNull ExecutableBinaryModuleType binaryType();
 
-        @Override
-        public String name() {
-            return "JAVASCRIPT_BINARY_ARCHIVER";
-        }
-
-        @Override
-        public String generateFQN(String appId, String version, String serviceName) {
-            return binaryType().generateFQN(appId, version, serviceName);
-        }
-
-        @Override
-        public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
-            return binaryType().serialize(input, rule);
-        }
-    };
-
-    @JsonCreator
-    static ExecutableArchiverModuleType factory(@NonNull String type) {
-        return AbstractModuleType.factory(type, ExecutableArchiverModuleType.class);
+    @Override
+    default String generateFQN(String appId, String version, String serviceName) {
+        return protocol() + binaryType().generateFQN(appId, version, serviceName);
     }
 
-    @NonNull ExecutableBinaryModuleType binaryType();
+    @Override
+    default IApplication serialize(@NonNull JsonObject request) throws InvalidModuleType {
+        return binaryType().serialize(request);
+    }
 
 }

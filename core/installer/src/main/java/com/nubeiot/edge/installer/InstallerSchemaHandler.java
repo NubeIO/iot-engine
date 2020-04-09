@@ -22,7 +22,7 @@ final class InstallerSchemaHandler implements SchemaHandler {
     public @NonNull SchemaInitializer initializer() {
         return entityHandler -> {
             InstallerEntityHandler handler = (InstallerEntityHandler) entityHandler;
-            final InstallerConfig config = handler.sharedData(InstallerEntityHandler.SHARED_INSTALLER_CFG);
+            final InstallerConfig config = handler.sharedData(InstallerCacheInitializer.SHARED_INSTALLER_CFG);
             return handler.addBuiltinApps(config);
         };
     }

@@ -15,7 +15,7 @@ import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.register.EventHttpServiceRegister;
 import com.nubeiot.core.sql.SqlContext;
 import com.nubeiot.core.sql.SqlProvider;
-import com.nubeiot.edge.installer.loader.ModuleTypeRule;
+import com.nubeiot.edge.installer.loader.RuleRepository;
 import com.nubeiot.edge.installer.service.AppDeployerDefinition;
 import com.nubeiot.edge.installer.service.AppDeploymentWorkflow;
 import com.nubeiot.edge.installer.service.InstallerService;
@@ -37,11 +37,8 @@ public abstract class InstallerVerticle<T extends InstallerService> extends Cont
         super.start();
         final InstallerConfig installerConfig = IConfig.from(nubeConfig.getAppConfig(), InstallerConfig.class);
         installerConfig.getRepoConfig().recomputeLocal(nubeConfig.getDataDir());
-        final ModuleTypeRule moduleRule = getModuleRuleProvider().get();
-        this.addSharedData(InstallerEntityHandler.SHARED_INSTALLER_CFG, installerConfig)
-            .addSharedData(InstallerEntityHandler.SHARED_MODULE_RULE, moduleRule)
-            .addSharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG, appDeployerDefinition())
-            .addProvider(new SqlProvider<>(entityHandlerClass()), this::sqlHandler)
+        new InstallerCacheInitializer().init(this);
+        this.addProvider(new SqlProvider<>(entityHandlerClass()), this::sqlHandler)
             .addProvider(new MicroserviceProvider(), ctx -> microContext = (MicroContext) ctx)
             .registerSuccessHandler(v -> publishApis(microContext).flatMap(r -> deployAppModules()).subscribe(r -> {
                 logger.info("Trigger deploying {} app modules successfully", r.size());
@@ -55,10 +52,10 @@ public abstract class InstallerVerticle<T extends InstallerService> extends Cont
     protected abstract Class<? extends InstallerEntityHandler> entityHandlerClass();
 
     @NonNull
-    protected abstract Supplier<ModuleTypeRule> getModuleRuleProvider();
+    protected abstract AppDeployerDefinition appDeployerDefinition();
 
     @NonNull
-    protected abstract AppDeployerDefinition appDeployerDefinition();
+    protected abstract RuleRepository ruleRepository();
 
     @NonNull
     protected abstract Supplier<Set<T>> services(@NonNull InstallerEntityHandler handler);

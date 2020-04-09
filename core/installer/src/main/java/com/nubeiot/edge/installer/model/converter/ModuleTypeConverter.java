@@ -15,7 +15,7 @@ public final class ModuleTypeConverter implements Converter<String, ModuleType> 
 
     @Override
     public String to(ModuleType userObject) {
-        return Objects.isNull(userObject) ? null : userObject.name();
+        return Objects.isNull(userObject) ? null : userObject.type();
     }
 
     @Override

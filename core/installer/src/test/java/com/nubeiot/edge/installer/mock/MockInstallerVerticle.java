@@ -1,6 +1,5 @@
 package com.nubeiot.edge.installer.mock;
 
-import java.util.Collections;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -8,7 +7,8 @@ import java.util.stream.Stream;
 
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.InstallerVerticle;
-import com.nubeiot.edge.installer.loader.ModuleTypeRule;
+import com.nubeiot.edge.installer.loader.ApplicationRule;
+import com.nubeiot.edge.installer.loader.RuleRepository;
 import com.nubeiot.edge.installer.loader.VertxModuleType;
 import com.nubeiot.edge.installer.mock.MockInstallerService.MockApplicationService;
 import com.nubeiot.edge.installer.mock.MockInstallerService.MockTransactionService;
@@ -32,14 +32,12 @@ public class MockInstallerVerticle extends InstallerVerticle {
     }
 
     @Override
-    protected @NonNull Supplier<ModuleTypeRule> getModuleRuleProvider() {
-        return () -> new ModuleTypeRule().registerRule(VertxModuleType.JAVA,
-                                                       Collections.singletonList("com.nubeiot.edge.module"));
-    }
-
-    @Override
     protected @NonNull AppDeployerDefinition appDeployerDefinition() {
         return definition;
+    }
+
+    protected @NonNull RuleRepository ruleRepository() {
+        return new RuleRepository().add(VertxModuleType.JAVA, ApplicationRule.jvmRule("com.nubeiot.edge.mock"));
     }
 
     @Override

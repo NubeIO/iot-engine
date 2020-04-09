@@ -5,12 +5,9 @@ import org.jooq.Configuration;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 
-import com.nubeiot.core.NubeConfig.AppConfig;
-import com.nubeiot.edge.installer.InstallerConfig.RepositoryConfig;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.model.tables.daos.ApplicationDao;
 import com.nubeiot.edge.installer.model.tables.daos.DeployTransactionDao;
-import com.nubeiot.edge.installer.model.tables.interfaces.IApplication;
 
 abstract class MockInitDataEntityHandler extends InstallerEntityHandler {
 
@@ -30,11 +27,6 @@ abstract class MockInitDataEntityHandler extends InstallerEntityHandler {
     //        return Single.zip(records, startupModules, (r1, r2) -> r1 + r2.size())
     //                     .map(r -> EventMessage.success(EventAction.INIT, new JsonObject().put("records", r)));
     //    }
-
-    @Override
-    protected AppConfig transformAppConfig(RepositoryConfig repoConfig, IApplication tblModule, AppConfig appConfig) {
-        return appConfig;
-    }
 
     protected abstract Single<Integer> initModules();
 

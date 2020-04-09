@@ -1,7 +1,5 @@
 package com.nubeiot.edge.connector.bacnet.cache;
 
-import java.util.function.Supplier;
-
 import com.nubeiot.core.cache.CacheInitializer;
 import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.connector.bacnet.BACnetConfig;
@@ -25,17 +23,11 @@ public final class BACnetCacheInitializer implements CacheInitializer<BACnetCach
     public BACnetCacheInitializer init(@NonNull BACnetVerticle context) {
         context.addSharedData(DataProtocolRpcClient.GATEWAY_ADDRESS,
                               Strings.requireNotBlank(config.getGatewayAddress(), "Missing gateway address config"));
-        addBlockingCache(context, EDGE_NETWORK_CACHE, BACnetNetworkCache::init);
-        addBlockingCache(context, BACNET_DEVICE_CACHE,
-                         () -> BACnetDeviceCache.init(context.getVertx(), context.getSharedKey()));
+        addBlockingCache(context.getVertx(), EDGE_NETWORK_CACHE, BACnetNetworkCache::init, context::addSharedData);
+        addBlockingCache(context.getVertx(), BACNET_DEVICE_CACHE,
+                         () -> BACnetDeviceCache.init(context.getVertx(), context.getSharedKey()),
+                         context::addSharedData);
         return this;
-    }
-
-    private <T> void addBlockingCache(@NonNull BACnetVerticle context, @NonNull String cacheKey,
-                                      @NonNull Supplier<T> blockingCacheProvider) {
-        context.getVertx()
-               .executeBlocking(future -> future.complete(blockingCacheProvider.get()),
-                                result -> context.addSharedData(cacheKey, result.result()));
     }
 
 }

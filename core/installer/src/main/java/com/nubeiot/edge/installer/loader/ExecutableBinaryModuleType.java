@@ -1,9 +1,6 @@
 package com.nubeiot.edge.installer.loader;
 
-import io.vertx.core.json.JsonObject;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.nubeiot.edge.installer.loader.AbstractModuleType.AbstractExecutableBinaryModuleType;
 
 import lombok.NonNull;
 
@@ -14,26 +11,26 @@ import lombok.NonNull;
  */
 public interface ExecutableBinaryModuleType extends ModuleType {
 
-    ExecutableBinaryModuleType JAVASCRIPT_BINARY = new AbstractExecutableBinaryModuleType() {
+    ExecutableBinaryModuleType NODEJS_BINARY = new ExecutableBinaryModuleType() {
         @Override
-        public String name() {
-            return "JAVASCRIPT_BINARY";
+        public String type() {
+            return "NODEJS_BINARY";
         }
 
         @Override
         public String generateFQN(String appId, String version, String serviceName) {
             return null;
         }
-
-        @Override
-        public JsonObject serialize(JsonObject input, ModuleTypeRule rule) throws InvalidModuleType {
-            return null;
-        }
     };
 
     @JsonCreator
     static ExecutableBinaryModuleType factory(@NonNull String type) {
-        return AbstractModuleType.factory(type, ExecutableBinaryModuleType.class);
+        return ModuleTypeFactory.factory(type, ExecutableBinaryModuleType.class);
+    }
+
+    @Override
+    default String protocol() {
+        return "binary";
     }
 
 }

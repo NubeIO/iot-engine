@@ -1,12 +1,11 @@
 package com.nubeiot.edge.installer.loader;
 
-import java.util.Objects;
-import java.util.stream.Stream;
-
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.nubeiot.core.utils.Reflections.ReflectionMethod;
+import com.nubeiot.core.dto.EnumType;
+import com.nubeiot.edge.installer.model.tables.interfaces.IApplication;
+import com.nubeiot.edge.installer.model.tables.pojos.Application;
 
 import lombok.NonNull;
 
@@ -15,11 +14,10 @@ import lombok.NonNull;
  *
  * @since 1.0.0
  */
-//TODO Later for other languages (except JAVA) https://github.com/NubeIO/iot-engine/issues/239
-public interface ModuleType {
+public interface ModuleType extends EnumType {
 
     /**
-     * Gets default.
+     * Defines default module type
      *
      * @return the default
      * @since 1.0.0
@@ -37,24 +35,27 @@ public interface ModuleType {
      */
     @JsonCreator
     static ModuleType factory(String type) {
-        return Stream.of(VertxModuleType.class, ExecutableBinaryModuleType.class, ExecutableArchiverModuleType.class)
-                     .map(clazz -> ReflectionMethod.executeStatic(clazz, "factory", type))
-                     .filter(Objects::nonNull)
-                     .map(ModuleType.class::cast)
-                     .findFirst()
-                     .orElseGet(ModuleType::getDefault);
+        return ModuleTypeFactory.factory(type);
     }
 
     /**
-     * Name string.
+     * Defines module type
      *
-     * @return the string
+     * @return the module type
      * @since 1.0.0
      */
-    String name();
+    String type();
 
     /**
-     * Generate fqn string.
+     * Defines service factory protocol to get artifact from remote/local repository
+     *
+     * @return the service factory protocol
+     * @since 1.0.0
+     */
+    String protocol();
+
+    /**
+     * Generate full qualified name.
      *
      * @param appId       the app id
      * @param version     the version
@@ -65,14 +66,16 @@ public interface ModuleType {
     String generateFQN(@NonNull String appId, String version, String serviceName);
 
     /**
-     * Serialize json object.
+     * Serialize request json to application model.
      *
-     * @param input the input
-     * @param rule  the rule
-     * @return the json object
+     * @param request the input
+     * @return the application
      * @throws InvalidModuleType the invalid module type
+     * @see IApplication
      * @since 1.0.0
      */
-    JsonObject serialize(@NonNull JsonObject input, @NonNull ModuleTypeRule rule) throws InvalidModuleType;
+    default IApplication serialize(@NonNull JsonObject request) throws InvalidModuleType {
+        return new Application(request).setServiceType(this);
+    }
 
 }

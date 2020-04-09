@@ -25,6 +25,7 @@ import com.nubeiot.core.event.EventContractor.Param;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.core.utils.DateTimes;
+import com.nubeiot.edge.installer.InstallerCacheInitializer;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.model.Tables;
 import com.nubeiot.edge.installer.model.dto.PostDeploymentResult;
@@ -56,7 +57,7 @@ class AppDeploymentSupervisor implements DeploymentService {
                                             ? handleError(result)
                                             : handleSuccess(result);
         final EventbusClient client = entityHandler.eventClient();
-        final AppDeployerDefinition deployer = sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
+        final AppDeployerDefinition deployer = sharedData(InstallerCacheInitializer.SHARED_APP_DEPLOYER_CFG);
         return last.doOnSuccess(res -> client.fire(
             DeliveryEvent.from(deployer.getReporterEvent(), new JsonObject().put("result", res.toJson()))));
     }

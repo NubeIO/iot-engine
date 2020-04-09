@@ -24,6 +24,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.statemachine.StateMachine;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.core.utils.Strings;
+import com.nubeiot.edge.installer.InstallerCacheInitializer;
 import com.nubeiot.edge.installer.InstallerConfig;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.model.dto.PreDeploymentResult;
@@ -42,7 +43,7 @@ public final class AppDeploymentWorkflow {
 
     public AppDeploymentWorkflow(@NonNull InstallerEntityHandler entityHandler) {
         this.entityHandler = entityHandler;
-        this.definition = entityHandler.sharedData(InstallerEntityHandler.SHARED_APP_DEPLOYER_CFG);
+        this.definition = entityHandler.sharedData(InstallerCacheInitializer.SHARED_APP_DEPLOYER_CFG);
     }
 
     public Single<JsonObject> process(@NonNull IApplication application, @NonNull EventAction action) {
@@ -62,7 +63,7 @@ public final class AppDeploymentWorkflow {
 
     private Single<PreDeploymentResult> createPreDeployment(IApplication req, EventAction action) {
         LOGGER.info("INSTALLER create pre-deployment for {}::::{}", action, req.getAppId());
-        InstallerConfig config = entityHandler.sharedData(InstallerEntityHandler.SHARED_INSTALLER_CFG);
+        InstallerConfig config = entityHandler.sharedData(InstallerCacheInitializer.SHARED_INSTALLER_CFG);
         if (EventAction.CREATE == action || InstallerAction.isInternal(action) && State.PENDING == req.getState()) {
             req.setState(State.ENABLED);
         }

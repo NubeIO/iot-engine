@@ -1,7 +1,5 @@
 package com.nubeiot.edge.module.datapoint.cache;
 
-import java.util.function.Supplier;
-
 import com.fasterxml.jackson.databind.InjectableValues.Std;
 import com.nubeiot.core.cache.CacheInitializer;
 import com.nubeiot.core.cache.ClassGraphCache;
@@ -23,20 +21,16 @@ public final class DataCacheInitializer implements CacheInitializer<DataCacheIni
     public DataCacheInitializer init(@NonNull EntityHandler context) {
         final ClassGraphCache<String, DataJobDefinition> jobDefinitionCache = new ClassGraphCache<>("Scheduler Job");
         DataJobDefinition.MAPPER.setInjectableValues(new Std().addValue(JOB_CONFIG_CACHE, jobDefinitionCache));
-        addBlockingCache(context, EntityServiceIndex.DATA_KEY, EntityServiceCacheIndex::create);
-        addBlockingCache(context, JOB_CONFIG_CACHE, () -> jobDefinitionCache.register(DataJobDefinition::find));
-        addBlockingCache(context, HISTORIES_DATA_CACHE, PointHistoryCache::new);
-        addBlockingCache(context, PROTOCOL_DISPATCHER_CACHE, () -> ProtocolDispatcherCache.init(context));
+        addBlockingCache(context.vertx(), EntityServiceIndex.DATA_KEY, EntityServiceCacheIndex::create,
+                         context::addSharedData);
+        addBlockingCache(context.vertx(), JOB_CONFIG_CACHE, () -> jobDefinitionCache.register(DataJobDefinition::find),
+                         context::addSharedData);
+        addBlockingCache(context.vertx(), HISTORIES_DATA_CACHE, PointHistoryCache::new, context::addSharedData);
+        addBlockingCache(context.vertx(), PROTOCOL_DISPATCHER_CACHE, () -> ProtocolDispatcherCache.init(context),
+                         context::addSharedData);
         //        addBlockingCache(context, CACHE_DATA_TYPE,
         //                         () -> Collections.unmodifiableSet(DataType.available().collect(Collectors.toSet())));
         return this;
-    }
-
-    private <T> void addBlockingCache(@NonNull EntityHandler context, @NonNull String cacheKey,
-                                      @NonNull Supplier<T> blockingCacheProvider) {
-        context.vertx()
-               .executeBlocking(future -> future.complete(blockingCacheProvider.get()),
-                                result -> context.addSharedData(cacheKey, result.result()));
     }
 
 }

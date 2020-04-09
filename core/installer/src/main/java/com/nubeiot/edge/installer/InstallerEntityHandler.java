@@ -1,8 +1,6 @@
 package com.nubeiot.edge.installer;
 
-import java.nio.file.Path;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -30,7 +28,7 @@ import com.nubeiot.core.sql.SchemaHandler;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.installer.InstallerConfig.RepositoryConfig;
-import com.nubeiot.edge.installer.loader.ModuleTypeRule;
+import com.nubeiot.edge.installer.loader.ApplicationParser;
 import com.nubeiot.edge.installer.model.DefaultCatalog;
 import com.nubeiot.edge.installer.model.Keys;
 import com.nubeiot.edge.installer.model.Tables;
@@ -54,9 +52,6 @@ import lombok.NonNull;
 public abstract class InstallerEntityHandler extends AbstractEntityHandler
     implements InstallerApiIndex, EntityConstraintHolder {
 
-    public static final String SHARED_MODULE_RULE = "MODULE_RULE";
-    public static final String SHARED_INSTALLER_CFG = "INSTALLER_CFG";
-    public static final String SHARED_APP_DEPLOYER_CFG = "APP_DEPLOYER_CFG";
     @Getter(value = AccessLevel.PACKAGE)
     private EventAction bootstrap;
 
@@ -71,7 +66,7 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler
 
     @Override
     public final Single<EntityHandler> before() {
-        InstallerConfig installerCfg = sharedData(SHARED_INSTALLER_CFG);
+        InstallerConfig installerCfg = sharedData(InstallerCacheInitializer.SHARED_INSTALLER_CFG);
         return super.before().map(handler -> {
             InstallerRepository.create(handler.vertx()).setup(installerCfg.getRepoConfig(), dataDir());
             return handler;
@@ -106,11 +101,11 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler
     }
 
     final InstallerEntityHandler initDeployer() {
-        ((AppDeployerDefinition) sharedData(SHARED_APP_DEPLOYER_CFG)).register(this);
+        ((AppDeployerDefinition) sharedData(InstallerCacheInitializer.SHARED_APP_DEPLOYER_CFG)).register(this);
         return this;
     }
 
-    protected AppConfig transformAppConfig(RepositoryConfig repoConfig, IApplication tblModule, AppConfig appConfig) {
+    protected AppConfig transformAppConfig(RepositoryConfig repoConfig, IApplication application, AppConfig appConfig) {
         return appConfig;
     }
 
@@ -124,20 +119,19 @@ public abstract class InstallerEntityHandler extends AbstractEntityHandler
         if (config.getBuiltinApps().isEmpty()) {
             return Single.just(new JsonObject().put("status", Status.SUCCESS));
         }
-        final Path dataDir = dataDir();
         return Observable.fromIterable(config.getBuiltinApps())
-                         .map(serviceData -> createApplication(dataDir, config.getRepoConfig(), serviceData))
+                         .map(serviceData -> createApplication(config.getRepoConfig(), serviceData))
                          .map(this::decorateApp)
-                         .collect(ArrayList<Application>::new, ArrayList::add)
+                         .toList()
                          .flatMap(list -> dao(ApplicationDao.class).insert(list))
                          .map(r -> new JsonObject().put("results", "Inserted " + r + " app module record(s)"));
     }
 
-    private Application createApplication(Path dataDir, RepositoryConfig repoConfig, RequestedServiceData serviceData) {
-        ModuleTypeRule rule = sharedData(SHARED_MODULE_RULE);
-        IApplication tblModule = rule.parse(serviceData.getMetadata());
-        AppConfig appConfig = transformAppConfig(repoConfig, tblModule, serviceData.getAppConfig());
-        return (Application) rule.parse(dataDir, tblModule, appConfig).setState(State.NONE);
+    private Application createApplication(@NonNull RepositoryConfig repoConfig,
+                                          @NonNull RequestedServiceData serviceData) {
+        final IApplication application = ApplicationParser.create(this::sharedData).parse(serviceData);
+        final AppConfig appConfig = transformAppConfig(repoConfig, application, serviceData.getAppConfig());
+        return (Application) application.setAppConfig(appConfig.toJson()).setState(State.NONE);
     }
 
     Single<JsonObject> transitionPendingModules() {

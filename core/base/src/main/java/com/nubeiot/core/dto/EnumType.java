@@ -14,6 +14,7 @@ import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashCode.Include;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -45,11 +46,12 @@ public interface EnumType extends JsonData {
         return null;
     }
 
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     abstract class AbstractEnumType implements EnumType {
 
         @NonNull
+        @Include
         private final String type;
         private final Collection<String> aliases;
 

@@ -12,6 +12,7 @@ import io.vertx.core.logging.LoggerFactory;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.utils.Strings;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -96,7 +97,7 @@ public interface SharedDataDelegate<T extends SharedDataDelegate> {
     T registerSharedData(@NonNull Function<String, Object> sharedDataFunc);
 
     @Getter
-    @NoArgsConstructor
+    @NoArgsConstructor(access = AccessLevel.PROTECTED)
     abstract class AbstractSharedDataDelegate<T extends SharedDataDelegate> implements SharedDataDelegate<T> {
 
         protected final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -104,7 +105,7 @@ public interface SharedDataDelegate<T extends SharedDataDelegate> {
         private String sharedKey;
         private Function<String, Object> sharedDataFunc;
 
-        public AbstractSharedDataDelegate(@NonNull Vertx vertx) {
+        protected AbstractSharedDataDelegate(@NonNull Vertx vertx) {
             this.vertx = vertx;
         }
 
@@ -127,6 +128,10 @@ public interface SharedDataDelegate<T extends SharedDataDelegate> {
         protected final T registerSharedKey(String sharedKey) {
             this.sharedKey = Strings.requireNotBlank(sharedKey, "Shared key cannot be empty");
             return (T) this;
+        }
+
+        protected Path dataDir() {
+            return Paths.get((String) getSharedDataValue(SHARED_DATADIR));
         }
 
     }

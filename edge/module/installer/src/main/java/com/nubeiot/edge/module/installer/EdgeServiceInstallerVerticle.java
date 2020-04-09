@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.InstallerVerticle;
-import com.nubeiot.edge.installer.loader.ModuleTypeRule;
+import com.nubeiot.edge.installer.loader.RuleRepository;
 import com.nubeiot.edge.installer.service.AppDeployerDefinition;
 import com.nubeiot.edge.installer.service.InstallerService;
 import com.nubeiot.edge.module.installer.service.EdgeInstallerService;
@@ -20,13 +20,13 @@ public final class EdgeServiceInstallerVerticle extends InstallerVerticle<EdgeIn
     }
 
     @Override
-    protected Supplier<ModuleTypeRule> getModuleRuleProvider() {
-        return new ServiceInstallerRuleProvider();
+    protected @NonNull AppDeployerDefinition appDeployerDefinition() {
+        return AppDeployerDefinition.create("app");
     }
 
     @Override
-    protected @NonNull AppDeployerDefinition appDeployerDefinition() {
-        return AppDeployerDefinition.create("app");
+    protected @NonNull RuleRepository ruleRepository() {
+        return RuleRepository.createJVMRule("com.nubeiot.edge.connector", "com.nubeiot.edge.rule");
     }
 
     @Override
