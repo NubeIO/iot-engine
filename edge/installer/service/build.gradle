@@ -1,0 +1,10 @@
+dependencies {
+    compile project(':core:auth')
+    compile project(':core:micro')
+    compile project(':core:archiver')
+    compile project(':edge:installer:model')
+    compile project(':edge:installer:rule')
+    compile "io.vertx:vertx-maven-service-factory:$project.versions.vertx"
+
+    testCompile project(":core:base").sourceSets.test.output
+}

@@ -27,8 +27,8 @@ import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.bios.loader.DeploymentAsserter;
 import com.nubeiot.edge.bios.service.BiosApplicationService;
 import com.nubeiot.edge.installer.InstallerVerticle;
-import com.nubeiot.edge.installer.loader.VertxModuleType;
 import com.nubeiot.edge.installer.model.tables.pojos.Application;
+import com.nubeiot.edge.installer.model.type.VertxModuleType;
 
 @Ignore
 public class HandlerDeleteTest extends BaseInstallerVerticleTest {

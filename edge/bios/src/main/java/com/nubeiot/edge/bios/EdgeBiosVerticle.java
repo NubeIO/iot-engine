@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 import com.nubeiot.edge.bios.service.BiosInstallerService;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.InstallerVerticle;
-import com.nubeiot.edge.installer.loader.RuleRepository;
+import com.nubeiot.edge.installer.rule.RuleRepository;
 import com.nubeiot.edge.installer.service.AppDeployerDefinition;
 import com.nubeiot.edge.installer.service.InstallerService;
 

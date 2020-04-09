@@ -4,10 +4,9 @@ ext {
 }
 
 dependencies {
-    compile project(':core:installer')
+    compile project(':edge:installer:service')
     compile project(':eventbus:edge:gateway')
-    compile project(':eventbus:edge:installer')
 
     testCompile project(":core:base").sourceSets.test.output
-    testCompile project(":core:installer").sourceSets.test.output
+    testCompile project(":edge:installer:service").sourceSets.test.output
 }

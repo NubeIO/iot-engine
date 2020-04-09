@@ -8,8 +8,8 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.utils.DateTimes;
-import com.nubeiot.edge.installer.loader.VertxModuleType;
 import com.nubeiot.edge.installer.model.tables.pojos.Application;
+import com.nubeiot.edge.installer.model.type.VertxModuleType;
 
 public class EnabledModuleInitData extends MockInitDataEntityHandler {
 
