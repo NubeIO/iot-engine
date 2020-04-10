@@ -1,0 +1,18 @@
+dependencies {
+    compile project.deps.jackson.core
+    compile project.deps.jackson.databind
+    compile project.deps.jackson.datetime
+    compile project.deps.logs.slf4j
+    compile project.deps.database.jooq
+    // https://mvnrepository.com/artifact/cz.jirutka.rsql/rsql-parser
+    compile group: 'cz.jirutka.rsql', name: 'rsql-parser', version: '2.1.0'
+    // https://mvnrepository.com/artifact/com.github.tennaito/rsql-jpa
+    compile group: 'com.github.tennaito', name: 'rsql-jpa', version: '2.0.2'
+
+    compileOnly project.deps.logs.logback
+    compileOnly project.deps.lombok
+    annotationProcessor project.deps.lombok
+
+    testCompile project.deps.tests.junit
+
+}

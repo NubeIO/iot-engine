@@ -8,10 +8,10 @@ import static org.junit.Assert.assertTrue;
 import org.json.JSONException;
 import org.junit.Test;
 
+import io.github.zero.jpa.Sortable.Direction;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.TestHelper.JsonHelper;
-import com.nubeiot.core.dto.Sort.SortType;
 
 public class RequestDataTest {
 
@@ -76,9 +76,7 @@ public class RequestDataTest {
                                              .headers(new JsonObject().put("h1", "v1"))
                                              .body(new JsonObject().put("b1", "v2"))
                                              .filter(new JsonObject().put("f1", "v3"))
-                                             .sort(Sort.builder()
-                                                       .item("s1", SortType.ASC)
-                                                       .item("s2", SortType.DESC)
+                                             .sort(Sort.builder().item("s1", Direction.ASC).item("s2", Direction.DESC)
                                                        .build())
                                              .build();
         JsonHelper.assertJson(expected, requestData.toJson());

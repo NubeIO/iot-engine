@@ -52,4 +52,6 @@ include ':eventbus:edge:datapoint'
 include ':eventbus:edge:gateway'
 
 include ':ext:rx-jdbc'
+include ':ext:jooq-rql'
+include ':ext:jpa-ext'
 

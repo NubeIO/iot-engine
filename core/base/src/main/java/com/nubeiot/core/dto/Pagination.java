@@ -1,6 +1,6 @@
 package com.nubeiot.core.dto;
 
-import java.io.Serializable;
+import io.github.zero.jpa.Pageable;
 
 import com.nubeiot.core.utils.Strings;
 
@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public final class Pagination implements Serializable, JsonData {
+public final class Pagination implements Pageable, JsonData {
 
     private int page;
     private int perPage;

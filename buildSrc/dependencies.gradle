@@ -1,13 +1,14 @@
 def versions = [
-    vertx   : "3.6.0",
-    lombok  : "1.18.8",
-    oshi    : "3.13.3",
-    jackson : "2.9.8",
-    logs    : [
+    vertx     : "3.6.0",
+    lombok    : "1.18.8",
+    oshi      : "3.13.3",
+    classgraph: "4.6.23",
+    jackson   : "2.9.8",
+    logs      : [
         slf4j  : "1.7.25",
         logback: "1.2.3"
     ],
-    database: [
+    database  : [
         jooq     : "3.11.11",
         jooqVertx: "4.1.0",
         hikari   : "3.2.0",
@@ -16,13 +17,14 @@ def versions = [
         h2       : "1.4.199",
         pgsql    : "42.2.5",
     ],
-    plugin  : [
+    plugin    : [
         "apt"   : "0.20",
         "docker": "3.1.1",
         "sonar" : "2.7",
     ],
-    tests   : [
+    tests     : [
         junit : "4.12",
+        junit5: "5.6.1",
         jacoco: "0.8.4"
     ],
 ]
@@ -30,29 +32,31 @@ def versions = [
 def genDir = "generated"
 
 ext.deps = [
-    lombok  : "org.projectlombok:lombok:$versions.lombok",
-    oshi    : "com.github.oshi:oshi-core:$versions.oshi",
-    plugin  : [
+    lombok    : "org.projectlombok:lombok:$versions.lombok",
+    oshi      : "com.github.oshi:oshi-core:$versions.oshi",
+    classgraph: "io.github.classgraph:classgraph:$versions.classgraph",
+    plugin    : [
         "apt"   : "net.ltgt.gradle:gradle-apt-plugin:$versions.plugin.apt",
         "docker": "com.github.docker-java:docker-java:$versions.plugin.docker",
         "sonar" : "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:$versions.plugin.sonar",
     ],
-    logs    : [
+    logs      : [
         slf4j  : "org.slf4j:slf4j-api:$versions.logs.slf4j",
         logback: "ch.qos.logback:logback-classic:$versions.logs.logback"
     ],
-    vertx   : [
+    vertx     : [
         core   : "io.vertx:vertx-core:$versions.vertx",
         codegen: "io.vertx:vertx-codegen:$versions.vertx",
         junit  : "io.vertx:vertx-unit:$versions.vertx"
     ],
-    jackson : [
-        core    : "com.fasterxml.jackson.core:jackson-core:$versions.jackson",
-        databind: "com.fasterxml.jackson.core:jackson-databind:$versions.jackson",
-        datatype: "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$versions.jackson",
-        datetime: "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$versions.jackson",
+    jackson   : [
+        core       : "com.fasterxml.jackson.core:jackson-core:$versions.jackson",
+        annotations: "com.fasterxml.jackson.core:jackson-annotations:$versions.jackson",
+        databind   : "com.fasterxml.jackson.core:jackson-databind:$versions.jackson",
+        datatype   : "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$versions.jackson",
+        datetime   : "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$versions.jackson",
     ],
-    database: [
+    database  : [
         h2              : "com.h2database:h2:$versions.database.h2",
         pgsql           : "org.postgresql:postgresql:$versions.database.pgsql",
         hikari          : "com.zaxxer:HikariCP:$versions.database.hikari",
@@ -66,8 +70,9 @@ ext.deps = [
         jooqVertxShared : "io.github.jklingsporn:vertx-jooq-shared:$versions.database.jooqVertx",
         jooqVertxCodegen: "io.github.jklingsporn:vertx-jooq-generate:$versions.database.jooqVertx"
     ],
-    tests   : [
+    tests     : [
         junit      : "junit:junit:$versions.tests.junit",
+        junit5     : "org.junit.jupiter:junit-jupiter-engine:$versions.tests.junit5",
         jsonAssert : "org.skyscreamer:jsonassert:1.5.0",
         assertj    : "org.assertj:assertj-core:3.5.2",
         awaitility : "com.jayway.awaitility:awaitility:1.7.0",

@@ -30,12 +30,12 @@ import org.jooq.SelectSeekStepN;
 import org.jooq.Table;
 import org.jooq.impl.DSL;
 
+import io.github.zero.jpa.Sortable.Direction;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.dto.Sort;
-import com.nubeiot.core.dto.Sort.SortType;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.core.utils.Strings;
@@ -53,7 +53,7 @@ public final class QueryBuilder {
 
     private final EntityMetadata base;
     private final Map<EntityMetadata, Condition> joinBy = new HashMap<>();
-    private List<OrderField<?>> orderFields;
+    private final List<OrderField<?>> orderFields;
     private Collection<EntityMetadata> references;
     private Predicate<EntityMetadata> predicate = metadata -> true;
     private JoinType joinType = JoinType.JOIN;
@@ -302,12 +302,12 @@ public final class QueryBuilder {
     }
 
     private OrderField<?> sortField(@NonNull EntityMetadata meta, @NonNull Entry<String, Object> entry) {
-        final SortType type = SortType.parse(Strings.toString(entry.getValue()));
+        final Direction type = Direction.parse(Strings.toString(entry.getValue()));
         if (type == null) {
             return null;
         }
         final Field<?> field = meta.table().getField(entry.getKey());
-        return Optional.ofNullable(field).map(f -> SortType.DESC == type ? f.desc() : f.asc()).orElse(null);
+        return Optional.ofNullable(field).map(f -> Direction.DESC == type ? f.desc() : f.asc()).orElse(null);
     }
 
     /**

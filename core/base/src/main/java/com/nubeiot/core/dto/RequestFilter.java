@@ -77,7 +77,7 @@ public final class RequestFilter extends JsonObject implements JsonData {
      * @since 1.0.0
      */
     public Set<String> getIncludes() {
-        return Arrays.stream(getString(RequestFilter.Filters.INCLUDE, "").split(",")).collect(Collectors.toSet());
+        return Arrays.stream(getString(Filters.INCLUDE, "").split(",")).collect(Collectors.toSet());
     }
 
     private boolean parseBoolean(String pretty) {
@@ -93,47 +93,72 @@ public final class RequestFilter extends JsonObject implements JsonData {
     public static final class Filters {
 
         /**
+         * For {@code advance query}
+         *
+         * @since 1.0.0
+         */
+        public static final String QUERY = "_q";
+
+        /**
          * To {@code prettify} response
+         *
+         * @since 1.0.0
          */
         public static final String PRETTY = "_pretty";
 
         /**
          * For {@code language}
+         *
+         * @since 1.0.0
          */
         public static final String LANG = "_lang";
 
         /**
          * For {@code pagination}
+         *
+         * @since 1.0.0
          */
         public static final String PAGE = "page";
 
         /**
          * For {@code pagination}
+         *
+         * @since 1.0.0
          */
         public static final String PER_PAGE = "per_page";
 
         /**
          * For {@code audit}
+         *
+         * @since 1.0.0
          */
         public static final String AUDIT = "_audit";
 
         /**
          * For {@code audit} in temporary
+         *
+         * @since 1.0.0
          */
         public static final String TEMP_AUDIT = "_temp_audit";
 
         /**
          * For {@code sort}
+         *
+         * @since 1.0.0
          */
         public static final String SORT = "_sort";
 
         /**
          * For {@code include}
+         *
+         * @since 1.0.0
          */
         public static final String INCLUDE = "_incl";
 
         /**
          * For {@code force}
+         *
+         * @since 1.0.0
          */
         public static final String FORCE = "_force";
 
