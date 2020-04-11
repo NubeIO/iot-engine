@@ -1,9 +1,8 @@
 package com.nubeiot.core.micro.filter;
 
+import io.github.zero.utils.Urls;
 import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.types.HttpLocation;
-
-import com.nubeiot.core.http.base.Urls;
 
 import lombok.NonNull;
 

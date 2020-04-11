@@ -3,11 +3,11 @@ package com.nubeiot.edge.connector.bacnet.translator;
 import java.util.Objects;
 import java.util.Optional;
 
+import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.protocol.CommunicationProtocol;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 import com.nubeiot.iotdata.translator.IoTEntityTranslator;
 

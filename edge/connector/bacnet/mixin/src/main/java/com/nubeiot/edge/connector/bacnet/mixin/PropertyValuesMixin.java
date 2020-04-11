@@ -7,13 +7,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import io.github.zero.utils.Functions;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.nubeiot.core.utils.Functions;
 import com.nubeiot.edge.connector.bacnet.mixin.deserializer.EncodableDeserializer;
 import com.nubeiot.edge.connector.bacnet.mixin.serializer.EncodableSerializer;
 import com.serotonin.bacnet4j.type.Encodable;

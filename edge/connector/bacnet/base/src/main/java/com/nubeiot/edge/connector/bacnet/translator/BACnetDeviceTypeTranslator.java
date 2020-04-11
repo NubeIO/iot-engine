@@ -2,7 +2,8 @@ package com.nubeiot.edge.connector.bacnet.translator;
 
 import java.util.Objects;
 
-import com.nubeiot.core.utils.Strings;
+import io.github.zero.utils.Strings;
+
 import com.nubeiot.edge.connector.bacnet.mixin.serializer.EncodableSerializer;
 import com.nubeiot.edge.connector.bacnet.translator.BACnetTranslator.BACnetIoTNotionTranslator;
 import com.nubeiot.iotdata.dto.DeviceType;

@@ -10,6 +10,7 @@ import org.jooq.Condition;
 import org.jooq.Field;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.github.zero.utils.Strings;
 import io.reactivex.Maybe;
 import io.vertx.core.json.JsonObject;
 
@@ -22,7 +23,6 @@ import com.nubeiot.core.sql.pojos.HasSyncAudit;
 import com.nubeiot.core.sql.pojos.HasTimeAudit;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.type.SyncAudit;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 

@@ -2,9 +2,10 @@ package com.nubeiot.edge.connector.bacnet;
 
 import java.util.concurrent.TimeUnit;
 
+import io.github.zero.utils.Strings;
+
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
-import com.nubeiot.core.utils.Strings;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
 import lombok.AccessLevel;

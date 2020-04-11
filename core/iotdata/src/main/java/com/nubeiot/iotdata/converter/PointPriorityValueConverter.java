@@ -4,8 +4,9 @@ import java.util.Objects;
 
 import org.jooq.Converter;
 
+import io.github.zero.utils.Strings;
+
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.iotdata.dto.PointPriorityValue;
 
 public final class PointPriorityValueConverter implements Converter<String, PointPriorityValue> {

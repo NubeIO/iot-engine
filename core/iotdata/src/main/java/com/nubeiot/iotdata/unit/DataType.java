@@ -6,6 +6,9 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import io.github.classgraph.ClassInfo;
+import io.github.zero.utils.Reflections.ReflectionClass;
+import io.github.zero.utils.Reflections.ReflectionField;
+import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -14,9 +17,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.nubeiot.core.dto.EnumType;
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
-import com.nubeiot.core.utils.Reflections.ReflectionField;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Base;
 
 import lombok.NonNull;

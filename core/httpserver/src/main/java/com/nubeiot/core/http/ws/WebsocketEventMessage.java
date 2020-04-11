@@ -3,6 +3,7 @@ package com.nubeiot.core.http.ws;
 import java.io.Serializable;
 import java.util.Objects;
 
+import io.github.zero.utils.Strings;
 import io.vertx.ext.bridge.BridgeEventType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -13,7 +14,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.exceptions.InitializerError;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;

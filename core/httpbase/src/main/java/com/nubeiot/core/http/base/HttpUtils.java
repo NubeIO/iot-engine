@@ -13,6 +13,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.github.zero.exceptions.InvalidUrlException;
+import io.github.zero.utils.Strings;
+import io.github.zero.utils.Urls;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
@@ -25,7 +28,6 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.Pagination;
 import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.dto.Sort;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

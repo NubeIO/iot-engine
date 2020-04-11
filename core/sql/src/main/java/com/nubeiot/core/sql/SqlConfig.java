@@ -5,11 +5,12 @@ import java.util.function.Supplier;
 
 import org.jooq.SQLDialect;
 
+import io.github.zero.utils.Strings;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
-import com.nubeiot.core.utils.Strings;
 import com.zaxxer.hikari.HikariConfig;
 
 import lombok.Getter;

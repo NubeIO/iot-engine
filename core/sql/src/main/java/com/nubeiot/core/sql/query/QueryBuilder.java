@@ -31,6 +31,7 @@ import org.jooq.Table;
 import org.jooq.impl.DSL;
 
 import io.github.zero.jpa.Sortable.Direction;
+import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.Pagination;
@@ -38,7 +39,6 @@ import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.dto.Sort;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.tables.JsonTable;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 

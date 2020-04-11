@@ -3,6 +3,7 @@ package com.nubeiot.core.sql.validation;
 import java.util.Optional;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
@@ -12,7 +13,7 @@ import com.nubeiot.core.exceptions.BeingUsedException;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.JsonPojo;
-import com.nubeiot.core.utils.Strings;
+import com.nubeiot.core.utils.JsonUtils;
 
 import lombok.NonNull;
 
@@ -125,7 +126,7 @@ public interface EntityValidation<P extends VertxPojo> {
      * @since 1.0.0
      */
     default NotFoundException notFound(@NonNull Object primaryKey) {
-        return notFound(Strings.kvMsg(context().requestKeyName(), primaryKey));
+        return notFound(JsonUtils.kvMsg(context().requestKeyName(), primaryKey));
     }
 
     /**

@@ -24,7 +24,7 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.service.marker.EntityReferences;
 import com.nubeiot.core.sql.service.marker.TransitiveReferenceMarker;
 import com.nubeiot.core.sql.service.marker.TransitiveReferenceMarker.TransitiveEntity;
-import com.nubeiot.core.utils.Strings;
+import com.nubeiot.core.utils.JsonUtils;
 
 import lombok.NonNull;
 
@@ -106,7 +106,7 @@ final class TransitiveReferenceDaoQueryExecutor<K, P extends VertxPojo, R extend
                          .map(json -> json.put(refField, JsonData.checkAndConvert(referenceKey)))
                          .map(RequestFilter::new)
                          .flatMap(filter -> fetchExists(queryBuilder.exist(context, filter)).switchIfEmpty(
-                             Single.error(reference.notFound(Strings.kvMsg(filter)))));
+                             Single.error(reference.notFound(JsonUtils.kvMsg(filter)))));
     }
 
 }

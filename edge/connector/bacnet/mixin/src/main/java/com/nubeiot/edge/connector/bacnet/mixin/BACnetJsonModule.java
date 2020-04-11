@@ -1,7 +1,8 @@
 package com.nubeiot.edge.connector.bacnet.mixin;
 
+import io.github.zero.utils.Reflections.ReflectionClass;
+
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin.PropertyValuesSerializer;
 import com.nubeiot.edge.connector.bacnet.mixin.serializer.EncodableSerializer;
 import com.nubeiot.edge.connector.bacnet.mixin.serializer.ObjectIdentifierKeySerializer;

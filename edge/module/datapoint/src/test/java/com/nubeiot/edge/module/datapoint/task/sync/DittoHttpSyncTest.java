@@ -9,6 +9,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
+import io.github.zero.utils.UUID64;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
@@ -25,7 +26,6 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.http.ExpectedResponse;
 import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.sql.pojos.JsonPojo;
-import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.module.datapoint.BaseDataPointVerticleTest;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.MockData;

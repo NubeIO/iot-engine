@@ -2,6 +2,7 @@ package com.nubeiot.core.component;
 
 import java.util.Objects;
 
+import io.github.zero.utils.Strings;
 import io.reactivex.Single;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -20,7 +21,6 @@ import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.event.ReplyEventHandler;
 import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.utils.ExecutorHelpers;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.Getter;
 import lombok.NonNull;

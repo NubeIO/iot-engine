@@ -1,6 +1,6 @@
 def versions = [
     vertx     : "3.6.0",
-    lombok    : "1.18.8",
+    lombok    : "edge-SNAPSHOT",
     oshi      : "3.13.3",
     classgraph: "4.6.23",
     jackson   : "2.9.8",
@@ -100,6 +100,7 @@ ext.repos = {
     mavenCentral()
     jcenter()
     maven { url "http://45.63.30.129:8081/repository/maven-releases/" }
+    maven { url 'https://projectlombok.org/edge-releases' }
 }
 
 ext.loggers = [

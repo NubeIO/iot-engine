@@ -2,8 +2,8 @@ package com.nubeiot.core.event;
 
 import java.io.Serializable;
 
-import com.nubeiot.core.utils.Functions;
-import com.nubeiot.core.utils.Strings;
+import io.github.zero.utils.Functions;
+import io.github.zero.utils.Strings;
 
 import lombok.Getter;
 

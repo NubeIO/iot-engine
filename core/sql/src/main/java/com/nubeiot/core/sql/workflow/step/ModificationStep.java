@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import org.jooq.Configuration;
 
+import io.github.zero.utils.Functions.TripleConsumer;
 import io.reactivex.Single;
 
 import com.nubeiot.core.dto.RequestData;
@@ -11,7 +12,6 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.pojos.DMLPojo;
 import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.core.sql.workflow.step.DMLStep.CreateOrUpdateStep;
-import com.nubeiot.core.utils.Functions.TripleConsumer;
 
 import lombok.Getter;
 import lombok.NonNull;

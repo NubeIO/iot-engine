@@ -1,6 +1,7 @@
 package com.nubeiot.edge.connector.bacnet.mixin;
 
-import com.nubeiot.core.utils.Functions;
+import io.github.zero.utils.Functions;
+
 import com.serotonin.bacnet4j.exception.BACnetRuntimeException;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;

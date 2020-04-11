@@ -3,13 +3,13 @@ package com.nubeiot.edge.connector.ditto.model;
 import java.util.Map;
 import java.util.UUID;
 
+import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.sql.pojos.JsonPojo;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.connector.ditto.model.IDittoModel.AbstractDittoModel;
 import com.nubeiot.iotdata.edge.model.tables.interfaces.IPointHistoryData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;

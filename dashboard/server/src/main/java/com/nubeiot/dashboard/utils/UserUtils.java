@@ -1,5 +1,6 @@
 package com.nubeiot.dashboard.utils;
 
+import io.github.zero.utils.Strings;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Single;
 import io.vertx.core.buffer.Buffer;
@@ -11,7 +12,6 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.http.base.HttpUtils;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.props.UserProps;
 

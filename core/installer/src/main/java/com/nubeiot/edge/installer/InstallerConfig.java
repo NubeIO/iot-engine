@@ -6,6 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.github.zero.utils.FileUtils;
+import io.github.zero.utils.Strings;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -14,9 +17,8 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.nubeiot.auth.Credential;
 import com.nubeiot.auth.ExternalServer;
 import com.nubeiot.core.IConfig;
+import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
-import com.nubeiot.core.utils.FileUtils;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.installer.loader.ModuleType;
 import com.nubeiot.edge.installer.model.dto.RequestedServiceData;
 
@@ -61,7 +63,7 @@ public final class InstallerConfig implements IConfig {
         }
 
         String recomputeLocal(Path parent) {
-            local = FileUtils.recomputeDataDir(parent, getLocal()).toString();
+            local = FileUtils.recomputeDataDir(NubeConfig.DEFAULT_DATADIR, parent, getLocal()).toString();
             return local;
         }
 

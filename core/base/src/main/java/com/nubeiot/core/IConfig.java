@@ -5,6 +5,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+import io.github.zero.utils.Functions.Silencer;
+import io.github.zero.utils.Reflections.ReflectionClass;
+import io.github.zero.utils.Reflections.ReflectionField;
+import io.github.zero.utils.Strings;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.Shareable;
@@ -18,10 +22,6 @@ import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.utils.Configs;
-import com.nubeiot.core.utils.Functions.Silencer;
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
-import com.nubeiot.core.utils.Reflections.ReflectionField;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -155,9 +155,9 @@ public interface IConfig extends JsonData, Shareable {
         private final ObjectMapper mapper;
 
         @Override
-        public void accept(T temp, HiddenException throwable) {
+        public void accept(T temp, io.github.zero.exceptions.HiddenException throwable) {
             if (Objects.nonNull(throwable)) {
-                throw throwable;
+                throw new HiddenException(throwable.getCause());
             }
             try {
                 object = create(temp.key(), entries, clazz);

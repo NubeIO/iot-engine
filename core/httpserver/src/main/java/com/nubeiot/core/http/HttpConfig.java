@@ -3,6 +3,8 @@ package com.nubeiot.core.http;
 import java.util.HashSet;
 import java.util.Set;
 
+import io.github.zero.utils.HttpScheme;
+import io.github.zero.utils.Urls;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
@@ -13,9 +15,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig;
-import com.nubeiot.core.http.base.HttpScheme;
 import com.nubeiot.core.http.base.HttpUtils;
-import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.handler.DownloadFileHandler;
 import com.nubeiot.core.http.handler.UploadFileHandler;
 import com.nubeiot.core.http.handler.UploadListener;

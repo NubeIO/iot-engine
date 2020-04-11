@@ -6,6 +6,7 @@ import static com.nubeiot.dashboard.constants.Collection.SITE;
 import static com.nubeiot.dashboard.constants.Collection.USER;
 import static com.nubeiot.dashboard.constants.Collection.USER_GROUP;
 
+import io.github.zero.utils.Strings;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Future;
@@ -15,7 +16,6 @@ import io.vertx.reactivex.ext.mongo.MongoClient;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.converter.ResponseDataConverter;
 import com.nubeiot.core.http.handler.ResponseDataWriter;
-import com.nubeiot.core.utils.Strings;
 
 public class MultiTenantRepresentationHelper {
 

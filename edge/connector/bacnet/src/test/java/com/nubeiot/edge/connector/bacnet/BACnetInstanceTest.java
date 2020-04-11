@@ -12,11 +12,11 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import io.github.zero.utils.FileUtils;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.connector.bacnet.converter.BACnetDataConversions;
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgePoint;
 import com.serotonin.bacnet4j.LocalDevice;

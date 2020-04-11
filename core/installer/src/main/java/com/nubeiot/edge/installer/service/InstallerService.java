@@ -6,14 +6,14 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.github.zero.utils.Reflections.ReflectionClass;
+import io.github.zero.utils.Urls;
 import io.vertx.core.http.HttpMethod;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.http.base.EventHttpService;
-import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 
 public interface InstallerService extends EventHttpService {

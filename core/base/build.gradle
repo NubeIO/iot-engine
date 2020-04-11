@@ -7,10 +7,12 @@ dependencies {
     compile project.deps.logs.slf4j
     compile project.deps.logs.logback
     compile project(":ext:jpa-ext")
+    compile project(":ext:utils")
     compile "io.vertx:vertx-rx-java2:$project.versions.vertx"
     compile "io.vertx:vertx-config:$project.versions.vertx"
 
     compileOnly project.deps.vertx.codegen
 
     testCompile project(":core:cluster:hazelcast")
+    testCompile project(":ext:utils").sourceSets.test.output
 }

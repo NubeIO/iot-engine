@@ -3,13 +3,13 @@ package com.nubeiot.core.http.rest;
 import java.util.Optional;
 import java.util.Set;
 
+import io.github.zero.utils.Urls;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.types.HttpEndpoint;
 import io.vertx.servicediscovery.types.HttpLocation;
 
 import com.nubeiot.core.http.ApiConstants;
-import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.utils.Networks;
 
 import lombok.NonNull;

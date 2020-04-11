@@ -8,6 +8,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import io.github.zero.utils.Functions;
 import io.reactivex.Completable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
@@ -40,7 +41,6 @@ import com.nubeiot.core.micro.monitor.ServiceGatewayAnnounceMonitor;
 import com.nubeiot.core.micro.monitor.ServiceGatewayUsageMonitor;
 import com.nubeiot.core.micro.type.EventMessagePusher;
 import com.nubeiot.core.micro.type.EventMessageService;
-import com.nubeiot.core.utils.Functions;
 
 import lombok.AccessLevel;
 import lombok.Getter;

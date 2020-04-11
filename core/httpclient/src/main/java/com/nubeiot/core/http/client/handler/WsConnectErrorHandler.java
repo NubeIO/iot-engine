@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import io.github.zero.utils.Reflections.ReflectionClass;
 import io.vertx.core.Handler;
 import io.vertx.core.VertxException;
 import io.vertx.core.http.HttpMethod;
@@ -16,7 +17,6 @@ import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.TimeoutException;
 import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.http.client.HttpClientRegistry;
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.Getter;
 import lombok.NonNull;

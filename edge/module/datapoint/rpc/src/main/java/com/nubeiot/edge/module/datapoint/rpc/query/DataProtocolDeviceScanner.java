@@ -3,12 +3,12 @@ package com.nubeiot.edge.module.datapoint.rpc.query;
 import java.util.Map;
 import java.util.UUID;
 
+import io.github.zero.utils.Strings;
 import io.reactivex.Single;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.sql.pojos.JsonPojo;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeDeviceMetadata;
 import com.nubeiot.edge.module.datapoint.model.pojos.EdgeDeviceComposite;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;

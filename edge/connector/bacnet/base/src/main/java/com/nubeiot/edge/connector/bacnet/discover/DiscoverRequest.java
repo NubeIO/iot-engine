@@ -2,14 +2,14 @@ package com.nubeiot.edge.connector.bacnet.discover;
 
 import java.util.Optional;
 
+import io.github.zero.utils.Functions;
+import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.utils.Functions;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -24,12 +24,12 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(level = AccessLevel.PUBLIC)
 public final class DiscoverRequest implements JsonData {
 
-    private JsonObject network;
-    private String networkCode;
-    private JsonObject device;
-    private Integer deviceCode;
-    private JsonObject object;
-    private String objectCode;
+    private final JsonObject network;
+    private final String networkCode;
+    private final JsonObject device;
+    private final Integer deviceCode;
+    private final JsonObject object;
+    private final String objectCode;
 
     public static DiscoverRequest from(@NonNull RequestData requestData, @NonNull DiscoverLevel level) {
         final JsonObject body = Optional.ofNullable(requestData.body()).orElse(new JsonObject());
@@ -37,9 +37,7 @@ public final class DiscoverRequest implements JsonData {
                                    ? null
                                    : Strings.requireNotBlank(body.getString(Fields.networkCode),
                                                              "Missing BACnet network code");
-        final Integer deviceCode = DiscoverLevel.DEVICE.isSkipValidate(level)
-                                   ? null
-                                   : Functions.getOrThrow(
+        final Integer deviceCode = DiscoverLevel.DEVICE.isSkipValidate(level) ? null : Functions.getOrThrow(
                                        () -> Functions.toInt().apply(body.getString(Fields.deviceCode)),
                                        t -> new IllegalArgumentException("Missing BACnet device code", t));
         final String objectCode = DiscoverLevel.OBJECT.isSkipValidate(level)

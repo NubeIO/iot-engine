@@ -2,9 +2,9 @@ package com.nubeiot.edge.connector.bacnet.mixin.deserializer;
 
 import java.util.Optional;
 
+import io.github.zero.utils.Functions;
 import io.vertx.core.json.JsonArray;
 
-import com.nubeiot.core.utils.Functions;
 import com.serotonin.bacnet4j.obj.PropertyTypeDefinition;
 import com.serotonin.bacnet4j.type.constructed.SequenceOf;
 

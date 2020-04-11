@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.github.zero.utils.Functions;
 import io.reactivex.functions.Function3;
 import io.vertx.core.json.JsonObject;
 
@@ -17,8 +18,7 @@ import com.nubeiot.core.sql.CompositeMetadata;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.CompositePojo;
 import com.nubeiot.core.sql.pojos.JsonPojo;
-import com.nubeiot.core.utils.Functions;
-import com.nubeiot.core.utils.Strings;
+import com.nubeiot.core.utils.JsonUtils;
 
 import lombok.NonNull;
 
@@ -94,7 +94,7 @@ public interface CompositeValidation<P extends VertxPojo, C extends CompositePoj
                          .filter(m -> !context().requestKeyName().equals(m.requestKeyName()))
                          .map(ref -> new SimpleEntry<>(ref.requestKeyName(), data.getValue(ref.requestKeyName())))
                          .filter(entry -> Objects.nonNull(entry.getValue()))
-                         .map(Strings.kvMsg())
+                         .map(JsonUtils.kvMsg())
                          .collect(Collectors.joining(" and "));
     }
 

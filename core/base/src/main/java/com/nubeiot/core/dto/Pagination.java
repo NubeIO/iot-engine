@@ -1,8 +1,7 @@
 package com.nubeiot.core.dto;
 
 import io.github.zero.jpa.Pageable;
-
-import com.nubeiot.core.utils.Strings;
+import io.github.zero.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

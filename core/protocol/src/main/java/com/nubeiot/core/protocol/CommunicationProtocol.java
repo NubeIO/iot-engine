@@ -2,6 +2,8 @@ package com.nubeiot.core.protocol;
 
 import java.util.Map;
 
+import io.github.zero.utils.Strings;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.dto.EnumType;
@@ -11,7 +13,6 @@ import com.nubeiot.core.protocol.network.IpNetwork;
 import com.nubeiot.core.protocol.network.TransportProtocol;
 import com.nubeiot.core.protocol.serial.SerialPortProtocol;
 import com.nubeiot.core.protocol.usb.UsbProtocol;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 

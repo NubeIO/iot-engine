@@ -25,17 +25,17 @@ import lombok.NonNull;
 @JsonDeserialize(builder = PostDeploymentResult.Builder.class)
 public class PostDeploymentResult implements JsonData {
 
-    private String serviceId;
-    private String transactionId;
-    private String deployId;
-    private String historyId;
-    private EventAction action;
-    private State prevState;
-    private State toState;
-    private State toActualState;
-    private Status status;
-    private JsonObject error;
-    private int affectRecords;
+    private final String serviceId;
+    private final String transactionId;
+    private final String deployId;
+    private final String historyId;
+    private final EventAction action;
+    private final State prevState;
+    private final State toState;
+    private final State toActualState;
+    private final Status status;
+    private final JsonObject error;
+    private final int affectRecords;
 
     public static PostDeploymentResult from(@NonNull PreDeploymentResult pre, String deployId, JsonObject error) {
         return PostDeploymentResult.builder()

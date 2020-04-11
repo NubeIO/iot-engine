@@ -6,6 +6,7 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
+import io.github.zero.utils.OSHelper;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.auth.BasicCredential;
@@ -13,7 +14,6 @@ import com.nubeiot.auth.Credential;
 import com.nubeiot.auth.CredentialType;
 import com.nubeiot.auth.ExternalServer;
 import com.nubeiot.core.IConfig;
-import com.nubeiot.core.TestHelper.OSHelper;
 import com.nubeiot.edge.installer.InstallerConfig.RepositoryConfig.RemoteRepositoryConfig;
 import com.nubeiot.edge.installer.loader.ModuleType;
 import com.nubeiot.edge.installer.model.dto.RequestedServiceData;

@@ -3,6 +3,7 @@ package com.nubeiot.core.event;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import io.github.zero.utils.Strings;
 import io.reactivex.Single;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -14,7 +15,6 @@ import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.exceptions.ServiceException;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -34,8 +34,8 @@ public final class ReplyEventHandler implements Handler<AsyncResult<Message<Obje
     private final EventAction action;
     @NonNull
     private final Consumer<EventMessage> success;
-    private Consumer<ErrorMessage> error;
-    private Consumer<Throwable> exception;
+    private final Consumer<ErrorMessage> error;
+    private final Consumer<Throwable> exception;
 
     @Override
     public void handle(AsyncResult<Message<Object>> reply) {

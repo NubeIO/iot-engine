@@ -3,6 +3,8 @@ package com.nubeiot.edge.module.gateway;
 import java.util.Collection;
 import java.util.function.Function;
 
+import io.github.zero.utils.Strings;
+import io.github.zero.utils.Urls;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
@@ -17,10 +19,8 @@ import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.exceptions.AlreadyExistException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
-import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.utils.Networks;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

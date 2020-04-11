@@ -13,10 +13,10 @@ import org.jooq.TransactionProvider;
 import org.jooq.TransactionalCallable;
 import org.jooq.exception.DataAccessException;
 
+import io.github.zero.utils.Functions;
 import io.reactivex.Single;
 
 import com.nubeiot.core.exceptions.DatabaseException.TransactionalException;
-import com.nubeiot.core.utils.Functions;
 
 import lombok.AccessLevel;
 import lombok.Getter;

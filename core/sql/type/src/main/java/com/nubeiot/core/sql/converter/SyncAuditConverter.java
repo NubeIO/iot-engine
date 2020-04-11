@@ -4,9 +4,10 @@ import java.util.Objects;
 
 import org.jooq.Converter;
 
+import io.github.zero.utils.Strings;
+
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.sql.type.SyncAudit;
-import com.nubeiot.core.utils.Strings;
 
 public final class SyncAuditConverter implements Converter<String, SyncAudit> {
 

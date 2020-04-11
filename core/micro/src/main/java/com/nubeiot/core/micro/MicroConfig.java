@@ -3,6 +3,7 @@ package com.nubeiot.core.micro;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.github.zero.utils.Strings;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.ServiceDiscoveryOptions;
@@ -17,7 +18,6 @@ import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.micro.monitor.ServiceGatewayAnnounceMonitor;
 import com.nubeiot.core.micro.monitor.ServiceGatewayUsageMonitor;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

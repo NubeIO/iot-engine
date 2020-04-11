@@ -2,8 +2,9 @@ package com.nubeiot.edge.connector.bacnet.cache;
 
 import java.util.function.Supplier;
 
+import io.github.zero.utils.Strings;
+
 import com.nubeiot.core.cache.CacheInitializer;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.BACnetVerticle;
 import com.nubeiot.edge.module.datapoint.rpc.DataProtocolRpcClient;

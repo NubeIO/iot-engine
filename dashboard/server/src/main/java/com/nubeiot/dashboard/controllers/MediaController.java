@@ -6,14 +6,15 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 
+import io.github.zero.utils.HttpScheme;
+import io.github.zero.utils.Strings;
+import io.github.zero.utils.Urls;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 import com.nubeiot.core.dto.ResponseData;
-import com.nubeiot.core.http.base.HttpScheme;
-import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.helper.ResponseDataHelper;
 import com.nubeiot.core.http.rest.RestApi;
@@ -21,7 +22,6 @@ import com.nubeiot.core.http.rest.provider.RestDownloadConfigProvider;
 import com.nubeiot.core.http.rest.provider.RestHttpConfigProvider;
 import com.nubeiot.core.mongo.MongoUtils;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
-import com.nubeiot.core.utils.Strings;
 import com.zandero.rest.annotation.RouteOrder;
 
 @Path("/media_file")

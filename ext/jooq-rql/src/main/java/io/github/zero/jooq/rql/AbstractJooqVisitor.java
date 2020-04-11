@@ -4,8 +4,6 @@ import java.util.Optional;
 
 import org.jooq.Record;
 import org.jooq.Table;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import io.github.zero.jooq.rql.criteria.CriteriaBuilderFactory;
 
@@ -25,11 +23,9 @@ import lombok.experimental.SuperBuilder;
  * @since 1.0.0
  */
 @Getter
-@SuperBuilder
 @Accessors(fluent = true)
+@SuperBuilder
 public abstract class AbstractJooqVisitor<R extends Record, T extends Table<R>, O> implements JooqRqlVisitor<R, T, O> {
-
-    protected final Logger log = LoggerFactory.getLogger(getClass());
 
     @NonNull
     private final T table;

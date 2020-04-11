@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
+import io.github.zero.utils.UUID64;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.Shareable;
@@ -18,7 +19,6 @@ import com.nubeiot.core.NubeConfig.AppConfig;
 import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.http.client.HttpClientConfig;
 import com.nubeiot.core.sql.pojos.JsonPojo;
-import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
 import com.nubeiot.edge.module.datapoint.scheduler.DataJobDefinition;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;

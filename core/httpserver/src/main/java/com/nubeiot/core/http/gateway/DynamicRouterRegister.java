@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.github.zero.utils.Urls;
 import io.vertx.core.logging.Logger;
 import io.vertx.ext.web.Router;
 import io.vertx.servicediscovery.Record;
@@ -14,7 +15,6 @@ import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.http.HttpServer;
 import com.nubeiot.core.http.ServerInfo;
-import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.handler.DynamicContextDispatcher;
 import com.nubeiot.core.http.rest.DynamicRestApi;
 import com.nubeiot.core.micro.monitor.ServiceGatewayMonitor;

@@ -6,6 +6,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
+import io.github.zero.utils.UUID64;
 import io.reactivex.Maybe;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
@@ -25,7 +26,6 @@ import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.type.SyncAudit;
 import com.nubeiot.core.sql.type.TimeAudit;
-import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.module.datapoint.BaseDataPointServiceTest;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;

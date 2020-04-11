@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -20,7 +21,6 @@ import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.exceptions.NotFoundException;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

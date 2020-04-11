@@ -5,7 +5,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
+import io.github.zero.utils.Reflections.ReflectionClass;
+
 import com.serotonin.bacnet4j.obj.PropertyTypeDefinition;
 import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.constructed.PriorityArray;

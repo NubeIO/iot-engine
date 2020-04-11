@@ -3,6 +3,8 @@ package io.github.zero.jooq.rql;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.github.zero.jooq.rql.criteria.CriteriaBuilderFactory;
 
@@ -51,6 +53,16 @@ public interface JooqRqlVisitor<R extends Record, T extends Table<R>, O> extends
      */
     default @NonNull CriteriaBuilderFactory criteriaBuilderFactory() {
         return CriteriaBuilderFactory.DEFAULT;
+    }
+
+    /**
+     * Gets logger.
+     *
+     * @return the logger
+     * @since 1.0.0
+     */
+    default Logger log() {
+        return LoggerFactory.getLogger(getClass());
     }
 
 }

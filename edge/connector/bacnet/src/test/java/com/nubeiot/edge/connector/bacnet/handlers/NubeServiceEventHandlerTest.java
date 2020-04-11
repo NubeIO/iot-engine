@@ -11,10 +11,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import io.github.zero.utils.FileUtils;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.connector.bacnet.BACnetInstance;
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgePoint;
 import com.serotonin.bacnet4j.LocalDevice;

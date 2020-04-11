@@ -7,6 +7,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 
+import io.github.zero.utils.Strings;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpHeaders;
@@ -31,7 +32,6 @@ import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.http.rest.provider.RestHttpClientConfigProvider;
 import com.nubeiot.core.http.rest.provider.RestHttpConfigProvider;
-import com.nubeiot.core.utils.Strings;
 import com.zandero.rest.annotation.ResponseWriter;
 
 public class ServerDittoRestController implements RestApi {

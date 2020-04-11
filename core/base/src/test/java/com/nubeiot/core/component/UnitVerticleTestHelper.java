@@ -2,7 +2,7 @@ package com.nubeiot.core.component;
 
 import java.nio.file.Path;
 
-import com.nubeiot.core.utils.Strings;
+import io.github.zero.utils.Strings;
 
 public interface UnitVerticleTestHelper {
 

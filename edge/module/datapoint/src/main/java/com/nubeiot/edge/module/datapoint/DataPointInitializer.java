@@ -9,13 +9,13 @@ import org.jooq.Field;
 import org.jooq.SQLDialect;
 import org.jooq.Table;
 
+import io.github.zero.utils.Strings;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.SchemaInitializer;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.module.datapoint.cache.DataCacheInitializer;
 import com.nubeiot.edge.module.datapoint.trigger.DataPointTriggerInitializer;
 import com.nubeiot.iotdata.edge.model.Tables;

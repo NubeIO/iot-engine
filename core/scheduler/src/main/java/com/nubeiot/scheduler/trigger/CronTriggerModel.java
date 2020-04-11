@@ -11,6 +11,7 @@ import org.quartz.CronTrigger;
 import org.quartz.ScheduleBuilder;
 import org.quartz.TriggerKey;
 
+import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -20,7 +21,6 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.scheduler.trigger.TriggerModel.AbstractTriggerModel;
 
 import lombok.Builder;

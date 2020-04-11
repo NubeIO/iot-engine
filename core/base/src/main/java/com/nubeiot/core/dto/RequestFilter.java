@@ -4,9 +4,8 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonObject;
-
-import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

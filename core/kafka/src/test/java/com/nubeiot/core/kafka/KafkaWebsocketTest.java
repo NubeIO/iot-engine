@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 
+import io.github.zero.utils.Urls;
 import io.vertx.core.http.WebSocket;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.bridge.BridgeEventType;
@@ -26,7 +27,6 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.HttpServerTestBase;
-import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.base.event.WebsocketServerEventMetadata;
 import com.nubeiot.core.http.mock.MockWebsocketEvent;
 import com.nubeiot.core.kafka.mock.MockKafkaConsumer;

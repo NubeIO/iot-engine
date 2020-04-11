@@ -6,14 +6,15 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import io.github.zero.utils.Strings;
+import io.github.zero.utils.UUID64;
+
 import com.nubeiot.core.cache.AbstractLocalCache;
 import com.nubeiot.core.cache.LocalDataCache;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.protocol.network.Ipv4Network;
 import com.nubeiot.core.protocol.network.Ipv6Network;
 import com.nubeiot.core.protocol.serial.SerialPortProtocol;
-import com.nubeiot.core.utils.Strings;
-import com.nubeiot.core.utils.UUID64;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

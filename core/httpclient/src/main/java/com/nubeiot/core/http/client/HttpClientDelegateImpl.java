@@ -4,6 +4,7 @@ import static com.nubeiot.core.http.base.HttpUtils.HttpRequests;
 
 import java.util.Objects;
 
+import io.github.zero.utils.Urls;
 import io.reactivex.Single;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -22,7 +23,6 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.http.base.HttpUtils;
-import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.client.HttpClientConfig.HandlerConfig;
 import com.nubeiot.core.http.client.handler.HttpClientWriter;
 import com.nubeiot.core.http.client.handler.HttpErrorHandler;

@@ -1,11 +1,11 @@
 package com.nubeiot.edge.connector.bacnet.dto;
 
+import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.EnumType.AbstractEnumType;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.protocol.CommunicationProtocol;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.Getter;
 import lombok.NonNull;

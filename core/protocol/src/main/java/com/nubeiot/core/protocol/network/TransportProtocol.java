@@ -2,14 +2,15 @@ package com.nubeiot.core.protocol.network;
 
 import java.util.Map;
 
+import io.github.zero.utils.Functions;
+import io.github.zero.utils.Strings;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.exceptions.CommunicationProtocolException;
 import com.nubeiot.core.exceptions.NotFoundException;
-import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.utils.Networks;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

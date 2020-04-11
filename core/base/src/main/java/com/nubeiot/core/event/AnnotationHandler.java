@@ -13,6 +13,12 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.github.zero.utils.Functions;
+import io.github.zero.utils.Reflections;
+import io.github.zero.utils.Reflections.ReflectionClass;
+import io.github.zero.utils.Reflections.ReflectionMethod;
+import io.github.zero.utils.Reflections.ReflectionMethod.MethodInfo;
+import io.github.zero.utils.Strings;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -28,12 +34,6 @@ import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
 import com.nubeiot.core.exceptions.StateException;
-import com.nubeiot.core.utils.Functions;
-import com.nubeiot.core.utils.Reflections;
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
-import com.nubeiot.core.utils.Reflections.ReflectionMethod;
-import com.nubeiot.core.utils.Reflections.ReflectionMethod.MethodInfo;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
@@ -53,7 +53,7 @@ final class AnnotationHandler<T extends EventListener> {
     }
 
     static MethodInfo getMethodByAnnotation(@NonNull Class<?> clazz, @NonNull EventAction action) {
-        if (ReflectionClass.isVertxOrSystemClass(clazz.getName())) {
+        if (isVertxOrSystemClass(clazz)) {
             throw new ImplementationError(ErrorCode.EVENT_ERROR,
                                           Strings.format("Missing implementation for action {0}", action));
         }
@@ -68,6 +68,11 @@ final class AnnotationHandler<T extends EventListener> {
                                                          action, clazz.getName()));
         }
         return to(methods.get(0));
+    }
+
+    private static boolean isVertxOrSystemClass(@NonNull Class<?> clazz) {
+        return ReflectionClass.isSystemClass(clazz.getName()) ||
+               ReflectionClass.belongsTo("io.vertx.core", "io.netty.", "com.fasterxml.jackson");
     }
 
     private static MethodInfo to(Method method) {

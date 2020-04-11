@@ -3,13 +3,13 @@ package com.nubeiot.core.http.client.handler;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
+import io.github.zero.utils.Reflections.ReflectionClass;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpHeaders;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.http.base.HttpUtils.HttpHeaderUtils;
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.NonNull;
 
