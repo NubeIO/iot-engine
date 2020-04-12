@@ -21,7 +21,7 @@ public interface QueryContext {
      * @since 1.0.0
      */
     default @NonNull LikeWildcardPattern likeWildcard() {
-        return new LikeWildcardPattern() {};
+        return LikeWildcardPattern.DEFAULT;
     }
 
     /**

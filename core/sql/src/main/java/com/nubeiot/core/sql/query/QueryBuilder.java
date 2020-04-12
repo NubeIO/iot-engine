@@ -290,6 +290,7 @@ public final class QueryBuilder {
         if (Objects.isNull(sort) || sort.isEmpty()) {
             return sql.orderBy(orderFields);
         }
+
         final JsonObject jsonSort = sort.toJson();
         final Stream<OrderField<?>> sortFields = Stream.concat(
             jsonSort.stream().filter(entry -> !entry.getKey().contains(".")).map(entry -> sortField(base, entry)),

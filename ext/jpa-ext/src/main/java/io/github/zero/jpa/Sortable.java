@@ -92,6 +92,10 @@ public interface Sortable extends Serializable {
             }
             return Stream.of(Direction.values()).filter(t -> t.name().equalsIgnoreCase(d)).findFirst().orElse(null);
         }
+
+        public boolean isAsc() {
+            return ASC == this;
+        }
     }
 
 

@@ -46,7 +46,7 @@ import lombok.RequiredArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Reflections {
 
-    private static final Logger logger = LoggerFactory.getLogger(Reflections.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Reflections.class);
 
     /**
      * Gets the current thread context class loader.
@@ -171,8 +171,8 @@ public final class Reflections {
             try {
                 return (T) field.get(null);
             } catch (IllegalAccessException | ClassCastException e) {
-                if (logger.isTraceEnabled()) {
-                    logger.trace("Failed to get field constant " + field.getName() + " of " + clazz.getName(), e);
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace("Failed to get field constant " + field.getName() + " of " + clazz.getName(), e);
                 }
                 return fallback;
             }
@@ -191,7 +191,7 @@ public final class Reflections {
                 f.setAccessible(true);
                 return type.cast(f.get(obj));
             } catch (IllegalAccessException | ClassCastException e) {
-                logger.warn("Cannot get data of field " + f.getName(), e);
+                LOGGER.warn("Cannot get data of field " + f.getName(), e);
                 return null;
             }
         }
@@ -210,7 +210,7 @@ public final class Reflections {
                                                .ignoreClassVisibility()
                                                .ignoreMethodVisibility()
                                                .whitelistClasses(clazz.getName());
-            if (logger.isTraceEnabled()) {
+            if (LOGGER.isTraceEnabled()) {
                 graph.verbose();
             }
             ScanResult scanResult = graph.scan();
@@ -247,8 +247,8 @@ public final class Reflections {
 
         public static ReflectionException handleError(@NonNull Executable executable,
                                                       @NonNull ReflectiveOperationException e) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Cannot execute method " + executable.getName(), e);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Cannot execute method " + executable.getName(), e);
             }
             if (e instanceof InvocationTargetException) {
                 Throwable targetException = ((InvocationTargetException) e).getTargetException();
@@ -431,7 +431,7 @@ public final class Reflections {
                     return (Class<?>) primitiveClazz;
                 }
             } catch (IllegalAccessException | NoSuchFieldException e) {
-                logger.trace("Try casting primitive class from class " + findClazz.getName(), e);
+                LOGGER.trace("Try casting primitive class from class " + findClazz.getName(), e);
             }
             return null;
         }
@@ -461,7 +461,7 @@ public final class Reflections {
             ClassGraph graph = new ClassGraph().enableAnnotationInfo()
                                                .ignoreClassVisibility()
                                                .whitelistPackages(packageName);
-            if (logger.isTraceEnabled()) {
+            if (LOGGER.isTraceEnabled()) {
                 graph.verbose();
             }
             try (ScanResult scanResult = graph.scan()) {
@@ -488,7 +488,7 @@ public final class Reflections {
             try {
                 return (Class<T>) Class.forName(Strings.requireNotBlank(clazz), true, Reflections.contextClassLoader());
             } catch (ClassNotFoundException | ClassCastException e) {
-                logger.debug("Not found class " + clazz, e);
+                LOGGER.debug("Not found class " + clazz, e);
                 return null;
             }
         }

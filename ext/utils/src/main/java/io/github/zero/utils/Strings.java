@@ -141,7 +141,7 @@ public final class Strings {
      */
     public static String optimizeMultipleSpace(String text) {
         String t = requireNotBlank(text);
-        return t.replaceAll("\\s+", "");
+        return t.replaceAll("\\s+", " ");
     }
 
     /**
@@ -226,7 +226,7 @@ public final class Strings {
     }
 
     public static String format(String msgPattern, Object... params) {
-        String[] args = Arrays.stream(params).map(String::valueOf).toArray(String[]::new);
+        Object[] args = Arrays.stream(params).map(String::valueOf).toArray(String[]::new);
         return MessageFormat.format(msgPattern, args);
     }
 

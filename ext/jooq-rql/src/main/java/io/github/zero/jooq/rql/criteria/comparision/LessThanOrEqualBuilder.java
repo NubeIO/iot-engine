@@ -1,11 +1,11 @@
 package io.github.zero.jooq.rql.criteria.comparision;
 
-import org.jooq.Condition;
-import org.jooq.Record;
-import org.jooq.SelectConditionStep;
-import org.jooq.Table;
+import java.util.List;
 
-import io.github.zero.jooq.rql.QueryContext;
+import org.jooq.Condition;
+import org.jooq.Field;
+
+import io.github.zero.jooq.rql.ArgumentParser;
 
 import cz.jirutka.rsql.parser.ast.ComparisonNode;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
@@ -14,16 +14,16 @@ import lombok.NonNull;
 
 public final class LessThanOrEqualBuilder extends AbstractComparisionCriteriaBuilder {
 
-    static final ComparisonOperator OPERATOR = RSQLOperators.LESS_THAN_OR_EQUAL;
+    public static final ComparisonOperator OPERATOR = RSQLOperators.LESS_THAN_OR_EQUAL;
 
     public LessThanOrEqualBuilder(@NonNull ComparisonNode node) {
         super(node);
     }
 
     @Override
-    public @NonNull Condition build(@NonNull Table table, @NonNull QueryContext queryContext,
-                                    @NonNull SelectConditionStep<? extends Record> select) {
-        return null;
+    protected @NonNull Condition compare(@NonNull Field field, @NonNull List<String> arguments,
+                                         @NonNull ArgumentParser parser) {
+        return field.le(parser.parse(field, arguments.get(0)));
     }
 
 }

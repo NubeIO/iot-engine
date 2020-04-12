@@ -9,21 +9,21 @@ import io.github.zero.jooq.rql.ArgumentParser;
 
 import cz.jirutka.rsql.parser.ast.ComparisonNode;
 import cz.jirutka.rsql.parser.ast.ComparisonOperator;
-import cz.jirutka.rsql.parser.ast.RSQLOperators;
 import lombok.NonNull;
 
-public final class GreaterThanBuilder extends AbstractComparisionCriteriaBuilder {
+//TODO implement it
+public final class LikeBuilder extends AbstractComparisionCriteriaBuilder {
 
-    public static final ComparisonOperator OPERATOR = RSQLOperators.GREATER_THAN;
+    public static final ComparisonOperator OPERATOR = new ComparisonOperator("=like=");
 
-    public GreaterThanBuilder(@NonNull ComparisonNode node) {
+    protected LikeBuilder(@NonNull ComparisonNode node) {
         super(node);
     }
 
     @Override
     protected @NonNull Condition compare(@NonNull Field field, @NonNull List<String> arguments,
                                          @NonNull ArgumentParser parser) {
-        return field.gt(parser.parse(field, arguments.get(0)));
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
 }

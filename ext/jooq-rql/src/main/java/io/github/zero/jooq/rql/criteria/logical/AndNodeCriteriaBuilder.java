@@ -1,17 +1,15 @@
 package io.github.zero.jooq.rql.criteria.logical;
 
-import org.jooq.Condition;
-import org.jooq.Record;
-import org.jooq.SelectConditionStep;
-import org.jooq.Table;
+import java.util.function.BiFunction;
 
-import io.github.zero.jooq.rql.QueryContext;
+import org.jooq.Condition;
+
 import io.github.zero.jooq.rql.criteria.AbstractCriteriaBuilder;
 
 import cz.jirutka.rsql.parser.ast.AndNode;
 import lombok.NonNull;
 
-public class AndNodeCriteriaBuilder extends AbstractCriteriaBuilder<AndNode>
+public final class AndNodeCriteriaBuilder extends AbstractCriteriaBuilder<AndNode>
     implements LogicalCriteriaBuilder<AndNode> {
 
     public AndNodeCriteriaBuilder(@NonNull AndNode node) {
@@ -19,9 +17,9 @@ public class AndNodeCriteriaBuilder extends AbstractCriteriaBuilder<AndNode>
     }
 
     @Override
-    public @NonNull Condition build(@NonNull Table table, @NonNull QueryContext queryContext,
-                                    @NonNull SelectConditionStep<? extends Record> select) {
-        return null;
+    @NonNull
+    public BiFunction<Condition, Condition, Condition> logical() {
+        return Condition::and;
     }
 
 }

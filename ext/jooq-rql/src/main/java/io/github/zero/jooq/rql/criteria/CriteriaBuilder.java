@@ -1,9 +1,8 @@
 package io.github.zero.jooq.rql.criteria;
 
 import org.jooq.Condition;
-import org.jooq.Record;
-import org.jooq.SelectConditionStep;
 import org.jooq.Table;
+import org.jooq.TableLike;
 
 import io.github.zero.jooq.rql.QueryContext;
 
@@ -14,6 +13,7 @@ import lombok.NonNull;
  * The interface Criteria builder.
  *
  * @param <T> Type of {@code Node}
+ * @see Node
  * @since 1.0.0
  */
 public interface CriteriaBuilder<T extends Node> {
@@ -29,14 +29,30 @@ public interface CriteriaBuilder<T extends Node> {
     /**
      * Build condition.
      *
-     * @param table        the table
-     * @param queryContext the query context
-     * @param select       the select
+     * @param table the table
      * @return the condition
-     * @see Condition
+     * @apiNote It is equivalent to call {@link #build(TableLike, QueryContext, CriteriaBuilderFactory)} with {@link
+     *     QueryContext#DEFAULT} and {@link CriteriaBuilderFactory#DEFAULT}
      * @since 1.0.0
      */
-    @NonNull Condition build(@NonNull Table table, @NonNull QueryContext queryContext,
-                             @NonNull SelectConditionStep<? extends Record> select);
+    default @NonNull Condition build(@NonNull TableLike table) {
+        return build(table, QueryContext.DEFAULT, CriteriaBuilderFactory.DEFAULT);
+    }
+
+    /**
+     * Build condition.
+     *
+     * @param table        the table
+     * @param queryContext the query context
+     * @param factory      the criteria builder factory
+     * @return the condition
+     * @see Condition
+     * @see Table
+     * @see QueryContext
+     * @see CriteriaBuilderFactory
+     * @since 1.0.0
+     */
+    @NonNull Condition build(@NonNull TableLike table, @NonNull QueryContext queryContext,
+                             @NonNull CriteriaBuilderFactory factory);
 
 }

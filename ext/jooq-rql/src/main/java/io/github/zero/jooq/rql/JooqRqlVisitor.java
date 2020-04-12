@@ -14,24 +14,14 @@ import lombok.NonNull;
 /**
  * The interface Jooq rql visitor.
  *
- * @param <R> Type of {@code Record}
- * @param <T> Type of {@code Table}
- * @param <O> Type of {@code result}
+ * @param <R> Type of {@code result}
  * @see Record
  * @see Table
  * @see DSLContext
  * @see RSQLVisitor
  * @since 1.0.0
  */
-public interface JooqRqlVisitor<R extends Record, T extends Table<R>, O> extends RSQLVisitor<O, DSLContext> {
-
-    /**
-     * Gets Table.
-     *
-     * @return the table
-     * @since 1.0.0
-     */
-    @NonNull T table();
+public interface JooqRqlVisitor<R> extends RSQLVisitor<R, DSLContext> {
 
     /**
      * Gets Query context.
