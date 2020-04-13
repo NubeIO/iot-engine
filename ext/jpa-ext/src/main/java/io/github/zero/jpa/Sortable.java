@@ -21,6 +21,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.Accessors;
 import lombok.experimental.FieldNameConstants;
 
 /**
@@ -93,8 +94,16 @@ public interface Sortable extends Serializable {
             return Stream.of(Direction.values()).filter(t -> t.name().equalsIgnoreCase(d)).findFirst().orElse(null);
         }
 
-        public boolean isAsc() {
+        public static Direction parse(char direction) {
+            return direction == DESC.symbol ? DESC : ASC;
+        }
+
+        public boolean isASC() {
             return ASC == this;
+        }
+
+        public boolean isDESC() {
+            return DESC == this;
         }
     }
 
@@ -105,10 +114,11 @@ public interface Sortable extends Serializable {
      * @since 1.0.0
      */
     @Getter
+    @Accessors(fluent = true)
+    @ToString
+    @FieldNameConstants(level = AccessLevel.PRIVATE)
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     @JsonSerialize(using = OrderSerializer.class)
-    @ToString
-    @FieldNameConstants
     class Order implements Serializable {
 
         @NonNull
@@ -180,7 +190,7 @@ public interface Sortable extends Serializable {
         @Override
         public void serialize(Order value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
             gen.writeStartObject();
-            gen.writeObjectField(value.getProperty(), value.getDirection());
+            gen.writeObjectField(value.property(), value.direction());
             gen.writeEndObject();
         }
 

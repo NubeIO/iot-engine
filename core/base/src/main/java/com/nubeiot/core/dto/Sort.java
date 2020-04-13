@@ -34,7 +34,7 @@ public final class Sort implements Sortable, JsonData {
                                 .filter(Strings::isNotBlank)
                                 .map(Sort::each)
                                 .filter(Objects::nonNull)
-                                .collect(Collectors.toMap(Order::getProperty, Function.identity())))
+                                .collect(Collectors.toMap(Order::property, Function.identity())))
                    .build();
     }
 
@@ -45,7 +45,7 @@ public final class Sort implements Sortable, JsonData {
                               .stream()
                               .map(Sort::each)
                               .filter(Objects::nonNull)
-                              .collect(Collectors.toMap(Order::getProperty, Function.identity())))
+                              .collect(Collectors.toMap(Order::property, Function.identity())))
                    .build();
     }
 
@@ -54,8 +54,8 @@ public final class Sort implements Sortable, JsonData {
             return null;
         }
         final char c = value.charAt(0);
-        Direction type = c == Direction.DESC.getSymbol() ? Direction.DESC : Direction.ASC;
-        String resource = c == Direction.ASC.getSymbol() || type == Direction.DESC ? value.substring(1) : value;
+        Direction type = Direction.parse(c);
+        String resource = c == Direction.ASC.getSymbol() || type.isDESC() ? value.substring(1) : value;
         return Order.by(resource, type);
     }
 
@@ -87,7 +87,7 @@ public final class Sort implements Sortable, JsonData {
     @Override
     public JsonObject toJson() {
         return JsonData.MAPPER.convertValue(
-            orders().stream().collect(Collectors.toMap(Order::getProperty, Order::getDirection)), JsonObject.class);
+            orders().stream().collect(Collectors.toMap(Order::property, Order::direction)), JsonObject.class);
     }
 
     @JsonPOJOBuilder(withPrefix = "")
@@ -99,7 +99,7 @@ public final class Sort implements Sortable, JsonData {
 
         public Builder item(@NonNull Order order) {
             items = Optional.ofNullable(items).orElseGet(HashMap::new);
-            items.put(order.getProperty(), order);
+            items.put(order.property(), order);
             return this;
         }
 
