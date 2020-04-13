@@ -18,6 +18,7 @@ public interface QueryContext {
      * Like wildcard like wildcard pattern.
      *
      * @return the like wildcard pattern
+     * @see LikeWildcardPattern
      * @since 1.0.0
      */
     default @NonNull LikeWildcardPattern likeWildcard() {

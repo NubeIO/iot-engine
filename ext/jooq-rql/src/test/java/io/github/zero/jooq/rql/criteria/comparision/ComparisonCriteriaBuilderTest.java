@@ -102,4 +102,51 @@ public class ComparisonCriteriaBuilderTest {
                             Strings.optimizeMultipleSpace(condition.toString()));
     }
 
+    @Test
+    public void test_between_node() {
+        final ComparisonNode node = new ComparisonNode(BetweenBuilder.OPERATOR, Tables.ALL_DATA_TYPE.F_DATE.getName(),
+                                                       Arrays.asList("2020-04-05T08:00:00Z", "2020-04-08T08:00:00Z"));
+        final CriteriaBuilder builder = CriteriaBuilderFactory.DEFAULT.create(node);
+        Assert.assertTrue(builder instanceof BetweenBuilder);
+        final Condition condition = builder.build(Tables.ALL_DATA_TYPE);
+        Assert.assertEquals(
+            "\"PUBLIC\".\"ALL_DATA_TYPE\".\"F_DATE\" between timestamp '2020-04-05 15:00:00.0' and timestamp " +
+            "'2020-04-08 15:00:00.0'", Strings.optimizeMultipleSpace(condition.toString()));
+    }
+
+    @Test
+    public void test_exists_node() {
+        final ComparisonNode node = new ComparisonNode(ExistsBuilder.OPERATOR, Tables.ALL_DATA_TYPE.F_PERIOD.getName(),
+                                                       Collections.singletonList("t"));
+        final CriteriaBuilder builder = CriteriaBuilderFactory.DEFAULT.create(node);
+        Assert.assertTrue(builder instanceof ExistsBuilder);
+        final Condition condition = builder.build(Tables.ALL_DATA_TYPE);
+        Assert.assertEquals("\"PUBLIC\".\"ALL_DATA_TYPE\".\"F_PERIOD\" is not null",
+                            Strings.optimizeMultipleSpace(condition.toString()));
+    }
+
+    @Test
+    public void test_non_exists_node() {
+        final ComparisonNode node = new ComparisonNode(NonExistsBuilder.OPERATOR,
+                                                       Tables.ALL_DATA_TYPE.F_DURATION.getName(),
+                                                       Collections.singletonList("t"));
+        final CriteriaBuilder builder = CriteriaBuilderFactory.DEFAULT.create(node);
+        Assert.assertTrue(builder instanceof NonExistsBuilder);
+        final Condition condition = builder.build(Tables.ALL_DATA_TYPE);
+        Assert.assertEquals("\"PUBLIC\".\"ALL_DATA_TYPE\".\"F_DURATION\" is null",
+                            Strings.optimizeMultipleSpace(condition.toString()));
+    }
+
+    @Test
+    public void test_nullable_node() {
+        final ComparisonNode node = new ComparisonNode(NullableBuilder.OPERATOR,
+                                                       Tables.ALL_DATA_TYPE.F_VALUE_JSON.getName(),
+                                                       Collections.singletonList("t"));
+        final CriteriaBuilder builder = CriteriaBuilderFactory.DEFAULT.create(node);
+        Assert.assertTrue(builder instanceof NullableBuilder);
+        final Condition condition = builder.build(Tables.ALL_DATA_TYPE);
+        Assert.assertEquals("( \"PUBLIC\".\"ALL_DATA_TYPE\".\"F_VALUE_JSON\" is null or \"PUBLIC\".\"ALL_DATA_TYPE\"" +
+                            ".\"F_VALUE_JSON\" = 't' )", Strings.optimizeMultipleSpace(condition.toString()));
+    }
+
 }

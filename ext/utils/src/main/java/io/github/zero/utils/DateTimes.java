@@ -1,5 +1,7 @@
 package io.github.zero.utils;
 
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -10,7 +12,9 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +27,11 @@ import lombok.NonNull;
 public final class DateTimes {
 
     private static final Logger logger = LoggerFactory.getLogger(DateTimes.class);
+
+    public static boolean isRelatedToDateTime(@NonNull Class cls) {
+        return TemporalAccessor.class.isAssignableFrom(cls) || Date.class.isAssignableFrom(cls) ||
+               Calendar.class.isAssignableFrom(cls) || TimeZone.class.isAssignableFrom(cls);
+    }
 
     public static LocalDateTime nowUTC() {
         return fromUTC(Instant.now());
@@ -102,6 +111,40 @@ public final class DateTimes {
                 logger.debug("Invalid date: " + datetime, e);
                 throw new IllegalArgumentException("Invalid date", e);
             }
+        }
+
+        public static Object parse(@NonNull Class<?> cls, String value) {
+            if (Strings.isBlank(value)) {
+                return null;
+            }
+            if (!isRelatedToDateTime(cls)) {
+                return value;
+            }
+            if (Instant.class.isAssignableFrom(cls)) {
+                return parse(value);
+            }
+            if (OffsetDateTime.class.isAssignableFrom(cls)) {
+                return parseDateTime(value);
+            }
+            if (ZonedDateTime.class.isAssignableFrom(cls)) {
+                return parseZonedDateTime(value);
+            }
+            if (OffsetTime.class.isAssignableFrom(cls)) {
+                return parseZonedDateTime(value);
+            }
+            if (java.sql.Date.class.isAssignableFrom(cls)) {
+                return new java.sql.Date(parse(value).toEpochMilli());
+            }
+            if (Time.class.isAssignableFrom(cls)) {
+                return Time.valueOf(value);
+            }
+            if (Timestamp.class.isAssignableFrom(cls)) {
+                return new Timestamp(parse(value).toEpochMilli());
+            }
+            if (Date.class.isAssignableFrom(cls)) {
+                return Date.from(parse(value));
+            }
+            return value;
         }
 
     }

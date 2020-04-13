@@ -1,8 +1,14 @@
 package io.github.zero.jooq.rql;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.jooq.Field;
+
+import io.github.zero.utils.DateTimes;
+import io.github.zero.utils.DateTimes.Iso8601Parser;
+import io.github.zero.utils.Strings;
 
 import lombok.NonNull;
 
@@ -28,7 +34,14 @@ public interface ArgumentParser {
      * @since 1.0.0
      */
     default Object parse(@NonNull Field field, String value) {
-        return value;
+        if (!DateTimes.isRelatedToDateTime(field.getDataType().getType())) {
+            return value;
+        }
+        if (Strings.isBlank(value)) {
+            return null;
+        }
+        return Optional.ofNullable(field.getDataType().convert(value))
+                       .orElseGet(() -> Iso8601Parser.parse(field.getDataType().getType(), value));
     }
 
     /**
@@ -40,8 +53,11 @@ public interface ArgumentParser {
      * @see Field
      * @since 1.0.0
      */
-    default List<?> parse(@NonNull Field field, List<String> values) {
-        return values;
+    default List<?> parse(@NonNull Field field, @NonNull List<String> values) {
+        if (!DateTimes.isRelatedToDateTime(field.getDataType().getType())) {
+            return values;
+        }
+        return values.stream().map(s -> parse(field, s)).collect(Collectors.toList());
     }
 
 }

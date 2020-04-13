@@ -1,4 +1,4 @@
-package io.github.zero.jooq.rql;
+package io.github.zero.jooq.rql.visitor;
 
 import org.jooq.Condition;
 import org.jooq.DSLContext;

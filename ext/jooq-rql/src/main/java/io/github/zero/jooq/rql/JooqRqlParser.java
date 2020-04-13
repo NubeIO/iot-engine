@@ -11,6 +11,7 @@ import org.jooq.Table;
 import org.jooq.TableLike;
 
 import io.github.zero.jooq.rql.parser.ast.ComparisonOperatorProxy;
+import io.github.zero.jooq.rql.visitor.JooqRqlConditionVisitor;
 
 import cz.jirutka.rsql.parser.RSQLParser;
 import cz.jirutka.rsql.parser.RSQLParserException;
@@ -23,6 +24,10 @@ import lombok.NonNull;
  */
 public final class JooqRqlParser {
 
+    /**
+     * The constant DEFAULT.
+     */
+    public static JooqRqlParser DEFAULT = new JooqRqlParser();
     @NonNull
     private final RSQLParser parser;
 
@@ -31,7 +36,7 @@ public final class JooqRqlParser {
      *
      * @since 1.0.0
      */
-    public JooqRqlParser() {
+    private JooqRqlParser() {
         this(ComparisonOperatorProxy.operators());
     }
 

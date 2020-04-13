@@ -22,6 +22,9 @@ public final class BetweenBuilder extends AbstractComparisionCriteriaBuilder {
     @Override
     protected @NonNull Condition compare(@NonNull Field field, @NonNull List<String> arguments,
                                          @NonNull ArgumentParser parser) {
+        if (arguments.size() < 2) {
+            throw new IllegalArgumentException("Between criteria requires 2 arguments");
+        }
         return field.between(parser.parse(field, arguments.get(0)), parser.parse(field, arguments.get(1)));
     }
 
