@@ -30,6 +30,10 @@ import org.jooq.SelectSeekStepN;
 import org.jooq.Table;
 import org.jooq.impl.DSL;
 
+import io.github.zero.jooq.rql.FieldMapper;
+import io.github.zero.jooq.rql.JooqRqlParser;
+import io.github.zero.jooq.rql.QueryContext;
+import io.github.zero.jooq.rql.visitor.JooqConditionRqlVisitor;
 import io.github.zero.jpa.Sortable.Direction;
 import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonObject;
@@ -212,7 +216,7 @@ public final class QueryBuilder {
     public Function<DSLContext, ? extends ResultQuery<? extends Record>> existQueryByJoin(
         @NonNull RequestFilter filter) {
         final @NonNull JsonTable<? extends Record> table = base.table();
-        final JsonObject nullable = new JsonObject();
+        final RequestFilter nullable = new RequestFilter();
         return context -> {
             final SelectJoinStep<Record> query = context.select(onlyPrimaryKeys()).from(table);
             if (Objects.nonNull(references)) {
@@ -223,8 +227,10 @@ public final class QueryBuilder {
                               }
                           })
                           .filter(predicate)
-                          .forEach(meta -> doJoin(query, meta, new JsonObject().put(meta.jsonKeyName(), filter.getValue(
-                              meta.requestKeyName())), JoinType.RIGHT_OUTER_JOIN));
+                          .forEach(meta -> doJoin(query, meta, new RequestFilter().put(meta.jsonKeyName(),
+                                                                                       filter.getValue(
+                                                                                           meta.requestKeyName())),
+                                                  JoinType.RIGHT_OUTER_JOIN));
             }
             return (ResultQuery<? extends Record>) query.where(condition(table, nullable, true)).limit(1);
         };
@@ -241,8 +247,7 @@ public final class QueryBuilder {
      * @see Condition
      * @since 1.0.0
      */
-    //TODO Rich query depends on RQL in future https://github.com/NubeIO/iot-engine/issues/128
-    public Condition condition(@NonNull EntityMetadata metadata, JsonObject filter) {
+    public Condition condition(@NonNull EntityMetadata metadata, RequestFilter filter) {
         return condition(metadata, filter, false);
     }
 
@@ -256,7 +261,7 @@ public final class QueryBuilder {
      * @since 1.0.0
      */
     @SuppressWarnings("unchecked")
-    public Condition condition(@NonNull EntityMetadata metadata, JsonObject filter, boolean allowNullable) {
+    public Condition condition(@NonNull EntityMetadata metadata, RequestFilter filter, boolean allowNullable) {
         return condition(metadata.table(), filter, allowNullable);
     }
 
@@ -270,12 +275,13 @@ public final class QueryBuilder {
     }
 
     @SuppressWarnings("unchecked")
-    private Condition condition(@NonNull JsonTable<? extends Record> table, JsonObject filter, boolean allowNullable) {
+    private Condition condition(@NonNull JsonTable<? extends Record> table, RequestFilter filter,
+                                boolean allowNullable) {
         if (Objects.isNull(filter)) {
             return DSL.trueCondition();
         }
-        Condition[] c = new Condition[] {DSL.trueCondition()};
-        filter.stream().map(entry -> {
+        final Condition[] c = new Condition[] {DSL.trueCondition()};
+        filter.streamExtraFilter().map(entry -> {
             final Field field = table.getField(entry.getKey());
             return Optional.ofNullable(field)
                            .map(f -> Optional.ofNullable(entry.getValue())
@@ -283,7 +289,19 @@ public final class QueryBuilder {
                                              .orElseGet(f::isNull))
                            .orElse(null);
         }).filter(Objects::nonNull).forEach(condition -> c[0] = c[0].and(condition));
-        return c[0];
+        return c[0].and(advanceQuery(table, filter.advanceQuery()));
+    }
+
+    private Condition advanceQuery(@NonNull JsonTable<? extends Record> table, String advanceQuery) {
+        if (Strings.isBlank(advanceQuery)) {
+            return DSL.trueCondition();
+        }
+        return JooqRqlParser.DEFAULT.criteria(advanceQuery, JooqConditionRqlVisitor.create(table, new QueryContext() {
+            @Override
+            public @NonNull FieldMapper fieldMapper() {
+                return FieldMapper.SNAKE_UPPERCASE_MAPPER;
+            }
+        }));
     }
 
     private SelectSeekStepN<? extends Record> orderBy(@NonNull SelectConditionStep<? extends Record> sql, Sort sort) {
@@ -336,7 +354,7 @@ public final class QueryBuilder {
                      .collect(Collectors.toList());
     }
 
-    private void doJoin(SelectJoinStep<Record> query, EntityMetadata meta, JsonObject filter, JoinType joinType) {
+    private void doJoin(SelectJoinStep<Record> query, EntityMetadata meta, RequestFilter filter, JoinType joinType) {
         final Condition joinCondition = joinBy.get(meta);
         if (Objects.isNull(joinCondition)) {
             query.join(meta.table(), joinType).onKey().where(condition(meta, filter));

@@ -45,7 +45,7 @@ public class RequestDataTest {
 
     @Test
     public void test_from_json_1() {
-        final JsonObject pagination = new JsonObject().put("page", 5).put("perPage", 10);
+        final JsonObject pagination = new JsonObject().put("_page", 5).put("_per_page", 10);
         final JsonObject data = new JsonObject().put("pagination", pagination)
                                                 .put("body", new JsonObject())
                                                 .put("filter", new JsonObject());
@@ -59,7 +59,7 @@ public class RequestDataTest {
 
     @Test
     public void test_from_json_2() {
-        final JsonObject pagination = new JsonObject().put("page", 5).put("perPage", 10);
+        final JsonObject pagination = new JsonObject().put("_page", 5).put("_per_page", 10);
         final JsonObject data = new JsonObject().put("pagination", pagination)
                                                 .put("body", new JsonObject().put("name", "xyz"))
                                                 .put("filter", new JsonObject().put("key", "1"));
