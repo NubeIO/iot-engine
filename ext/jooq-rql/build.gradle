@@ -9,8 +9,6 @@ dependencies {
     compile project.deps.database.jooq
     // https://mvnrepository.com/artifact/cz.jirutka.rsql/rsql-parser
     compile group: 'cz.jirutka.rsql', name: 'rsql-parser', version: '2.1.0'
-    // https://mvnrepository.com/artifact/com.github.tennaito/rsql-jpa
-    compile group: 'com.github.tennaito', name: 'rsql-jpa', version: '2.0.2'
 
     testCompile project.deps.tests.junit
     testCompile project.deps.logs.logback
