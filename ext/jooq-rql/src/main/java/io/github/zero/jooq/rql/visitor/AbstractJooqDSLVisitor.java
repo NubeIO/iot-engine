@@ -3,7 +3,6 @@ package io.github.zero.jooq.rql.visitor;
 import org.jooq.DSLContext;
 
 import io.github.zero.jooq.rql.AbstractJooqRqlFacade;
-import io.github.zero.jooq.rql.JooqRqlVisitor;
 
 import cz.jirutka.rsql.parser.ast.AndNode;
 import cz.jirutka.rsql.parser.ast.ComparisonNode;
@@ -15,15 +14,16 @@ import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;
 
 /**
- * Represents for Abstract jooq visitor.
+ * Represents for Abstract jOOQ DSL RQL visitor.
  *
  * @param <R> Type of {@code Result}
+ * @see JooqDSLRqlVisitor
  * @since 1.0.0
  */
 @Getter
 @SuperBuilder
 @Accessors(fluent = true)
-public abstract class AbstractJooqVisitor<R> extends AbstractJooqRqlFacade implements JooqRqlVisitor<R> {
+public abstract class AbstractJooqDSLVisitor<R> extends AbstractJooqRqlFacade implements JooqDSLRqlVisitor<R> {
 
     @Override
     public R visit(AndNode node, DSLContext dsl) {
@@ -41,6 +41,6 @@ public abstract class AbstractJooqVisitor<R> extends AbstractJooqRqlFacade imple
     }
 
     @NonNull
-    protected abstract R build(@NonNull Node node, @NonNull DSLContext dsl);
+    protected abstract R build(@NonNull Node node, DSLContext dsl);
 
 }

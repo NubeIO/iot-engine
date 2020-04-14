@@ -37,7 +37,7 @@ public class JooqRqlQueryTest {
                                     .append(Tables.TABLE_CLASS.getName() + "=out=(123,456)")
                                     .append(")")
                                     .toString();
-        final Condition condition = jooqRqlParser.criteria(query, dsl, Tables.TABLES);
+        final Condition condition = jooqRqlParser.criteria(query, Tables.TABLES);
         Assert.assertEquals("( 1 = 1 and \"INFORMATION_SCHEMA\".\"TABLES\".\"TABLE_SCHEMA\" = 'public' and " +
                             "\"INFORMATION_SCHEMA\".\"TABLES\".\"TABLE_NAME\" is not null and ( ( 1 = 1 and " +
                             "\"INFORMATION_SCHEMA\".\"TABLES\".\"TABLE_TYPE\" in ( 'xyz', 'abc' ) ) or " +

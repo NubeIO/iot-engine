@@ -5,7 +5,7 @@ import io.github.zero.jooq.rql.criteria.CriteriaBuilderFactory;
 import lombok.NonNull;
 
 /**
- * The interface Jooq rql facade.
+ * The interface jOOQ RQL facade that wraps some condiments to enhance parsing SQL query in runtime
  *
  * @since 1.0.0
  */

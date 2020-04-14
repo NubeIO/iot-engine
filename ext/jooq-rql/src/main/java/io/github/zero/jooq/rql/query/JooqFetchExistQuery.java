@@ -6,6 +6,12 @@ import org.jooq.impl.DSL;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * Represents for jOOQ fetch exist query.
+ *
+ * @see JooqConditionQuery
+ * @since 1.0.0
+ */
 @SuperBuilder
 public final class JooqFetchExistQuery extends AbstractJooqConditionQuery<Boolean> {
 

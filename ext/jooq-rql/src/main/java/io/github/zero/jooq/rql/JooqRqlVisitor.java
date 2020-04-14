@@ -1,18 +1,13 @@
 package io.github.zero.jooq.rql;
 
-import org.jooq.DSLContext;
-
 import cz.jirutka.rsql.parser.ast.RSQLVisitor;
 
 /**
- * The interface Jooq RQL visitor.
+ * The interface jOOQ RQL visitor.
  *
- * @param <R> Type of {@code Result}
- * @see DSLContext
+ * @param <R> Type of {@code Visitor Result}
+ * @param <C> Type of {@code Visitor Context}
  * @see RSQLVisitor
- * @see JooqRqlFacade
  * @since 1.0.0
  */
-public interface JooqRqlVisitor<R> extends RSQLVisitor<R, DSLContext>, JooqRqlFacade, HasLog {
-
-}
+public interface JooqRqlVisitor<R, C> extends RSQLVisitor<R, C>, JooqRqlFacade, HasLog {}

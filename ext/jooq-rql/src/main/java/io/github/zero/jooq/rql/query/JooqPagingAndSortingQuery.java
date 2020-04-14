@@ -19,10 +19,17 @@ import lombok.NonNull;
 import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * Represents for jOOQ paging and sorting query.
+ *
+ * @see SelectOptionStep
+ * @see JooqConditionQuery
+ * @since 1.0.0
+ */
 @Getter
 @SuperBuilder
 @Accessors(fluent = true)
-public final class JooqPagingAndSortingVisitor extends AbstractJooqConditionQuery<SelectOptionStep<Record>> {
+public final class JooqPagingAndSortingQuery extends AbstractJooqConditionQuery<SelectOptionStep<Record>> {
 
     private final Pageable pageable;
     private final Sortable sortable;
@@ -47,7 +54,8 @@ public final class JooqPagingAndSortingVisitor extends AbstractJooqConditionQuer
     }
 
     private OrderField<?> sortField(@NonNull Sortable.Order order) {
-        return queryContext().fieldMapper().get(table(), order.property())
+        return queryContext().fieldMapper()
+                             .get(table(), order.property())
                              .map(f -> order.direction().isASC() ? f.asc() : f.desc())
                              .orElse(null);
     }

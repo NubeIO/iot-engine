@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
  *
  * @since 1.0.0
  */
-public interface HasLog {
+interface HasLog {
 
     /**
      * Gets logger.

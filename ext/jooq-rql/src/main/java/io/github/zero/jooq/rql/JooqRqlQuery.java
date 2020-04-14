@@ -2,6 +2,8 @@ package io.github.zero.jooq.rql;
 
 import org.jooq.DSLContext;
 
+import io.github.zero.jooq.rql.visitor.JooqDSLRqlVisitor;
+
 import lombok.NonNull;
 
 /**
@@ -9,10 +11,10 @@ import lombok.NonNull;
  *
  * @param <R> Type of {@code Query Result}
  * @param <T> Type of {@code Visitor result}
- * @see JooqRqlFacade
+ * @param <C> Type of {@code Visitor context}
  * @since 1.0.0
  */
-public interface JooqRqlQuery<R, T> extends JooqRqlFacade, HasLog {
+public interface JooqRqlQuery<R, T, C> extends JooqRqlFacade, HasLog {
 
     /**
      * Defines dsl context.
@@ -32,13 +34,13 @@ public interface JooqRqlQuery<R, T> extends JooqRqlFacade, HasLog {
     @NonNull JooqRqlParser parser();
 
     /**
-     * Defines Jooq RQL visitor.
+     * Defines jOOQ RQL visitor.
      *
      * @return the Jooq rql visitor
-     * @see JooqRqlVisitor
+     * @see JooqDSLRqlVisitor
      * @since 1.0.0
      */
-    @NonNull JooqRqlVisitor<T> visitor();
+    @NonNull JooqRqlVisitor<T, C> visitor();
 
     /**
      * Execute.

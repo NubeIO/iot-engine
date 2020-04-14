@@ -5,6 +5,12 @@ import org.jooq.Condition;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * Represents for jOOQ fetch count query.
+ *
+ * @see JooqConditionQuery
+ * @since 1.0.0
+ */
 @SuperBuilder
 public final class JooqFetchCountQuery extends AbstractJooqConditionQuery<Integer> {
 
