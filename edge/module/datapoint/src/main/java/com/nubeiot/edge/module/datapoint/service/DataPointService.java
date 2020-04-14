@@ -16,7 +16,8 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.EntityService;
-import com.nubeiot.core.sql.workflow.task.EntityTask;
+import com.nubeiot.core.sql.workflow.task.EntityTaskManager;
+import com.nubeiot.core.sql.workflow.task.EntityTaskManagerImpl;
 import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.task.remote.ProtocolDispatcherTask;
 import com.nubeiot.edge.module.datapoint.task.sync.SyncServiceFactory;
@@ -36,13 +37,13 @@ public interface DataPointService<P extends VertxPojo, M extends EntityMetadata>
     }
 
     @Override
-    default EntityTask prePersistTask() {
-        return new ProtocolDispatcherTask(entityHandler());
-    }
-
-    @Override
-    default EntityTask postPersistAsyncTask() {
-        return SyncServiceFactory.get(entityHandler(), entityHandler().sharedData(DataPointIndex.DATA_SYNC_CFG));
+    default @NonNull EntityTaskManager taskManager() {
+        return EntityTaskManagerImpl.builder()
+                                    .prePersistTask(new ProtocolDispatcherTask(entityHandler()))
+                                    .postPersistAsyncTask(SyncServiceFactory.get(entityHandler(),
+                                                                                 entityHandler().sharedData(
+                                                                                     DataPointIndex.DATA_SYNC_CFG)))
+                                    .build();
     }
 
     default String api() {

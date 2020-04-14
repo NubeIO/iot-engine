@@ -19,7 +19,8 @@ import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractGroupEntityService;
 import com.nubeiot.core.sql.service.marker.EntityReferences;
-import com.nubeiot.core.sql.workflow.task.EntityTask;
+import com.nubeiot.core.sql.workflow.task.EntityTaskManager;
+import com.nubeiot.core.sql.workflow.task.EntityTaskManagerImpl;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
@@ -74,16 +75,6 @@ public final class PointService
     }
 
     @Override
-    public EntityTask postPersistTask() {
-        return new PointReferencedTask(entityHandler());
-    }
-
-    @Override
-    public boolean supportForceDeletion() {
-        return true;
-    }
-
-    @Override
     public @NonNull RequestDecorator requestDecorator() {
         return NetworkExtension.create(EdgeExtension.create(this));
     }
@@ -120,6 +111,26 @@ public final class PointService
                                                              NetworkMetadata.INSTANCE))
                      .flatMap(Collection::stream)
                      .collect(Collectors.toSet());
+    }
+
+    @Override
+    public @NonNull Collection<EventAction> getAvailableEvents() {
+        return Stream.concat(super.getAvailableEvents().stream(), Stream.of(EventAction.BATCH_CREATE))
+                     .collect(Collectors.toSet());
+    }
+
+    @Override
+    public @NonNull EntityTaskManager taskManager() {
+        return EntityTaskManagerImpl.builder()
+                                    .prePersistTask(super.taskManager().prePersistTask())
+                                    .postPersistTask(new PointReferencedTask(entityHandler()))
+                                    .postPersistAsyncTask(super.taskManager().postPersistAsyncTask())
+                                    .build();
+    }
+
+    @Override
+    public boolean supportForceDeletion() {
+        return true;
     }
 
     private JsonObject convertResource(@NonNull VertxPojo pojo, @NonNull RequestData requestData) {

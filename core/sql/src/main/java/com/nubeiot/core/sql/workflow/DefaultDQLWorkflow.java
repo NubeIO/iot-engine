@@ -31,10 +31,11 @@ public final class DefaultDQLWorkflow<T extends VertxPojo> extends AbstractSQLWo
     protected @NonNull Single<JsonObject> run(@NonNull RequestData requestData, Configuration runtimeConfig) {
         final RequestData reqData = normalize().apply(requestData);
         return sqlStep().query(reqData, validator().andThen(afterValidation()))
-                        .flatMap(pojo -> postExecuter().execute(initSuccessData(reqData, pojo))
-                                                       .switchIfEmpty(Single.just(pojo)))
-                        .doOnSuccess(pojo -> asyncPostExecuter().execute(initSuccessData(reqData, pojo)))
-                        .doOnError(err -> asyncPostExecuter().execute(initErrorData(reqData, err)))
+                        .flatMap(pojo -> taskManager().postBlockingExecuter()
+                                                      .execute(initSuccessData(reqData, pojo))
+                                                      .switchIfEmpty(Single.just(pojo)))
+                        .doOnSuccess(pojo -> taskManager().postAsyncExecuter().execute(initSuccessData(reqData, pojo)))
+                        .doOnError(err -> taskManager().postAsyncExecuter().execute(initErrorData(reqData, err)))
                         .flatMap(pojo -> transformer().apply(reqData, (T) pojo));
     }
 

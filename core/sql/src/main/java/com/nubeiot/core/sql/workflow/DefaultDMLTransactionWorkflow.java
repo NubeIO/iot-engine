@@ -11,7 +11,7 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.transaction.JDBCRXTransactionExecutor;
 import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.core.sql.workflow.step.DMLStep;
-import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter;
+import com.nubeiot.core.sql.workflow.task.EntityTaskManager;
 
 import lombok.Builder;
 import lombok.NonNull;
@@ -43,18 +43,8 @@ public final class DefaultDMLTransactionWorkflow implements DMLTransactionWorkfl
     }
 
     @Override
-    public @NonNull EntityTaskExecuter.BlockingEntityTaskExecuter preExecuter() {
-        return workflow.preExecuter();
-    }
-
-    @Override
-    public @NonNull EntityTaskExecuter.BlockingEntityTaskExecuter postExecuter() {
-        return workflow.postExecuter();
-    }
-
-    @Override
-    public @NonNull EntityTaskExecuter.AsyncEntityTaskExecuter asyncPostExecuter() {
-        return workflow.asyncPostExecuter();
+    public @NonNull EntityTaskManager taskManager() {
+        return workflow.taskManager();
     }
 
     @Override

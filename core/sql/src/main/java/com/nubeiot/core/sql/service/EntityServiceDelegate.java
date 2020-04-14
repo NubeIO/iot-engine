@@ -18,137 +18,121 @@ import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.decorator.RequestDecorator;
 import com.nubeiot.core.sql.query.EntityQueryExecutor;
 import com.nubeiot.core.sql.validation.EntityValidation;
-import com.nubeiot.core.sql.workflow.task.EntityTask;
+import com.nubeiot.core.sql.workflow.task.EntityTaskManager;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
 /**
- * Represents a service delegate that wraps an actual {@code entity service} in case of it cannot {@code extends}
- * directly default {@code entity service}.
+ * The interface Entity service delegate.
  *
  * @param <P> Type of {@code VertxPojo}
- * @param <M> Type of {@code EntityMetadata}
- * @param <S> Type of {@code EntityService}
- * @see EntityService
- * @see ReferencingEntityService
- * @see GroupEntityService
- * @see ManyToManyEntityService
+ * @param <M> Type of {@code Entity Metadata}
+ * @param <S> Type of {@code Entity Service}
  * @since 1.0.0
  */
-@RequiredArgsConstructor
-public abstract class EntityServiceDelegate<P extends VertxPojo, M extends EntityMetadata, S extends EntityService<P, M>>
-    implements EntityService<P, M> {
+public interface EntityServiceDelegate<P extends VertxPojo, M extends EntityMetadata, S extends EntityService<P, M>>
+    extends EntityService<P, M> {
 
-    @NonNull
-    private final S service;
-
-    protected S unwrap() {
-        return this.service;
-    }
+    /**
+     * Unwrap Entity service.
+     *
+     * @return the service
+     * @since 1.0.0
+     */
+    S unwrap();
 
     @Override
-    public @NonNull EntityHandler entityHandler() {
+    default @NonNull EntityHandler entityHandler() {
         return unwrap().entityHandler();
     }
 
     @Override
-    public M context() {
+    default M context() {
         return unwrap().context();
     }
 
     @Override
-    public @NonNull Collection<EventAction> getAvailableEvents() {
+    default @NonNull Collection<EventAction> getAvailableEvents() {
         return unwrap().getAvailableEvents();
     }
 
     @Override
-    public @NonNull EntityQueryExecutor<P> queryExecutor() {
+    default @NonNull EntityQueryExecutor<P> queryExecutor() {
         return unwrap().queryExecutor();
     }
 
     @Override
-    public @NonNull RequestDecorator requestDecorator() {
+    default @NonNull RequestDecorator requestDecorator() {
         return unwrap().requestDecorator();
     }
 
     @Override
-    public EntityValidation validation() {
+    default EntityValidation validation() {
         return unwrap().validation();
     }
 
     @Override
-    public @NonNull EntityTransformer transformer() {
+    default @NonNull EntityTransformer transformer() {
         return unwrap().transformer();
     }
 
     @Override
-    public EntityTask prePersistTask() {
-        return unwrap().prePersistTask();
+    default @NonNull EntityTaskManager taskManager() {
+        return unwrap().taskManager();
     }
 
     @Override
-    public EntityTask postPersistTask() {
-        return unwrap().postPersistTask();
-    }
-
-    @Override
-    public EntityTask postPersistAsyncTask() {
-        return unwrap().postPersistAsyncTask();
-    }
-
-    @Override
-    public boolean supportForceDeletion() {
+    default boolean supportForceDeletion() {
         return unwrap().supportForceDeletion();
     }
 
     @Override
-    public Single<JsonObject> list(RequestData requestData) {
+    default Single<JsonObject> list(RequestData requestData) {
         return unwrap().list(requestData);
     }
 
     @Override
-    public Single<JsonObject> get(RequestData requestData) {
+    default Single<JsonObject> get(RequestData requestData) {
         return unwrap().get(requestData);
     }
 
     @Override
-    public Single<JsonObject> create(RequestData requestData) {
+    default Single<JsonObject> create(RequestData requestData) {
         return unwrap().create(requestData);
     }
 
     @Override
-    public Single<JsonObject> update(RequestData requestData) {
+    default Single<JsonObject> update(RequestData requestData) {
         return unwrap().update(requestData);
     }
 
     @Override
-    public Single<JsonObject> patch(RequestData requestData) {
+    default Single<JsonObject> patch(RequestData requestData) {
         return unwrap().patch(requestData);
     }
 
     @Override
-    public Single<JsonObject> delete(RequestData requestData) {
+    default Single<JsonObject> delete(RequestData requestData) {
         return unwrap().delete(requestData);
     }
 
     @Override
-    public Logger logger() {
+    default Logger logger() {
         return unwrap().logger();
     }
 
     @Override
-    public ObjectMapper mapper() {
+    default ObjectMapper mapper() {
         return unwrap().mapper();
     }
 
     @Override
-    public String fallback() {
+    default String fallback() {
         return unwrap().fallback();
     }
 
     @Override
-    public Single<EventMessage> apply(Message<Object> message) {
+    default Single<EventMessage> apply(Message<Object> message) {
         return unwrap().apply(message);
     }
 

@@ -10,6 +10,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.pojos.DMLPojo;
 import com.nubeiot.core.sql.workflow.step.DMLStep;
+import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter.AsyncEntityTaskExecuter;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -29,12 +30,14 @@ public class DefaultDMLWorkflow<T extends DMLStep> extends AbstractSQLWorkflow i
     @Override
     protected @NonNull Single<JsonObject> run(@NonNull RequestData requestData, Configuration runtimeConfig) {
         final RequestData reqData = normalize().apply(requestData);
+        final AsyncEntityTaskExecuter postAsyncExecuter = taskManager().postAsyncExecuter();
         return sqlStep().execute(reqData, validator().andThen(afterValidation()), runtimeConfig)
-                        .flatMap(dmlPojo -> postExecuter().execute(initSuccessData(reqData, dmlPojo.dbEntity()))
-                                                          .map(pojo -> DMLPojo.clone(dmlPojo, pojo))
-                                                          .switchIfEmpty(Single.just(dmlPojo)))
-                        .doOnSuccess(db -> asyncPostExecuter().execute(initSuccessData(reqData, db.dbEntity())))
-                        .doOnError(err -> asyncPostExecuter().execute(initErrorData(reqData, err)))
+                        .flatMap(dmlPojo -> taskManager().postBlockingExecuter()
+                                                         .execute(initSuccessData(reqData, dmlPojo.dbEntity()))
+                                                         .map(pojo -> DMLPojo.clone(dmlPojo, pojo))
+                                                         .switchIfEmpty(Single.just(dmlPojo)))
+                        .doOnSuccess(db -> postAsyncExecuter.execute(initSuccessData(reqData, db.dbEntity())))
+                        .doOnError(err -> postAsyncExecuter.execute(initErrorData(reqData, err)))
                         .flatMap(pojo -> transformer().apply(reqData, pojo));
     }
 

@@ -16,7 +16,7 @@ import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.decorator.RequestDecorator;
 import com.nubeiot.core.sql.query.EntityQueryExecutor;
 import com.nubeiot.core.sql.validation.EntityValidation;
-import com.nubeiot.core.sql.workflow.task.EntityTask;
+import com.nubeiot.core.sql.workflow.task.EntityTaskManager;
 
 import lombok.NonNull;
 
@@ -82,36 +82,13 @@ public interface EntityService<P extends VertxPojo, M extends EntityMetadata>
     @NonNull EntityTransformer transformer();
 
     /**
-     * Defines {@code blocking pre-task} is run before the entity manager do query or persist
+     * Defines {@code Entity Task manager}.
      *
-     * @return pre blocking task
-     * @see EntityTask
+     * @return the task manager
      * @since 1.0.0
      */
-    default EntityTask prePersistTask() {
-        return null;
-    }
-
-    /**
-     * Defines {@code blocking post-task} is run after the entity manager do query or persist
-     *
-     * @return post blocking task
-     * @see EntityTask
-     * @since 1.0.0
-     */
-    default EntityTask postPersistTask() {
-        return null;
-    }
-
-    /**
-     * Defines {@code async post-task} is run after the entity manager do query or persist
-     *
-     * @return post async task
-     * @see EntityTask
-     * @since 1.0.0
-     */
-    default EntityTask postPersistAsyncTask() {
-        return null;
+    default @NonNull EntityTaskManager taskManager() {
+        return EntityTaskManager.EMPTY;
     }
 
     /**

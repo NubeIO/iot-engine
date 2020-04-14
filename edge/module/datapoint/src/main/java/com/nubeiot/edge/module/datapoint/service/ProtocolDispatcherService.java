@@ -20,7 +20,8 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.service.AbstractEntityService;
-import com.nubeiot.core.sql.workflow.task.EntityTask;
+import com.nubeiot.core.sql.workflow.task.EntityTaskManager;
+import com.nubeiot.core.sql.workflow.task.EntityTaskManagerImpl;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.ProtocolDispatcherMetadata;
 import com.nubeiot.iotdata.edge.model.tables.pojos.ProtocolDispatcher;
 
@@ -40,8 +41,11 @@ public final class ProtocolDispatcherService
     }
 
     @Override
-    public EntityTask prePersistTask() {
-        return null;
+    public @NonNull EntityTaskManager taskManager() {
+        return EntityTaskManagerImpl.builder()
+                                    .postPersistTask(super.taskManager().postPersistTask())
+                                    .postPersistAsyncTask(super.taskManager().postPersistAsyncTask())
+                                    .build();
     }
 
     public Set<EventMethodDefinition> definitions() {

@@ -10,7 +10,8 @@ import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractEntityService;
-import com.nubeiot.core.sql.workflow.task.EntityTask;
+import com.nubeiot.core.sql.workflow.task.EntityTaskManager;
+import com.nubeiot.core.sql.workflow.task.EntityTaskManagerImpl;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.SyncDispatcherMetadata;
 import com.nubeiot.iotdata.edge.model.tables.pojos.SyncDispatcher;
 
@@ -29,8 +30,11 @@ public final class SyncDispatcherService extends AbstractEntityService<SyncDispa
     }
 
     @Override
-    public EntityTask prePersistTask() {
-        return null;
+    public @NonNull EntityTaskManager taskManager() {
+        return EntityTaskManagerImpl.builder()
+                                    .postPersistTask(super.taskManager().postPersistTask())
+                                    .postPersistAsyncTask(super.taskManager().postPersistAsyncTask())
+                                    .build();
     }
 
     public Set<EventMethodDefinition> definitions() {
