@@ -3,7 +3,9 @@ package com.nubeiot.edge.module.datapoint.service;
 import java.util.UUID;
 
 import org.junit.Test;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 
@@ -305,6 +307,74 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
                                            .filter(new JsonObject().put(Filters.FORCE, true))
                                            .build();
         asserter(context, true, expected, PointService.class.getName(), EventAction.REMOVE, req);
+    }
+
+    @Test
+    public void test_create_batch_point(TestContext context) {
+        final UUID p1Id = UUID.randomUUID();
+        final UUID p2Id = UUID.randomUUID();
+        final JsonObject body = new JsonObject(
+            "{\"points\":[{\"resource\":{\"id\":\"" + p1Id + "\",\"code\":\"TET_01\"," + "\"edge\":\"" +
+            PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.DEFAULT_NETWORK + "\"," +
+            "\"enabled\":true,\"protocol\":\"UNKNOWN\",\"kind\":\"UNKNOWN\",\"type\":\"UNKNOWN\"," +
+            "\"unit\":{\"type\":\"bool\",\"category\":\"ALL\"}},\"action\":\"CREATE\",\"status\":\"SUCCESS\"}," +
+            "{\"resource\":{\"id\":\"" + p2Id + "\",\"code\":\"TET02\"," + "\"edge\":\"" + PrimaryKey.EDGE +
+            "\",\"network\":\"" + PrimaryKey.DEFAULT_NETWORK + "\"," +
+            "\"enabled\":true,\"protocol\":\"UNKNOWN\",\"kind\":\"UNKNOWN\",\"type\":\"UNKNOWN\"," +
+            "\"unit\":{\"type\":\"number\",\"category\":\"ALL\"}},\"action\":\"CREATE\",\"status\":\"SUCCESS\"}]}");
+        final Point p1 = new Point().setId(p1Id)
+                                    .setCode("TET_01")
+                                    .setMeasureUnit(Base.BOOLEAN.type())
+                                    .setEdge(PrimaryKey.EDGE)
+                                    .setNetwork(PrimaryKey.DEFAULT_NETWORK);
+        final Point p2 = new Point().setId(p2Id)
+                                    .setCode("TET02")
+                                    .setMeasureUnit(Base.NUMBER.type())
+                                    .setEdge(PrimaryKey.EDGE)
+                                    .setNetwork(PrimaryKey.DEFAULT_NETWORK);
+        final RequestData req = RequestData.builder()
+                                           .body(new JsonObject().put("points",
+                                                                      new JsonArray().add(JsonPojo.from(p1).toJson())
+                                                                                     .add(JsonPojo.from(p2).toJson())))
+                                           .build();
+        asserter(context, true, body, PointService.class.getName(), EventAction.BATCH_CREATE, req,
+                 JSONCompareMode.LENIENT);
+    }
+
+    @Test
+    public void test_create_batch_point_invalid(TestContext context) {
+        final RequestData req = RequestData.builder().body(new JsonObject()).build();
+        asserter(context, false, new JsonObject().put("code", ErrorCode.INVALID_ARGUMENT)
+                                                 .put("message", "Must provide json array under 'points' key"),
+                 PointService.class.getName(), EventAction.BATCH_CREATE, req);
+    }
+
+    @Test
+    public void test_create_batch_point_one_error(TestContext context) {
+        final UUID p1Id = UUID.randomUUID();
+        final JsonObject body = new JsonObject(
+            "{\"points\":[{\"resource\":{\"edge\":\"" + PrimaryKey.EDGE + "\"," + "\"network\":\"" +
+            PrimaryKey.DEFAULT_NETWORK + "\",\"measure_unit\":\"number\"," +
+            "\"unit\":{\"type\":\"number\"}},\"error\":{\"code\":\"INVALID_ARGUMENT\",\"message\":\"Point Code is " +
+            "mandatory\"}},{\"resource\":{\"id\":\"" + p1Id + "\",\"code\":\"TET_01\"," + "\"edge\":\"" +
+            PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.DEFAULT_NETWORK + "\"," +
+            "\"enabled\":true,\"protocol\":\"UNKNOWN\",\"kind\":\"UNKNOWN\",\"type\":\"UNKNOWN\"," +
+            "\"unit\":{\"type\":\"bool\",\"category\":\"ALL\"}},\"action\":\"CREATE\",\"status\":\"SUCCESS\"}]}");
+        final Point p1 = new Point().setId(p1Id)
+                                    .setCode("TET_01")
+                                    .setMeasureUnit(Base.BOOLEAN.type())
+                                    .setEdge(PrimaryKey.EDGE)
+                                    .setNetwork(PrimaryKey.DEFAULT_NETWORK);
+        final Point p2 = new Point().setMeasureUnit(Base.NUMBER.type())
+                                    .setEdge(PrimaryKey.EDGE)
+                                    .setNetwork(PrimaryKey.DEFAULT_NETWORK);
+        final RequestData req = RequestData.builder()
+                                           .body(new JsonObject().put("points",
+                                                                      new JsonArray().add(JsonPojo.from(p1).toJson())
+                                                                                     .add(JsonPojo.from(p2).toJson())))
+                                           .build();
+        asserter(context, true, body, PointService.class.getName(), EventAction.BATCH_CREATE, req,
+                 JSONCompareMode.LENIENT);
     }
 
 }

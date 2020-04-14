@@ -507,6 +507,7 @@ public interface DataPointIndex extends MetadataIndex {
         private PointComposite validate(@NonNull PointComposite point) {
             Objects.requireNonNull(point.getEdge(), "Point must be assigned to Edge");
             Objects.requireNonNull(point.getNetwork(), "Point must be assigned to Network");
+            Strings.requireNotBlank(point.getCode(), "Point Code is mandatory");
             final MeasureUnit other = point.getOther(MeasureUnitMetadata.INSTANCE.singularKeyName());
             if (Objects.isNull(other)) {
                 point.addMeasureUnit(new MeasureUnit().setType(

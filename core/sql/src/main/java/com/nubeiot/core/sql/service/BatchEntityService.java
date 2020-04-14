@@ -24,12 +24,11 @@ import lombok.NonNull;
  * @see EntityService
  * @since 1.0.0
  */
-public interface BatchEntityService<P extends VertxPojo, M extends EntityMetadata, S extends EntityService<P, M>>
-    extends EntityServiceDelegate<P, M, S> {
+public interface BatchEntityService<P extends VertxPojo, M extends EntityMetadata> extends EntityService<P, M> {
 
     @NonNull
     default Collection<EventAction> getAvailableEvents() {
-        return Stream.of(unwrap().getAvailableEvents(), ActionMethodMapping.BATCH_DML_MAP.get().keySet())
+        return Stream.of(EntityService.super.getAvailableEvents(), ActionMethodMapping.BATCH_DML_MAP.get().keySet())
                      .flatMap(Collection::stream)
                      .collect(Collectors.toSet());
     }
