@@ -30,12 +30,12 @@ import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.edge.module.datapoint.model.pojos.EdgeDeviceComposite;
 import com.nubeiot.edge.module.datapoint.model.pojos.HasProtocol;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
-import com.nubeiot.edge.module.datapoint.model.pojos.PointThingComposite;
+import com.nubeiot.edge.module.datapoint.model.pojos.PointTransducerComposite;
 import com.nubeiot.iotdata.dto.HistorySettingType;
 import com.nubeiot.iotdata.dto.PointPriorityValue;
 import com.nubeiot.iotdata.dto.PointPriorityValue.PointValue;
 import com.nubeiot.iotdata.dto.Protocol;
-import com.nubeiot.iotdata.dto.ThingType;
+import com.nubeiot.iotdata.dto.TransducerType;
 import com.nubeiot.iotdata.edge.model.Tables;
 import com.nubeiot.iotdata.edge.model.tables.daos.DeviceDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.EdgeDao;
@@ -47,13 +47,13 @@ import com.nubeiot.iotdata.edge.model.tables.daos.PointDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.PointHistoryDataDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.PointRealtimeDataDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.PointTagDao;
-import com.nubeiot.iotdata.edge.model.tables.daos.PointThingDao;
+import com.nubeiot.iotdata.edge.model.tables.daos.PointTransducerDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.PointValueDataDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.ProtocolDispatcherDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.RealtimeSettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.ScheduleSettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.SyncDispatcherDao;
-import com.nubeiot.iotdata.edge.model.tables.daos.ThingDao;
+import com.nubeiot.iotdata.edge.model.tables.daos.TransducerDao;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;
 import com.nubeiot.iotdata.edge.model.tables.pojos.EdgeDevice;
@@ -64,13 +64,13 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointRealtimeData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointTag;
-import com.nubeiot.iotdata.edge.model.tables.pojos.PointThing;
+import com.nubeiot.iotdata.edge.model.tables.pojos.PointTransducer;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.ProtocolDispatcher;
 import com.nubeiot.iotdata.edge.model.tables.pojos.RealtimeSetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.ScheduleSetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.SyncDispatcher;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
 import com.nubeiot.iotdata.edge.model.tables.records.DeviceRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.EdgeDeviceRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.EdgeRecord;
@@ -81,13 +81,13 @@ import com.nubeiot.iotdata.edge.model.tables.records.PointHistoryDataRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.PointRealtimeDataRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.PointRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.PointTagRecord;
-import com.nubeiot.iotdata.edge.model.tables.records.PointThingRecord;
+import com.nubeiot.iotdata.edge.model.tables.records.PointTransducerRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.PointValueDataRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.ProtocolDispatcherRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.RealtimeSettingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.ScheduleSettingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.SyncDispatcherRecord;
-import com.nubeiot.iotdata.edge.model.tables.records.ThingRecord;
+import com.nubeiot.iotdata.edge.model.tables.records.TransducerRecord;
 import com.nubeiot.iotdata.unit.DataType;
 
 import lombok.AccessLevel;
@@ -111,10 +111,10 @@ public interface DataPointIndex extends MetadataIndex {
         map.put(EdgeMetadata.INSTANCE, 10);
         map.put(DeviceMetadata.INSTANCE, 10);
         map.put(NetworkMetadata.INSTANCE, 20);
-        map.put(ThingMetadata.INSTANCE, 20);
+        map.put(TransducerMetadata.INSTANCE, 20);
         map.put(EdgeDeviceMetadata.INSTANCE, 30);
         map.put(PointMetadata.INSTANCE, 40);
-        map.put(PointThingMetadata.INSTANCE, 50);
+        map.put(PointTransducerMetadata.INSTANCE, 50);
         return map;
     }
 
@@ -748,69 +748,70 @@ public interface DataPointIndex extends MetadataIndex {
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class ThingMetadata implements UUIDKeyEntity<Thing, ThingRecord, ThingDao> {
+    final class TransducerMetadata implements UUIDKeyEntity<Transducer, TransducerRecord, TransducerDao> {
 
-        public static final ThingMetadata INSTANCE = new ThingMetadata();
+        public static final TransducerMetadata INSTANCE = new TransducerMetadata();
 
         @Override
-        public @NonNull com.nubeiot.iotdata.edge.model.tables.Thing table() {
-            return Tables.THING;
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.Transducer table() {
+            return Tables.TRANSDUCER;
         }
 
         @Override
-        public @NonNull Class<Thing> modelClass() {
-            return Thing.class;
+        public @NonNull Class<Transducer> modelClass() {
+            return Transducer.class;
         }
 
         @Override
-        public @NonNull Class<ThingDao> daoClass() {
-            return ThingDao.class;
+        public @NonNull Class<TransducerDao> daoClass() {
+            return TransducerDao.class;
         }
 
         @Override
-        public @NonNull Thing onCreating(RequestData reqData) throws IllegalArgumentException {
-            Thing thing = parseFromRequest(reqData.body());
-            Strings.requireNotBlank(thing.getCode(), "Thing code is mandatory");
-            Strings.requireNotBlank(thing.getType(), "Thing type is mandatory");
-            Strings.requireNotBlank(thing.getCategory(), "Thing category is mandatory");
-            return thing.setId(Optional.ofNullable(thing.getId()).orElseGet(UUID::randomUUID));
+        public @NonNull Transducer onCreating(RequestData reqData) throws IllegalArgumentException {
+            Transducer transducer = parseFromRequest(reqData.body());
+            Strings.requireNotBlank(transducer.getCode(), "Transducer code is mandatory");
+            Strings.requireNotBlank(transducer.getType(), "Transducer type is mandatory");
+            Strings.requireNotBlank(transducer.getCategory(), "Transducer category is mandatory");
+            return transducer.setId(Optional.ofNullable(transducer.getId()).orElseGet(UUID::randomUUID));
         }
 
     }
 
 
-    final class PointThingMetadata
-        extends AbstractCompositeMetadata<Long, PointThing, PointThingRecord, PointThingDao, PointThingComposite>
-        implements BigSerialKeyEntity<PointThing, PointThingRecord, PointThingDao> {
+    final class PointTransducerMetadata extends
+                                        AbstractCompositeMetadata<Long, PointTransducer, PointTransducerRecord,
+                                                                     PointTransducerDao, PointTransducerComposite>
+        implements BigSerialKeyEntity<PointTransducer, PointTransducerRecord, PointTransducerDao> {
 
-        public static final PointThingMetadata INSTANCE = new PointThingMetadata().addSubItem(
-            PointCompositeMetadata.INSTANCE, ThingMetadata.INSTANCE);
+        public static final PointTransducerMetadata INSTANCE = new PointTransducerMetadata().addSubItem(
+            PointCompositeMetadata.INSTANCE, TransducerMetadata.INSTANCE);
 
-        public static String genComputedThing(@NonNull ThingType type, @NonNull UUID thingId) {
-            if (type != ThingType.SENSOR) {
+        public static String genComputedTransducer(@NonNull TransducerType type, @NonNull UUID transducerId) {
+            if (type != TransducerType.SENSOR) {
                 return null;
             }
-            return UUID64.uuidToBase64(thingId) + "-" + type.type();
+            return UUID64.uuidToBase64(transducerId) + "-" + type.type();
         }
 
         @Override
-        public @NonNull Class<PointThing> rawClass() {
-            return PointThing.class;
+        public @NonNull Class<PointTransducer> rawClass() {
+            return PointTransducer.class;
         }
 
         @Override
-        public @NonNull Class<PointThingComposite> modelClass() {
-            return PointThingComposite.class;
+        public @NonNull Class<PointTransducerComposite> modelClass() {
+            return PointTransducerComposite.class;
         }
 
         @Override
-        public @NonNull com.nubeiot.iotdata.edge.model.tables.PointThing table() {
-            return Tables.POINT_THING;
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.PointTransducer table() {
+            return Tables.POINT_TRANSDUCER;
         }
 
         @Override
-        public @NonNull Class<PointThingDao> daoClass() {
-            return PointThingDao.class;
+        public @NonNull Class<PointTransducerDao> daoClass() {
+            return PointTransducerDao.class;
         }
 
     }

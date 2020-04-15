@@ -33,8 +33,8 @@ public class DataPointEntityHandlerTest {
         Assert.assertEquals(3, referenceEntityMetadata.size());
         Assert.assertTrue(referenceEntityMetadata.stream()
                                                  .allMatch(ref -> ref.getTable().equals(Tables.EDGE_DEVICE) ||
-                                                                  ref.getTable().equals(Tables.THING) ||
-                                                                  ref.getTable().equals(Tables.POINT_THING)));
+                                                                  ref.getTable().equals(Tables.TRANSDUCER) ||
+                                                                  ref.getTable().equals(Tables.POINT_TRANSDUCER)));
     }
 
     @Test
@@ -49,7 +49,7 @@ public class DataPointEntityHandlerTest {
     @Test
     public void test_reference_table_to_point() {
         final List<ReferenceEntityMetadata> referenceEntityMetadata = holder.referenceTo(PointMetadata.INSTANCE);
-        final Set<Table> tables = Stream.of(Tables.POINT_TAG, Tables.POINT_THING, Tables.POINT_HISTORY_DATA,
+        final Set<Table> tables = Stream.of(Tables.POINT_TAG, Tables.POINT_TRANSDUCER, Tables.POINT_HISTORY_DATA,
                                             Tables.POINT_REALTIME_DATA, Tables.POINT_VALUE_DATA,
                                             Tables.SCHEDULE_SETTING, Tables.HISTORY_SETTING, Tables.REALTIME_SETTING)
                                         .collect(Collectors.toSet());

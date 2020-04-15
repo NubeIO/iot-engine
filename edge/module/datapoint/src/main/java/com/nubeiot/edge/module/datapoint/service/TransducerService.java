@@ -17,22 +17,22 @@ import com.nubeiot.core.sql.service.marker.EntityReferences;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeDeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.ThingMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.TransducerMetadata;
 import com.nubeiot.edge.module.datapoint.service.extension.NetworkExtension;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
 
 import lombok.NonNull;
 
-public final class ThingService extends AbstractTransitiveEntityService<Thing, ThingMetadata>
-    implements DataPointService<Thing, ThingMetadata> {
+public final class TransducerService extends AbstractTransitiveEntityService<Transducer, TransducerMetadata>
+    implements DataPointService<Transducer, TransducerMetadata> {
 
-    public ThingService(@NonNull EntityHandler entityHandler) {
+    public TransducerService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
     }
 
     @Override
-    public ThingMetadata context() {
-        return ThingMetadata.INSTANCE;
+    public TransducerMetadata context() {
+        return TransducerMetadata.INSTANCE;
     }
 
     @Override

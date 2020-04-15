@@ -36,7 +36,7 @@ final class DataPointInitializer implements SchemaInitializer {
         map.put(Tables.DEVICE, Tables.DEVICE.ID);
         map.put(Tables.NETWORK, Tables.NETWORK.ID);
         map.put(Tables.POINT, Tables.POINT.ID);
-        map.put(Tables.THING, Tables.THING.ID);
+        map.put(Tables.TRANSDUCER, Tables.TRANSDUCER.ID);
         final String sql = "Alter table {0} alter column {1} set default random_uuid()";
         if (dsl.configuration().family() == SQLDialect.H2) {
             return map.entrySet()

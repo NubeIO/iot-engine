@@ -8,8 +8,8 @@ import io.reactivex.Single;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.pojos.JsonPojo;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointThingMetadata;
-import com.nubeiot.edge.module.datapoint.model.pojos.PointThingComposite;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointTransducerMetadata;
+import com.nubeiot.edge.module.datapoint.model.pojos.PointTransducerComposite;
 
 import lombok.NonNull;
 
@@ -21,15 +21,15 @@ import lombok.NonNull;
  * @since 1.0.0
  */
 public interface DataProtocolPointScanner<X, T extends DataProtocolPointScanner>
-    extends DataProtocolScanner<PointThingComposite, X, T> {
+    extends DataProtocolScanner<PointTransducerComposite, X, T> {
 
     @Override
-    default @NonNull PointThingMetadata context() {
-        return PointThingMetadata.INSTANCE;
+    default @NonNull PointTransducerMetadata context() {
+        return PointTransducerMetadata.INSTANCE;
     }
 
     @Override
-    default @NonNull String parseKey(@NonNull PointThingComposite entity) {
+    default @NonNull String parseKey(@NonNull PointTransducerComposite entity) {
         return Strings.toString(entity.getPointId());
     }
 
@@ -42,8 +42,8 @@ public interface DataProtocolPointScanner<X, T extends DataProtocolPointScanner>
      * @since 1.0.0
      */
     default @NonNull Single<Map<String, X>> scan(@NonNull UUID networkId, @NonNull UUID deviceId) {
-        final PointThingComposite pojo = (PointThingComposite) new PointThingComposite().setNetworkId(networkId)
-                                                                                        .setDeviceId(deviceId);
+        final PointTransducerComposite pojo = (PointTransducerComposite) new PointTransducerComposite().setNetworkId(
+            networkId).setDeviceId(deviceId);
         return query(RequestData.builder().body(JsonPojo.from(pojo).toJson()).build());
     }
 

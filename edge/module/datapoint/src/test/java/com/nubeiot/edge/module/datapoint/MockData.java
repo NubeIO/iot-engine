@@ -26,20 +26,20 @@ import com.nubeiot.edge.module.datapoint.DataPointIndex.HistoryDataMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistorySettingMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointThingMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointTransducerMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointValueMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.ProtocolDispatcherMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.RealtimeSettingMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.TagPointMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.ThingMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.TransducerMetadata;
 import com.nubeiot.iotdata.dto.DeviceType;
 import com.nubeiot.iotdata.dto.HistorySettingType;
 import com.nubeiot.iotdata.dto.PointKind;
 import com.nubeiot.iotdata.dto.PointPriorityValue;
 import com.nubeiot.iotdata.dto.PointType;
 import com.nubeiot.iotdata.dto.Protocol;
-import com.nubeiot.iotdata.dto.ThingCategory;
-import com.nubeiot.iotdata.dto.ThingType;
+import com.nubeiot.iotdata.dto.TransducerCategory;
+import com.nubeiot.iotdata.dto.TransducerType;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;
 import com.nubeiot.iotdata.edge.model.tables.pojos.EdgeDevice;
@@ -48,11 +48,11 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointTag;
-import com.nubeiot.iotdata.edge.model.tables.pojos.PointThing;
+import com.nubeiot.iotdata.edge.model.tables.pojos.PointTransducer;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.ProtocolDispatcher;
 import com.nubeiot.iotdata.edge.model.tables.pojos.RealtimeSetting;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
 import com.nubeiot.iotdata.unit.DataTypeCategory.AngularVelocity;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Base;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Temperature;
@@ -68,9 +68,9 @@ public final class MockData {
     public static final JsonObject MEASURE_UNITS = measures();
     public static final List<Network> NETWORKS = networks();
     public static final List<Device> DEVICES = devices();
-    public static final List<Thing> THINGS = things();
+    public static final List<Transducer> TRANSDUCERS = transducers();
     public static final List<EdgeDevice> EDGE_EQUIPS = edgeEquips();
-    public static final List<PointThing> POINT_THINGS = pointThings();
+    public static final List<PointTransducer> POINT_TRANSDUCERS = pointTransducers();
     public static final List<Point> POINTS = points();
     public static final List<PointTag> TAGS = tags();
     public static final List<PointValueData> POINT_DATA = pointData();
@@ -293,83 +293,92 @@ public final class MockData {
                                              .setNetworkId(PrimaryKey.BACNET_NETWORK));
     }
 
-    private static List<Thing> things() {
-        final Thing t1 = new Thing().setId(PrimaryKey.THING_TEMP_DROPLET)
-                                    .setDeviceId(PrimaryKey.DEVICE_DROPLET)
-                                    .setCode("DROPLET-2CB2B763-T")
-                                    .setType(ThingType.SENSOR)
-                                    .setCategory(ThingCategory.TEMP)
-                                    .setMeasureUnit(Temperature.CELSIUS.type())
-                                    .setLabel(Label.builder().label("Droplet Temp").build());
-        final Thing t2 = new Thing().setId(PrimaryKey.THING_HUMIDITY_DROPLET)
-                                    .setDeviceId(PrimaryKey.DEVICE_DROPLET)
-                                    .setCode("DROPLET-2CB2B763-H")
-                                    .setType(ThingType.SENSOR)
-                                    .setCategory(ThingCategory.HUMIDITY)
-                                    .setMeasureUnit(Base.PERCENTAGE.type())
-                                    .setDeviceId(PrimaryKey.DEVICE_DROPLET)
-                                    .setLabel(Label.builder().label("Droplet Humidity").build());
-        final Thing t3 = new Thing().setId(PrimaryKey.THING_SWITCH_HVAC)
-                                    .setDeviceId(PrimaryKey.DEVICE_HVAC)
-                                    .setCode("HVAC-XYZ-FAN-CONTROL")
-                                    .setType(ThingType.ACTUATOR)
-                                    .setCategory(ThingCategory.SWITCH)
-                                    .setMeasureUnit(Base.BOOLEAN.type())
-                                    .setLabel(Label.builder().label("HVAC Fan Control").build());
-        final Thing t4 = new Thing().setId(PrimaryKey.THING_FAN_HVAC)
-                                    .setDeviceId(PrimaryKey.DEVICE_HVAC)
-                                    .setCode("HVAC-XYZ-FAN")
-                                    .setType(ThingType.SENSOR)
-                                    .setCategory(ThingCategory.VELOCITY)
-                                    .setMeasureUnit(AngularVelocity.RPM.type())
-                                    .setLabel(Label.builder().label("HVAC Fan").build());
-        final Thing t5 = new Thing().setId(PrimaryKey.THING_TEMP_HVAC)
-                                    .setDeviceId(PrimaryKey.DEVICE_HVAC)
-                                    .setCode("HVAC-XYZ-TEMP-01")
-                                    .setType(ThingType.SENSOR)
-                                    .setCategory(ThingCategory.TEMP)
-                                    .setMeasureUnit(Temperature.CELSIUS.type())
-                                    .setLabel(Label.builder().label("HVAC Temp").build());
+    private static List<Transducer> transducers() {
+        final Transducer t1 = new Transducer().setId(PrimaryKey.TRANSDUCER_TEMP_DROPLET)
+                                              .setDeviceId(PrimaryKey.DEVICE_DROPLET)
+                                              .setCode("DROPLET-2CB2B763-T")
+                                              .setType(TransducerType.SENSOR)
+                                              .setCategory(TransducerCategory.TEMP)
+                                              .setMeasureUnit(Temperature.CELSIUS.type())
+                                              .setLabel(Label.builder().label("Droplet Temp").build());
+        final Transducer t2 = new Transducer().setId(PrimaryKey.TRANSDUCER_HUMIDITY_DROPLET)
+                                              .setDeviceId(PrimaryKey.DEVICE_DROPLET)
+                                              .setCode("DROPLET-2CB2B763-H")
+                                              .setType(TransducerType.SENSOR)
+                                              .setCategory(TransducerCategory.HUMIDITY)
+                                              .setMeasureUnit(Base.PERCENTAGE.type())
+                                              .setDeviceId(PrimaryKey.DEVICE_DROPLET)
+                                              .setLabel(Label.builder().label("Droplet Humidity").build());
+        final Transducer t3 = new Transducer().setId(PrimaryKey.TRANSDUCER_SWITCH_HVAC)
+                                              .setDeviceId(PrimaryKey.DEVICE_HVAC)
+                                              .setCode("HVAC-XYZ-FAN-CONTROL")
+                                              .setType(TransducerType.ACTUATOR)
+                                              .setCategory(TransducerCategory.SWITCH)
+                                              .setMeasureUnit(Base.BOOLEAN.type())
+                                              .setLabel(Label.builder().label("HVAC Fan Control").build());
+        final Transducer t4 = new Transducer().setId(PrimaryKey.TRANSDUCER_FAN_HVAC)
+                                              .setDeviceId(PrimaryKey.DEVICE_HVAC)
+                                              .setCode("HVAC-XYZ-FAN")
+                                              .setType(TransducerType.SENSOR)
+                                              .setCategory(TransducerCategory.VELOCITY)
+                                              .setMeasureUnit(AngularVelocity.RPM.type())
+                                              .setLabel(Label.builder().label("HVAC Fan").build());
+        final Transducer t5 = new Transducer().setId(PrimaryKey.TRANSDUCER_TEMP_HVAC)
+                                              .setDeviceId(PrimaryKey.DEVICE_HVAC)
+                                              .setCode("HVAC-XYZ-TEMP-01")
+                                              .setType(TransducerType.SENSOR)
+                                              .setCategory(TransducerCategory.TEMP)
+                                              .setMeasureUnit(Temperature.CELSIUS.type())
+                                              .setLabel(Label.builder().label("HVAC Temp").build());
         return Arrays.asList(t1, t2, t3, t4, t5);
     }
 
-    private static List<PointThing> pointThings() {
-        final PointThing t1 = new PointThing().setPointId(PrimaryKey.P_GPIO_HUMIDITY)
-                                              .setThingId(PrimaryKey.THING_HUMIDITY_DROPLET)
-                                              .setDeviceId(PrimaryKey.DEVICE_DROPLET)
-                                              .setNetworkId(PrimaryKey.DEFAULT_NETWORK)
-                                              .setEdgeId(PrimaryKey.EDGE)
-                                              .setComputedThing(PointThingMetadata.genComputedThing(ThingType.SENSOR,
-                                                                                                    PrimaryKey.THING_HUMIDITY_DROPLET));
-        final PointThing t2 = new PointThing().setPointId(PrimaryKey.P_GPIO_TEMP)
-                                              .setThingId(PrimaryKey.THING_TEMP_DROPLET)
-                                              .setDeviceId(PrimaryKey.DEVICE_DROPLET)
-                                              .setNetworkId(PrimaryKey.DEFAULT_NETWORK)
-                                              .setEdgeId(PrimaryKey.EDGE)
-                                              .setComputedThing(PointThingMetadata.genComputedThing(ThingType.SENSOR,
-                                                                                                    PrimaryKey.THING_TEMP_DROPLET));
-        final PointThing t3 = new PointThing().setPointId(PrimaryKey.P_BACNET_TEMP)
-                                              .setThingId(PrimaryKey.THING_TEMP_HVAC)
-                                              .setDeviceId(PrimaryKey.DEVICE_HVAC)
-                                              .setNetworkId(PrimaryKey.BACNET_NETWORK)
-                                              .setEdgeId(PrimaryKey.EDGE)
-                                              .setComputedThing(PointThingMetadata.genComputedThing(ThingType.SENSOR,
-                                                                                                    PrimaryKey.THING_TEMP_HVAC));
-        final PointThing t4 = new PointThing().setPointId(PrimaryKey.P_BACNET_FAN)
-                                              .setThingId(PrimaryKey.THING_FAN_HVAC)
-                                              .setDeviceId(PrimaryKey.DEVICE_HVAC)
-                                              .setNetworkId(PrimaryKey.BACNET_NETWORK)
-                                              .setEdgeId(PrimaryKey.EDGE)
-                                              .setComputedThing(PointThingMetadata.genComputedThing(ThingType.SENSOR,
-                                                                                                    PrimaryKey.THING_FAN_HVAC));
-        final PointThing t5 = new PointThing().setPointId(PrimaryKey.P_BACNET_SWITCH)
-                                              .setThingId(PrimaryKey.THING_SWITCH_HVAC)
-                                              .setDeviceId(PrimaryKey.DEVICE_HVAC)
-                                              .setDeviceId(PrimaryKey.DEVICE_HVAC)
-                                              .setNetworkId(PrimaryKey.BACNET_NETWORK)
-                                              .setEdgeId(PrimaryKey.EDGE)
-                                              .setComputedThing(PointThingMetadata.genComputedThing(ThingType.ACTUATOR,
-                                                                                                    PrimaryKey.THING_SWITCH_HVAC));
+    private static List<PointTransducer> pointTransducers() {
+        final PointTransducer t1 = new PointTransducer().setPointId(PrimaryKey.P_GPIO_HUMIDITY)
+                                                        .setTransducerId(PrimaryKey.TRANSDUCER_HUMIDITY_DROPLET)
+                                                        .setDeviceId(PrimaryKey.DEVICE_DROPLET)
+                                                        .setNetworkId(PrimaryKey.DEFAULT_NETWORK)
+                                                        .setEdgeId(PrimaryKey.EDGE)
+                                                        .setComputedTransducer(
+                                                            PointTransducerMetadata.genComputedTransducer(
+                                                                TransducerType.SENSOR,
+                                                                PrimaryKey.TRANSDUCER_HUMIDITY_DROPLET));
+        final PointTransducer t2 = new PointTransducer().setPointId(PrimaryKey.P_GPIO_TEMP)
+                                                        .setTransducerId(PrimaryKey.TRANSDUCER_TEMP_DROPLET)
+                                                        .setDeviceId(PrimaryKey.DEVICE_DROPLET)
+                                                        .setNetworkId(PrimaryKey.DEFAULT_NETWORK)
+                                                        .setEdgeId(PrimaryKey.EDGE)
+                                                        .setComputedTransducer(
+                                                            PointTransducerMetadata.genComputedTransducer(
+                                                                TransducerType.SENSOR,
+                                                                PrimaryKey.TRANSDUCER_TEMP_DROPLET));
+        final PointTransducer t3 = new PointTransducer().setPointId(PrimaryKey.P_BACNET_TEMP)
+                                                        .setTransducerId(PrimaryKey.TRANSDUCER_TEMP_HVAC)
+                                                        .setDeviceId(PrimaryKey.DEVICE_HVAC)
+                                                        .setNetworkId(PrimaryKey.BACNET_NETWORK)
+                                                        .setEdgeId(PrimaryKey.EDGE)
+                                                        .setComputedTransducer(
+                                                            PointTransducerMetadata.genComputedTransducer(
+                                                                TransducerType.SENSOR,
+                                                                PrimaryKey.TRANSDUCER_TEMP_HVAC));
+        final PointTransducer t4 = new PointTransducer().setPointId(PrimaryKey.P_BACNET_FAN)
+                                                        .setTransducerId(PrimaryKey.TRANSDUCER_FAN_HVAC)
+                                                        .setDeviceId(PrimaryKey.DEVICE_HVAC)
+                                                        .setNetworkId(PrimaryKey.BACNET_NETWORK)
+                                                        .setEdgeId(PrimaryKey.EDGE)
+                                                        .setComputedTransducer(
+                                                            PointTransducerMetadata.genComputedTransducer(
+                                                                TransducerType.SENSOR, PrimaryKey.TRANSDUCER_FAN_HVAC));
+        final PointTransducer t5 = new PointTransducer().setPointId(PrimaryKey.P_BACNET_SWITCH)
+                                                        .setTransducerId(PrimaryKey.TRANSDUCER_SWITCH_HVAC)
+                                                        .setDeviceId(PrimaryKey.DEVICE_HVAC)
+                                                        .setDeviceId(PrimaryKey.DEVICE_HVAC)
+                                                        .setNetworkId(PrimaryKey.BACNET_NETWORK)
+                                                        .setEdgeId(PrimaryKey.EDGE)
+                                                        .setComputedTransducer(
+                                                            PointTransducerMetadata.genComputedTransducer(
+                                                                TransducerType.ACTUATOR,
+                                                                PrimaryKey.TRANSDUCER_SWITCH_HVAC));
         return Arrays.asList(t1, t2, t3, t4, t5);
     }
 
@@ -400,20 +409,22 @@ public final class MockData {
                           .put(NetworkMetadata.INSTANCE.singularKeyName(), data(NETWORKS));
     }
 
-    public static JsonObject data_Device_Equip_Thing() {
+    public static JsonObject data_Device_Equip_Transducer() {
         return data_Edge_Network().put(DeviceMetadata.INSTANCE.singularKeyName(), data(DEVICES))
                                   .put(EdgeDeviceMetadata.INSTANCE.singularKeyName(), data(EDGE_EQUIPS))
-                                  .put(ThingMetadata.INSTANCE.singularKeyName(), data(THINGS));
+                                  .put(TransducerMetadata.INSTANCE.singularKeyName(), data(TRANSDUCERS));
     }
 
     public static JsonObject data_Point_Setting_Tag() {
-        return data_Device_Equip_Thing().put(PointMetadata.INSTANCE.singularKeyName(), data(POINTS))
-                                        .put(TagPointMetadata.INSTANCE.singularKeyName(), data(TAGS))
-                                        .put(PointValueMetadata.INSTANCE.singularKeyName(), data(POINT_DATA))
-                                        .put(HistorySettingMetadata.INSTANCE.singularKeyName(), data(HISTORY_SETTINGS))
-                                        .put(HistoryDataMetadata.INSTANCE.singularKeyName(), data(HISTORY_DATA))
-                                        .put(RealtimeSettingMetadata.INSTANCE.singularKeyName(), data(RT_SETTINGS))
-                                        .put(PointThingMetadata.INSTANCE.singularKeyName(), data(POINT_THINGS));
+        return data_Device_Equip_Transducer().put(PointMetadata.INSTANCE.singularKeyName(), data(POINTS))
+                                             .put(TagPointMetadata.INSTANCE.singularKeyName(), data(TAGS))
+                                             .put(PointValueMetadata.INSTANCE.singularKeyName(), data(POINT_DATA))
+                                             .put(HistorySettingMetadata.INSTANCE.singularKeyName(),
+                                                  data(HISTORY_SETTINGS))
+                                             .put(HistoryDataMetadata.INSTANCE.singularKeyName(), data(HISTORY_DATA))
+                                             .put(RealtimeSettingMetadata.INSTANCE.singularKeyName(), data(RT_SETTINGS))
+                                             .put(PointTransducerMetadata.INSTANCE.singularKeyName(),
+                                                  data(POINT_TRANSDUCERS));
     }
 
     public static JsonObject data_Protocol_Dispatcher() {
@@ -446,11 +457,11 @@ public final class MockData {
         public static final UUID DEVICE_DROPLET = UUID.fromString("e43aa03a-4746-4fb5-815d-ee62f709b535");
         public static final UUID DEVICE_HVAC = UUID.fromString("28a4ba1b-154d-4bbf-8537-320be70e50e5");
 
-        public static final UUID THING_TEMP_DROPLET = UUID.fromString("08d66e92-f15d-4fdb-9ed5-fd165b212591");
-        public static final UUID THING_HUMIDITY_DROPLET = UUID.fromString("5eb7da66-8013-4cc4-9608-ead768eca665");
-        public static final UUID THING_FAN_HVAC = UUID.fromString("388519ef-797f-49ca-a613-204b4587ef28");
-        public static final UUID THING_TEMP_HVAC = UUID.fromString("960f5686-1dd6-48c0-bb5b-bec79c2b5788");
-        public static final UUID THING_SWITCH_HVAC = UUID.fromString("76d34f4e-3b20-4776-99c7-d93d79d5b4a6");
+        public static final UUID TRANSDUCER_TEMP_DROPLET = UUID.fromString("08d66e92-f15d-4fdb-9ed5-fd165b212591");
+        public static final UUID TRANSDUCER_HUMIDITY_DROPLET = UUID.fromString("5eb7da66-8013-4cc4-9608-ead768eca665");
+        public static final UUID TRANSDUCER_FAN_HVAC = UUID.fromString("388519ef-797f-49ca-a613-204b4587ef28");
+        public static final UUID TRANSDUCER_TEMP_HVAC = UUID.fromString("960f5686-1dd6-48c0-bb5b-bec79c2b5788");
+        public static final UUID TRANSDUCER_SWITCH_HVAC = UUID.fromString("76d34f4e-3b20-4776-99c7-d93d79d5b4a6");
 
     }
 

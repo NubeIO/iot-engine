@@ -17,19 +17,19 @@ import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointThingMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointTransducerMetadata;
 
 import lombok.NonNull;
 
-public final class PointByDeviceService extends PointThingService {
+public final class PointByDeviceService extends PointTransducerService {
 
     PointByDeviceService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
     }
 
     @Override
-    public PointThingMetadata context() {
-        return PointThingMetadata.INSTANCE;
+    public PointTransducerMetadata context() {
+        return PointTransducerMetadata.INSTANCE;
     }
 
     @Override

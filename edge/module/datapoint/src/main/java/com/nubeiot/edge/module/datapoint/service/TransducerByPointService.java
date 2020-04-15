@@ -14,20 +14,20 @@ import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointThingMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.ThingMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointTransducerMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.TransducerMetadata;
 
 import lombok.NonNull;
 
-public final class ThingByPointService extends PointThingService {
+public final class TransducerByPointService extends PointTransducerService {
 
-    ThingByPointService(@NonNull EntityHandler entityHandler) {
+    TransducerByPointService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
     }
 
     @Override
-    public PointThingMetadata context() {
-        return PointThingMetadata.INSTANCE;
+    public PointTransducerMetadata context() {
+        return PointTransducerMetadata.INSTANCE;
     }
 
     @Override
@@ -37,12 +37,17 @@ public final class ThingByPointService extends PointThingService {
 
     @Override
     public @NonNull EntityMetadata resource() {
-        return ThingMetadata.INSTANCE;
+        return TransducerMetadata.INSTANCE;
     }
 
     @Override
     public @NonNull Collection<EventAction> getAvailableEvents() {
         return ActionMethodMapping.DQL_MAP.get().keySet();
+    }
+
+    @Override
+    public boolean supportForceDeletion() {
+        return false;
     }
 
     @Override
@@ -56,11 +61,6 @@ public final class ThingByPointService extends PointThingService {
                                                              NetworkMetadata.INSTANCE, reference()))
                      .flatMap(Collection::stream)
                      .collect(Collectors.toSet());
-    }
-
-    @Override
-    public boolean supportForceDeletion() {
-        return false;
     }
 
 }

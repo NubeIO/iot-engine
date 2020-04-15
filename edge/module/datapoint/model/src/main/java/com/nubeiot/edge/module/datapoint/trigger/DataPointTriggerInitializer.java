@@ -20,8 +20,10 @@ public final class DataPointTriggerInitializer {
 
     public int execute(@NonNull DSLContext dsl) {
         return dsl.execute(String.join(";", Arrays.asList(
-            createTrigger("POINT_THING_CREATION_TRIGGER", "INSERT", Tables.POINT_THING, PointThingTrigger.class),
-            createTrigger("POINT_THING_MODIFICATION_TRIGGER", "UPDATE", Tables.POINT_THING, PointThingTrigger.class))));
+            createTrigger("POINT_TRANSDUCER_CREATION_TRIGGER", "INSERT", Tables.POINT_TRANSDUCER,
+                          PointTransducerTrigger.class),
+            createTrigger("POINT_TRANSDUCER_MODIFICATION_TRIGGER", "UPDATE", Tables.POINT_TRANSDUCER,
+                          PointTransducerTrigger.class))));
     }
 
 }
