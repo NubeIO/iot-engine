@@ -1,6 +1,7 @@
 package com.nubeiot.core.dto;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -223,6 +224,8 @@ public final class RequestFilter extends JsonObject implements JsonData {
          * @since 1.0.0
          */
         public static final String FORCE = "_force";
+
+        public static final List<String> BOOLEAN_PARAMS = Arrays.asList(PRETTY, AUDIT, TEMP_AUDIT, FORCE);
 
     }
 

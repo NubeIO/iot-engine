@@ -11,6 +11,7 @@ import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.edge.module.datapoint.BaseDataPointVerticleTest;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Temperature;
 
 public class PointVerticleReaderTest extends BaseDataPointVerticleTest {
@@ -21,7 +22,7 @@ public class PointVerticleReaderTest extends BaseDataPointVerticleTest {
     }
 
     @Test
-    public void test_get_points_with_invalid_key_400(TestContext context) {
+    public void test_get_point_with_invalid_key_400(TestContext context) {
         assertRestByClient(context, HttpMethod.GET, "/api/s/network/xxx/point/" + PrimaryKey.P_GPIO_TEMP, 400,
                            new JsonObject("{\"message\":\"Invalid key\",\"code\":\"INVALID_ARGUMENT\"}"));
     }
@@ -103,6 +104,24 @@ public class PointVerticleReaderTest extends BaseDataPointVerticleTest {
                                         "{\"id\":2,\"tag_name\":\"source\",\"tag_value\":\"droplet\"}]"));
         assertRestByClient(context, HttpMethod.GET, "/api/s/point/" + PrimaryKey.P_GPIO_TEMP + "?_incl=tag", 200,
                            point);
+    }
+
+    @Test
+    public void test_get_points_by_advance_query(TestContext context) {
+        final Point search1 = MockData.search(PrimaryKey.P_GPIO_TEMP);
+        final Point search2 = MockData.search(PrimaryKey.P_GPIO_HUMIDITY);
+        final JsonObject expected = new JsonObject(
+            "{\"points\":[{\"id\":\"1efaf662-1333-48d1-a60f-8fc60f259f0e\",\"code\":\"2CB2B763_TEMP\"," +
+            "\"edge\":\"d7cd3f57-a188-4462-b959-df7a23994c92\",\"network\":\"e3eab951-932e-4fcc-a925-08b31e1014a0\"," +
+            "\"enabled\":true,\"protocol\":\"WIRE\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\"," +
+            "\"measure_unit\":\"celsius\",\"precision\":3,\"offset\":0}," +
+            "{\"id\":\"3bea3c91-850d-4409-b594-8ffb5aa6b8a0\",\"code\":\"2CB2B763_HUMIDITY\"," +
+            "\"edge\":\"d7cd3f57-a188-4462-b959-df7a23994c92\",\"network\":\"e3eab951-932e-4fcc-a925-08b31e1014a0\"," +
+            "\"enabled\":true,\"protocol\":\"WIRE\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\"," +
+            "\"measure_unit\":\"percentage\",\"min_scale\":0,\"max_scale\":100,\"precision\":3,\"offset\":0}]}");
+        final String query = "_incl=tag&_q=code=in=(" + search1.getCode() + "," + search2.getCode() + ")" +
+                             "&_page=1&_per_page=2";
+        assertRestByClient(context, HttpMethod.GET, "/api/s/point?" + query, 200, expected);
     }
 
 }

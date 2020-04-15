@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -26,7 +27,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.Pagination;
-import com.nubeiot.core.dto.RequestFilter;
+import com.nubeiot.core.dto.RequestFilter.Filters;
 import com.nubeiot.core.dto.Sort;
 
 import lombok.AccessLevel;
@@ -44,7 +45,7 @@ public final class HttpUtils {
                       HttpMethod.HEAD, HttpMethod.OPTIONS)));
 
     private static boolean isPretty(HttpServerRequest request) {
-        return Boolean.parseBoolean(request.getParam(RequestFilter.Filters.PRETTY));
+        return Boolean.parseBoolean(request.getParam(Filters.PRETTY));
     }
 
     @SuppressWarnings("unchecked")
@@ -115,7 +116,7 @@ public final class HttpUtils {
         private static final String SEPARATE = "&";
 
         public static String language(@NonNull HttpServerRequest request) {
-            String lang = request.getParam(RequestFilter.Filters.LANG);
+            String lang = request.getParam(Filters.LANG);
             if (Strings.isBlank(lang)) {
                 return "en";
             }
@@ -125,8 +126,8 @@ public final class HttpUtils {
         public static Pagination pagination(@NonNull HttpServerRequest request) {
             if (request.method() == HttpMethod.GET) {
                 return Pagination.builder()
-                                 .page(request.getParam(RequestFilter.Filters.PAGE))
-                                 .perPage(request.getParam(RequestFilter.Filters.PER_PAGE))
+                                 .page(request.getParam(Filters.PAGE))
+                                 .perPage(request.getParam(Filters.PER_PAGE))
                                  .build();
             }
             return null;
@@ -134,23 +135,34 @@ public final class HttpUtils {
 
         public static Sort sort(@NonNull HttpServerRequest request) {
             if (request.method() == HttpMethod.GET) {
-                return Sort.from(
-                    Urls.decode(Optional.ofNullable(request.getParam(RequestFilter.Filters.SORT)).orElse("")));
+                return Sort.from(Urls.decode(Optional.ofNullable(request.getParam(Filters.SORT)).orElse("")));
             }
             return null;
         }
 
         public static JsonObject query(@NonNull HttpServerRequest request) {
-            String query = request.query();
-            return Strings.isBlank(query) ? new JsonObject() : JsonObject.mapFrom(deserializeQuery(query));
+            final Map<String, Object> map = request.params()
+                                                   .entries()
+                                                   .stream()
+                                                   .collect(Collectors.toMap(Entry::getKey,
+                                                                             entry -> (Object) entry.getValue(),
+                                                                             (o, o2) -> {
+                                                                                 if (o instanceof String) {
+                                                                                     return new JsonArray().add(o)
+                                                                                                           .add(o2);
+                                                                                 }
+                                                                                 return ((JsonArray) o).add(o2);
+                                                                             }));
+            Filters.BOOLEAN_PARAMS.forEach(s -> map.computeIfPresent(s, (s1, o) -> true));
+            return JsonObject.mapFrom(map);
         }
 
-        public static Map<String, Object> deserializeQuery(String query) {
+        public static JsonObject deserializeQuery(String query) {
             Map<String, Object> map = new HashMap<>();
             for (String property : query.split("\\" + SEPARATE)) {
                 String[] keyValues = property.split("\\" + EQUAL);
                 String propKey = Urls.decode(keyValues[0]);
-                if (RequestFilter.Filters.AUDIT.equals(propKey) || RequestFilter.Filters.PRETTY.equals(propKey)) {
+                if (Filters.AUDIT.equals(propKey) || Filters.PRETTY.equals(propKey)) {
                     map.put(propKey, true);
                     continue;
                 }
@@ -159,7 +171,7 @@ public final class HttpUtils {
                 }
                 map.put(propKey, Urls.decode(keyValues[1]));
             }
-            return map;
+            return JsonObject.mapFrom(map);
         }
 
         public static String serializeQuery(JsonObject filter) {
@@ -167,7 +179,7 @@ public final class HttpUtils {
                    ? null
                    : filter.fieldNames()
                            .stream()
-                           .map(name -> name.concat(EQUAL).concat(filter.getString(name)))
+                           .map(name -> name.concat(EQUAL).concat(Urls.encode(Strings.toString(filter.getValue(name)))))
                            .collect(Collectors.joining(SEPARATE));
         }
 
