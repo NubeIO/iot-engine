@@ -79,7 +79,7 @@ public interface NetworkExtension extends RequestDecoratorExtension {
 
     @Override
     default @NonNull List<String> filterKeys() {
-        return Collections.singletonList(NetworkMetadata.INSTANCE.singularKeyName());
+        return bodyKeys();
     }
 
     @Override
