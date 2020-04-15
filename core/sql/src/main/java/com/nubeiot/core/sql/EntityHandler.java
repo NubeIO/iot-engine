@@ -12,6 +12,7 @@ import org.jooq.UpdatableRecord;
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.rx.jdbc.JDBCRXGenericQueryExecutor;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.github.zero.utils.Reflections.ReflectionClass;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -20,7 +21,6 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.sql.query.ComplexQueryExecutor;
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.NonNull;
 

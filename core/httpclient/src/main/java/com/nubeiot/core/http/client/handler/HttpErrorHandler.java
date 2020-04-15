@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+import io.github.zero.utils.Reflections.ReflectionClass;
 import io.netty.resolver.dns.DnsNameResolverException;
 import io.netty.resolver.dns.DnsNameResolverTimeoutException;
 import io.reactivex.SingleEmitter;
@@ -17,7 +18,6 @@ import com.nubeiot.core.exceptions.NubeExceptionConverter;
 import com.nubeiot.core.exceptions.TimeoutException;
 import com.nubeiot.core.http.base.HostInfo;
 import com.nubeiot.core.http.client.HttpClientRegistry;
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

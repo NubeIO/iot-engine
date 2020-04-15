@@ -1,0 +1,12 @@
+dependencies {
+    compile project.deps.logs.slf4j
+    compileOnly project.deps.logs.logback
+    compileOnly project.deps.classgraph
+    compileOnly project.deps.jackson.annotations
+    compileOnly project.deps.lombok
+    annotationProcessor project.deps.lombok
+
+    testCompile project.deps.tests.junit
+    testCompile project.deps.logs.logback
+
+}

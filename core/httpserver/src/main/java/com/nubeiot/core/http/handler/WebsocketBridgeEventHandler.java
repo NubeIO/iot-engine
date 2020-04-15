@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import io.github.zero.utils.Strings;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
@@ -22,7 +23,6 @@ import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.http.base.event.WebsocketServerEventMetadata;
 import com.nubeiot.core.http.ws.WebsocketEventExecutor;
 import com.nubeiot.core.http.ws.WebsocketEventMessage;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 

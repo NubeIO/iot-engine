@@ -2,6 +2,7 @@ package com.nubeiot.core.http.handler;
 
 import java.util.function.Predicate;
 
+import io.github.zero.utils.Functions;
 import io.reactivex.Single;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.RoutingContext;
@@ -17,7 +18,6 @@ import com.nubeiot.core.http.handler.DynamicContextDispatcher.AbstractDynamicCon
 import com.nubeiot.core.http.rest.DynamicEventRestApi;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.core.micro.type.EventMessageService;
-import com.nubeiot.core.utils.Functions;
 
 public final class DynamicEventApiDispatcher<T extends DynamicEventRestApi>
     extends AbstractDynamicContextDispatcher<T> {

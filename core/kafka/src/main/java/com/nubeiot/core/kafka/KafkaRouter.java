@@ -7,10 +7,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import io.github.zero.utils.Strings;
+
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.kafka.handler.KafkaErrorHandler;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -22,14 +23,14 @@ import lombok.NonNull;
 @Getter(AccessLevel.PUBLIC)
 public final class KafkaRouter {
 
-    private Map<String, ClientTechId> consumerTechId = new HashMap<>();
-    private Map<ClientTechId, Set<KafkaEventMetadata>> consumerEvents = new HashMap<>();
+    private final Map<String, ClientTechId> consumerTechId = new HashMap<>();
+    private final Map<ClientTechId, Set<KafkaEventMetadata>> consumerEvents = new HashMap<>();
 
-    private Map<String, ClientTechId> producerTechId = new HashMap<>();
-    private Set<KafkaEventMetadata> producerEvents = new HashSet<>();
+    private final Map<String, ClientTechId> producerTechId = new HashMap<>();
+    private final Set<KafkaEventMetadata> producerEvents = new HashSet<>();
 
-    private Map<ClientTechId, KafkaErrorHandler> consumerExceptionHandler = new HashMap<>();
-    private Map<ClientTechId, KafkaErrorHandler> producerExceptionHandler = new HashMap<>();
+    private final Map<ClientTechId, KafkaErrorHandler> consumerExceptionHandler = new HashMap<>();
+    private final Map<ClientTechId, KafkaErrorHandler> producerExceptionHandler = new HashMap<>();
 
     public KafkaRouter registerKafkaEvent(KafkaEventMetadata... kafkaEvents) {
         Arrays.stream(kafkaEvents).filter(Objects::nonNull).forEach(this::registerKafkaEvent);

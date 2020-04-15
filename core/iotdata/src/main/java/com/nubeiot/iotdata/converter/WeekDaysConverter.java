@@ -4,8 +4,9 @@ import java.time.DayOfWeek;
 import java.util.Locale;
 import java.util.Objects;
 
+import io.github.zero.utils.Strings;
+
 import com.nubeiot.core.sql.converter.ArrayConverter;
-import com.nubeiot.core.utils.Strings;
 
 public final class WeekDaysConverter extends ArrayConverter<DayOfWeek> {
 

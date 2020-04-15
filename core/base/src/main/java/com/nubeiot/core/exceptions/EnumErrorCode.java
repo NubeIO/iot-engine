@@ -2,15 +2,16 @@ package com.nubeiot.core.exceptions;
 
 import java.io.Serializable;
 
+import io.github.zero.exceptions.ErrorCode;
+
 import com.nubeiot.core.dto.EnumType;
+import com.nubeiot.core.dto.EnumType.AbstractEnumType;
 
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
-public final class EnumErrorCode implements EnumType, Serializable {
+public final class EnumErrorCode extends AbstractEnumType implements ErrorCode, EnumType, Serializable {
 
     public static EnumErrorCode DESIRED_ERROR = new EnumErrorCode("DESIRED_ERROR");
     public static EnumErrorCode INVALID_ARGUMENT = new EnumErrorCode("INVALID_ARGUMENT");
@@ -31,11 +32,14 @@ public final class EnumErrorCode implements EnumType, Serializable {
     public static EnumErrorCode TIMEOUT_ERROR = new EnumErrorCode("TIMEOUT_ERROR");
     public static EnumErrorCode NETWORK_ERROR = new EnumErrorCode("NETWORK_ERROR");
     public static EnumErrorCode COMMUNICATION_PROTOCOL_ERROR = new EnumErrorCode("COMMUNICATION_PROTOCOL_ERROR");
-    private final String code;
+
+    protected EnumErrorCode(String code) {
+        super(code);
+    }
 
     @Override
-    public @NonNull String type() {
-        return code;
+    public @NonNull String code() {
+        return type();
     }
 
 }

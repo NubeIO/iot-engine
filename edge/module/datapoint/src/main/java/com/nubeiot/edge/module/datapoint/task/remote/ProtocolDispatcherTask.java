@@ -3,6 +3,7 @@ package com.nubeiot.edge.module.datapoint.task.remote;
 import java.util.Optional;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.github.zero.utils.Strings;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
@@ -16,7 +17,6 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.workflow.task.EntityDefinitionContext;
 import com.nubeiot.core.sql.workflow.task.EntityRuntimeContext;
 import com.nubeiot.core.sql.workflow.task.ProxyEntityTask;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.module.datapoint.cache.DataCacheInitializer;
 import com.nubeiot.edge.module.datapoint.cache.ProtocolDispatcherCache;
 import com.nubeiot.edge.module.datapoint.model.pojos.HasProtocol;

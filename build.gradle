@@ -50,14 +50,6 @@ subprojects {
     }
 
     dependencies {
-        compile project.deps.vertx.core
-        compile project.deps.jackson.core
-        compile project.deps.jackson.databind
-        compile project.deps.jackson.datetime
-        compile project.deps.logs.slf4j
-        compile project.deps.logs.logback
-
-        compileOnly project.deps.vertx.codegen
         compileOnly project.deps.lombok
         annotationProcessor project.deps.lombok
 

@@ -9,13 +9,13 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import io.github.zero.utils.Functions;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.service.marker.HasReferenceEntityMarker;
-import com.nubeiot.core.utils.Functions;
 
 import lombok.NonNull;
 

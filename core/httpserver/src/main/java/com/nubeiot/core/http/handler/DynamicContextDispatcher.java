@@ -3,6 +3,7 @@ package com.nubeiot.core.http.handler;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import io.github.zero.utils.Urls;
 import io.reactivex.Single;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
@@ -14,7 +15,6 @@ import com.nubeiot.core.exceptions.ErrorMessage;
 import com.nubeiot.core.exceptions.HttpException;
 import com.nubeiot.core.exceptions.HttpStatusMapping;
 import com.nubeiot.core.http.base.HttpUtils;
-import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.rest.DynamicEventRestApi;
 import com.nubeiot.core.http.rest.DynamicHttpRestApi;
 import com.nubeiot.core.http.rest.DynamicRestApi;

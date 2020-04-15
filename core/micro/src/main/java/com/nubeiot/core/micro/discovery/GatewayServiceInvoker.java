@@ -3,6 +3,7 @@ package com.nubeiot.core.micro.discovery;
 import java.util.Optional;
 import java.util.function.Function;
 
+import io.github.zero.utils.Strings;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Status;
@@ -22,7 +23,6 @@ import com.nubeiot.core.micro.ServiceScope;
 import com.nubeiot.core.micro.filter.ByPredicate;
 import com.nubeiot.core.micro.transfomer.RecordOutput;
 import com.nubeiot.core.micro.transfomer.RecordTransformer.RecordView;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 

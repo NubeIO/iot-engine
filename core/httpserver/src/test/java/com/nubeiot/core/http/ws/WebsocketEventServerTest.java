@@ -8,6 +8,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import io.github.zero.utils.Urls;
 import io.vertx.core.http.WebSocket;
 import io.vertx.core.http.WebsocketRejectedException;
 import io.vertx.core.json.JsonObject;
@@ -28,7 +29,6 @@ import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.http.HttpServerTestBase;
-import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.mock.MockWebsocketEvent;
 import com.nubeiot.core.http.mock.MockWebsocketEvent.MockWebsocketEventServerListener;
 

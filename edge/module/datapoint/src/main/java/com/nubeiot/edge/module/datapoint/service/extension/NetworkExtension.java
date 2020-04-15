@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
+import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
@@ -15,7 +16,6 @@ import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.sql.decorator.RequestDecorator;
 import com.nubeiot.core.sql.decorator.RequestDecoratorExtension;
 import com.nubeiot.core.sql.service.AbstractEntityService;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 
@@ -79,7 +79,7 @@ public interface NetworkExtension extends RequestDecoratorExtension {
 
     @Override
     default @NonNull List<String> filterKeys() {
-        return Collections.singletonList(NetworkMetadata.INSTANCE.singularKeyName());
+        return bodyKeys();
     }
 
     @Override

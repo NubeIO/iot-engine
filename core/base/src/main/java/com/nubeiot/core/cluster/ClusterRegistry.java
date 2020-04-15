@@ -3,7 +3,7 @@ package com.nubeiot.core.cluster;
 import java.util.EnumMap;
 import java.util.Objects;
 
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
+import io.github.zero.utils.Reflections.ReflectionClass;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.github.zero.utils.Strings;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -18,7 +19,6 @@ import com.nubeiot.core.event.EventListener;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.protocol.network.IpNetwork;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 
+import io.github.zero.utils.Strings;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
@@ -19,7 +20,6 @@ import com.nubeiot.core.micro.filter.RecordPredicate;
 import com.nubeiot.core.micro.transfomer.RecordOutput;
 import com.nubeiot.core.micro.transfomer.RecordTransformer;
 import com.nubeiot.core.micro.transfomer.RecordTransformer.RecordView;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

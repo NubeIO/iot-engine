@@ -3,6 +3,7 @@ package com.nubeiot.core.sql.decorator;
 import java.util.Optional;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.github.zero.utils.Strings;
 
 import com.nubeiot.core.dto.DataTransferObject.Headers;
 import com.nubeiot.core.dto.RequestData;
@@ -10,7 +11,6 @@ import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.pojos.HasTimeAudit;
 import com.nubeiot.core.sql.type.TimeAudit;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 

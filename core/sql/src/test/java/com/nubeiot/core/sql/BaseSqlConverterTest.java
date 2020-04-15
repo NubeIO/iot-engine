@@ -1,11 +1,11 @@
 package com.nubeiot.core.sql;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.github.zero.utils.Reflections.ReflectionField;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.TestHelper;
-import com.nubeiot.core.utils.Reflections.ReflectionField;
 
 import lombok.NonNull;
 

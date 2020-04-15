@@ -11,9 +11,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import io.github.zero.utils.FileUtils;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgePoint;
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgeWriteRequest;
 import com.serotonin.bacnet4j.LocalDevice;

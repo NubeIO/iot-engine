@@ -5,19 +5,18 @@ import java.util.Map;
 import java.util.Set;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.github.zero.utils.Reflections.ReflectionClass;
 
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
-import com.nubeiot.core.sql.service.EntityServiceDelegate;
-import com.nubeiot.core.sql.validation.EntityValidation;
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
+import com.nubeiot.core.sql.service.AbstractEntityServiceDelegate;
 import com.nubeiot.scheduler.QuartzSchedulerContext;
 
 import lombok.NonNull;
 
-final class SchedulerDelegate<P extends VertxPojo, M extends EntityMetadata, V extends EntityValidation>
-    extends EntityServiceDelegate<P, M, SchedulerService<P, M>> implements SchedulerService<P, M> {
+final class SchedulerDelegate<P extends VertxPojo, M extends EntityMetadata>
+    extends AbstractEntityServiceDelegate<P, M, SchedulerService<P, M>> implements SchedulerService<P, M> {
 
     SchedulerDelegate(@NonNull EntityHandler entityHandler, @NonNull Class<SchedulerService<P, M>> serviceClass,
                       @NonNull QuartzSchedulerContext schedulerContext) {
@@ -39,11 +38,6 @@ final class SchedulerDelegate<P extends VertxPojo, M extends EntityMetadata, V e
     }
 
     @Override
-    public Set<EventMethodDefinition> definitions() {
-        return unwrap().definitions();
-    }
-
-    @Override
     public QuartzSchedulerContext getSchedulerContext() {
         return unwrap().getSchedulerContext();
     }
@@ -51,6 +45,11 @@ final class SchedulerDelegate<P extends VertxPojo, M extends EntityMetadata, V e
     @Override
     public String api() {
         return unwrap().api();
+    }
+
+    @Override
+    public Set<EventMethodDefinition> definitions() {
+        return unwrap().definitions();
     }
 
 }

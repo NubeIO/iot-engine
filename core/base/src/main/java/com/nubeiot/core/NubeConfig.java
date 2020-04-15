@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import io.github.zero.utils.FileUtils;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBusOptions;
@@ -14,7 +15,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.cluster.ClusterType;
-import com.nubeiot.core.utils.FileUtils;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,6 +29,7 @@ import lombok.Setter;
 public final class NubeConfig implements IConfig {
 
     public static final String DATA_DIR = "dataDir";
+    public static final Path DEFAULT_DATADIR = FileUtils.defaultDatadir(".nubeio");
 
     @JsonProperty(value = NubeConfig.DATA_DIR)
     private Path dataDir;
@@ -46,7 +47,7 @@ public final class NubeConfig implements IConfig {
      * @return nubeConfig instance
      */
     public static NubeConfig blank(@NonNull JsonObject appConfig) {
-        return blank(FileUtils.DEFAULT_DATADIR, appConfig);
+        return blank(DEFAULT_DATADIR, appConfig);
     }
 
     public static NubeConfig blank(@NonNull Path dataDir, @NonNull JsonObject appConfig) {
@@ -79,7 +80,7 @@ public final class NubeConfig implements IConfig {
 
     public Path getDataDir() {
         if (Objects.isNull(dataDir)) {
-            dataDir = FileUtils.DEFAULT_DATADIR;
+            dataDir = DEFAULT_DATADIR;
         }
         return dataDir;
     }

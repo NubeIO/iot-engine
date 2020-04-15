@@ -3,13 +3,13 @@ package com.nubeiot.core.component;
 import java.nio.file.Path;
 import java.util.Objects;
 
+import io.github.zero.utils.Strings;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.IConfig;
-import com.nubeiot.core.utils.FileUtils;
-import com.nubeiot.core.utils.Strings;
+import com.nubeiot.core.NubeConfig;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -33,7 +33,7 @@ public abstract class UnitVerticle<C extends IConfig, T extends UnitContext> ext
      */
     protected void injectTest(String sharedKey, Path testDir) {
         this.registerSharedKey(Strings.isBlank(sharedKey) ? toString() : sharedKey);
-        this.testDir = Objects.isNull(testDir) ? FileUtils.DEFAULT_DATADIR : testDir;
+        this.testDir = Objects.isNull(testDir) ? NubeConfig.DEFAULT_DATADIR : testDir;
     }
 
     @Override

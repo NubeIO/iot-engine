@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import io.github.zero.utils.FileUtils;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
@@ -22,7 +23,6 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
-import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.connector.bacnet.BACnetInstance;
 import com.nubeiot.edge.connector.bacnet.converter.BACnetDataConversions;
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgePoint;

@@ -14,6 +14,7 @@ import org.jooq.Configuration;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.github.zero.utils.Functions;
 import io.reactivex.Single;
 import io.reactivex.functions.Consumer;
 import io.vertx.core.Vertx;
@@ -37,7 +38,6 @@ import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.sql.decorator.EntitySyncHandler;
 import com.nubeiot.core.sql.workflow.task.EntityRuntimeContext;
 import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter.AsyncEntityTaskExecuter;
-import com.nubeiot.core.utils.Functions;
 import com.nubeiot.edge.module.datapoint.service.DataPointService;
 import com.nubeiot.edge.module.datapoint.task.sync.SyncServiceFactory;
 import com.nubeiot.iotdata.dto.Protocol;

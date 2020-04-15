@@ -4,12 +4,12 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 
+import io.github.zero.utils.Functions;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.sql.type.Label;
-import com.nubeiot.core.utils.Functions;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
 import com.nubeiot.edge.module.datapoint.policy.CleanupPolicy;
 import com.nubeiot.edge.module.datapoint.policy.OldestCleanupPolicy;

@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
+import io.github.zero.jpa.Sortable.Direction;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -12,7 +13,6 @@ import io.vertx.ext.unit.TestContext;
 import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.Sort;
-import com.nubeiot.core.dto.Sort.SortType;
 import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.pojos.JsonPojo;
@@ -114,7 +114,7 @@ public class HistoryDataServiceTest extends AbstractPointDataServiceTest {
             "\"priority\":16}]}");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString()))
-                                     .sort(Sort.builder().item("time", SortType.ASC).build())
+                                     .sort(Sort.builder().item("time", Direction.ASC).build())
                                      .build();
         asserter(context, true, expected, HistoryDataService.class.getName(), EventAction.GET_LIST, req);
     }

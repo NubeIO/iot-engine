@@ -7,13 +7,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import io.github.zero.jpa.Sortable.Direction;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.dto.Sort;
-import com.nubeiot.core.dto.Sort.SortType;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.DesiredException;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
@@ -100,7 +100,7 @@ public final class HistoryDataService extends AbstractReferencingEntityService<P
         }
         final RequestFilter filter = (RequestFilter) new RequestFilter().put(context().table().POINT.getName(),
                                                                              JsonData.checkAndConvert(point));
-        final Sort sort = Sort.builder().item(context().table().TIME.getName(), SortType.DESC).build();
+        final Sort sort = Sort.builder().item(context().table().TIME.getName(), Direction.DESC).build();
         return queryExecutor().executeAny(queryExecutor().queryBuilder().viewOne(filter, sort))
                               .map(rr -> rr.fetchOptionalInto(PointHistoryData.class))
                               .filter(Optional::isPresent)

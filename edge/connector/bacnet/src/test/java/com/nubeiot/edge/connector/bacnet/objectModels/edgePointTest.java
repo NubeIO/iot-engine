@@ -5,9 +5,9 @@ import java.net.URL;
 import org.junit.Assert;
 import org.junit.Test;
 
+import io.github.zero.utils.FileUtils;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.connector.bacnet.objectModels.EdgePoint.Kind;
 
 public class edgePointTest {

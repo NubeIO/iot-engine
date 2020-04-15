@@ -16,6 +16,7 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.AbstractQueryExecutor;
 import io.github.jklingsporn.vertx.jooq.shared.internal.QueryResult;
 import io.github.jklingsporn.vertx.jooq.shared.internal.jdbc.JDBCQueryExecutor;
 import io.github.jklingsporn.vertx.jooq.shared.internal.jdbc.JDBCQueryResult;
+import io.github.zero.utils.Functions;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Handler;
@@ -25,7 +26,6 @@ import io.vertx.reactivex.core.Vertx;
 import com.nubeiot.core.exceptions.DatabaseException;
 import com.nubeiot.core.exceptions.HiddenException;
 import com.nubeiot.core.exceptions.NubeException;
-import com.nubeiot.core.utils.Functions;
 
 import lombok.Getter;
 

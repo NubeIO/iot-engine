@@ -14,6 +14,8 @@ import org.junit.runner.RunWith;
 import org.skyscreamer.jsonassert.Customization;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
+import io.github.zero.utils.Strings;
+import io.github.zero.utils.Urls;
 import io.reactivex.Single;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
@@ -38,10 +40,8 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.http.base.HostInfo;
-import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.client.HttpClientDelegate;
 import com.nubeiot.core.http.ws.WebsocketEventMessage;
-import com.nubeiot.core.utils.Strings;
 import com.zandero.rest.RestRouter;
 
 @RunWith(VertxUnitRunner.class)

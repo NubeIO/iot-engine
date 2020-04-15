@@ -15,7 +15,6 @@ import com.nubeiot.core.NubeConfig.SystemConfig;
 import com.nubeiot.core.cluster.ClusterType;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.utils.Configs;
-import com.nubeiot.core.utils.FileUtils;
 
 public class NubeConfigTest {
 
@@ -23,7 +22,7 @@ public class NubeConfigTest {
     public void test_default() throws JSONException {
         NubeConfig from = IConfig.fromClasspath("system.json", NubeConfig.class);
         System.out.println(from.toJson());
-        assertEquals(FileUtils.DEFAULT_DATADIR, from.getDataDir());
+        assertEquals(NubeConfig.DEFAULT_DATADIR, from.getDataDir());
         Assert.assertNotNull(from.getSystemConfig());
         System.out.println(from.getSystemConfig().getClusterConfig().toJson().encode());
         JSONAssert.assertEquals("{\"active\":true,\"ha\":false,\"name\":\"nubeio-cluster\",\"type\":\"HAZELCAST\"," +

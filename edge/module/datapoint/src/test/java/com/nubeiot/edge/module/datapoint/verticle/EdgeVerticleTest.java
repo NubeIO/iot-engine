@@ -3,6 +3,7 @@ package com.nubeiot.edge.module.datapoint.verticle;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
+import io.github.zero.utils.UUID64;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
@@ -12,7 +13,6 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.http.ExpectedResponse;
 import com.nubeiot.core.sql.pojos.JsonPojo;
-import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.module.datapoint.BaseDataPointVerticleTest;
 import com.nubeiot.edge.module.datapoint.DataPointConfig.DataSyncConfig;
 import com.nubeiot.edge.module.datapoint.MockData;

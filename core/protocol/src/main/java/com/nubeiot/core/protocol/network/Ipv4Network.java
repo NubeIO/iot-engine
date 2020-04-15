@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.github.zero.utils.Strings;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -16,7 +17,6 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.exceptions.CommunicationProtocolException;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.utils.Networks;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.Builder;
 import lombok.Getter;

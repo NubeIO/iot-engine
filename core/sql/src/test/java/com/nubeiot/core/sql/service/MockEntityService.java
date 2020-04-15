@@ -2,6 +2,8 @@ package com.nubeiot.core.sql.service;
 
 import java.util.Objects;
 
+import io.github.zero.utils.Strings;
+
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.AbstractEntityHandler;
 import com.nubeiot.core.sql.EntityHandler;
@@ -19,7 +21,6 @@ import com.nubeiot.core.sql.service.MockEntityService.Metadata.BookMetadata;
 import com.nubeiot.core.sql.service.marker.EntityReferences;
 import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.core.sql.validation.EntityValidation;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

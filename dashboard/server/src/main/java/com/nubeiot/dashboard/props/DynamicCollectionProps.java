@@ -1,10 +1,10 @@
 package com.nubeiot.dashboard.props;
 
+import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;
 
 import lombok.Getter;
@@ -12,11 +12,11 @@ import lombok.Getter;
 @Getter
 public class DynamicCollectionProps {
 
-    private String collection;
-    private String siteId;
-    private JsonArray sitesIds;
-    private Role role;
-    private boolean isAuthorizedSiteId;
+    private final String collection;
+    private final String siteId;
+    private final JsonArray sitesIds;
+    private final Role role;
+    private final boolean isAuthorizedSiteId;
 
     public DynamicCollectionProps(RoutingContext ctx, String collection) {
         this.collection = collection;

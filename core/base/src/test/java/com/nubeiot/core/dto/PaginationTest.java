@@ -45,7 +45,7 @@ public class PaginationTest {
 
     @Test
     public void test_from_json() {
-        final JsonObject init = new JsonObject().put("page", 5).put("perPage", 10);
+        final JsonObject init = new JsonObject().put("_page", 5).put("_per_page", 10);
         final Pagination pagination = init.mapTo(Pagination.class);
         assertEquals(5, pagination.getPage());
         assertEquals(10, pagination.getPerPage());

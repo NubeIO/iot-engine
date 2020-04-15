@@ -8,6 +8,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.ws.rs.core.MediaType;
 
+import io.github.zero.exceptions.InvalidUrlException;
+import io.github.zero.utils.Reflections;
+import io.github.zero.utils.Strings;
+import io.github.zero.utils.Urls;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -18,14 +22,11 @@ import com.nubeiot.core.exceptions.InitializerError;
 import com.nubeiot.core.http.ApiConstants;
 import com.nubeiot.core.http.HttpConfig.RestConfig.DynamicRouteConfig;
 import com.nubeiot.core.http.HttpServer;
-import com.nubeiot.core.http.base.InvalidUrlException;
-import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.handler.ApiExceptionHandler;
 import com.nubeiot.core.http.handler.ApiJsonWriter;
 import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.handler.RestEventResponseHandler;
-import com.nubeiot.core.utils.Reflections;
-import com.nubeiot.core.utils.Strings;
+import com.nubeiot.core.micro.MicroContext;
 import com.zandero.rest.RestBuilder;
 import com.zandero.rest.RestRouter;
 
@@ -129,7 +130,7 @@ public final class RestApisBuilder {
             return null;
         }
         try {
-            Class.forName("com.nubeiot.core.micro.MicroContext", false, Reflections.contextClassLoader());
+            Class.forName(MicroContext.class.getName(), false, Reflections.contextClassLoader());
         } catch (ClassNotFoundException e) {
             throw new InitializerError("To enabled dynamic route, you have to put on nube-core-micro.jar in classpath",
                                        e);

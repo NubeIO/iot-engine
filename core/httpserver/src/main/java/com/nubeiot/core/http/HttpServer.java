@@ -8,6 +8,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.github.zero.utils.FileUtils;
+import io.github.zero.utils.Strings;
+import io.github.zero.utils.Urls;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.Route;
@@ -18,6 +21,7 @@ import io.vertx.ext.web.handler.ResponseContentTypeHandler;
 import io.vertx.ext.web.handler.ResponseTimeHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 
+import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.component.UnitVerticle;
 import com.nubeiot.core.event.EventAction;
@@ -37,7 +41,6 @@ import com.nubeiot.core.http.HttpConfig.RestConfig.DynamicRouteConfig;
 import com.nubeiot.core.http.HttpConfig.StaticWebConfig;
 import com.nubeiot.core.http.HttpConfig.WebsocketConfig;
 import com.nubeiot.core.http.base.HttpUtils;
-import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.gateway.GatewayIndexApi;
 import com.nubeiot.core.http.handler.DownloadFileHandler;
 import com.nubeiot.core.http.handler.FailureContextHandler;
@@ -50,8 +53,6 @@ import com.nubeiot.core.http.rest.RestApisBuilder;
 import com.nubeiot.core.http.rest.RestEventApi;
 import com.nubeiot.core.http.rest.RestEventApisBuilder;
 import com.nubeiot.core.http.ws.WebsocketEventBuilder;
-import com.nubeiot.core.utils.FileUtils;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 
@@ -70,11 +71,24 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         this.httpRouter = httpRouter;
     }
 
+    /**
+     * Decorator route with produce and consume
+     * <p>
+     * TODO: Need to check again Route#consumes(String)
+     *
+     * @param route route
+     * @see Route#produces(String)
+     * @see Route#consumes(String)
+     */
+    public static void restrictJsonRoute(Route route) {
+        route.produces(HttpUtils.JSON_CONTENT_TYPE).produces(HttpUtils.JSON_UTF8_CONTENT_TYPE);
+    }
+
     @Override
     public void start(Future<Void> future) {
         logger.info("Starting HTTP Server...");
         super.start();
-        this.dataDir = this.getSharedData(SharedDataDelegate.SHARED_DATADIR, FileUtils.DEFAULT_DATADIR.toString());
+        this.dataDir = this.getSharedData(SharedDataDelegate.SHARED_DATADIR, NubeConfig.DEFAULT_DATADIR.toString());
         HttpServerOptions options = new HttpServerOptions(config.getOptions()).setHost(config.getHost())
                                                                               .setPort(config.getPort());
         final Router handler = initRouter();
@@ -159,19 +173,6 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         }
     }
 
-    /**
-     * Decorator route with produce and consume
-     * <p>
-     * TODO: Need to check again Route#consumes(String)
-     *
-     * @param route route
-     * @see Route#produces(String)
-     * @see Route#consumes(String)
-     */
-    public static void restrictJsonRoute(Route route) {
-        route.produces(HttpUtils.JSON_CONTENT_TYPE).produces(HttpUtils.JSON_UTF8_CONTENT_TYPE);
-    }
-
     private void initStaticWebRouter(Router mainRouter, StaticWebConfig webConfig) {
         if (!webConfig.isEnabled()) {
             return;
@@ -180,7 +181,7 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
         if (webConfig.isInResource()) {
             staticHandler.setWebRoot(webConfig.getWebRoot());
         } else {
-            String webDir = FileUtils.createFolder(dataDir, webConfig.getWebRoot());
+            String webDir = FileUtils.createFolder(NubeConfig.DEFAULT_DATADIR, dataDir, webConfig.getWebRoot());
             logger.info("Static web dir {}", webDir);
             staticHandler.setEnableRangeSupport(true)
                          .setSendVaryHeader(true)
@@ -205,13 +206,13 @@ public final class HttpServer extends UnitVerticle<HttpConfig, HttpServerContext
                                                      .build();
     }
 
-    private Router initFileStorageRouter(Router router, FileStorageConfig storageConfig, String publicUrl) {
-        if (!storageConfig.isEnabled()) {
+    private Router initFileStorageRouter(Router router, FileStorageConfig storageCfg, String publicUrl) {
+        if (!storageCfg.isEnabled()) {
             return router;
         }
-        Path storageDir = Paths.get(FileUtils.createFolder(dataDir, storageConfig.getDir()));
-        initUploadRouter(router, storageDir, storageConfig.getUploadConfig(), publicUrl);
-        initDownloadRouter(router, storageDir, storageConfig.getDownloadConfig());
+        Path storageDir = Paths.get(FileUtils.createFolder(NubeConfig.DEFAULT_DATADIR, dataDir, storageCfg.getDir()));
+        initUploadRouter(router, storageDir, storageCfg.getUploadConfig(), publicUrl);
+        initDownloadRouter(router, storageDir, storageCfg.getDownloadConfig());
         return router;
     }
 

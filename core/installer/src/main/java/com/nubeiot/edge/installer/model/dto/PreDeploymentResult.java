@@ -4,6 +4,8 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 
+import io.github.zero.utils.FileUtils;
+import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -24,12 +26,9 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.utils.FileUtils;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.installer.InstallerConfig;
 
 import lombok.Builder;
-import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -52,8 +51,7 @@ public final class PreDeploymentResult implements JsonData, IRequestData {
     private final AppConfig appConfig;
     private final NubeConfig systemConfig;
     @Setter
-    @Default
-    private boolean silent = false;
+    private boolean silent;
 
     public static JsonObject filterOutSensitiveConfig(String serviceId, JsonObject appCfg) {
         if ("com.nubeiot.edge.module:installer".equals(serviceId)) {
@@ -98,7 +96,7 @@ public final class PreDeploymentResult implements JsonData, IRequestData {
 
         private JsonObject appConfig;
         private JsonObject systemConfig;
-        private Path dataDir = FileUtils.DEFAULT_DATADIR;
+        private Path dataDir = NubeConfig.DEFAULT_DATADIR;
 
         @JsonProperty("app_config")
         public Builder appConfig(Map<String, Object> appConfig) {
@@ -131,7 +129,7 @@ public final class PreDeploymentResult implements JsonData, IRequestData {
 
             NubeConfig systemConfig = IConfig.parseConfig(this.systemConfig, NubeConfig.class,
                                                           () -> NubeConfig.blank(this.systemConfig));
-            systemConfig.setDataDir(FileUtils.recomputeDataDir(dataDir, FileUtils.normalize(serviceId)));
+            systemConfig.setDataDir(FileUtils.recomputeDataDir(dataDir, dataDir, FileUtils.normalize(serviceId)));
             return new PreDeploymentResult(transactionId, action, Objects.isNull(prevState) ? State.NONE : prevState,
                                            Objects.isNull(targetState) ? State.NONE : targetState, serviceId,
                                            serviceFQN, deployId, appConfig, systemConfig, silent);

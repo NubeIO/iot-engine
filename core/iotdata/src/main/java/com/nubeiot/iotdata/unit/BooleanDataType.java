@@ -3,7 +3,8 @@ package com.nubeiot.iotdata.unit;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.nubeiot.core.utils.Strings;
+import io.github.zero.utils.Strings;
+
 import com.nubeiot.iotdata.unit.DataTypeCategory.Base;
 
 import lombok.NonNull;

@@ -10,12 +10,12 @@ import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
+import io.github.zero.exceptions.InvalidUrlException;
 import io.vertx.core.http.HttpMethod;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.NotFoundException;
-import com.nubeiot.core.http.base.InvalidUrlException;
 
 public class EventMethodDefinitionTest {
 

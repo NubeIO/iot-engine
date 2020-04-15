@@ -1,6 +1,8 @@
 package com.nubeiot.edge.connector.ditto;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.github.zero.utils.Strings;
+import io.github.zero.utils.UUID64;
 import io.reactivex.Maybe;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
@@ -14,8 +16,6 @@ import com.nubeiot.core.http.client.HttpClientDelegate;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntitySyncHandler;
-import com.nubeiot.core.utils.Strings;
-import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.connector.ditto.model.IDittoModel;
 import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.sync.SyncTask;

@@ -23,7 +23,7 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.AuditDecorator;
 import com.nubeiot.core.sql.pojos.DMLPojo;
 import com.nubeiot.core.sql.validation.OperationValidator;
-import com.nubeiot.core.utils.Strings;
+import com.nubeiot.core.utils.JsonUtils;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -71,7 +71,7 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQuer
                                                  .map(k -> metadata.parseKey(k.toString()));
             return opt.map(key -> fetchExists(queryBuilder().exist(metadata, key)).map(b -> key))
                       .orElse(Maybe.empty())
-                      .flatMap(k -> Maybe.error(metadata.alreadyExisted(Strings.kvMsg(metadata.requestKeyName(), k))))
+                      .flatMap(k -> Maybe.error(metadata.alreadyExisted(JsonUtils.kvMsg(metadata.requestKeyName(), k))))
                       .switchIfEmpty(Single.just((P) AuditDecorator.addCreationAudit(reqData, metadata, pojo)))
                       .flatMap(entity -> opt.isPresent()
                                          ? ((Single<Integer>) dao.insert(entity)).map(i -> opt.get())
@@ -109,7 +109,7 @@ abstract class BaseDaoQueryExecutor<P extends VertxPojo> implements InternalQuer
         final Single<Integer> delete = (Single<Integer>) dao(metadata).deleteById(pk);
         return delete.filter(r -> r > 0)
                      .map(r -> dbEntity)
-                     .switchIfEmpty(EntityQueryExecutor.unableDelete(Strings.kvMsg(metadata.requestKeyName(), pk)));
+                     .switchIfEmpty(EntityQueryExecutor.unableDelete(JsonUtils.kvMsg(metadata.requestKeyName(), pk)));
     }
 
 }

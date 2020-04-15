@@ -11,6 +11,7 @@ import org.jooq.DSLContext;
 import org.jooq.TableField;
 
 import io.github.jklingsporn.vertx.jooq.rx.jdbc.JDBCRXGenericQueryExecutor;
+import io.github.zero.utils.DateTimes;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -25,7 +26,6 @@ import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.event.EventContractor.Param;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.statemachine.StateMachine;
-import com.nubeiot.core.utils.DateTimes;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.model.Tables;
 import com.nubeiot.edge.installer.model.dto.PostDeploymentResult;

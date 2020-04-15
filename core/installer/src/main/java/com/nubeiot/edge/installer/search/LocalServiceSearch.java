@@ -12,6 +12,9 @@ import org.jooq.Field;
 import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
 
+import io.github.zero.utils.DateTimes;
+import io.github.zero.utils.DateTimes.Iso8601Parser;
+import io.github.zero.utils.Strings;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -23,9 +26,6 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.enums.State;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
-import com.nubeiot.core.utils.DateTimes;
-import com.nubeiot.core.utils.DateTimes.Iso8601Parser;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.loader.ModuleType;
 import com.nubeiot.edge.installer.model.Tables;
@@ -38,7 +38,7 @@ public final class LocalServiceSearch implements IServiceSearch {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private InstallerEntityHandler entityHandler;
+    private final InstallerEntityHandler entityHandler;
 
     public LocalServiceSearch(@NonNull InstallerEntityHandler entityHandler) {
         this.entityHandler = entityHandler;

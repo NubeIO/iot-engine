@@ -1,31 +1,29 @@
 package com.nubeiot.core.dto;
 
-import java.io.Serializable;
-import java.util.AbstractMap.SimpleEntry;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.github.zero.jpa.Sortable;
+import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import com.nubeiot.core.utils.Strings;
 
-import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.Singular;
 
 @Builder(builderClassName = "Builder")
-public final class Sort implements Serializable, JsonData {
+public final class Sort implements Sortable, JsonData {
 
-    @Singular
-    private final Map<String, SortType> items;
+    private final Map<String, Order> items;
 
     public static Sort from(String requestParam) {
         if (Strings.isBlank(requestParam)) {
@@ -36,7 +34,7 @@ public final class Sort implements Serializable, JsonData {
                                 .filter(Strings::isNotBlank)
                                 .map(Sort::each)
                                 .filter(Objects::nonNull)
-                                .collect(Collectors.toMap(Entry::getKey, Entry::getValue)))
+                                .collect(Collectors.toMap(Order::property, Function.identity())))
                    .build();
     }
 
@@ -47,60 +45,64 @@ public final class Sort implements Serializable, JsonData {
                               .stream()
                               .map(Sort::each)
                               .filter(Objects::nonNull)
-                              .collect(Collectors.toMap(Entry::getKey, Entry::getValue)))
+                              .collect(Collectors.toMap(Order::property, Function.identity())))
                    .build();
     }
 
-    private static Entry<String, SortType> each(String value) {
+    private static Order each(String value) {
         if (Strings.isBlank(value)) {
             return null;
         }
         final char c = value.charAt(0);
-        SortType type = c == SortType.DESC.getSymbol() ? SortType.DESC : SortType.ASC;
-        String resource = c == SortType.ASC.getSymbol() || type == SortType.DESC ? value.substring(1) : value;
-        return new SimpleEntry<>(resource, type);
+        Direction type = Direction.parse(c);
+        String resource = c == Direction.ASC.getSymbol() || type.isDESC() ? value.substring(1) : value;
+        return Order.by(resource, type);
     }
 
-    private static Entry<String, SortType> each(@NonNull Entry<String, String> entry) {
+    private static Order each(@NonNull Entry<String, String> entry) {
         if (Strings.isBlank(entry.getKey())) {
             return null;
         }
-        SortType type = SortType.parse(entry.getValue());
+        Direction type = Direction.parse(entry.getValue());
         if (type == null) {
             return null;
         }
-        return new SimpleEntry<>(entry.getKey(), type);
+        return Order.by(entry.getKey(), type);
+    }
+
+    @Override
+    public @NonNull Collection<Order> orders() {
+        return items.values();
+    }
+
+    @Override
+    public Order get(String property) {
+        return items.get(property);
     }
 
     public boolean isEmpty() {
-        return this.items.isEmpty();
+        return items.isEmpty();
     }
 
     @Override
     public JsonObject toJson() {
-        return JsonData.MAPPER.convertValue(items, JsonObject.class);
+        return JsonData.MAPPER.convertValue(
+            orders().stream().collect(Collectors.toMap(Order::property, Order::direction)), JsonObject.class);
     }
-
-    @Getter
-    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-    public enum SortType {
-        ASC('+'), DESC('-');
-
-        private final char symbol;
-
-        public static SortType parse(String type) {
-            if (Strings.isBlank(type)) {
-                return ASC;
-            }
-            if (type.length() == 1) {
-                return type.charAt(0) == DESC.symbol ? DESC : ASC;
-            }
-            return Stream.of(SortType.values()).filter(t -> t.name().equalsIgnoreCase(type)).findFirst().orElse(null);
-        }
-    }
-
 
     @JsonPOJOBuilder(withPrefix = "")
-    public static class Builder {}
+    public static class Builder {
+
+        public Builder item(@NonNull String property, @NonNull Direction direction) {
+            return item(Order.by(property, direction));
+        }
+
+        public Builder item(@NonNull Order order) {
+            items = Optional.ofNullable(items).orElseGet(HashMap::new);
+            items.put(order.property(), order);
+            return this;
+        }
+
+    }
 
 }

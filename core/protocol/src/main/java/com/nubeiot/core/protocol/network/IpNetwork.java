@@ -13,6 +13,8 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import io.github.zero.utils.Functions;
+import io.github.zero.utils.Strings;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -21,9 +23,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.exceptions.CommunicationProtocolException;
 import com.nubeiot.core.exceptions.NotFoundException;
-import com.nubeiot.core.utils.Functions;
 import com.nubeiot.core.utils.Networks;
-import com.nubeiot.core.utils.Strings;
 
 import inet.ipaddr.IPAddressString;
 import lombok.AccessLevel;

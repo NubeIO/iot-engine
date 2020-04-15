@@ -9,12 +9,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
 
+import io.github.zero.utils.FileUtils;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.Shareable;
 
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
-import com.nubeiot.core.utils.FileUtils;
 import com.nubeiot.edge.installer.model.tables.interfaces.ITblModule;
 import com.nubeiot.edge.installer.model.tables.pojos.TblModule;
 
@@ -52,7 +52,9 @@ public final class ModuleTypeRule implements Shareable {
     }
 
     private JsonObject computeAppSystemConfig(@NonNull Path parentDataDir, String serviceId) {
-        return NubeConfig.blank(FileUtils.recomputeDataDir(parentDataDir, FileUtils.normalize(serviceId))).toJson();
+        return NubeConfig.blank(
+            FileUtils.recomputeDataDir(NubeConfig.DEFAULT_DATADIR, parentDataDir, FileUtils.normalize(serviceId)))
+                         .toJson();
     }
 
     public ModuleTypeRule registerRule(ModuleType moduleType, List<String> searchPattern) {

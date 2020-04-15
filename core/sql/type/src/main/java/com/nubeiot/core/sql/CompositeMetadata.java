@@ -18,12 +18,12 @@ import org.jooq.UpdatableRecord;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.github.zero.utils.Reflections.ReflectionClass;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.pojos.CompositePojo;
 import com.nubeiot.core.sql.validation.CompositeValidation;
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
 
 import lombok.NonNull;
 

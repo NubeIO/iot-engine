@@ -2,12 +2,14 @@ package com.nubeiot.edge.module.datapoint.service;
 
 import java.util.Set;
 
-import com.nubeiot.core.http.base.Urls;
+import io.github.zero.utils.Urls;
+
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractEntityService;
-import com.nubeiot.core.sql.workflow.task.EntityTask;
+import com.nubeiot.core.sql.workflow.task.EntityTaskManager;
+import com.nubeiot.core.sql.workflow.task.EntityTaskManagerImpl;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
 
@@ -26,13 +28,8 @@ public final class MeasureUnitService extends AbstractEntityService<MeasureUnit,
     }
 
     @Override
-    public EntityTask prePersistTask() {
-        return null;
-    }
-
-    @Override
-    public EntityTask postPersistAsyncTask() {
-        return null;
+    public @NonNull EntityTaskManager taskManager() {
+        return EntityTaskManagerImpl.builder().postPersistTask(super.taskManager().postPersistTask()).build();
     }
 
     @Override
@@ -45,8 +42,4 @@ public final class MeasureUnitService extends AbstractEntityService<MeasureUnit,
         return Urls.toPathWithLC(context().modelClass().getSimpleName());
     }
 
-    //    @Override
-    //    public Single<JsonObject> afterCreate(Object key, @NonNull VertxPojo pojo, @NonNull RequestData reqData) {
-    //        return Single.error(new RuntimeException("After Create"));
-    //    }
 }

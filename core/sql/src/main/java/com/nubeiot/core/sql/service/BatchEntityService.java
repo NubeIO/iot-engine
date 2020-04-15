@@ -10,6 +10,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.sql.EntityMetadata;
 
@@ -37,9 +38,10 @@ public interface BatchEntityService<P extends VertxPojo, M extends EntityMetadat
      *
      * @param requestData Request data
      * @return json object that includes status message
-     * @see EventAction#BATCH_CREATE EventAction#BATCH_CREATE
+     * @see EventAction#BATCH_CREATE
      * @since 1.0.0
      */
+    @EventContractor(action = EventAction.BATCH_CREATE, returnType = Single.class)
     Single<JsonObject> batchCreate(@NonNull RequestData requestData);
 
     /**
@@ -47,9 +49,10 @@ public interface BatchEntityService<P extends VertxPojo, M extends EntityMetadat
      *
      * @param requestData Request data
      * @return json object that includes status message
-     * @see EventAction#BATCH_UPDATE EventAction#BATCH_UPDATE
+     * @see EventAction#BATCH_UPDATE
      * @since 1.0.0
      */
+    @EventContractor(action = EventAction.BATCH_UPDATE, returnType = Single.class)
     Single<JsonObject> batchUpdate(@NonNull RequestData requestData);
 
     /**
@@ -57,9 +60,10 @@ public interface BatchEntityService<P extends VertxPojo, M extends EntityMetadat
      *
      * @param requestData Request data
      * @return json object that includes status message
-     * @see EventAction#BATCH_PATCH EventAction#BATCH_PATCH
+     * @see EventAction#BATCH_PATCH
      * @since 1.0.0
      */
+    @EventContractor(action = EventAction.BATCH_PATCH, returnType = Single.class)
     Single<JsonObject> batchPatch(@NonNull RequestData requestData);
 
     /**
@@ -67,9 +71,10 @@ public interface BatchEntityService<P extends VertxPojo, M extends EntityMetadat
      *
      * @param requestData Request data
      * @return json object that includes status message
-     * @see EventAction#BATCH_DELETE EventAction#BATCH_DELETE
+     * @see EventAction#BATCH_DELETE
      * @since 1.0.0
      */
+    @EventContractor(action = EventAction.BATCH_DELETE, returnType = Single.class)
     Single<JsonObject> batchDelete(@NonNull RequestData requestData);
 
 }

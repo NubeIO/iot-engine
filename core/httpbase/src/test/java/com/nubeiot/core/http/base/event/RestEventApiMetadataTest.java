@@ -6,11 +6,11 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
+import io.github.zero.utils.Urls;
 import io.vertx.core.http.HttpMethod;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventPattern;
-import com.nubeiot.core.http.base.Urls;
 
 public class RestEventApiMetadataTest {
 

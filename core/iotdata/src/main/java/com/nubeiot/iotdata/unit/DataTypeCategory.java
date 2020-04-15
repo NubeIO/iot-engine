@@ -1,7 +1,7 @@
 package com.nubeiot.iotdata.unit;
 
-import com.nubeiot.core.utils.Reflections.ReflectionField;
-import com.nubeiot.core.utils.Strings;
+import io.github.zero.utils.Reflections.ReflectionField;
+import io.github.zero.utils.Strings;
 
 import lombok.NonNull;
 

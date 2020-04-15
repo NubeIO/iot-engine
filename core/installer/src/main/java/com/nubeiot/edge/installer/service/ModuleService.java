@@ -3,6 +3,7 @@ package com.nubeiot.edge.installer.service;
 import java.util.Collection;
 import java.util.Optional;
 
+import io.github.zero.utils.Strings;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
@@ -12,7 +13,6 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
 import com.nubeiot.core.exceptions.NotFoundException;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.installer.InstallerEntityHandler;
 import com.nubeiot.edge.installer.loader.ModuleTypeRule;
 import com.nubeiot.edge.installer.model.dto.PreDeploymentResult;

@@ -15,6 +15,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 
+import io.github.zero.utils.Strings;
 import io.reactivex.Single;
 import io.reactivex.SingleSource;
 import io.vertx.core.Future;
@@ -42,7 +43,6 @@ import com.nubeiot.core.http.helper.ResponseDataHelper;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.http.rest.provider.RestNubeConfigProvider;
 import com.nubeiot.core.mongo.RestMongoClientProvider;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.UserImpl;
 import com.nubeiot.dashboard.providers.RestOAuth2AuthProvider;

@@ -28,7 +28,7 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.EntityConstraintHolder;
 import com.nubeiot.core.sql.pojos.DMLPojo;
 import com.nubeiot.core.sql.validation.OperationValidator;
-import com.nubeiot.core.utils.Strings;
+import com.nubeiot.core.utils.JsonUtils;
 
 import lombok.NonNull;
 
@@ -224,7 +224,7 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
 
     default @NonNull String requestKeyAsMessage(@NonNull EntityMetadata metadata, @NonNull VertxPojo pojo,
                                                 @NonNull Object primaryKey) {
-        return Strings.kvMsg(metadata.requestKeyName(), primaryKey);
+        return JsonUtils.kvMsg(metadata.requestKeyName(), primaryKey);
     }
 
 }

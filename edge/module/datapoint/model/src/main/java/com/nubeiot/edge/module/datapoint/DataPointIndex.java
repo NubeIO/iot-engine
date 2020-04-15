@@ -11,6 +11,9 @@ import java.util.UUID;
 
 import org.jooq.OrderField;
 
+import io.github.zero.utils.DateTimes;
+import io.github.zero.utils.Strings;
+import io.github.zero.utils.UUID64;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
@@ -24,9 +27,6 @@ import com.nubeiot.core.sql.EntityMetadata.UUIDKeyEntity;
 import com.nubeiot.core.sql.MetadataIndex;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.tables.JsonTable;
-import com.nubeiot.core.utils.DateTimes;
-import com.nubeiot.core.utils.Strings;
-import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.module.datapoint.model.pojos.EdgeDeviceComposite;
 import com.nubeiot.edge.module.datapoint.model.pojos.HasProtocol;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
@@ -507,6 +507,7 @@ public interface DataPointIndex extends MetadataIndex {
         private PointComposite validate(@NonNull PointComposite point) {
             Objects.requireNonNull(point.getEdge(), "Point must be assigned to Edge");
             Objects.requireNonNull(point.getNetwork(), "Point must be assigned to Network");
+            Strings.requireNotBlank(point.getCode(), "Point Code is mandatory");
             final MeasureUnit other = point.getOther(MeasureUnitMetadata.INSTANCE.singularKeyName());
             if (Objects.isNull(other)) {
                 point.addMeasureUnit(new MeasureUnit().setType(

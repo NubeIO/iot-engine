@@ -10,9 +10,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.core.sql.workflow.step.SQLStep;
-import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter;
-import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter.AsyncEntityTaskExecuter;
-import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter.BlockingEntityTaskExecuter;
+import com.nubeiot.core.sql.workflow.task.EntityTaskManager;
 import com.nubeiot.core.workflow.Workflow;
 
 import lombok.NonNull;
@@ -58,14 +56,13 @@ public interface SQLWorkflow extends Workflow {
     @NonNull OperationValidator validator();
 
     /**
-     * Declares {@code blocking pre-task} that is called after {@code validating} in {@link #validator()} and before
-     * {@code executing SQL}.
+     * Declares {@code Task manager}.
      *
-     * @return the pre blocking entity task workflow
-     * @see BlockingEntityTaskExecuter
+     * @return the task manager
+     * @see EntityTaskManager
      * @since 1.0.0
      */
-    @NonNull EntityTaskExecuter.BlockingEntityTaskExecuter preExecuter();
+    @NonNull EntityTaskManager taskManager();
 
     /**
      * Declares {@code SQL step} for interacting with database.
@@ -75,29 +72,6 @@ public interface SQLWorkflow extends Workflow {
      * @since 1.0.0
      */
     @NonNull SQLStep sqlStep();
-
-    /**
-     * Declares the {@code blocking post-task} that is called after {@code executing SQL}.
-     * <p>
-     * {@code SQL Workflow} will not invoke {@code blocking post-task} if any error in {@code SQL execution} phase
-     *
-     * @return the post blocking entity task workflow
-     * @see BlockingEntityTaskExecuter
-     * @since 1.0.0
-     */
-    @NonNull EntityTaskExecuter.BlockingEntityTaskExecuter postExecuter();
-
-    /**
-     * Declares {@code async post-task} that is called after {@code executing SQL}.
-     * <p>
-     * {@code SQL Workflow} will invoke {@code async post-task} regardless {@code SQL execution} phase is success or
-     * error
-     *
-     * @return the async entity task workflow
-     * @see AsyncEntityTaskExecuter
-     * @since 1.0.0
-     */
-    @NonNull EntityTaskExecuter.AsyncEntityTaskExecuter asyncPostExecuter();
 
     /**
      * Kick off workflow.

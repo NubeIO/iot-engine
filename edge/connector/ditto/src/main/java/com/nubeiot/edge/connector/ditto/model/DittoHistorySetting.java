@@ -2,10 +2,11 @@ package com.nubeiot.edge.connector.ditto.model;
 
 import java.util.Map;
 
+import io.github.zero.utils.Strings;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.edge.connector.ditto.model.IDittoModel.AbstractDittoModel;
 import com.nubeiot.iotdata.edge.model.tables.interfaces.IHistorySetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.HistorySetting;

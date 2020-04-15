@@ -2,6 +2,7 @@ package com.nubeiot.core.http.base.event;
 
 import java.util.Objects;
 
+import io.github.zero.utils.Strings;
 import io.vertx.core.http.HttpMethod;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -10,7 +11,6 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.http.base.HttpUtils.HttpMethods;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -41,7 +41,7 @@ public final class EventMethodMapping implements JsonData {
     /**
      * Optional
      */
-    private String regexPath;
+    private final String regexPath;
 
 
     @JsonPOJOBuilder(withPrefix = "")

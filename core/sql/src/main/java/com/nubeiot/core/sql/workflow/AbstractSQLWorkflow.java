@@ -13,10 +13,7 @@ import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.core.sql.workflow.task.EntityRuntimeContext;
-import com.nubeiot.core.sql.workflow.task.EntityTask;
-import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter;
-import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter.AsyncEntityTaskExecuter;
-import com.nubeiot.core.sql.workflow.task.EntityTaskExecuter.BlockingEntityTaskExecuter;
+import com.nubeiot.core.sql.workflow.task.EntityTaskManager;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -37,11 +34,7 @@ abstract class AbstractSQLWorkflow implements SQLWorkflow {
     @NonNull
     private final OperationValidator validator;
     @NonNull
-    private final EntityTaskExecuter.BlockingEntityTaskExecuter preExecuter;
-    @NonNull
-    private final EntityTaskExecuter.BlockingEntityTaskExecuter postExecuter;
-    @NonNull
-    private final EntityTaskExecuter.AsyncEntityTaskExecuter asyncPostExecuter;
+    private final EntityTaskManager taskManager;
 
     @NonNull
     @Override
@@ -54,8 +47,9 @@ abstract class AbstractSQLWorkflow implements SQLWorkflow {
 
     @NonNull
     protected OperationValidator afterValidation() {
-        return OperationValidator.create(
-            (req, pojo) -> preExecuter().execute(initSuccessData(req, pojo)).switchIfEmpty(Single.just(pojo)));
+        return OperationValidator.create((req, pojo) -> taskManager().preBlockingExecuter()
+                                                                     .execute(initSuccessData(req, pojo))
+                                                                     .switchIfEmpty(Single.just(pojo)));
     }
 
     @NonNull
@@ -77,26 +71,6 @@ abstract class AbstractSQLWorkflow implements SQLWorkflow {
                                    .data(pojo)
                                    .throwable(t)
                                    .build();
-    }
-
-    static abstract class AbstractSQLWorkflowBuilder<C extends AbstractSQLWorkflow,
-                                                        B extends AbstractSQLWorkflowBuilder<C, B>> {
-
-        public B preTask(EntityTask preTask) {
-            this.preExecuter = BlockingEntityTaskExecuter.create(preTask);
-            return self();
-        }
-
-        public B postTask(EntityTask postTask) {
-            this.postExecuter = BlockingEntityTaskExecuter.create(postTask);
-            return self();
-        }
-
-        public B asyncPostTask(EntityTask asyncPostTask) {
-            this.asyncPostExecuter = AsyncEntityTaskExecuter.create(asyncPostTask);
-            return self();
-        }
-
     }
 
 }

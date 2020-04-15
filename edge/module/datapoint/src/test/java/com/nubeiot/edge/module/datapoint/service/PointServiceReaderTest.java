@@ -8,12 +8,14 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.dto.RequestData;
+import com.nubeiot.core.dto.RequestFilter.Filters;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.edge.module.datapoint.BaseDataPointServiceTest;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Base;
 import com.nubeiot.iotdata.unit.DataTypeCategory.Temperature;
 
@@ -40,7 +42,8 @@ public class PointServiceReaderTest extends BaseDataPointServiceTest {
     @Test
     public void test_get_point_by_network(TestContext context) {
         JsonObject expected = JsonPojo.from(MockData.search(PrimaryKey.P_GPIO_TEMP))
-                                      .toJson().put("unit", Temperature.CELSIUS.toJson());
+                                      .toJson()
+                                      .put("unit", Temperature.CELSIUS.toJson());
         expected.remove("measure_unit");
         RequestData req = RequestData.builder()
                                      .body(new JsonObject().put("network_id", "local")
@@ -205,6 +208,35 @@ public class PointServiceReaderTest extends BaseDataPointServiceTest {
                                      .body(new JsonObject().put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString()))
                                      .build();
         asserter(context, false, expected, HistorySettingService.class.getName(), EventAction.GET_ONE, req);
+    }
+
+    @Test
+    public void test_get_list_point_by_advance_query_in_list_code(TestContext context) {
+        final Point p1 = MockData.search(PrimaryKey.P_BACNET_FAN);
+        final Point p2 = MockData.search(PrimaryKey.P_BACNET_TEMP);
+        final JsonObject filter = new JsonObject().put(Filters.QUERY,
+                                                       "code=in=(" + p1.getCode() + "," + p2.getCode() + ")");
+        final RequestData reqData = RequestData.builder().filter(filter).build();
+        final JsonObject expected = new JsonObject().put("points", new JsonArray().add(JsonPojo.from(p1).toJson())
+                                                                                  .add(JsonPojo.from(p2).toJson()));
+        asserter(context, true, expected, PointService.class.getName(), EventAction.GET_LIST, reqData,
+                 JSONCompareMode.LENIENT);
+    }
+
+    @Test
+    public void test_get_list_point_by_advance_query_or_comparision(TestContext context) {
+        final Point p1 = MockData.search(PrimaryKey.P_BACNET_FAN);
+        final Point p2 = MockData.search(PrimaryKey.P_BACNET_TEMP);
+        final Point p3 = MockData.search(PrimaryKey.P_BACNET_SWITCH);
+        final Point p4 = MockData.search(PrimaryKey.P_GPIO_TEMP);
+        final JsonObject filter = new JsonObject().put(Filters.QUERY, "protocol==BACNET or measure_unit==celsius");
+        final RequestData reqData = RequestData.builder().filter(filter).build();
+        final JsonObject expected = new JsonObject().put("points", new JsonArray().add(JsonPojo.from(p1).toJson())
+                                                                                  .add(JsonPojo.from(p2).toJson())
+                                                                                  .add(JsonPojo.from(p3).toJson())
+                                                                                  .add(JsonPojo.from(p4).toJson()));
+        asserter(context, true, expected, PointService.class.getName(), EventAction.GET_LIST, reqData,
+                 JSONCompareMode.LENIENT);
     }
 
 }

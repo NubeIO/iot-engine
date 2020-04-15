@@ -30,7 +30,7 @@ import com.nubeiot.core.sql.pojos.DMLPojo;
 import com.nubeiot.core.sql.service.marker.EntityReferences;
 import com.nubeiot.core.sql.service.marker.ReferencingEntityMarker;
 import com.nubeiot.core.sql.validation.OperationValidator;
-import com.nubeiot.core.utils.Strings;
+import com.nubeiot.core.utils.JsonUtils;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -51,8 +51,9 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
     private EntityMetadata context;
 
     private EntityMetadata resource;
-    private Predicate<EntityMetadata> existPredicate = m -> Objects.nonNull(context) &&
-                                                            !m.singularKeyName().equals(context.singularKeyName());
+    private final Predicate<EntityMetadata> existPredicate = m -> Objects.nonNull(context) && !m.singularKeyName()
+                                                                                                .equals(
+                                                                                                    context.singularKeyName());
     private Predicate<EntityMetadata> viewPredicate = existPredicate;
     private EntityReferences references;
 
@@ -164,7 +165,7 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
             final String sKeyN = resource.requestKeyName();
             return isExist.flatMapSingle(b -> lookupByPrimaryKey(resource, sKey))
                           .filter(Optional::isPresent)
-                          .flatMap(o -> Maybe.error(resource.alreadyExisted(Strings.kvMsg(sKeyN, sKey))))
+                          .flatMap(o -> Maybe.error(resource.alreadyExisted(JsonUtils.kvMsg(sKeyN, sKey))))
                           .switchIfEmpty(Single.just(AuditDecorator.addCreationAudit(reqData, resource, src))
                                                .flatMap(p -> doInsertReturnKey(resource, p, sKey)))
                           .map(k -> AuditDecorator.addCreationAudit(reqData, base,

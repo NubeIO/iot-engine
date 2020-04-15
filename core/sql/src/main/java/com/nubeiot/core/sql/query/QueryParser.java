@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.core.dto.RequestFilter;
 import com.nubeiot.core.sql.EntityMetadata;
 
 import lombok.NonNull;
@@ -26,11 +27,11 @@ public interface QueryParser {
      * @return the json object
      * @since 1.0.0
      */
-    static JsonObject fromReference(@NonNull EntityMetadata reference, JsonObject root) {
+    static RequestFilter fromReference(@NonNull EntityMetadata reference, RequestFilter root) {
         if (Objects.isNull(root)) {
-            return new JsonObject();
+            return new RequestFilter();
         }
-        return streamRefs(reference, root).collect(JsonObject::new,
+        return streamRefs(reference, root).collect(RequestFilter::new,
                                                    (json, entry) -> json.put(entry.getKey(), entry.getValue()),
                                                    (json1, json2) -> json1.mergeIn(json2, true));
     }

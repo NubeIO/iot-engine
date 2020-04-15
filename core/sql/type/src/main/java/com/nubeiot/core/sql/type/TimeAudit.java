@@ -3,10 +3,11 @@ package com.nubeiot.core.sql.type;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
+import io.github.zero.utils.DateTimes;
+
 import com.fasterxml.jackson.databind.PropertyNamingStrategy.SnakeCaseStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.core.utils.DateTimes;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

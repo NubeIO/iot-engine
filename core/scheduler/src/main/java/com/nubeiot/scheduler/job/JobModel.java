@@ -6,6 +6,7 @@ import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.utils.Key;
 
+import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -14,7 +15,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.nubeiot.core.dto.JsonData;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.EqualsAndHashCode;
 import lombok.EqualsAndHashCode.Include;

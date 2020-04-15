@@ -5,8 +5,9 @@ import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
+import io.github.zero.utils.Strings;
+
 import com.nubeiot.core.IConfig;
-import com.nubeiot.core.utils.Strings;
 
 public class HttpClientConfigTest {
 

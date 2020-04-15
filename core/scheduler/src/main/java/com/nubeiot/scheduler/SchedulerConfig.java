@@ -3,11 +3,12 @@ package com.nubeiot.scheduler;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import io.github.zero.utils.Strings;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.Getter;

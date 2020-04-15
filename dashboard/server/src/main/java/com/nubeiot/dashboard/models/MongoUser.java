@@ -1,11 +1,11 @@
 package com.nubeiot.dashboard.models;
 
-import com.nubeiot.core.utils.Strings;
+import io.github.zero.utils.Strings;
+import io.vertx.core.json.JsonObject;
+
 import com.nubeiot.dashboard.Model;
 import com.nubeiot.dashboard.Role;
 import com.nubeiot.dashboard.utils.UserUtils;
-
-import io.vertx.core.json.JsonObject;
 
 public class MongoUser extends Model {
     private String _id;

@@ -4,12 +4,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
+import io.github.zero.exceptions.SneakyErrorCodeException;
+import io.github.zero.utils.Strings;
 import io.reactivex.exceptions.CompositeException;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -66,6 +67,10 @@ public final class NubeExceptionConverter implements Function<Throwable, NubeExc
         if (t instanceof CompositeException) {
             List<Throwable> exceptions = ((CompositeException) throwable).getExceptions();
             t = exceptions.get(exceptions.size() - 1);
+        }
+        if (t instanceof SneakyErrorCodeException) {
+            //TODO convert SneakyError
+            return apply(t.getCause());
         }
         if (t instanceof NubeException) {
             return overrideMsg(friendly ? convert((NubeException) t, true) : (NubeException) t);

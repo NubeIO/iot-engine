@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.quartz.JobKey;
 
+import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -14,7 +15,6 @@ import com.nubeiot.core.event.DeliveryEvent;
 import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
-import com.nubeiot.core.utils.Strings;
 import com.nubeiot.scheduler.job.JobModel.AbstractJobModel;
 
 import lombok.Builder;

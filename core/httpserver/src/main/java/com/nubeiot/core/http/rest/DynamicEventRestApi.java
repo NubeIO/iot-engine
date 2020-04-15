@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 
@@ -12,7 +13,6 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.http.base.event.EventMethodMapping;
 import com.nubeiot.core.micro.type.EventMessageService;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 

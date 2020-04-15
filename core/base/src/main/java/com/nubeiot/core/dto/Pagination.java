@@ -1,8 +1,10 @@
 package com.nubeiot.core.dto;
 
-import java.io.Serializable;
+import io.github.zero.jpa.Pageable;
+import io.github.zero.utils.Strings;
 
-import com.nubeiot.core.utils.Strings;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.nubeiot.core.dto.RequestFilter.Filters;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -12,9 +14,11 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public final class Pagination implements Serializable, JsonData {
+public final class Pagination implements Pageable, JsonData {
 
+    @JsonProperty(Filters.PAGE)
     private int page;
+    @JsonProperty(Filters.PER_PAGE)
     private int perPage;
 
     public static Pagination oneValue() {

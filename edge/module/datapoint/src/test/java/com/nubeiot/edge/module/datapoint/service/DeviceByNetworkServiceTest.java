@@ -7,6 +7,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
+import io.github.zero.utils.UUID64;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
@@ -23,7 +24,6 @@ import com.nubeiot.core.event.EventMessage;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.pojos.JsonPojo;
-import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.module.datapoint.BaseDataPointServiceTest;
 import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;

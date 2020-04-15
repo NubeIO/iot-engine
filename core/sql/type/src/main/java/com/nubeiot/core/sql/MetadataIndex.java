@@ -8,9 +8,8 @@ import java.util.stream.Collectors;
 import org.jooq.Table;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-
-import com.nubeiot.core.utils.Reflections.ReflectionClass;
-import com.nubeiot.core.utils.Reflections.ReflectionField;
+import io.github.zero.utils.Reflections.ReflectionClass;
+import io.github.zero.utils.Reflections.ReflectionField;
 
 import lombok.NonNull;
 

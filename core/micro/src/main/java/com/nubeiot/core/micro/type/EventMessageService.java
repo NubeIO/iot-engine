@@ -2,12 +2,12 @@ package com.nubeiot.core.micro.type;
 
 import java.util.Objects;
 
+import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.spi.ServiceType;
 
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 

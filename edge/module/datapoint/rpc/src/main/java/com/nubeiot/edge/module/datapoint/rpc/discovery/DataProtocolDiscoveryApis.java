@@ -3,8 +3,9 @@ package com.nubeiot.edge.module.datapoint.rpc.discovery;
 import java.util.Collections;
 import java.util.Set;
 
+import io.github.zero.utils.Urls;
+
 import com.nubeiot.core.http.base.EventHttpService;
-import com.nubeiot.core.http.base.Urls;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 

@@ -1,0 +1,12 @@
+dependencies {
+    compile project.deps.jackson.core
+    compile project.deps.jackson.annotations
+    compile project.deps.jackson.databind
+
+    compileOnly project.deps.logs.logback
+    compileOnly project.deps.lombok
+    annotationProcessor project.deps.lombok
+
+    testCompile project.deps.tests.junit
+
+}

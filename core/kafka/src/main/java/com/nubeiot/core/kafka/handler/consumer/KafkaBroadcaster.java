@@ -1,5 +1,6 @@
 package com.nubeiot.core.kafka.handler.consumer;
 
+import io.github.zero.utils.Strings;
 import io.vertx.core.Vertx;
 
 import com.nubeiot.core.component.SharedDataDelegate;
@@ -9,7 +10,6 @@ import com.nubeiot.core.event.EventPattern;
 import com.nubeiot.core.event.EventbusClient;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
-import com.nubeiot.core.utils.Strings;
 
 import lombok.NonNull;
 

@@ -9,6 +9,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
 
+import io.github.zero.utils.Strings;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Single;
 import io.vertx.core.Future;
@@ -28,12 +29,11 @@ import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.http.handler.ResponseDataWriter;
 import com.nubeiot.core.http.rest.RestApi;
 import com.nubeiot.core.http.rest.provider.RestNubeConfigProvider;
-import com.nubeiot.core.utils.Strings;
 
 public class PostgreSqlRestController implements RestApi {
 
     private static final Logger logger = LoggerFactory.getLogger(PostgreSqlRestController.class);
-    private Map<String, SQLClient> clients = new HashMap<>();
+    private final Map<String, SQLClient> clients = new HashMap<>();
 
     @GET
     @Path("/info")
