@@ -4,11 +4,12 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.github.zero.utils.Strings;
+import io.github.zero.utils.UUID64;
+
 import com.nubeiot.core.cache.AbstractLocalCache;
 import com.nubeiot.core.cache.LocalDataCache;
 import com.nubeiot.core.protocol.CommunicationProtocol;
-import com.nubeiot.core.utils.Strings;
-import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetObjectCache.BACnetObjectCacheKey;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetObjectCache.BACnetObjectCacheValue;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;

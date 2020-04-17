@@ -12,7 +12,8 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.decorator.RequestDecorator;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractManyToManyEntityService;
-import com.nubeiot.core.sql.workflow.task.EntityTask;
+import com.nubeiot.core.sql.workflow.task.EntityTaskManager;
+import com.nubeiot.core.sql.workflow.task.EntityTaskManagerImpl;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeDeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
@@ -58,8 +59,11 @@ public final class DeviceByNetworkService
     }
 
     @Override
-    public EntityTask postPersistAsyncTask() {
-        return null;
+    public @NonNull EntityTaskManager taskManager() {
+        return EntityTaskManagerImpl.builder()
+                                    .prePersistTask(super.taskManager().prePersistTask())
+                                    .postPersistTask(super.taskManager().postPersistTask())
+                                    .build();
     }
 
     @Override

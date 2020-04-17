@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
+import io.github.zero.utils.UUID64;
 import io.reactivex.Observable;
 import io.vertx.core.Vertx;
 
@@ -13,7 +14,6 @@ import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.exceptions.ErrorData;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.utils.ExecutorHelpers;
-import com.nubeiot.core.utils.UUID64;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
