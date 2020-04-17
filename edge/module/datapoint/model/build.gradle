@@ -15,11 +15,11 @@ dependencies {
 task jooqGen(type: JooqGenerateTask) {
     packageName = "com.nubeiot.iotdata.edge.model"
     enumTypes = project(':core:sql').ext.enumTypes
-    renameFields = ["history_setting_type|point_type|device_type|transducer_type|measure_type": "type",
-                    "point_category|measure_category|transducer_category"                     : "category",
-                    "measure_unit_alias"                                                 : "unit_alias",
-                    "point_kind"                                                         : "kind",
-                    "offset_val"                                                         : "offset"]
+    renameFields = ["history_setting_type|point_type|device_type|transducer_type|measure_type|group_type": "type",
+                    "point_category|measure_category|transducer_category"                                : "category",
+                    "measure_unit_alias"                                                                 : "unit_alias",
+                    "point_kind"                                                                         : "kind",
+                    "offset_val"                                                                         : "offset"]
     dbTypes = project(':core:sql').ext.dbTypes + [
         new ForcedType(userType: "com.nubeiot.iotdata.dto.HistorySettingType",
                        types: DB.TYPES.varchar,
@@ -60,7 +60,11 @@ task jooqGen(type: JooqGenerateTask) {
         new ForcedType(userType: "com.nubeiot.iotdata.dto.TransducerType",
                        types: DB.TYPES.varchar,
                        expression: Strings.toRegexIgnoreCase("transducer_type"),
-                       converter: "com.nubeiot.iotdata.converter.TransducerTypeConverter")
+                       converter: "com.nubeiot.iotdata.converter.TransducerTypeConverter"),
+        new ForcedType(userType: "com.nubeiot.iotdata.dto.GroupType",
+                       types: DB.TYPES.varchar,
+                       expression: Strings.toRegexIgnoreCase("group_type"),
+                       converter: "com.nubeiot.iotdata.converter.GroupTypeConverter")
     ]
     javaTypes = project(':core:sql').ext.javaTypes + [
         new JsonDataType(className: "com.nubeiot.iotdata.dto.HistorySettingType",
@@ -88,6 +92,9 @@ task jooqGen(type: JooqGenerateTask) {
         new JsonDataType(className: "com.nubeiot.iotdata.dto.DeviceType",
                          converter: "%s.type()",
                          parser: "com.nubeiot.iotdata.dto.DeviceType.factory((String)%s)"),
+        new JsonDataType(className: "com.nubeiot.iotdata.dto.GroupType",
+                         converter: "%s.type()",
+                         parser: "com.nubeiot.iotdata.dto.GroupType.factory((String)%s)"),
         new JsonDataType(className: "com.nubeiot.iotdata.dto.PointPriorityValue",
                          converter: "%s.toJson()",
                          parser: "com.nubeiot.core.dto.JsonData.from(%s, com.nubeiot.iotdata.dto.PointPriorityValue.class)"),

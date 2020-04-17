@@ -1,6 +1,7 @@
 package com.nubeiot.edge.module.datapoint.trigger;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.h2.api.Trigger;
 import org.jooq.DSLContext;
@@ -19,11 +20,15 @@ public final class DataPointTriggerInitializer {
     }
 
     public int execute(@NonNull DSLContext dsl) {
-        return dsl.execute(String.join(";", Arrays.asList(
+        final List<String> triggers = Arrays.asList(
             createTrigger("POINT_TRANSDUCER_CREATION_TRIGGER", "INSERT", Tables.POINT_TRANSDUCER,
                           PointTransducerTrigger.class),
             createTrigger("POINT_TRANSDUCER_MODIFICATION_TRIGGER", "UPDATE", Tables.POINT_TRANSDUCER,
-                          PointTransducerTrigger.class))));
+                          PointTransducerTrigger.class),
+            createTrigger("FOLDER_GROUP_CREATION_TRIGGER", "INSERT", Tables.FOLDER_GROUP, FolderGroupTrigger.class),
+            createTrigger("FOLDER_GROUP_REF_MODIFICATION_TRIGGER", "UPDATE", Tables.FOLDER_GROUP,
+                          FolderGroupTrigger.class));
+        return dsl.execute(String.join(";", triggers));
     }
 
 }

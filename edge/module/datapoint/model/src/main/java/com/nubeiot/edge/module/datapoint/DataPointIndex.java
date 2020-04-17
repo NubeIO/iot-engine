@@ -40,6 +40,8 @@ import com.nubeiot.iotdata.edge.model.Tables;
 import com.nubeiot.iotdata.edge.model.tables.daos.DeviceDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.EdgeDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.EdgeDeviceDao;
+import com.nubeiot.iotdata.edge.model.tables.daos.FolderDao;
+import com.nubeiot.iotdata.edge.model.tables.daos.FolderGroupDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.HistorySettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.MeasureUnitDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.NetworkDao;
@@ -57,6 +59,8 @@ import com.nubeiot.iotdata.edge.model.tables.daos.TransducerDao;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;
 import com.nubeiot.iotdata.edge.model.tables.pojos.EdgeDevice;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Folder;
+import com.nubeiot.iotdata.edge.model.tables.pojos.FolderGroup;
 import com.nubeiot.iotdata.edge.model.tables.pojos.HistorySetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
@@ -74,6 +78,8 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
 import com.nubeiot.iotdata.edge.model.tables.records.DeviceRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.EdgeDeviceRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.EdgeRecord;
+import com.nubeiot.iotdata.edge.model.tables.records.FolderGroupRecord;
+import com.nubeiot.iotdata.edge.model.tables.records.FolderRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.HistorySettingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.MeasureUnitRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.NetworkRecord;
@@ -842,6 +848,52 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<EdgeDeviceDao> daoClass() {
             return EdgeDeviceDao.class;
+        }
+
+    }
+
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    final class FolderMetadata implements SerialKeyEntity<Folder, FolderRecord, FolderDao> {
+
+        public static final FolderMetadata INSTANCE = new FolderMetadata();
+
+        @Override
+        public @NonNull JsonTable<FolderRecord> table() {
+            return Tables.FOLDER;
+        }
+
+        @Override
+        public @NonNull Class<Folder> modelClass() {
+            return Folder.class;
+        }
+
+        @Override
+        public @NonNull Class<FolderDao> daoClass() {
+            return FolderDao.class;
+        }
+
+    }
+
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    final class FolderGroupMetadata implements BigSerialKeyEntity<FolderGroup, FolderGroupRecord, FolderGroupDao> {
+
+        public static final FolderGroupMetadata INSTANCE = new FolderGroupMetadata();
+
+        @Override
+        public @NonNull JsonTable<FolderGroupRecord> table() {
+            return Tables.FOLDER_GROUP;
+        }
+
+        @Override
+        public @NonNull Class<FolderGroup> modelClass() {
+            return FolderGroup.class;
+        }
+
+        @Override
+        public @NonNull Class<FolderGroupDao> daoClass() {
+            return FolderGroupDao.class;
         }
 
     }

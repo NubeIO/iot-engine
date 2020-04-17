@@ -114,6 +114,35 @@
 				<fk_column name="NETWORK_ID" pk="ID" />
 			</fk>
 		</table>
+		<table name="FOLDER" >
+			<column name="ID" type="integer" jt="4" mandatory="y" autoincrement="y" />
+			<column name="NAME" type="varchar" length="100" jt="12" mandatory="y" />
+			<column name="TIME_AUDIT" type="varchar" length="500" jt="12" />
+			<column name="SYNC_AUDIT" type="clob" length="2147483647" jt="2005" />
+			<index name="PK_FOLDER_ID" unique="PRIMARY_KEY" >
+				<column name="ID" />
+			</index>
+		</table>
+		<table name="GROUP_REF" >
+			<column name="ID" type="integer" jt="4" mandatory="y" autoincrement="y" />
+			<column name="FOLDER_ID" type="integer" jt="4" mandatory="y" />
+			<column name="GROUP_TYPE" type="varchar" length="15" jt="12" mandatory="y" >
+				<comment><![CDATA[DEVICE or POINT or FOLDER]]></comment>
+			</column>
+			<column name="DEVICE_ID" type="uuid" length="2147483647" jt="-2" mandatory="y" />
+			<column name="POINT_ID" type="uuid" length="2147483647" jt="-2" />
+			<column name="TIME_AUDIT" type="varchar" length="500" jt="12" />
+			<column name="SYNC_AUDIT" type="clob" length="2147483647" jt="2005" />
+			<index name="PK_GROUP_REF_ID" unique="PRIMARY_KEY" >
+				<column name="ID" />
+			</index>
+			<index name="IDX_GROUP_REF_FOLDER_ID" unique="NORMAL" >
+				<column name="FOLDER_ID" />
+			</index>
+			<fk name="FK_GROUP_REF_FOLDER" to_schema="edge_datapoint.PUBLIC" to_table="FOLDER" delete_action="cascade" update_action="cascade" >
+				<fk_column name="FOLDER_ID" pk="ID" />
+			</fk>
+		</table>
 		<table name="HISTORY_SETTING" >
 			<column name="POINT" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="ENABLED" type="boolean" jt="16" mandatory="y" >
@@ -515,24 +544,26 @@ Field: DEVICE_ID, NETWORK_ID, EDGE_ID, COMPUTED_TRANSDUCER is computed by TRIGGE
 	</schema>
 	<connector name="H2" database="H2" driver_class="org.h2.Driver" driver_jar="h2-1.4.197.jar" driver_desc="File" host="localhost" port="0" instance="/data/projects/nubeio/iot-engine/edge/module/datapoint/model/src/main/resources/ddl/edge_datapoint" />
 	<layout name="Default Layout" id="Layout_4a6ba2c" show_relation="columns" >
-		<entity schema="edge_datapoint.PUBLIC" name="DEVICE" color="FFCCCC" x="1344" y="560" />
-		<entity schema="edge_datapoint.PUBLIC" name="DEVICE_TAG" color="FFCCCC" x="1120" y="784" />
+		<entity schema="edge_datapoint.PUBLIC" name="DEVICE" color="FFCCCC" x="1360" y="784" />
+		<entity schema="edge_datapoint.PUBLIC" name="DEVICE_TAG" color="FFCCCC" x="1120" y="1008" />
 		<entity schema="edge_datapoint.PUBLIC" name="EDGE" color="BEBEF4" x="688" y="80" />
 		<entity schema="edge_datapoint.PUBLIC" name="EDGE_DEVICE" color="BEBEF4" x="1120" y="80" />
+		<entity schema="edge_datapoint.PUBLIC" name="FOLDER" color="CCE6FF" x="960" y="576" />
+		<entity schema="edge_datapoint.PUBLIC" name="GROUP_REF" color="CCE6FF" x="1200" y="560" />
 		<entity schema="edge_datapoint.PUBLIC" name="HISTORY_SETTING" color="EEF7EC" x="432" y="784" />
-		<entity schema="edge_datapoint.PUBLIC" name="MEASURE_UNIT" color="FFCCCC" x="704" y="544" />
+		<entity schema="edge_datapoint.PUBLIC" name="MEASURE_UNIT" color="CCE6FF" x="672" y="560" />
 		<entity schema="edge_datapoint.PUBLIC" name="NETWORK" color="BEBEF4" x="944" y="288" />
 		<entity schema="edge_datapoint.PUBLIC" name="POINT" color="EEF7EC" x="400" y="304" />
 		<entity schema="edge_datapoint.PUBLIC" name="POINT_HISTORY_DATA" color="EEF7EC" x="48" y="336" />
 		<entity schema="edge_datapoint.PUBLIC" name="POINT_REALTIME_DATA" color="EEF7EC" x="48" y="528" />
 		<entity schema="edge_datapoint.PUBLIC" name="POINT_TAG" color="EEF7EC" x="416" y="80" />
-		<entity schema="edge_datapoint.PUBLIC" name="POINT_TRANSDUCER" color="FFCCCC" x="688" y="768" />
+		<entity schema="edge_datapoint.PUBLIC" name="POINT_TRANSDUCER" color="FFCCCC" x="704" y="992" />
 		<entity schema="edge_datapoint.PUBLIC" name="POINT_VALUE_DATA" color="EEF7EC" x="240" y="784" />
 		<entity schema="edge_datapoint.PUBLIC" name="PROTOCOL_DISPATCHER" color="FFFFCC" x="1344" y="80" />
 		<entity schema="edge_datapoint.PUBLIC" name="REALTIME_SETTING" color="EEF7EC" x="64" y="704" />
 		<entity schema="edge_datapoint.PUBLIC" name="SCHEDULE_SETTING" color="EEF7EC" x="48" y="80" />
 		<entity schema="edge_datapoint.PUBLIC" name="SYNC_DISPATCHER" color="FFFFCC" x="1344" y="336" />
-		<entity schema="edge_datapoint.PUBLIC" name="TRANSDUCER" color="FFCCCC" x="992" y="560" />
+		<entity schema="edge_datapoint.PUBLIC" name="TRANSDUCER" color="FFCCCC" x="976" y="880" />
 		<group name="SYSTEM" color="FFFFCC" >
 			<entity schema="edge_datapoint.PUBLIC" name="PROTOCOL_DISPATCHER" />
 			<entity schema="edge_datapoint.PUBLIC" name="SYNC_DISPATCHER" />
@@ -540,7 +571,6 @@ Field: DEVICE_ID, NETWORK_ID, EDGE_ID, COMPUTED_TRANSDUCER is computed by TRIGGE
 		<group name="DEVICE" color="FFCCCC" >
 			<entity schema="edge_datapoint.PUBLIC" name="TRANSDUCER" />
 			<entity schema="edge_datapoint.PUBLIC" name="DEVICE" />
-			<entity schema="edge_datapoint.PUBLIC" name="MEASURE_UNIT" />
 			<entity schema="edge_datapoint.PUBLIC" name="POINT_TRANSDUCER" />
 			<entity schema="edge_datapoint.PUBLIC" name="DEVICE_TAG" />
 		</group>
@@ -558,6 +588,11 @@ Field: DEVICE_ID, NETWORK_ID, EDGE_ID, COMPUTED_TRANSDUCER is computed by TRIGGE
 			<entity schema="edge_datapoint.PUBLIC" name="REALTIME_SETTING" />
 			<entity schema="edge_datapoint.PUBLIC" name="SCHEDULE_SETTING" />
 			<entity schema="edge_datapoint.PUBLIC" name="POINT_HISTORY_DATA" />
+		</group>
+		<group name="COMMON" color="CCE6FF" >
+			<entity schema="edge_datapoint.PUBLIC" name="FOLDER" />
+			<entity schema="edge_datapoint.PUBLIC" name="GROUP_REF" />
+			<entity schema="edge_datapoint.PUBLIC" name="MEASURE_UNIT" />
 		</group>
 		<script name="DEVICE" id="Editor_3b225e6" language="SQL" >
 			<string><![CDATA[DROP INDEX IDX_UQ_PROTOCOL_DISPATCHER]]></string>
