@@ -107,8 +107,8 @@ public final class PointTransducerTrigger implements Trigger {
                 final NubeException cause = new NubeException(ErrorCode.INVALID_ARGUMENT, Strings.format(
                     "Transducer {0} with type {1} is already assigned to Point {2}", pojo.getTransducerId(),
                     type.type(), r.getPointId()));
-                throw new SQLException(SQLStateClass.C22_DATA_EXCEPTION.name(),
-                                       SQLStateClass.C22_DATA_EXCEPTION.className(), cause);
+                throw new SQLException(SQLStateClass.C23_INTEGRITY_CONSTRAINT_VIOLATION.name(),
+                                       SQLStateClass.C23_INTEGRITY_CONSTRAINT_VIOLATION.className(), cause);
             }
         }
         return computed;

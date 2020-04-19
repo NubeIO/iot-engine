@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
@@ -239,6 +240,10 @@ public final class Strings {
      */
     public static String fallback(String value, String fallback) {
         return Strings.isBlank(value) ? requireNotBlank(fallback) : value;
+    }
+
+    public static String fallback(String value, @NonNull Supplier<String> fallback) {
+        return Strings.isBlank(value) ? fallback.get() : value;
     }
 
     public static boolean in(String with, boolean equalsIgnoreCase, String... values) {

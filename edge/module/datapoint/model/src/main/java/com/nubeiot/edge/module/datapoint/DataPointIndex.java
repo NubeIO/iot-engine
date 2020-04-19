@@ -23,14 +23,17 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.EntityMetadata.BigSerialKeyEntity;
 import com.nubeiot.core.sql.EntityMetadata.SerialKeyEntity;
 import com.nubeiot.core.sql.EntityMetadata.StringKeyEntity;
+import com.nubeiot.core.sql.EntityMetadata.UUID64KeyEntity;
 import com.nubeiot.core.sql.EntityMetadata.UUIDKeyEntity;
 import com.nubeiot.core.sql.MetadataIndex;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.edge.module.datapoint.model.pojos.EdgeDeviceComposite;
+import com.nubeiot.edge.module.datapoint.model.pojos.FolderGroupComposite;
 import com.nubeiot.edge.module.datapoint.model.pojos.HasProtocol;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointTransducerComposite;
+import com.nubeiot.iotdata.dto.GroupLevel;
 import com.nubeiot.iotdata.dto.HistorySettingType;
 import com.nubeiot.iotdata.dto.PointPriorityValue;
 import com.nubeiot.iotdata.dto.PointPriorityValue.PointValue;
@@ -121,6 +124,8 @@ public interface DataPointIndex extends MetadataIndex {
         map.put(EdgeDeviceMetadata.INSTANCE, 30);
         map.put(PointMetadata.INSTANCE, 40);
         map.put(PointTransducerMetadata.INSTANCE, 50);
+        map.put(FolderMetadata.INSTANCE, 60);
+        map.put(FolderGroupMetadata.INSTANCE, 70);
         return map;
     }
 
@@ -151,7 +156,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull Device onCreating(RequestData reqData) throws IllegalArgumentException {
-            Device device = parseFromRequest(reqData.body());
+            Device device = UUIDKeyEntity.super.onCreating(reqData);
             Strings.requireNotBlank(device.getCode(), "Device code is mandatory");
             Strings.requireNotBlank(device.getType(), "Device type is mandatory");
             return device.setId(Optional.ofNullable(device.getId()).orElseGet(UUID::randomUUID));
@@ -187,7 +192,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull Edge onCreating(RequestData reqData) throws IllegalArgumentException {
-            Edge edge = parseFromRequest(reqData.body());
+            Edge edge = UUIDKeyEntity.super.onCreating(reqData);
             edge.setCustomerCode(
                 Strings.requireNotBlank(edge.getCustomerCode(), "Customer code cannot be blank").toUpperCase());
             edge.setSiteCode(Strings.requireNotBlank(edge.getSiteCode(), "Site code cannot be blank").toUpperCase());
@@ -257,7 +262,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull PointHistoryData onCreating(RequestData reqData) throws IllegalArgumentException {
-            final PointHistoryData historyData = parseFromRequest(reqData.body());
+            final PointHistoryData historyData = BigSerialKeyEntity.super.onCreating(reqData);
             Objects.requireNonNull(historyData.getPoint(), "History data point is mandatory");
             Objects.requireNonNull(historyData.getValue(), "History data value is mandatory");
             return historyData.setTime(Optional.ofNullable(historyData.getTime()).orElse(DateTimes.now()))
@@ -307,7 +312,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull HistorySetting onCreating(@NonNull RequestData reqData) throws IllegalArgumentException {
-            return validate(parseFromRequest(reqData.body()));
+            return validate(UUIDKeyEntity.super.onCreating(reqData));
         }
 
         @Override
@@ -408,7 +413,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull Network onCreating(RequestData reqData) throws IllegalArgumentException {
-            Network network = parseFromRequest(reqData.body());
+            Network network = UUIDKeyEntity.super.onCreating(reqData);
             Objects.requireNonNull(network.getEdge(), "Edge is mandatory");
             Strings.requireNotBlank(network.getCode(), "Network code is mandatory");
             return network.setId(Optional.ofNullable(network.getId()).orElseGet(UUID::randomUUID));
@@ -488,7 +493,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull PointComposite onCreating(RequestData reqData) throws IllegalArgumentException {
-            PointComposite point = validate(parseFromRequest(reqData.body()));
+            PointComposite point = validate(super.onCreating(reqData));
             point.setId(Optional.ofNullable(point.getId()).orElseGet(UUID::randomUUID));
             return point;
         }
@@ -775,7 +780,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull Transducer onCreating(RequestData reqData) throws IllegalArgumentException {
-            Transducer transducer = parseFromRequest(reqData.body());
+            Transducer transducer = UUIDKeyEntity.super.onCreating(reqData);
             Strings.requireNotBlank(transducer.getCode(), "Transducer code is mandatory");
             Strings.requireNotBlank(transducer.getType(), "Transducer type is mandatory");
             Strings.requireNotBlank(transducer.getCategory(), "Transducer category is mandatory");
@@ -854,12 +859,12 @@ public interface DataPointIndex extends MetadataIndex {
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class FolderMetadata implements SerialKeyEntity<Folder, FolderRecord, FolderDao> {
+    final class FolderMetadata implements UUID64KeyEntity<Folder, FolderRecord, FolderDao> {
 
         public static final FolderMetadata INSTANCE = new FolderMetadata();
 
         @Override
-        public @NonNull JsonTable<FolderRecord> table() {
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.Folder table() {
             return Tables.FOLDER;
         }
 
@@ -873,27 +878,107 @@ public interface DataPointIndex extends MetadataIndex {
             return FolderDao.class;
         }
 
+        @Override
+        public @NonNull String jsonKeyName() {
+            return "id";
+        }
+
+        @Override
+        public @NonNull Folder onCreating(@NonNull RequestData reqData) throws IllegalArgumentException {
+            final Folder folder = UUID64KeyEntity.super.onCreating(reqData);
+            return folder.setId(Strings.fallback(folder.getId(), UUID64::random));
+        }
+
     }
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class FolderGroupMetadata implements BigSerialKeyEntity<FolderGroup, FolderGroupRecord, FolderGroupDao> {
+    final class FolderGroupMetadata
+        extends AbstractCompositeMetadata<String, FolderGroup, FolderGroupRecord, FolderGroupDao, FolderGroupComposite>
+        implements UUID64KeyEntity<FolderGroup, FolderGroupRecord, FolderGroupDao> {
 
         public static final FolderGroupMetadata INSTANCE = new FolderGroupMetadata();
 
         @Override
-        public @NonNull JsonTable<FolderGroupRecord> table() {
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.FolderGroup table() {
             return Tables.FOLDER_GROUP;
-        }
-
-        @Override
-        public @NonNull Class<FolderGroup> modelClass() {
-            return FolderGroup.class;
         }
 
         @Override
         public @NonNull Class<FolderGroupDao> daoClass() {
             return FolderGroupDao.class;
+        }
+
+        @Override
+        public @NonNull String jsonKeyName() {
+            return "id";
+        }
+
+        @Override
+        public @NonNull List<OrderField<?>> orderFields() {
+            return Arrays.asList(table().LEVEL.asc(), table().FOLDER_ID.asc());
+        }
+
+        @Override
+        public @NonNull Class<FolderGroupComposite> modelClass() {
+            return FolderGroupComposite.class;
+        }
+
+        @Override
+        public @NonNull Class<FolderGroup> rawClass() {
+            return FolderGroup.class;
+        }
+
+        @Override
+        public @NonNull FolderGroupComposite onCreating(@NonNull RequestData reqData) throws IllegalArgumentException {
+            final FolderGroupComposite fg = validate(super.onCreating(reqData));
+            return (FolderGroupComposite) fg.setId(Strings.fallback(fg.getId(), UUID64::random));
+        }
+
+        @Override
+        public @NonNull FolderGroupComposite onUpdating(@NonNull FolderGroup dbData, @NonNull RequestData reqData)
+            throws IllegalArgumentException {
+            return validate(super.onUpdating(dbData, reqData));
+        }
+
+        @Override
+        public @NonNull FolderGroupComposite onPatching(@NonNull FolderGroup dbData, @NonNull RequestData reqData)
+            throws IllegalArgumentException {
+            return validate(super.onPatching(dbData, reqData));
+        }
+
+        public <PP extends FolderGroup> PP validate(@NonNull FolderGroup pojo) {
+            if (Objects.isNull(pojo.getFolderId())) {
+                throw new IllegalArgumentException("Missing " + table().getJsonField(table().FOLDER_ID));
+            }
+            if (pojo.getLevel() == GroupLevel.EDGE) {
+                if (Objects.isNull(pojo.getNetworkId())) {
+                    throw new IllegalArgumentException("Missing " + table().getJsonField(table().NETWORK_ID));
+                }
+                return (PP) pojo.setDeviceId(null).setPointId(null).setParentFolderId(null);
+            }
+            if (pojo.getLevel() == GroupLevel.NETWORK) {
+                if (Objects.isNull(pojo.getDeviceId())) {
+                    throw new IllegalArgumentException("Missing " + table().getJsonField(table().DEVICE_ID));
+                }
+                return (PP) pojo.setPointId(null).setParentFolderId(null);
+            }
+            if (pojo.getLevel() == GroupLevel.DEVICE) {
+                if (Objects.isNull(pojo.getPointId())) {
+                    throw new IllegalArgumentException("Missing " + table().getJsonField(table().POINT_ID));
+                }
+                return (PP) pojo.setParentFolderId(null);
+            }
+            if (pojo.getLevel() == GroupLevel.FOLDER) {
+                if (Objects.isNull(pojo.getParentFolderId())) {
+                    throw new IllegalArgumentException("Missing " + table().getJsonField(table().PARENT_FOLDER_ID));
+                }
+                if (pojo.getParentFolderId().equals(pojo.getFolderId())) {
+                    throw new IllegalArgumentException("Parent folder cannot be same as itself");
+                }
+                return (PP) pojo;
+            }
+            throw new IllegalArgumentException("Unknown group level " + pojo.getLevel());
         }
 
     }

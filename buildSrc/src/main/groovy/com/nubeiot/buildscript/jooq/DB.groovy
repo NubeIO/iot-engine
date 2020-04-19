@@ -11,6 +11,7 @@ class DB {
         timestamp : Strings.toRegexIgnoreCase("TIMESTAMP"),
         timestampz: Strings.toRegexIgnoreCase("TIMESTAMP(\\([0-9]\\))? WITH TIME ZONE"),
         array     : Strings.toRegexIgnoreCase("ARRAY"),
+        uuid      : Strings.toRegexIgnoreCase("UUID"),
     ]
     static COL_REGEX = [
         json     : Strings.toRegexIgnoreCase(".+_JSON\$"),

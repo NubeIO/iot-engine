@@ -27,6 +27,11 @@ abstract class PointTransducerService
     }
 
     @Override
+    public PointTransducerMetadata context() {
+        return PointTransducerMetadata.INSTANCE;
+    }
+
+    @Override
     public @NonNull RequestDecorator requestDecorator() {
         return NetworkExtension.create(this);
     }

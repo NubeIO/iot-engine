@@ -15,51 +15,54 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.FolderGroupMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.FolderMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointTransducerMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
+import com.nubeiot.iotdata.dto.GroupLevel;
 
 import lombok.NonNull;
 
-public final class PointByDeviceService extends PointTransducerService {
+public final class PointByFolderService extends FolderGroupService {
 
-    PointByDeviceService(@NonNull EntityHandler entityHandler) {
+    public PointByFolderService(EntityHandler entityHandler) {
         super(entityHandler);
     }
 
     @Override
-    public PointTransducerMetadata context() {
-        return PointTransducerMetadata.INSTANCE;
-    }
-
-    @Override
     public @NonNull EntityMetadata reference() {
-        return DeviceMetadata.INSTANCE;
+        return FolderGroupMetadata.INSTANCE;
     }
 
     @Override
     public @NonNull List<EntityMetadata> references() {
-        return Arrays.asList(DeviceMetadata.INSTANCE, NetworkMetadata.INSTANCE);
+        return Arrays.asList(FolderMetadata.INSTANCE, DeviceMetadata.INSTANCE, NetworkMetadata.INSTANCE);
     }
 
     @Override
     public @NonNull EntityMetadata resource() {
-        return PointMetadata.INSTANCE;
+        return PointCompositeMetadata.INSTANCE;
     }
 
     @Override
     public final Set<EventMethodDefinition> definitions() {
         final @NonNull Collection<EventAction> events = getAvailableEvents();
         return Stream.of(super.definitions(),
-                         EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, events, resource(), true,
-                                                             EdgeMetadata.INSTANCE, NetworkMetadata.INSTANCE,
+                         EntityHttpService.createDefinitions(events, resource(), true, DeviceMetadata.INSTANCE,
                                                              reference()),
                          EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, events, resource(), true,
-                                                             EdgeMetadata.INSTANCE, reference()),
+                                                             EdgeMetadata.INSTANCE, NetworkMetadata.INSTANCE,
+                                                             DeviceMetadata.INSTANCE, reference()),
                          EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, events, resource(), true,
-                                                             NetworkMetadata.INSTANCE, reference()))
+                                                             NetworkMetadata.INSTANCE, DeviceMetadata.INSTANCE,
+                                                             reference()))
                      .flatMap(Collection::stream)
                      .collect(Collectors.toSet());
+    }
+
+    @Override
+    protected @NonNull GroupLevel groupLevel() {
+        return GroupLevel.DEVICE;
     }
 
 }

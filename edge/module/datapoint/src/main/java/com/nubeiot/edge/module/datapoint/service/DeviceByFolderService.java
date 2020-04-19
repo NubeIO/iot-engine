@@ -11,37 +11,27 @@ import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.http.EntityHttpService;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.FolderMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.TransducerMetadata;
+import com.nubeiot.iotdata.dto.GroupLevel;
 
 import lombok.NonNull;
 
-public final class TransducerByPointService extends PointTransducerService {
+public final class DeviceByFolderService extends FolderGroupService {
 
-    TransducerByPointService(@NonNull EntityHandler entityHandler) {
+    public DeviceByFolderService(EntityHandler entityHandler) {
         super(entityHandler);
     }
 
     @Override
     public @NonNull EntityMetadata reference() {
-        return PointMetadata.INSTANCE;
+        return FolderMetadata.INSTANCE;
     }
 
     @Override
     public @NonNull EntityMetadata resource() {
-        return TransducerMetadata.INSTANCE;
-    }
-
-    @Override
-    public @NonNull Collection<EventAction> getAvailableEvents() {
-        return ActionMethodMapping.DQL_MAP.get().keySet();
-    }
-
-    @Override
-    public boolean supportForceDeletion() {
-        return false;
+        return DeviceMetadata.INSTANCE;
     }
 
     @Override
@@ -49,12 +39,14 @@ public final class TransducerByPointService extends PointTransducerService {
         final @NonNull Collection<EventAction> events = getAvailableEvents();
         return Stream.of(super.definitions(),
                          EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, events, resource(), true,
-                                                             EdgeMetadata.INSTANCE, NetworkMetadata.INSTANCE,
-                                                             reference()),
-                         EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, events, resource(), true,
                                                              NetworkMetadata.INSTANCE, reference()))
                      .flatMap(Collection::stream)
                      .collect(Collectors.toSet());
+    }
+
+    @Override
+    protected @NonNull GroupLevel groupLevel() {
+        return GroupLevel.NETWORK;
     }
 
 }

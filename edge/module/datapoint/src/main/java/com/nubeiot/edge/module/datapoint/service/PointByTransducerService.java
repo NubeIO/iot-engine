@@ -17,7 +17,6 @@ import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointTransducerMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.TransducerMetadata;
 
 import lombok.NonNull;
@@ -26,11 +25,6 @@ public final class PointByTransducerService extends PointTransducerService {
 
     PointByTransducerService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
-    }
-
-    @Override
-    public PointTransducerMetadata context() {
-        return PointTransducerMetadata.INSTANCE;
     }
 
     @Override

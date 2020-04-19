@@ -107,7 +107,7 @@ public final class RestApisBuilder {
         if (restApiClass.isEmpty()) {
             return null;
         }
-        Class[] classes = restApiClass.toArray(new Class[] {});
+        Object[] classes = restApiClass.toArray(new Class[] {});
         logger.info("Registering sub router REST API...");
         RestRouter.getExceptionHandlers().clear();
         return new RestBuilder(vertx).errorHandler(ApiExceptionHandler.class)

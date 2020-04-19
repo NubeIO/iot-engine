@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.github.zero.utils.UUID64;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;
@@ -22,6 +23,8 @@ import com.nubeiot.edge.module.datapoint.DataPointConfig.BuiltinData;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeDeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.FolderGroupMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.FolderMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistoryDataMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistorySettingMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
@@ -33,6 +36,7 @@ import com.nubeiot.edge.module.datapoint.DataPointIndex.RealtimeSettingMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.TagPointMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.TransducerMetadata;
 import com.nubeiot.iotdata.dto.DeviceType;
+import com.nubeiot.iotdata.dto.GroupLevel;
 import com.nubeiot.iotdata.dto.HistorySettingType;
 import com.nubeiot.iotdata.dto.PointKind;
 import com.nubeiot.iotdata.dto.PointPriorityValue;
@@ -43,6 +47,8 @@ import com.nubeiot.iotdata.dto.TransducerType;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;
 import com.nubeiot.iotdata.edge.model.tables.pojos.EdgeDevice;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Folder;
+import com.nubeiot.iotdata.edge.model.tables.pojos.FolderGroup;
 import com.nubeiot.iotdata.edge.model.tables.pojos.HistorySetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
@@ -78,6 +84,30 @@ public final class MockData {
     public static final List<PointHistoryData> HISTORY_DATA = historyData();
     public static final List<RealtimeSetting> RT_SETTINGS = rtSettings();
     public static final List<ProtocolDispatcher> PROTOCOL_DISPATCHERS = protocolDispatchers();
+    public static final List<Folder> FOLDERS = folders();
+    public static final List<FolderGroup> FOLDER_GROUPS = folderGroups();
+
+    private static List<Folder> folders() {
+        return Arrays.asList(new Folder().setId(PrimaryKey.FOLDER_1).setEdgeId(PrimaryKey.EDGE).setName("folder-1"),
+                             new Folder().setId(PrimaryKey.FOLDER_2).setEdgeId(PrimaryKey.EDGE).setName("folder-2"),
+                             new Folder().setId(PrimaryKey.FOLDER_3).setEdgeId(PrimaryKey.EDGE).setName("folder-3"));
+    }
+
+    private static List<FolderGroup> folderGroups() {
+        return Arrays.asList(new FolderGroup().setId(PrimaryKey.FOLDER_GROUP_1)
+                                              .setFolderId(PrimaryKey.FOLDER_1)
+                                              .setLevel(GroupLevel.NETWORK)
+                                              .setDeviceId(PrimaryKey.DEVICE_DROPLET),
+                             new FolderGroup().setId(PrimaryKey.FOLDER_GROUP_2)
+                                              .setFolderId(PrimaryKey.FOLDER_1)
+                                              .setLevel(GroupLevel.DEVICE)
+                                              .setDeviceId(PrimaryKey.DEVICE_DROPLET)
+                                              .setPointId(PrimaryKey.P_GPIO_TEMP),
+                             new FolderGroup().setId(PrimaryKey.FOLDER_GROUP_3)
+                                              .setFolderId(PrimaryKey.FOLDER_2)
+                                              .setLevel(GroupLevel.NETWORK)
+                                              .setDeviceId(PrimaryKey.DEVICE_DROPLET));
+    }
 
     private static List<ProtocolDispatcher> protocolDispatchers() {
         return Arrays.asList(new ProtocolDispatcher().setProtocol(Protocol.BACNET)
@@ -416,13 +446,15 @@ public final class MockData {
     }
 
     public static JsonObject data_Point_Setting_Tag() {
+        return data_Point_Device().put(TagPointMetadata.INSTANCE.singularKeyName(), data(TAGS))
+                                  .put(PointValueMetadata.INSTANCE.singularKeyName(), data(POINT_DATA))
+                                  .put(HistorySettingMetadata.INSTANCE.singularKeyName(), data(HISTORY_SETTINGS))
+                                  .put(HistoryDataMetadata.INSTANCE.singularKeyName(), data(HISTORY_DATA))
+                                  .put(RealtimeSettingMetadata.INSTANCE.singularKeyName(), data(RT_SETTINGS));
+    }
+
+    public static JsonObject data_Point_Device() {
         return data_Device_Equip_Transducer().put(PointMetadata.INSTANCE.singularKeyName(), data(POINTS))
-                                             .put(TagPointMetadata.INSTANCE.singularKeyName(), data(TAGS))
-                                             .put(PointValueMetadata.INSTANCE.singularKeyName(), data(POINT_DATA))
-                                             .put(HistorySettingMetadata.INSTANCE.singularKeyName(),
-                                                  data(HISTORY_SETTINGS))
-                                             .put(HistoryDataMetadata.INSTANCE.singularKeyName(), data(HISTORY_DATA))
-                                             .put(RealtimeSettingMetadata.INSTANCE.singularKeyName(), data(RT_SETTINGS))
                                              .put(PointTransducerMetadata.INSTANCE.singularKeyName(),
                                                   data(POINT_TRANSDUCERS));
     }
@@ -430,6 +462,11 @@ public final class MockData {
     public static JsonObject data_Protocol_Dispatcher() {
         return data_Edge_Network().put(ProtocolDispatcherMetadata.INSTANCE.singularKeyName(),
                                        data(PROTOCOL_DISPATCHERS));
+    }
+
+    public static JsonObject data_Folder_Group() {
+        return data_Point_Device().put(FolderMetadata.INSTANCE.singularKeyName(), data(FOLDERS))
+                                  .put(FolderGroupMetadata.INSTANCE.singularKeyName(), data(FOLDER_GROUPS));
     }
 
     public static <T extends VertxPojo> List<JsonObject> data(List<T> list) {
@@ -462,6 +499,24 @@ public final class MockData {
         public static final UUID TRANSDUCER_FAN_HVAC = UUID.fromString("388519ef-797f-49ca-a613-204b4587ef28");
         public static final UUID TRANSDUCER_TEMP_HVAC = UUID.fromString("960f5686-1dd6-48c0-bb5b-bec79c2b5788");
         public static final UUID TRANSDUCER_SWITCH_HVAC = UUID.fromString("76d34f4e-3b20-4776-99c7-d93d79d5b4a6");
+
+        public static final String FOLDER_1 = UUID64.uuidToBase64(
+            UUID.fromString("256b2c9a-04ce-4985-a561-a64651796c4b"));
+        public static final String FOLDER_2 = UUID64.uuidToBase64(
+            UUID.fromString("f0e0c118-784b-46c9-95cd-2277a5d65163"));
+        public static final String FOLDER_3 = UUID64.uuidToBase64(
+            UUID.fromString("a58667aa-cb3f-4bf4-a9e0-878aebb793e2"));
+
+        public static final String FOLDER_GROUP_1 = UUID64.uuidToBase64(
+            UUID.fromString("fc8bb382-9b2e-4fbb-971d-9d0f797879c5"));
+        public static final String FOLDER_GROUP_2 = UUID64.uuidToBase64(
+            UUID.fromString("f0feaab1-74a6-40fc-9741-6c3abd76ab34"));
+        public static final String FOLDER_GROUP_3 = UUID64.uuidToBase64(
+            UUID.fromString("d74edfc3-78ee-45a1-848a-8f3680cb5151"));
+        public static final String FOLDER_7 = UUID64.uuidToBase64(
+            UUID.fromString("3dd08f81-9f21-462c-b250-4feab2ca862e"));
+        public static final String FOLDER_8 = UUID64.uuidToBase64(
+            UUID.fromString("60bb45aa-3a20-406a-af24-e3d31c08c86b"));
 
     }
 

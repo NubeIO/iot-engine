@@ -26,7 +26,7 @@ public final class DataPointTriggerInitializer {
             createTrigger("POINT_TRANSDUCER_MODIFICATION_TRIGGER", "UPDATE", Tables.POINT_TRANSDUCER,
                           PointTransducerTrigger.class),
             createTrigger("FOLDER_GROUP_CREATION_TRIGGER", "INSERT", Tables.FOLDER_GROUP, FolderGroupTrigger.class),
-            createTrigger("FOLDER_GROUP_REF_MODIFICATION_TRIGGER", "UPDATE", Tables.FOLDER_GROUP,
+            createTrigger("FOLDER_GROUP_MODIFICATION_TRIGGER", "UPDATE", Tables.FOLDER_GROUP,
                           FolderGroupTrigger.class));
         return dsl.execute(String.join(";", triggers));
     }
