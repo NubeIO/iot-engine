@@ -48,20 +48,19 @@ public final class GroupDeviceValidator extends AbstractGroupLevelValidator impl
                 "Point id " + group.getPointId() + " does not belongs to network id " + networkId);
         }
         final PointTransducer table = PointTransducerMetadata.INSTANCE.table();
-        final PointTransducerRecord record = Optional.ofNullable(dsl().selectFrom(table)
-                                                                      .where(table.POINT_ID.eq(group.getPointId())
-                                                                                           .and(table.NETWORK_ID.eq(
-                                                                                               networkId)))
-                                                                      .limit(1)
-                                                                      .fetchOne()).orElse(null);
-        if (Objects.isNull(record)) {
-            return FolderRef.builder().networkId(networkId).build();
-        }
-        if (Objects.nonNull(group.getDeviceId()) && !record.getDeviceId().equals(group.getDeviceId())) {
+        final PointTransducerRecord r = Optional.ofNullable(dsl().selectFrom(table)
+                                                                 .where(table.POINT_ID.eq(group.getPointId())
+                                                                                      .and(table.NETWORK_ID.eq(
+                                                                                          networkId)))
+                                                                 .limit(1)
+                                                                 .fetchOne())
+                                                .orElseThrow(() -> new ConflictException(
+                                                    "Unknown device of point " + group.getPointId()));
+        if (Objects.nonNull(group.getDeviceId()) && !r.getDeviceId().equals(group.getDeviceId())) {
             throw new ConflictException(
                 "Point id " + group.getPointId() + " does not belongs to device id " + group.getDeviceId());
         }
-        return FolderRef.builder().networkId(networkId).deviceId(record.getDeviceId()).pointId(pt.getId()).build();
+        return FolderRef.builder().networkId(networkId).deviceId(r.getDeviceId()).pointId(pt.getId()).build();
     }
 
     @NonNull

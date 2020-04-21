@@ -74,7 +74,8 @@ public final class EventMethodDefinition implements JsonData {
     }
 
     static String toRegex(String capturePath) {
-        return capturePath.replaceFirst("/:[^/]+(/?)$", "/.+$1").replaceAll("/:[^/]+", "/[^/]+");
+        //FIXME check with forward url
+        return capturePath.replaceFirst("/:[^/]+(/?)$", "/[^/]+$1").replaceAll("/:[^/]+", "/[^/]+");
     }
 
     private static String searchRegex(String servicePath) {

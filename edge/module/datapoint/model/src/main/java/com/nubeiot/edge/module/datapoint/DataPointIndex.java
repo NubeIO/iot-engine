@@ -12,7 +12,6 @@ import java.util.UUID;
 import org.jooq.OrderField;
 
 import io.github.zero.utils.DateTimes;
-import io.github.zero.utils.Functions;
 import io.github.zero.utils.Strings;
 import io.github.zero.utils.UUID64;
 import io.vertx.core.json.JsonObject;
@@ -519,7 +518,7 @@ public interface DataPointIndex extends MetadataIndex {
         private PointComposite validate(@NonNull PointComposite point) {
             Objects.requireNonNull(point.getEdge(), "Point must be assigned to Edge");
             Objects.requireNonNull(point.getNetwork(), "Point must be assigned to Network");
-            Strings.requireNotBlank(point.getCode(), "Point Code is mandatory");
+            point.setCode(Strings.requireNotBlank(point.getCode(), () -> mandatoryField(table().CODE)));
             final MeasureUnit other = point.getOther(MeasureUnitMetadata.INSTANCE.singularKeyName());
             if (Objects.isNull(other)) {
                 point.addMeasureUnit(new MeasureUnit().setType(
@@ -898,7 +897,10 @@ public interface DataPointIndex extends MetadataIndex {
         extends AbstractCompositeMetadata<String, FolderGroup, FolderGroupRecord, FolderGroupDao, FolderGroupComposite>
         implements UUID64KeyEntity<FolderGroup, FolderGroupRecord, FolderGroupDao> {
 
-        public static final FolderGroupMetadata INSTANCE = new FolderGroupMetadata();
+        public static final FolderGroupMetadata INSTANCE = new FolderGroupMetadata().addSubItem(FolderMetadata.INSTANCE,
+                                                                                                DeviceMetadata.INSTANCE,
+                                                                                                NetworkMetadata.INSTANCE,
+                                                                                                PointCompositeMetadata.INSTANCE);
 
         @Override
         public @NonNull com.nubeiot.iotdata.edge.model.tables.FolderGroup table() {
@@ -932,8 +934,14 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull FolderGroupComposite onCreating(@NonNull RequestData reqData) throws IllegalArgumentException {
-            final FolderGroupComposite fg = validate(super.onCreating(reqData));
-            return (FolderGroupComposite) fg.setId(Strings.fallback(fg.getId(), UUID64::random));
+            final FolderGroupComposite pojo = super.onCreating(reqData);
+            final Folder folder = pojo.getOther(FolderMetadata.INSTANCE.singularKeyName());
+            final Device device = pojo.getOther(DeviceMetadata.INSTANCE.singularKeyName());
+            final Point point = pojo.getOther(PointCompositeMetadata.INSTANCE.singularKeyName());
+            pojo.setFolderId(Optional.ofNullable(folder).map(Folder::getId).orElseGet(pojo::getFolderId));
+            pojo.setDeviceId(Optional.ofNullable(device).map(Device::getId).orElseGet(pojo::getDeviceId));
+            pojo.setPointId(Optional.ofNullable(point).map(Point::getId).orElseGet(pojo::getPointId));
+            return (FolderGroupComposite) validate(pojo.setId(Strings.fallback(pojo.getId(), UUID64::random)));
         }
 
         @Override
@@ -948,29 +956,28 @@ public interface DataPointIndex extends MetadataIndex {
             return validate(super.onPatching(dbData, reqData));
         }
 
-        public <PP extends FolderGroup> PP validate(@NonNull FolderGroup pojo) {
-            Functions.getOrThrow(() -> Strings.requireNotBlank(pojo.getFolderId()),
-                                 () -> FolderGroupMetadata.INSTANCE.mandatoryField(table().FOLDER_ID));
+        public <PP extends FolderGroup> PP validate(@NonNull PP pojo) {
+            pojo.setFolderId(Strings.requireNotBlank(pojo.getFolderId(), () -> mandatoryField(table().FOLDER_ID)));
             if (pojo.getLevel() == GroupLevel.EDGE) {
-                Functions.getOrThrow(() -> Objects.requireNonNull(pojo.getNetworkId()),
-                                     () -> FolderGroupMetadata.INSTANCE.mandatoryField(table().NETWORK_ID));
-                return (PP) pojo.setDeviceId(null).setPointId(null).setParentFolderId(null);
+                final UUID networkId = Strings.requireNotBlank(pojo.getNetworkId(),
+                                                               () -> mandatoryField(table().NETWORK_ID));
+                return (PP) pojo.setNetworkId(networkId).setDeviceId(null).setPointId(null).setParentFolderId(null);
             }
             if (pojo.getLevel() == GroupLevel.NETWORK) {
                 if (Objects.isNull(pojo.getNetworkId()) && Objects.isNull(pojo.getDeviceId())) {
-                    throw FolderGroupMetadata.INSTANCE.mandatoryField(table().NETWORK_ID);
+                    throw mandatoryField(table().NETWORK_ID);
                 }
                 return (PP) pojo.setPointId(null).setParentFolderId(null);
             }
             if (pojo.getLevel() == GroupLevel.DEVICE) {
                 if (Objects.isNull(pojo.getDeviceId()) && Objects.isNull(pojo.getPointId())) {
-                    throw FolderGroupMetadata.INSTANCE.mandatoryField(table().DEVICE_ID);
+                    throw mandatoryField(table().DEVICE_ID);
                 }
                 return (PP) pojo.setParentFolderId(null);
             }
             if (pojo.getLevel() == GroupLevel.FOLDER) {
-                Functions.getOrThrow(() -> Strings.requireNotBlank(pojo.getParentFolderId()),
-                                     () -> FolderGroupMetadata.INSTANCE.mandatoryField(table().PARENT_FOLDER_ID));
+                pojo.setParentFolderId(
+                    Strings.requireNotBlank(pojo.getParentFolderId(), () -> mandatoryField(table().PARENT_FOLDER_ID)));
                 if (pojo.getParentFolderId().equals(pojo.getFolderId())) {
                     throw new IllegalArgumentException("Parent folder cannot be same as itself");
                 }

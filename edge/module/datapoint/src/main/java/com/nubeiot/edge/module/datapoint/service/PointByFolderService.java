@@ -14,7 +14,6 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.FolderMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
@@ -49,9 +48,6 @@ public final class PointByFolderService extends FolderGroupService {
         return Stream.of(super.definitions(),
                          EntityHttpService.createDefinitions(events, resource(), true, DeviceMetadata.INSTANCE,
                                                              reference()),
-                         EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, events, resource(), true,
-                                                             EdgeMetadata.INSTANCE, NetworkMetadata.INSTANCE,
-                                                             DeviceMetadata.INSTANCE, reference()),
                          EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, events, resource(), true,
                                                              NetworkMetadata.INSTANCE, DeviceMetadata.INSTANCE,
                                                              reference()))

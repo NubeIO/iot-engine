@@ -70,8 +70,10 @@ public abstract class FolderGroupService
         final FolderGroup fgTbl = context().table();
         final Folder folderTbl = FolderMetadata.INSTANCE.table();
         return Stream.of(super.ignoreFields(),
-                         Arrays.asList(fgTbl.getJsonField(fgTbl.DEVICE_ID), fgTbl.getJsonField(fgTbl.NETWORK_ID),
-                                       fgTbl.getJsonField(fgTbl.LEVEL), folderTbl.getJsonField(folderTbl.EDGE_ID)))
+                         Arrays.asList(fgTbl.getJsonField(fgTbl.NETWORK_ID), fgTbl.getJsonField(fgTbl.DEVICE_ID),
+                                       fgTbl.getJsonField(fgTbl.FOLDER_ID), fgTbl.getJsonField(fgTbl.PARENT_FOLDER_ID),
+                                       fgTbl.getJsonField(fgTbl.POINT_ID), fgTbl.getJsonField(fgTbl.LEVEL),
+                                       folderTbl.getJsonField(folderTbl.EDGE_ID)))
                      .flatMap(Collection::stream)
                      .collect(Collectors.toSet());
     }
