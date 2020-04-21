@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.decorator.RequestDecorator;
@@ -40,6 +41,31 @@ public abstract class FolderGroupService
     }
 
     @Override
+    public @NonNull RequestData onCreatingOneResource(@NonNull RequestData requestData) {
+        return appendGroupLevel(super.onCreatingOneResource(requestData));
+    }
+
+    @Override
+    public @NonNull RequestData onModifyingOneResource(@NonNull RequestData requestData) {
+        return appendGroupLevel(super.onModifyingOneResource(requestData));
+    }
+
+    @Override
+    public @NonNull RequestData onDeletingOneResource(@NonNull RequestData requestData) {
+        return appendGroupLevel(super.onDeletingOneResource(requestData));
+    }
+
+    @Override
+    public @NonNull RequestData onReadingManyResource(@NonNull RequestData requestData) {
+        return appendGroupLevel(super.onReadingManyResource(requestData));
+    }
+
+    @Override
+    public @NonNull RequestData onReadingOneResource(@NonNull RequestData requestData) {
+        return appendGroupLevel(super.onReadingOneResource(requestData));
+    }
+
+    @Override
     public Set<String> ignoreFields() {
         final FolderGroup fgTbl = context().table();
         final Folder folderTbl = FolderMetadata.INSTANCE.table();
@@ -57,5 +83,12 @@ public abstract class FolderGroupService
 
     @NonNull
     protected abstract GroupLevel groupLevel();
+
+    @NonNull
+    private RequestData appendGroupLevel(@NonNull RequestData reqData) {
+        reqData.body().put(context().table().getJsonField(context().table().LEVEL), groupLevel().type());
+        reqData.filter().put(context().table().getJsonField(context().table().LEVEL), groupLevel().type());
+        return reqData;
+    }
 
 }

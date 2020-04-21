@@ -8,7 +8,7 @@ import lombok.Getter;
 
 @Builder
 @Getter
-public class ClusterNode implements JsonData, IRequestData {
+public final class ClusterNode implements JsonData, IRequestData {
 
     private final String id;
     private final String name;

@@ -56,7 +56,8 @@ public class JDBCRXGenericQueryExecutor extends AbstractQueryExecutor
             } catch (DataAccessException e) {
                 Throwable cause = Functions.getIfThrow(() -> e.getCause().getCause().getCause()).orElse(null);
                 if (cause instanceof NubeException) {
-                    if (e.sqlStateClass() == SQLStateClass.C22_DATA_EXCEPTION) {
+                    if (e.sqlStateClass() == SQLStateClass.C22_DATA_EXCEPTION ||
+                        e.sqlStateClass() == SQLStateClass.C23_INTEGRITY_CONSTRAINT_VIOLATION) {
                         throw (NubeException) cause;
                     }
                     throw new DatabaseException(

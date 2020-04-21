@@ -90,7 +90,8 @@ public final class MockData {
     private static List<Folder> folders() {
         return Arrays.asList(new Folder().setId(PrimaryKey.FOLDER_1).setEdgeId(PrimaryKey.EDGE).setName("folder-1"),
                              new Folder().setId(PrimaryKey.FOLDER_2).setEdgeId(PrimaryKey.EDGE).setName("folder-2"),
-                             new Folder().setId(PrimaryKey.FOLDER_3).setEdgeId(PrimaryKey.EDGE).setName("folder-3"));
+                             new Folder().setId(PrimaryKey.FOLDER_3).setEdgeId(PrimaryKey.EDGE).setName("folder-3"),
+                             new Folder().setId(PrimaryKey.FOLDER_4).setEdgeId(PrimaryKey.EDGE).setName("folder-4"));
     }
 
     private static List<FolderGroup> folderGroups() {
@@ -100,13 +101,27 @@ public final class MockData {
                                               .setDeviceId(PrimaryKey.DEVICE_DROPLET),
                              new FolderGroup().setId(PrimaryKey.FOLDER_GROUP_2)
                                               .setFolderId(PrimaryKey.FOLDER_1)
+                                              .setLevel(GroupLevel.NETWORK)
+                                              .setDeviceId(PrimaryKey.DEVICE_HVAC),
+                             new FolderGroup().setId(PrimaryKey.FOLDER_GROUP_3)
+                                              .setFolderId(PrimaryKey.FOLDER_2)
+                                              .setLevel(GroupLevel.DEVICE)
+                                              .setDeviceId(PrimaryKey.DEVICE_DROPLET),
+                             new FolderGroup().setId(PrimaryKey.FOLDER_GROUP_4)
+                                              .setFolderId(PrimaryKey.FOLDER_3)
                                               .setLevel(GroupLevel.DEVICE)
                                               .setDeviceId(PrimaryKey.DEVICE_DROPLET)
                                               .setPointId(PrimaryKey.P_GPIO_TEMP),
-                             new FolderGroup().setId(PrimaryKey.FOLDER_GROUP_3)
-                                              .setFolderId(PrimaryKey.FOLDER_2)
-                                              .setLevel(GroupLevel.NETWORK)
-                                              .setDeviceId(PrimaryKey.DEVICE_DROPLET));
+                             new FolderGroup().setId(PrimaryKey.FOLDER_GROUP_5)
+                                              .setFolderId(PrimaryKey.FOLDER_3)
+                                              .setLevel(GroupLevel.DEVICE)
+                                              .setDeviceId(PrimaryKey.DEVICE_DROPLET)
+                                              .setPointId(PrimaryKey.P_GPIO_HUMIDITY),
+                             new FolderGroup().setId(PrimaryKey.FOLDER_GROUP_6)
+                                              .setFolderId(PrimaryKey.FOLDER_4)
+                                              .setLevel(GroupLevel.DEVICE)
+                                              .setDeviceId(PrimaryKey.DEVICE_DROPLET)
+                                              .setPointId(PrimaryKey.P_GPIO_TEMP));
     }
 
     private static List<ProtocolDispatcher> protocolDispatchers() {
@@ -506,6 +521,8 @@ public final class MockData {
             UUID.fromString("f0e0c118-784b-46c9-95cd-2277a5d65163"));
         public static final String FOLDER_3 = UUID64.uuidToBase64(
             UUID.fromString("a58667aa-cb3f-4bf4-a9e0-878aebb793e2"));
+        public static final String FOLDER_4 = UUID64.uuidToBase64(
+            UUID.fromString("7df8281c-1f7c-429b-af17-d9c6db3ffea8"));
 
         public static final String FOLDER_GROUP_1 = UUID64.uuidToBase64(
             UUID.fromString("fc8bb382-9b2e-4fbb-971d-9d0f797879c5"));
@@ -513,10 +530,14 @@ public final class MockData {
             UUID.fromString("f0feaab1-74a6-40fc-9741-6c3abd76ab34"));
         public static final String FOLDER_GROUP_3 = UUID64.uuidToBase64(
             UUID.fromString("d74edfc3-78ee-45a1-848a-8f3680cb5151"));
-        public static final String FOLDER_7 = UUID64.uuidToBase64(
+        public static final String FOLDER_GROUP_4 = UUID64.uuidToBase64(
             UUID.fromString("3dd08f81-9f21-462c-b250-4feab2ca862e"));
-        public static final String FOLDER_8 = UUID64.uuidToBase64(
+        public static final String FOLDER_GROUP_5 = UUID64.uuidToBase64(
             UUID.fromString("60bb45aa-3a20-406a-af24-e3d31c08c86b"));
+        public static final String FOLDER_GROUP_6 = UUID64.uuidToBase64(
+            UUID.fromString("60400b6a-7ddd-42b6-94b3-793a5d4e6ff8"));
+        public static final String FOLDER_GROUP_7 = UUID64.uuidToBase64(
+            UUID.fromString("6d63f967-37af-4c16-acce-dd5e142d4133"));
 
     }
 

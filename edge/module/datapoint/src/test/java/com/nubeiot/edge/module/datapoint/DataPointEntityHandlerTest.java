@@ -30,20 +30,22 @@ public class DataPointEntityHandlerTest {
     @Test
     public void test_reference_table_to_device() {
         final List<ReferenceEntityMetadata> referenceEntityMetadata = holder.referenceTo(DeviceMetadata.INSTANCE);
-        Assert.assertEquals(3, referenceEntityMetadata.size());
+        Assert.assertEquals(4, referenceEntityMetadata.size());
         Assert.assertTrue(referenceEntityMetadata.stream()
                                                  .allMatch(ref -> ref.getTable().equals(Tables.EDGE_DEVICE) ||
                                                                   ref.getTable().equals(Tables.TRANSDUCER) ||
-                                                                  ref.getTable().equals(Tables.POINT_TRANSDUCER)));
+                                                                  ref.getTable().equals(Tables.POINT_TRANSDUCER) ||
+                                                                  ref.getTable().equals(Tables.FOLDER_GROUP)));
     }
 
     @Test
     public void test_reference_table_to_network() {
         final List<ReferenceEntityMetadata> referenceEntityMetadata = holder.referenceTo(NetworkMetadata.INSTANCE);
-        Assert.assertEquals(2, referenceEntityMetadata.size());
+        Assert.assertEquals(3, referenceEntityMetadata.size());
         Assert.assertTrue(referenceEntityMetadata.stream()
                                                  .allMatch(ref -> ref.getTable().equals(Tables.POINT) ||
-                                                                  ref.getTable().equals(Tables.EDGE_DEVICE)));
+                                                                  ref.getTable().equals(Tables.EDGE_DEVICE) ||
+                                                                  ref.getTable().equals(Tables.FOLDER_GROUP)));
     }
 
     @Test
@@ -51,8 +53,8 @@ public class DataPointEntityHandlerTest {
         final List<ReferenceEntityMetadata> referenceEntityMetadata = holder.referenceTo(PointMetadata.INSTANCE);
         final Set<Table> tables = Stream.of(Tables.POINT_TAG, Tables.POINT_TRANSDUCER, Tables.POINT_HISTORY_DATA,
                                             Tables.POINT_REALTIME_DATA, Tables.POINT_VALUE_DATA,
-                                            Tables.SCHEDULE_SETTING, Tables.HISTORY_SETTING, Tables.REALTIME_SETTING)
-                                        .collect(Collectors.toSet());
+                                            Tables.SCHEDULE_SETTING, Tables.HISTORY_SETTING, Tables.REALTIME_SETTING,
+                                            Tables.FOLDER_GROUP).collect(Collectors.toSet());
         Assert.assertEquals(tables.size(), referenceEntityMetadata.size());
         Assert.assertTrue(referenceEntityMetadata.stream().allMatch(ref -> tables.contains(ref.getTable())));
     }

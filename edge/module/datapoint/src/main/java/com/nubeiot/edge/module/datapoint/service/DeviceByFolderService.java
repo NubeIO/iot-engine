@@ -35,10 +35,14 @@ public final class DeviceByFolderService extends FolderGroupService {
     }
 
     @Override
+    public @NonNull Collection<EventAction> getAvailableEvents() {
+        return ActionMethodMapping.DQL_MAP.get().keySet();
+    }
+
+    @Override
     public final Set<EventMethodDefinition> definitions() {
-        final @NonNull Collection<EventAction> events = getAvailableEvents();
         return Stream.of(super.definitions(),
-                         EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, events, resource(), true,
+                         EntityHttpService.createDefinitions(getAvailableEvents(), resource(), true,
                                                              NetworkMetadata.INSTANCE, reference()))
                      .flatMap(Collection::stream)
                      .collect(Collectors.toSet());

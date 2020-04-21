@@ -38,6 +38,7 @@ public class NubeException extends RuntimeException {
         INVALID_ARGUMENT,
         ALREADY_EXIST,
         BEING_USED,
+        CONFLICT_ERROR,
         NOT_FOUND,
         SERVICE_NOT_FOUND,
         SECURITY_ERROR,

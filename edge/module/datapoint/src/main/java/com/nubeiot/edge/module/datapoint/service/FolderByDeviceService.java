@@ -16,7 +16,7 @@ public final class FolderByDeviceService extends FolderGroupService {
 
     @Override
     protected @NonNull GroupLevel groupLevel() {
-        return GroupLevel.NETWORK;
+        return GroupLevel.DEVICE;
     }
 
     @Override

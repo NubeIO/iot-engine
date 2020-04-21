@@ -85,16 +85,9 @@
 			<column name="EDGE_ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="DEVICE_ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="NETWORK_ID" type="uuid" length="2147483647" jt="-2" mandatory="y" />
-			<column name="ADDRESS" type="varchar" length="500" decimal="0" jt="12" />
+			<column name="ADDRESS_JSON" type="clob" length="2147483647" jt="2005" />
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
 			<column name="SYNC_AUDIT" type="clob" length="2147483647" decimal="0" jt="2005" />
-			<index name="CONSTRAINT_9" unique="PRIMARY_KEY" >
-				<column name="ID" />
-			</index>
-			<index name="IDX_UQ_DEVICE_EQUIP" unique="UNIQUE" >
-				<column name="EDGE_ID" options="ASC" />
-				<column name="DEVICE_ID" options="ASC" />
-			</index>
 			<index name="IDX_FK_EDGE_DEVICE_EDGE" unique="NORMAL" >
 				<column name="EDGE_ID" options="ASC" />
 			</index>
@@ -103,6 +96,13 @@
 			</index>
 			<index name="IDX_FK_EDGE_DEVICE_NETWORK" unique="NORMAL" >
 				<column name="NETWORK_ID" options="ASC" />
+			</index>
+			<index name="PK_EDGE_DEVICE" unique="PRIMARY_KEY" >
+				<column name="ID" />
+			</index>
+			<index name="IDX_UQ_EDGE_DEVICE" unique="UNIQUE" >
+				<column name="EDGE_ID" />
+				<column name="DEVICE_ID" />
 			</index>
 			<fk name="FK_EDGE_DEVICE_DEVICE" to_schema="edge_datapoint.PUBLIC" to_table="DEVICE" delete_action="cascade" update_action="cascade" >
 				<fk_column name="DEVICE_ID" pk="ID" />
@@ -115,32 +115,56 @@
 			</fk>
 		</table>
 		<table name="FOLDER" >
-			<column name="ID" type="integer" jt="4" mandatory="y" autoincrement="y" />
+			<column name="PUI_ID" type="uuid" length="2147483647" jt="-2" mandatory="y" />
 			<column name="NAME" type="varchar" length="100" jt="12" mandatory="y" />
+			<column name="EDGE_ID" type="uuid" length="2147483647" jt="-2" mandatory="y" />
 			<column name="TIME_AUDIT" type="varchar" length="500" jt="12" />
 			<column name="SYNC_AUDIT" type="clob" length="2147483647" jt="2005" />
 			<index name="PK_FOLDER_ID" unique="PRIMARY_KEY" >
-				<column name="ID" />
+				<column name="PUI_ID" />
 			</index>
+			<fk name="FK_FOLDER_EDGE" to_schema="edge_datapoint.PUBLIC" to_table="EDGE" >
+				<fk_column name="EDGE_ID" pk="ID" />
+			</fk>
 		</table>
-		<table name="GROUP_REF" >
-			<column name="ID" type="integer" jt="4" mandatory="y" autoincrement="y" />
-			<column name="FOLDER_ID" type="integer" jt="4" mandatory="y" />
-			<column name="GROUP_TYPE" type="varchar" length="15" jt="12" mandatory="y" >
-				<comment><![CDATA[DEVICE or POINT or FOLDER]]></comment>
+		<table name="FOLDER_GROUP" >
+			<column name="PUI_ID" type="uuid" length="2147483647" jt="-2" mandatory="y" />
+			<column name="GROUP_LEVEL" type="varchar" length="15" jt="12" mandatory="y" >
+				<comment><![CDATA[EDGE  or NETWORK or DEVICE  or FOLDER]]></comment>
 			</column>
-			<column name="DEVICE_ID" type="uuid" length="2147483647" jt="-2" mandatory="y" />
+			<column name="FOLDER_ID" type="uuid" length="2147483647" jt="-2" mandatory="y" />
+			<column name="NETWORK_ID" type="uuid" length="2147483647" jt="-2" />
+			<column name="DEVICE_ID" type="uuid" length="2147483647" jt="-2" />
 			<column name="POINT_ID" type="uuid" length="2147483647" jt="-2" />
+			<column name="PARENT_FOLDER" type="uuid" length="2147483647" jt="-2" />
 			<column name="TIME_AUDIT" type="varchar" length="500" jt="12" />
 			<column name="SYNC_AUDIT" type="clob" length="2147483647" jt="2005" />
-			<index name="PK_GROUP_REF_ID" unique="PRIMARY_KEY" >
-				<column name="ID" />
+			<index name="PK_FOLDER_GROUP_ID" unique="PRIMARY_KEY" >
+				<column name="PUI_ID" />
 			</index>
-			<index name="IDX_GROUP_REF_FOLDER_ID" unique="NORMAL" >
+			<index name="IDX_FOLDER_GROUP_FOLDER_ID" unique="NORMAL" >
 				<column name="FOLDER_ID" />
 			</index>
-			<fk name="FK_GROUP_REF_FOLDER" to_schema="edge_datapoint.PUBLIC" to_table="FOLDER" delete_action="cascade" update_action="cascade" >
-				<fk_column name="FOLDER_ID" pk="ID" />
+			<index name="IDX_FOLDER_GROUP_NETWORK_ID" unique="NORMAL" >
+				<column name="NETWORK_ID" />
+			</index>
+			<index name="IDX_FOLDER_GROUP_POINT_ID" unique="NORMAL" >
+				<column name="POINT_ID" />
+			</index>
+			<index name="IDX_FOLDER_GROUP_DEVICE_ID" unique="NORMAL" >
+				<column name="DEVICE_ID" />
+			</index>
+			<fk name="FK_FOLDER_GROUP_FOLDER" to_schema="edge_datapoint.PUBLIC" to_table="FOLDER" delete_action="cascade" update_action="cascade" >
+				<fk_column name="FOLDER_ID" pk="PUI_ID" />
+			</fk>
+			<fk name="FK_FOLDER_GROUP_NETWORK" to_schema="edge_datapoint.PUBLIC" to_table="NETWORK" delete_action="cascade" update_action="cascade" >
+				<fk_column name="NETWORK_ID" pk="ID" />
+			</fk>
+			<fk name="FK_FOLDER_GROUP_DEVICE" to_schema="edge_datapoint.PUBLIC" to_table="DEVICE" delete_action="cascade" update_action="cascade" >
+				<fk_column name="DEVICE_ID" pk="ID" />
+			</fk>
+			<fk name="FK_FOLDER_GROUP_POINT" to_schema="edge_datapoint.PUBLIC" to_table="POINT" delete_action="cascade" update_action="cascade" >
+				<fk_column name="POINT_ID" pk="ID" />
 			</fk>
 		</table>
 		<table name="HISTORY_SETTING" >
@@ -180,7 +204,7 @@
 		<table name="NETWORK" >
 			<column name="ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="CODE" type="varchar" length="63" decimal="0" jt="12" mandatory="y" />
-			<column name="EDGE" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
+			<column name="EDGE_ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="PROTOCOL" type="varchar" length="31" decimal="0" jt="12" mandatory="y" >
 				<defo>&#039;UNKNOWN&#039;</defo>
 			</column>
@@ -196,18 +220,18 @@
 			</index>
 			<index name="IDX_UQ_NETWORK" unique="UNIQUE" >
 				<column name="CODE" options="ASC" />
-				<column name="EDGE" options="ASC" />
+				<column name="EDGE_ID" options="ASC" />
 				<column name="PROTOCOL" options="ASC" />
 			</index>
 			<index name="FK_NETWORK_EDGE" unique="NORMAL" >
-				<column name="EDGE" options="ASC" />
+				<column name="EDGE_ID" options="ASC" />
 			</index>
 			<index name="IDX_NETWORK_EDGE_PROTOCOL" unique="NORMAL" >
-				<column name="EDGE" options="ASC" />
+				<column name="EDGE_ID" options="ASC" />
 				<column name="PROTOCOL" options="ASC" />
 			</index>
 			<fk name="FK_NETWORK_EDGE" to_schema="edge_datapoint.PUBLIC" to_table="EDGE" delete_action="cascade" update_action="cascade" >
-				<fk_column name="EDGE" pk="ID" />
+				<fk_column name="EDGE_ID" pk="ID" />
 			</fk>
 		</table>
 		<table name="POINT" >
@@ -269,6 +293,49 @@
 			</fk>
 			<fk name="FK_POINT_NETWORK" to_schema="edge_datapoint.PUBLIC" to_table="NETWORK" delete_action="restrict" update_action="cascade" >
 				<fk_column name="NETWORK" pk="ID" />
+			</fk>
+		</table>
+		<table name="POINT_DEVICE" >
+			<comment><![CDATA[Represents for Point is attached to one and more specific Transducers.
+Thing with type is SENSOR is attached to only one Point. It will be validated by COMPUTED_THING field
+Field: DEVICE_ID, NETWORK_ID, EDGE_ID, COMPUTED_THING is not null and is computed by TRIGGER:  com.nubeiot.edge.module.datapoint.trigger.PointThingTrigger]]></comment>
+			<column name="ID" type="bigint" jt="-5" mandatory="y" autoincrement="y" />
+			<column name="POINT_ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
+			<column name="DEVICE_ID" type="uuid" length="2147483647" jt="-2" />
+			<column name="TRANSDUCER_ID" type="uuid" length="2147483647" jt="-2" />
+			<column name="COMPUTED_THING" type="varchar" length="100" decimal="0" jt="12" />
+			<column name="NETWORK_ID" type="uuid" length="2147483647" decimal="0" jt="-2" />
+			<column name="EDGE_ID" type="uuid" length="2147483647" jt="-2" />
+			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
+			<column name="SYNC_AUDIT" type="clob" length="2147483647" decimal="0" jt="2005" />
+			<index name="IDX_UQ_POINT_THING_COMPUTED" unique="UNIQUE" >
+				<column name="COMPUTED_THING" options="ASC" />
+			</index>
+			<index name="IDX_POINT_DEVICE_POINT" unique="NORMAL" >
+				<column name="POINT_ID" options="ASC" />
+			</index>
+			<index name="IDX_POINT_DEVICE_TRANSDUCER" unique="NORMAL" >
+				<column name="TRANSDUCER_ID" options="ASC" />
+			</index>
+			<index name="IDX_POINT_DEVICE_DEVICE" unique="NORMAL" >
+				<column name="DEVICE_ID" />
+			</index>
+			<index name="PK_POINT_THING" unique="PRIMARY_KEY" >
+				<column name="ID" />
+			</index>
+			<index name="IDX_UQ_POINT_DEVICE" unique="UNIQUE" >
+				<column name="POINT_ID" />
+				<column name="DEVICE_ID" />
+				<column name="TRANSDUCER_ID" />
+			</index>
+			<fk name="FK_POINT_DEVICE_POINT" to_schema="edge_datapoint.PUBLIC" to_table="POINT" delete_action="cascade" update_action="cascade" >
+				<fk_column name="POINT_ID" pk="ID" />
+			</fk>
+			<fk name="FK_POINT_DEVICE_TRANSDUCER" to_schema="edge_datapoint.PUBLIC" to_table="TRANSDUCER" delete_action="cascade" update_action="cascade" >
+				<fk_column name="TRANSDUCER_ID" pk="ID" />
+			</fk>
+			<fk name="FK_POINT_DEVICE_DEVICE" to_schema="edge_datapoint.PUBLIC" to_table="DEVICE" delete_action="cascade" update_action="cascade" >
+				<fk_column name="DEVICE_ID" pk="ID" />
 			</fk>
 		</table>
 		<table name="POINT_HISTORY_DATA" >
@@ -345,49 +412,6 @@
 			</index>
 			<fk name="FK_TAG_POINT" to_schema="edge_datapoint.PUBLIC" to_table="POINT" delete_action="cascade" update_action="cascade" >
 				<fk_column name="POINT" pk="ID" />
-			</fk>
-		</table>
-		<table name="POINT_TRANSDUCER" >
-			<comment><![CDATA[Represents for Point is attached to one and more specific Things.
-Thing with type is SENSOR is attached to only one Point. It will be validated by COMPUTED_TRANSDUCER field
-Field: DEVICE_ID, NETWORK_ID, EDGE_ID, COMPUTED_TRANSDUCER is computed by TRIGGER: com.nubeiot.edge.module.datapoint.trigger.PointTransducerTrigger]]></comment>
-			<column name="ID" type="bigint" jt="-5" mandatory="y" autoincrement="y" />
-			<column name="POINT_ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
-			<column name="DEVICE_ID" type="uuid" length="2147483647" jt="-2" />
-			<column name="TRANSDUCER_ID" type="uuid" length="2147483647" jt="-2" />
-			<column name="COMPUTED_TRANSDUCER" type="varchar" length="100" decimal="0" jt="12" />
-			<column name="NETWORK_ID" type="uuid" length="2147483647" decimal="0" jt="-2" />
-			<column name="EDGE_ID" type="uuid" length="2147483647" jt="-2" />
-			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
-			<column name="SYNC_AUDIT" type="clob" length="2147483647" decimal="0" jt="2005" />
-			<index name="IDX_UQ_POINT_TRANSDUCER_COMPUTED" unique="UNIQUE" >
-				<column name="COMPUTED_TRANSDUCER" options="ASC" />
-			</index>
-			<index name="IDX_POINT_TRANSDUCER_POINT" unique="NORMAL" >
-				<column name="POINT_ID" options="ASC" />
-			</index>
-			<index name="IDX_POINT_TRANSDUCER_TRANSDUCER" unique="NORMAL" >
-				<column name="TRANSDUCER_ID" options="ASC" />
-			</index>
-			<index name="IDX_POINT_TRANSDUCER_DEVICE" unique="NORMAL" >
-				<column name="DEVICE_ID" />
-			</index>
-			<index name="PK_POINT_TRANSDUCER" unique="PRIMARY_KEY" >
-				<column name="ID" />
-			</index>
-			<index name="IDX_UQ_POINT_TRANSDUCER" unique="UNIQUE" >
-				<column name="POINT_ID" />
-				<column name="DEVICE_ID" />
-				<column name="TRANSDUCER_ID" />
-			</index>
-			<fk name="FK_POINT_TRANSDUCER_POINT" to_schema="edge_datapoint.PUBLIC" to_table="POINT" delete_action="cascade" update_action="cascade" >
-				<fk_column name="POINT_ID" pk="ID" />
-			</fk>
-			<fk name="FK_POINT_TRANSDUCER_TRANSDUCER" to_schema="edge_datapoint.PUBLIC" to_table="TRANSDUCER" delete_action="cascade" update_action="cascade" >
-				<fk_column name="TRANSDUCER_ID" pk="ID" />
-			</fk>
-			<fk name="FK_POINT_TRANSDUCER_DEVICE" to_schema="edge_datapoint.PUBLIC" to_table="DEVICE" delete_action="cascade" update_action="cascade" >
-				<fk_column name="DEVICE_ID" pk="ID" />
 			</fk>
 		</table>
 		<table name="POINT_VALUE_DATA" >
@@ -492,7 +516,7 @@ Field: DEVICE_ID, NETWORK_ID, EDGE_ID, COMPUTED_TRANSDUCER is computed by TRIGGE
 			</index>
 		</table>
 		<table name="TRANSDUCER" >
-			<comment><![CDATA[Real physical Thing/Transducer in Device]]></comment>
+			<comment><![CDATA[Real physical Transducer in Device]]></comment>
 			<column name="ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
 			<column name="CODE" type="varchar" length="127" decimal="0" jt="12" mandatory="y" />
 			<column name="DEVICE_ID" type="uuid" length="2147483647" decimal="0" jt="-2" mandatory="y" />
@@ -505,14 +529,14 @@ Field: DEVICE_ID, NETWORK_ID, EDGE_ID, COMPUTED_TRANSDUCER is computed by TRIGGE
 			<column name="METADATA_JSON" type="clob" length="2147483647" jt="2005" />
 			<column name="TIME_AUDIT" type="varchar" length="500" decimal="0" jt="12" />
 			<column name="SYNC_AUDIT" type="clob" length="2147483647" decimal="0" jt="2005" />
-			<index name="PK_TRANSDUCER" unique="PRIMARY_KEY" >
+			<index name="PK_THING" unique="PRIMARY_KEY" >
 				<column name="ID" />
 			</index>
 			<index name="IDX_UQ_TRANSDUCER" unique="UNIQUE" >
 				<column name="CODE" options="ASC" />
 				<column name="DEVICE_ID" options="ASC" />
 			</index>
-			<index name="FK_TRANSDUCER_MEASURE" unique="NORMAL" >
+			<index name="IDX_TRANSDUCER_MEASURE" unique="NORMAL" >
 				<column name="MEASURE_UNIT" options="ASC" />
 			</index>
 			<index name="IDX_TRANSDUCER_DEVICE" unique="NORMAL" >
@@ -544,26 +568,27 @@ Field: DEVICE_ID, NETWORK_ID, EDGE_ID, COMPUTED_TRANSDUCER is computed by TRIGGE
 	</schema>
 	<connector name="H2" database="H2" driver_class="org.h2.Driver" driver_jar="h2-1.4.197.jar" driver_desc="File" host="localhost" port="0" instance="/data/projects/nubeio/iot-engine/edge/module/datapoint/model/src/main/resources/ddl/edge_datapoint" />
 	<layout name="Default Layout" id="Layout_4a6ba2c" show_relation="columns" >
-		<entity schema="edge_datapoint.PUBLIC" name="DEVICE" color="FFCCCC" x="1360" y="784" />
-		<entity schema="edge_datapoint.PUBLIC" name="DEVICE_TAG" color="FFCCCC" x="1120" y="1008" />
-		<entity schema="edge_datapoint.PUBLIC" name="EDGE" color="BEBEF4" x="688" y="80" />
-		<entity schema="edge_datapoint.PUBLIC" name="EDGE_DEVICE" color="BEBEF4" x="1120" y="80" />
-		<entity schema="edge_datapoint.PUBLIC" name="FOLDER" color="CCE6FF" x="960" y="576" />
-		<entity schema="edge_datapoint.PUBLIC" name="GROUP_REF" color="CCE6FF" x="1200" y="560" />
+		<comment><![CDATA[datapoint]]></comment>
 		<entity schema="edge_datapoint.PUBLIC" name="HISTORY_SETTING" color="EEF7EC" x="432" y="784" />
-		<entity schema="edge_datapoint.PUBLIC" name="MEASURE_UNIT" color="CCE6FF" x="672" y="560" />
-		<entity schema="edge_datapoint.PUBLIC" name="NETWORK" color="BEBEF4" x="944" y="288" />
+		<entity schema="edge_datapoint.PUBLIC" name="MEASURE_UNIT" color="FFCCCC" x="688" y="592" />
 		<entity schema="edge_datapoint.PUBLIC" name="POINT" color="EEF7EC" x="400" y="304" />
+		<entity schema="edge_datapoint.PUBLIC" name="POINT_DEVICE" color="FFCCCC" x="720" y="768" />
 		<entity schema="edge_datapoint.PUBLIC" name="POINT_HISTORY_DATA" color="EEF7EC" x="48" y="336" />
 		<entity schema="edge_datapoint.PUBLIC" name="POINT_REALTIME_DATA" color="EEF7EC" x="48" y="528" />
 		<entity schema="edge_datapoint.PUBLIC" name="POINT_TAG" color="EEF7EC" x="416" y="80" />
-		<entity schema="edge_datapoint.PUBLIC" name="POINT_TRANSDUCER" color="FFCCCC" x="704" y="992" />
 		<entity schema="edge_datapoint.PUBLIC" name="POINT_VALUE_DATA" color="EEF7EC" x="240" y="784" />
-		<entity schema="edge_datapoint.PUBLIC" name="PROTOCOL_DISPATCHER" color="FFFFCC" x="1344" y="80" />
+		<entity schema="edge_datapoint.PUBLIC" name="PROTOCOL_DISPATCHER" color="FFFFCC" x="1248" y="80" />
 		<entity schema="edge_datapoint.PUBLIC" name="REALTIME_SETTING" color="EEF7EC" x="64" y="704" />
 		<entity schema="edge_datapoint.PUBLIC" name="SCHEDULE_SETTING" color="EEF7EC" x="48" y="80" />
-		<entity schema="edge_datapoint.PUBLIC" name="SYNC_DISPATCHER" color="FFFFCC" x="1344" y="336" />
-		<entity schema="edge_datapoint.PUBLIC" name="TRANSDUCER" color="FFCCCC" x="976" y="880" />
+		<entity schema="edge_datapoint.PUBLIC" name="SYNC_DISPATCHER" color="FFFFCC" x="1440" y="80" />
+		<entity schema="edge_datapoint.PUBLIC" name="DEVICE_TAG" color="FFCCCC" x="1200" y="784" />
+		<entity schema="edge_datapoint.PUBLIC" name="TRANSDUCER" color="FFCCCC" x="976" y="592" />
+		<entity schema="edge_datapoint.PUBLIC" name="NETWORK" color="BEBEF4" x="688" y="80" />
+		<entity schema="edge_datapoint.PUBLIC" name="FOLDER" color="CCFFFF" x="1248" y="352" />
+		<entity schema="edge_datapoint.PUBLIC" name="EDGE" color="BEBEF4" x="880" y="272" />
+		<entity schema="edge_datapoint.PUBLIC" name="FOLDER_GROUP" color="CCFFFF" x="1472" y="336" />
+		<entity schema="edge_datapoint.PUBLIC" name="DEVICE" color="FFCCCC" x="1440" y="624" />
+		<entity schema="edge_datapoint.PUBLIC" name="EDGE_DEVICE" color="BEBEF4" x="1040" y="80" />
 		<group name="SYSTEM" color="FFFFCC" >
 			<entity schema="edge_datapoint.PUBLIC" name="PROTOCOL_DISPATCHER" />
 			<entity schema="edge_datapoint.PUBLIC" name="SYNC_DISPATCHER" />
@@ -571,7 +596,8 @@ Field: DEVICE_ID, NETWORK_ID, EDGE_ID, COMPUTED_TRANSDUCER is computed by TRIGGE
 		<group name="DEVICE" color="FFCCCC" >
 			<entity schema="edge_datapoint.PUBLIC" name="TRANSDUCER" />
 			<entity schema="edge_datapoint.PUBLIC" name="DEVICE" />
-			<entity schema="edge_datapoint.PUBLIC" name="POINT_TRANSDUCER" />
+			<entity schema="edge_datapoint.PUBLIC" name="MEASURE_UNIT" />
+			<entity schema="edge_datapoint.PUBLIC" name="POINT_DEVICE" />
 			<entity schema="edge_datapoint.PUBLIC" name="DEVICE_TAG" />
 		</group>
 		<group name="EDGE" color="ECECF7" >
@@ -589,10 +615,9 @@ Field: DEVICE_ID, NETWORK_ID, EDGE_ID, COMPUTED_TRANSDUCER is computed by TRIGGE
 			<entity schema="edge_datapoint.PUBLIC" name="SCHEDULE_SETTING" />
 			<entity schema="edge_datapoint.PUBLIC" name="POINT_HISTORY_DATA" />
 		</group>
-		<group name="COMMON" color="CCE6FF" >
+		<group name="CONTAINER" color="CCFFFF" >
 			<entity schema="edge_datapoint.PUBLIC" name="FOLDER" />
-			<entity schema="edge_datapoint.PUBLIC" name="GROUP_REF" />
-			<entity schema="edge_datapoint.PUBLIC" name="MEASURE_UNIT" />
+			<entity schema="edge_datapoint.PUBLIC" name="FOLDER_GROUP" />
 		</group>
 		<script name="DEVICE" id="Editor_3b225e6" language="SQL" >
 			<string><![CDATA[DROP INDEX IDX_UQ_PROTOCOL_DISPATCHER]]></string>
@@ -679,54 +704,54 @@ ALTER TABLE PUBLIC.POINT ADD CONSTRAINT FK_POINT_NETWORK FOREIGN KEY ( NETWORK )
 
 ALTER TABLE PUBLIC.POINT ADD CONSTRAINT FK_POINT_TRANSDUCER FOREIGN KEY ( TRANSDUCER ) REFERENCES PUBLIC.TRANSDUCER( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;]]></string>
 		</script>
-		<script name="POINT_TRANSDUCER" id="Editor_5c75822" language="SQL" >
-			<string><![CDATA[CREATE TABLE PUBLIC.POINT_TRANSDUCER (
+		<script name="POINT_THING" id="Editor_5c75822" language="SQL" >
+			<string><![CDATA[CREATE TABLE PUBLIC.POINT_THING (
 	ID                   bigint GENERATED ALWAYS AS IDENTITY  NOT NULL,
 	POINT_ID             uuid(2147483647)   NOT NULL,
-	TRANSDUCER_ID             uuid(2147483647)   NOT NULL,
-	COMPUTED_TRANSDUCER       varchar(63)   ,
+	THING_ID             uuid(2147483647)   NOT NULL,
+	COMPUTED_THING       varchar(63)   ,
 	EDGE_ID              uuid(2147483647)   NOT NULL,
 	NETWORK_ID           uuid(2147483647)   NOT NULL,
 	DEVICE_ID            uuid(2147483647)   NOT NULL,
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           clob(2147483647)   ,
-	CONSTRAINT PK_POINT_TRANSDUCER PRIMARY KEY ( ID ),
-	CONSTRAINT IDX_UQ_POINT_TRANSDUCER UNIQUE ( POINT_ID, TRANSDUCER_ID ) ,
-	CONSTRAINT IDX_UQ_POINT_TRANSDUCER_COMPUTED UNIQUE ( COMPUTED_TRANSDUCER )
+	CONSTRAINT PK_POINT_THING PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_POINT_THING UNIQUE ( POINT_ID, THING_ID ) ,
+	CONSTRAINT IDX_UQ_POINT_THING_COMPUTED UNIQUE ( COMPUTED_THING )
  );
 
-COMMENT ON TABLE PUBLIC.POINT_TRANSDUCER IS 'Represents for Point is attached to one and more specific Things\nThing with type is SENSOR is attached to only one Point';
+COMMENT ON TABLE PUBLIC.POINT_THING IS 'Represents for Point is attached to one and more specific Things\nThing with type is SENSOR is attached to only one Point';
 
-ALTER TABLE PUBLIC.POINT_TRANSDUCER ADD CONSTRAINT FK_POINT_TRANSDUCER_POINT FOREIGN KEY ( POINT_ID ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE PUBLIC.POINT_THING ADD CONSTRAINT FK_POINT_THING_POINT FOREIGN KEY ( POINT_ID ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
 
-ALTER TABLE PUBLIC.POINT_TRANSDUCER ADD CONSTRAINT FK_POINT_TRANSDUCER_TRANSDUCER FOREIGN KEY ( TRANSDUCER_ID ) REFERENCES PUBLIC.TRANSDUCER( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE PUBLIC.POINT_THING ADD CONSTRAINT FK_POINT_THING_THING FOREIGN KEY ( THING_ID ) REFERENCES PUBLIC.THING( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
 ]]></string>
 		</script>
-		<script name="POINT_TRANSDUCER_002" id="Editor_743782" language="SQL" >
-			<string><![CDATA[CREATE TABLE PUBLIC.POINT_TRANSDUCER (
+		<script name="POINT_THING_002" id="Editor_743782" language="SQL" >
+			<string><![CDATA[CREATE TABLE PUBLIC.POINT_THING (
 	ID                   bigint GENERATED ALWAYS AS IDENTITY  NOT NULL,
 	POINT_ID             uuid(2147483647)   NOT NULL,
-	TRANSDUCER_ID             uuid(2147483647)   NOT NULL,
-	COMPUTED_TRANSDUCER       varchar(100)   ,
+	THING_ID             uuid(2147483647)   NOT NULL,
+	COMPUTED_THING       varchar(100)   ,
 	EDGE_ID              uuid(2147483647)   NOT NULL,
 	NETWORK_ID           uuid(2147483647)   NOT NULL,
 	DEVICE_ID            uuid(2147483647)   NOT NULL,
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           clob(2147483647)   ,
-	CONSTRAINT PK_POINT_TRANSDUCER PRIMARY KEY ( ID ),
-	CONSTRAINT IDX_UQ_POINT_TRANSDUCER UNIQUE ( POINT_ID, TRANSDUCER_ID ) ,
-	CONSTRAINT IDX_UQ_POINT_TRANSDUCER_COMPUTED UNIQUE ( COMPUTED_TRANSDUCER )
+	CONSTRAINT PK_POINT_THING PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_POINT_THING UNIQUE ( POINT_ID, THING_ID ) ,
+	CONSTRAINT IDX_UQ_POINT_THING_COMPUTED UNIQUE ( COMPUTED_THING )
  );
 
-CREATE INDEX IDX_POINT_TRANSDUCER_POINT ON PUBLIC.POINT_TRANSDUCER ( POINT_ID );
+CREATE INDEX IDX_POINT_THING_POINT ON PUBLIC.POINT_THING ( POINT_ID );
 
-CREATE INDEX IDX_POINT_TRANSDUCER_TRANSDUCER ON PUBLIC.POINT_TRANSDUCER ( TRANSDUCER_ID );
+CREATE INDEX IDX_POINT_THING_THING ON PUBLIC.POINT_THING ( THING_ID );
 
-COMMENT ON TABLE PUBLIC.POINT_TRANSDUCER IS 'Represents for Point is attached to one and more specific Things.\nThing with type is SENSOR is attached to only one Point. It will be validated by COMPUTED_TRANSDUCER field';
+COMMENT ON TABLE PUBLIC.POINT_THING IS 'Represents for Point is attached to one and more specific Things.\nThing with type is SENSOR is attached to only one Point. It will be validated by COMPUTED_THING field';
 
-ALTER TABLE PUBLIC.POINT_TRANSDUCER ADD CONSTRAINT FK_POINT_TRANSDUCER_POINT FOREIGN KEY ( POINT_ID ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE PUBLIC.POINT_THING ADD CONSTRAINT FK_POINT_THING_POINT FOREIGN KEY ( POINT_ID ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
 
-ALTER TABLE PUBLIC.POINT_TRANSDUCER ADD CONSTRAINT FK_POINT_TRANSDUCER_TRANSDUCER FOREIGN KEY ( TRANSDUCER_ID ) REFERENCES PUBLIC.TRANSDUCER( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE PUBLIC.POINT_THING ADD CONSTRAINT FK_POINT_THING_THING FOREIGN KEY ( THING_ID ) REFERENCES PUBLIC.THING( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
 ]]></string>
 		</script>
 		<script name="POINT_VALUE_DATA" id="Editor_3a1a87c" language="SQL" >
@@ -871,7 +896,7 @@ CREATE INDEX IDX_FK_DEVICE_EQUIP_EQUIP ON DEVICE_EQUIP ( EQUIP );
 
 CREATE INDEX IDX_FK_DEVICE_EQUIP_NETWORK ON DEVICE_EQUIP ( NETWORK );
 
-CREATE TABLE TRANSDUCER (
+CREATE TABLE THING (
 	ID                   integer GENERATED ALWAYS AS IDENTITY  NOT NULL,
 	EQUIP                uuid   NOT NULL,
 	TRANSDUCER           uuid   NOT NULL,
@@ -880,21 +905,21 @@ CREATE TABLE TRANSDUCER (
 	MEASURE_UNIT         varchar(15)   ,
 	TIME_AUDIT           varchar(500)   ,
 	SYNC_AUDIT           varchar(500)   ,
-	CONSTRAINT IDX_UQ_EQUIP_TRANSDUCER_CODE UNIQUE ( EQUIP, PRODUCT_CODE ) ,
-	CONSTRAINT IDX_UQ_TRANSDUCER UNIQUE ( EQUIP, TRANSDUCER ) ,
-	CONSTRAINT PK_TRANSDUCER PRIMARY KEY ( ID )
+	CONSTRAINT IDX_UQ_EQUIP_THING_CODE UNIQUE ( EQUIP, PRODUCT_CODE ) ,
+	CONSTRAINT IDX_UQ_THING UNIQUE ( EQUIP, TRANSDUCER ) ,
+	CONSTRAINT PK_THING PRIMARY KEY ( ID )
  );
 
-CREATE INDEX IDX_FK_TRANSDUCER_EQUIP ON TRANSDUCER ( EQUIP );
+CREATE INDEX IDX_FK_THING_EQUIP ON THING ( EQUIP );
 
-CREATE INDEX IDX_FK_TRANSDUCER_MEASURE ON TRANSDUCER ( MEASURE_UNIT );
+CREATE INDEX IDX_FK_THING_MEASURE ON THING ( MEASURE_UNIT );
 
-CREATE INDEX IDX_FK_TRANSDUCER_TRANSDUCER ON TRANSDUCER ( TRANSDUCER );
+CREATE INDEX IDX_FK_THING_TRANSDUCER ON THING ( TRANSDUCER );
 
-COMMENT ON TABLE TRANSDUCER IS 'Real Thing that represents from Equipment and Transducer';
-COMMENT ON COLUMN TRANSDUCER.PRODUCT_CODE IS 'Manufacturer product transducer code depends on equipment';
-COMMENT ON COLUMN TRANSDUCER.PRODUCT_LABEL IS 'Manufacturer transducer label depends on equipment';
-COMMENT ON COLUMN TRANSDUCER.MEASURE_UNIT IS 'Standard manufacturer transducer measure unit';
+COMMENT ON TABLE THING IS 'Real Thing that represents from Equipment and Transducer';
+COMMENT ON COLUMN THING.PRODUCT_CODE IS 'Manufacturer product transducer code depends on equipment';
+COMMENT ON COLUMN THING.PRODUCT_LABEL IS 'Manufacturer transducer label depends on equipment';
+COMMENT ON COLUMN THING.MEASURE_UNIT IS 'Standard manufacturer transducer measure unit';
 
 CREATE TABLE IF NOT EXISTS POINT (
 	ID                   uuid   NOT NULL,
@@ -1056,11 +1081,11 @@ ALTER TABLE REALTIME_SETTING ADD CONSTRAINT FK_REALTIME_SETTING_POINT FOREIGN KE
 
 ALTER TABLE SCHEDULE_SETTING ADD CONSTRAINT FK_SCHEDULE_POINT FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
 
-ALTER TABLE TRANSDUCER ADD CONSTRAINT FK_TRANSDUCER_EQUIP FOREIGN KEY ( EQUIP ) REFERENCES EQUIPMENT( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE THING ADD CONSTRAINT FK_THING_EQUIP FOREIGN KEY ( EQUIP ) REFERENCES EQUIPMENT( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
 
-ALTER TABLE TRANSDUCER ADD CONSTRAINT FK_TRANSDUCER_MEASURE FOREIGN KEY ( MEASURE_UNIT ) REFERENCES MEASURE_UNIT( MEASURE_TYPE ) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE THING ADD CONSTRAINT FK_THING_MEASURE FOREIGN KEY ( MEASURE_UNIT ) REFERENCES MEASURE_UNIT( MEASURE_TYPE ) ON DELETE RESTRICT ON UPDATE CASCADE;
 
-ALTER TABLE TRANSDUCER ADD CONSTRAINT FK_TRANSDUCER_TRANSDUCER FOREIGN KEY ( TRANSDUCER ) REFERENCES TRANSDUCERS( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;]]></string>
+ALTER TABLE THING ADD CONSTRAINT FK_THING_TRANSDUCER FOREIGN KEY ( TRANSDUCER ) REFERENCES TRANSDUCERS( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;]]></string>
 		</script>
 		<script name="SQL_Editor_001" id="Editor_16fd549" language="SQL" >
 			<string><![CDATA[CREATE SCHEMA PUBLIC;
@@ -1185,3 +1210,305 @@ CREATE INDEX IDX_FK_POINT_NETWORK ON PUBLIC.POINT ( NETWORK );
 CREATE INDEX IDX_FK_POINT_TRANSDUCER ON PUBLIC.POINT ( TRANSDUCER );
 
 COMMENT ON TABLE PUBLIC.POINT IS 'Represents for:\n- Edge device pin if category is GPIO\n- Virtual point if category is not GPIO';
+
+CREATE TABLE PUBLIC.POINT_HISTORY_DATA (
+	ID                   bigint  DEFAULT (NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_80300AAB_0F06_4978_9ABB_E101C001FAB6) NOT NULL,
+	POINT                uuid(2147483647)   NOT NULL,
+	TIME                 timestamp   NOT NULL,
+	VALUE                double   ,
+	PRIORITY             integer   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
+	CONSTRAINT CONSTRAINT_B PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_POINT_HISTORY_DATA_INDEX_B UNIQUE ( POINT, TIME )
+ );
+
+CREATE INDEX IDX_FK_HISTORY_DATA_POINT ON PUBLIC.POINT_HISTORY_DATA ( POINT );
+
+CREATE INDEX IDX_POINT_HISTORY_DATA_TIME ON PUBLIC.POINT_HISTORY_DATA ( TIME );
+
+CREATE TABLE PUBLIC.POINT_REALTIME_DATA (
+	ID                   bigint  DEFAULT (NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_0C4DB876_E135_4BE2_9067_6A7D40678A0B) NOT NULL,
+	POINT                uuid(2147483647)   NOT NULL,
+	TIME                 timestamp   NOT NULL,
+	VALUE_JSON           clob(2147483647)   ,
+	PRIORITY             integer   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
+	CONSTRAINT CONSTRAINT_6 PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_POINT_REALTIME_DATA_INDEX_6 UNIQUE ( POINT, TIME )
+ );
+
+CREATE INDEX IDX_FK_POINT_REALTIME_DATA_POINT ON PUBLIC.POINT_REALTIME_DATA ( POINT );
+
+CREATE INDEX IDX_POINT_REALTIME_DATA_TIME ON PUBLIC.POINT_REALTIME_DATA ( TIME );
+
+CREATE TABLE PUBLIC.POINT_TAG (
+	ID                   bigint  DEFAULT (NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_8477E3AC_D540_4A25_891F_B44771BDA9AB) NOT NULL,
+	TAG_NAME             varchar(63)   NOT NULL,
+	POINT                uuid(2147483647)   NOT NULL,
+	TAG_VALUE            varchar(255)   NOT NULL,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
+	CONSTRAINT CONSTRAINT_3 PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_POINT_TAG_INDEX_3 UNIQUE ( TAG_NAME, POINT )
+ );
+
+CREATE INDEX IDX_FK_TAG_POINT ON PUBLIC.POINT_TAG ( POINT );
+
+CREATE INDEX IDX_TAG_BY_POINT ON PUBLIC.POINT_TAG ( TAG_NAME );
+
+CREATE TABLE PUBLIC.POINT_VALUE_DATA (
+	POINT                uuid(2147483647)   NOT NULL,
+	VALUE                double   ,
+	PRIORITY             integer   NOT NULL,
+	PRIORITY_VALUES      varchar(500)   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
+	CONSTRAINT PK_POINT_VALUE_DATA PRIMARY KEY ( POINT )
+ );
+
+CREATE TABLE PUBLIC.REALTIME_SETTING (
+	POINT                uuid(2147483647)   NOT NULL,
+	ENABLED              boolean  DEFAULT FALSE NOT NULL,
+	TOLERANCE            double   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
+	CONSTRAINT PK_REALTIME_SETTING PRIMARY KEY ( POINT )
+ );
+
+CREATE TABLE PUBLIC.SCHEDULE_SETTING (
+	ID                   uuid(2147483647)   NOT NULL,
+	POINT                uuid(2147483647)   NOT NULL,
+	RECURRING            boolean  DEFAULT TRUE NOT NULL,
+	NAME                 varchar(63)   NOT NULL,
+	COLOR                varchar(15)  DEFAULT '#FFFFFF' NOT NULL,
+	START_TIME           timestamp   NOT NULL,
+	END_TIME             timestamp   NOT NULL,
+	VALUE                double   NOT NULL,
+	WEEKDAYS             array   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
+	CONSTRAINT PK_SCHEDULE_SETTING PRIMARY KEY ( ID )
+ );
+
+CREATE INDEX IDX_FK_SCHEDULE_POINT ON PUBLIC.SCHEDULE_SETTING ( POINT );
+
+CREATE TABLE PUBLIC.THING (
+	ID                   integer  DEFAULT (NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_4FF36861_2980_4995_93AD_83BA5CC08AA0) NOT NULL,
+	EQUIP                uuid(2147483647)   NOT NULL,
+	TRANSDUCER           uuid(2147483647)   NOT NULL,
+	PRODUCT_CODE         varchar(127)   ,
+	PRODUCT_LABEL        varchar(1000)   ,
+	MEASURE_UNIT         varchar(63)   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
+	CONSTRAINT CONSTRAINT_4 PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_EQUIP_THING_CODE_INDEX_4 UNIQUE ( EQUIP, PRODUCT_CODE ) ,
+	CONSTRAINT IDX_UQ_THING_INDEX_4 UNIQUE ( EQUIP, TRANSDUCER )
+ );
+
+CREATE INDEX IDX_FK_THING_EQUIP ON PUBLIC.THING ( EQUIP );
+
+CREATE INDEX IDX_FK_THING_MEASURE ON PUBLIC.THING ( MEASURE_UNIT );
+
+CREATE INDEX IDX_FK_THING_TRANSDUCER ON PUBLIC.THING ( TRANSDUCER );
+
+COMMENT ON TABLE PUBLIC.THING IS 'Real Thing that represents from Equipment and Transducer';
+
+CREATE TABLE PUBLIC.HISTORY_SETTING (
+	POINT                uuid(2147483647)   NOT NULL,
+	HISTORY_SETTING_TYPE varchar(15)   ,
+	SCHEDULE             varchar(127)   ,
+	TOLERANCE            double   ,
+	SIZE                 integer   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
+	CONSTRAINT PK_HISTORY_SETTING PRIMARY KEY ( POINT )
+ );
+
+ALTER TABLE PUBLIC.DEVICE_EQUIP ADD CONSTRAINT FK_DEVICE_EQUIPMENT_DEVICE FOREIGN KEY ( DEVICE ) REFERENCES PUBLIC.DEVICE( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.DEVICE_EQUIP ADD CONSTRAINT FK_DEVICE_EQUIP_EQUIP FOREIGN KEY ( EQUIP ) REFERENCES PUBLIC.EQUIPMENT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.DEVICE_EQUIP ADD CONSTRAINT FK_DEVICE_EQUIP_NETWORK FOREIGN KEY ( NETWORK ) REFERENCES PUBLIC.NETWORK( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.HISTORY_SETTING ADD CONSTRAINT FK_HISTORY_SETTING_POINT FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.NETWORK ADD CONSTRAINT FK_NETWORK_DEVICE FOREIGN KEY ( DEVICE ) REFERENCES PUBLIC.DEVICE( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.POINT ADD CONSTRAINT FK_POINT_DEVICE FOREIGN KEY ( DEVICE ) REFERENCES PUBLIC.DEVICE( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.POINT ADD CONSTRAINT FK_POINT_MEASURE_UNIT FOREIGN KEY ( MEASURE_UNIT ) REFERENCES PUBLIC.MEASURE_UNIT( MEASURE_TYPE ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.POINT ADD CONSTRAINT FK_POINT_NETWORK FOREIGN KEY ( NETWORK ) REFERENCES PUBLIC.NETWORK( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.POINT ADD CONSTRAINT FK_POINT_TRANSDUCER FOREIGN KEY ( TRANSDUCER ) REFERENCES PUBLIC.TRANSDUCER( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.POINT_HISTORY_DATA ADD CONSTRAINT FK_HISTORY_DATA_POINT FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.POINT_REALTIME_DATA ADD CONSTRAINT FK_POINT_REALTIME_DATA_POINT FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.POINT_TAG ADD CONSTRAINT FK_TAG_POINT FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.POINT_VALUE_DATA ADD CONSTRAINT FK_VALUE_POINT FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.REALTIME_SETTING ADD CONSTRAINT FK_REALTIME_SETTING_POINT FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.SCHEDULE_SETTING ADD CONSTRAINT FK_SCHEDULE_POINT FOREIGN KEY ( POINT ) REFERENCES PUBLIC.POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_EQUIP FOREIGN KEY ( EQUIP ) REFERENCES PUBLIC.EQUIPMENT( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_MEASURE FOREIGN KEY ( MEASURE_UNIT ) REFERENCES PUBLIC.MEASURE_UNIT( MEASURE_TYPE ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_TRANSDUCER FOREIGN KEY ( TRANSDUCER ) REFERENCES PUBLIC.TRANSDUCER( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+]]></string>
+		</script>
+		<script name="SQL_Editor_002" id="Editor_37aec61" language="SQL" >
+			<string><![CDATA[ALTER TABLE EDGE_DEVICE ADD CONSTRAINT FK_EDGE_DEVICE_EDGE FOREIGN KEY ( EDGE_ID ) REFERENCES EDGE( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE EDGE_DEVICE ADD CONSTRAINT FK_EDGE_DEVICE_DEVICE FOREIGN KEY ( DEVICE_ID ) REFERENCES DEVICE( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE EDGE_DEVICE ADD CONSTRAINT FK_EDGE_DEVICE_NETWORK FOREIGN KEY ( NETWORK_ID ) REFERENCES NETWORK( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE HISTORY_SETTING ADD CONSTRAINT FK_HISTORY_SETTING_POINT FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE NETWORK ADD CONSTRAINT FK_NETWORK_EDGE FOREIGN KEY ( EDGE ) REFERENCES EDGE( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE POINT ADD CONSTRAINT FK_POINT_EDGE FOREIGN KEY ( EDGE ) REFERENCES EDGE( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE POINT ADD CONSTRAINT FK_POINT_NETWORK FOREIGN KEY ( NETWORK ) REFERENCES NETWORK( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE POINT ADD CONSTRAINT FK_POINT_MEASURE_UNIT FOREIGN KEY ( MEASURE_UNIT ) REFERENCES MEASURE_UNIT( MEASURE_TYPE ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE POINT_HISTORY_DATA ADD CONSTRAINT FK_HISTORY_DATA_POINT FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE POINT_REALTIME_DATA ADD CONSTRAINT FK_POINT_REALTIME_DATA_POINT FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE POINT_TAG ADD CONSTRAINT FK_TAG_POINT FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE POINT_VALUE_DATA ADD CONSTRAINT FK_VALUE_POINT FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE REALTIME_SETTING ADD CONSTRAINT FK_REALTIME_SETTING_POINT FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE SCHEDULE_SETTING ADD CONSTRAINT FK_SCHEDULE_POINT FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE THING ADD CONSTRAINT FK_THING_DEVICE FOREIGN KEY ( DEVICE_ID ) REFERENCES DEVICE( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE THING ADD CONSTRAINT FK_THING_MEASURE FOREIGN KEY ( MEASURE_UNIT ) REFERENCES MEASURE_UNIT( MEASURE_TYPE ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE POINT_THING ADD CONSTRAINT FK_POINT_THING_POINT FOREIGN KEY ( POINT_ID ) REFERENCES POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE POINT_THING ADD CONSTRAINT FK_POINT_THING_THING FOREIGN KEY ( THING_ID ) REFERENCES THING( ID ) ON DELETE CASCADE ON UPDATE CASCADE;]]></string>
+		</script>
+		<script name="SQL_Editor_003" id="Editor_a25751" language="SQL" >
+			<string><![CDATA[ALTER TABLE PUBLIC.DEVICE_TAG ALTER COLUMN ID bigint GENERATED ALWAYS AS IDENTITY NOT NULL;]]></string>
+		</script>
+		<script name="SQL_Editor_004" id="Editor_2a6d2f7" language="SQL" >
+			<string><![CDATA[CREATE TABLE IF NOT EXISTS POINT_HISTORY_DATA (
+	ID                   bigint GENERATED ALWAYS AS IDENTITY  NOT NULL,
+	POINT                uuid   NOT NULL,
+	TIME                 timestamp   NOT NULL,
+	VALUE                double   ,
+	PRIORITY             integer  ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           clob(2147483647)   ,
+	CONSTRAINT IDX_UQ_POINT_HISTORY_DATA UNIQUE ( POINT, TIME ) ,
+	CONSTRAINT PK_POINT_HISTORY_DATA PRIMARY KEY ( ID )
+ );
+
+CREATE INDEX IDX_FK_HISTORY_DATA_POINT ON POINT_HISTORY_DATA ( POINT );
+
+CREATE INDEX IDX_POINT_HISTORY_DATA_TIME ON POINT_HISTORY_DATA ( TIME );
+
+ALTER TABLE POINT_HISTORY_DATA ADD CONSTRAINT FK_HISTORY_DATA_POINT FOREIGN KEY ( POINT ) REFERENCES POINT( ID ) ON DELETE CASCADE ON UPDATE CASCADE;
+]]></string>
+		</script>
+		<script name="SYNC_DISPATCHER" id="Editor_2516967" language="SQL" >
+			<string><![CDATA[CREATE TABLE PUBLIC.SYNC_DISPATCHER (
+	ID                   integer GENERATED ALWAYS AS IDENTITY  NOT NULL,
+	SYNC_TYPE            integer   NOT NULL,
+	STATE                varchar(31)  DEFAULT 'NONE' NOT NULL,
+	CONFIGURATION_JSON   clob(2147483647)   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           clob(2147483647)   ,
+	CONSTRAINT PK_SYNC_DISPATCHER_ID PRIMARY KEY ( ID )
+ );]]></string>
+		</script>
+		<script name="THING" id="Editor_5a7978d" language="SQL" >
+			<string><![CDATA[CREATE TABLE PUBLIC.THING (
+	ID                   integer  DEFAULT (NEXT VALUE FOR PUBLIC.SYSTEM_SEQUENCE_4FF36861_2980_4995_93AD_83BA5CC08AA0) NOT NULL,
+	DEVICE_ID            uuid(2147483647)   NOT NULL,
+	TRANSDUCER_ID        uuid(2147483647)   NOT NULL,
+	PRODUCT_CODE         varchar(127)   ,
+	PRODUCT_LABEL        varchar(1000)   ,
+	MEASURE_UNIT         varchar(63)   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           varchar(500)   ,
+	CONSTRAINT CONSTRAINT_4 PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_EQUIP_THING_CODE_INDEX_4 UNIQUE ( DEVICE_ID, PRODUCT_CODE ) ,
+	CONSTRAINT IDX_UQ_THING_INDEX_4 UNIQUE ( DEVICE_ID, TRANSDUCER_ID )
+ );
+
+CREATE INDEX IDX_FK_THING_EQUIP ON PUBLIC.THING ( DEVICE_ID );
+
+CREATE INDEX IDX_FK_THING_MEASURE ON PUBLIC.THING ( MEASURE_UNIT );
+
+CREATE INDEX IDX_FK_THING_TRANSDUCER ON PUBLIC.THING ( TRANSDUCER_ID );
+
+COMMENT ON TABLE PUBLIC.THING IS 'Real Thing that represents from Equipment and Transducer';
+
+ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_EQUIP FOREIGN KEY ( DEVICE_ID ) REFERENCES PUBLIC.DEVICE( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_MEASURE FOREIGN KEY ( MEASURE_UNIT ) REFERENCES PUBLIC.MEASURE_UNIT( MEASURE_TYPE ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_TRANSDUCER FOREIGN KEY ( TRANSDUCER_ID ) REFERENCES PUBLIC.TRANSDUCER( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;]]></string>
+		</script>
+		<script name="THING_001" id="Editor_4929b84" language="SQL" >
+			<string><![CDATA[CREATE TABLE PUBLIC.THING (
+	ID                   uuid(2147483647)   NOT NULL,
+	CODE                 varchar(127)   ,
+	DEVICE_ID            uuid(2147483647)   NOT NULL,
+	THING_TYPE           varchar(15)  DEFAULT 'SENSOR' NOT NULL,
+	THING_CATEGORY       varchar(63)   NOT NULL,
+	LABEL                varchar(1000)   ,
+	MEASURE_UNIT         varchar(63)   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           clob(2147483647)   ,
+	CONSTRAINT PK_THING PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_THING UNIQUE ( CODE, DEVICE_ID )
+ );
+
+COMMENT ON TABLE PUBLIC.THING IS 'Real physical Thing in Device';
+
+ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_DEVICE FOREIGN KEY ( DEVICE_ID ) REFERENCES PUBLIC.DEVICE( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_MEASURE FOREIGN KEY ( MEASURE_UNIT ) REFERENCES PUBLIC.MEASURE_UNIT( MEASURE_TYPE ) ON DELETE RESTRICT ON UPDATE CASCADE;
+]]></string>
+		</script>
+		<script name="THING_002" id="Editor_41dc40" language="SQL" >
+			<string><![CDATA[CREATE TABLE PUBLIC.THING (
+	ID                   uuid(2147483647)   NOT NULL,
+	CODE                 varchar(127)   NOT NULL,
+	DEVICE_ID            uuid(2147483647)   NOT NULL,
+	THING_TYPE           varchar(15)  DEFAULT 'SENSOR' NOT NULL,
+	THING_CATEGORY       varchar(100)   NOT NULL,
+	LABEL                varchar(1000)   ,
+	MEASURE_UNIT         varchar(63)   ,
+	TIME_AUDIT           varchar(500)   ,
+	SYNC_AUDIT           clob(2147483647)   ,
+	CONSTRAINT PK_THING PRIMARY KEY ( ID ),
+	CONSTRAINT IDX_UQ_THING UNIQUE ( CODE, DEVICE_ID )
+ );
+
+CREATE INDEX IDX_THING_DEVICE ON PUBLIC.THING ( DEVICE_ID );
+
+COMMENT ON TABLE PUBLIC.THING IS 'Real physical Thing in Device';
+
+ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_DEVICE FOREIGN KEY ( DEVICE_ID ) REFERENCES PUBLIC.DEVICE( ID ) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE PUBLIC.THING ADD CONSTRAINT FK_THING_MEASURE FOREIGN KEY ( MEASURE_UNIT ) REFERENCES PUBLIC.MEASURE_UNIT( MEASURE_TYPE ) ON DELETE RESTRICT ON UPDATE CASCADE;
+]]></string>
+		</script>
+	</layout>
+</project>
