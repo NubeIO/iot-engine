@@ -46,8 +46,8 @@ public final class PointByFolderService extends FolderGroupService {
     public final Set<EventMethodDefinition> definitions() {
         final @NonNull Collection<EventAction> events = getAvailableEvents();
         return Stream.of(super.definitions(),
-                         EntityHttpService.createDefinitions(events, resource(), true, DeviceMetadata.INSTANCE,
-                                                             reference()),
+                         EntityHttpService.createDefinitions(ActionMethodMapping.CRUD_MAP, events, resource(), true,
+                                                             DeviceMetadata.INSTANCE, reference()),
                          EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, events, resource(), true,
                                                              NetworkMetadata.INSTANCE, DeviceMetadata.INSTANCE,
                                                              reference()))

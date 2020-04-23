@@ -79,6 +79,18 @@ public class PointByFolderVerticleTest extends FolderGroupVerticleTest {
     }
 
     @Test
+    public void test_get_point_in_network_n_device_n_folder(TestContext context) {
+        final String path = "/api/s/network/default/device/" + PrimaryKey.DEVICE_DROPLET + "/folder/" +
+                            PrimaryKey.FOLDER_3 + "/point/" + PrimaryKey.P_GPIO_TEMP;
+        final JsonObject expected = new JsonObject(
+            "{\"point\":{\"id\":\"" + PrimaryKey.P_GPIO_TEMP + "\",\"code\":\"2CB2B763_TEMP\",\"edge\":\"" +
+            PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.DEFAULT_NETWORK + "\",\"enabled\":true," +
+            "\"protocol\":\"WIRE\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"measure_unit\":\"celsius\"," +
+            "\"precision\":3,\"offset\":0}," + "\"id\":\"" + PrimaryKey.FOLDER_GROUP_4 + "\"}");
+        assertRestByClient(context, HttpMethod.GET, path, 200, expected);
+    }
+
+    @Test
     public void test_get_point_in_device_n_folder_not_found(TestContext context) {
         final String path = "/api/s/device/" + PrimaryKey.DEVICE_DROPLET + "/folder/" + PrimaryKey.FOLDER_4 +
                             "/point/" + PrimaryKey.P_GPIO_HUMIDITY;
@@ -101,16 +113,15 @@ public class PointByFolderVerticleTest extends FolderGroupVerticleTest {
 
     @Test
     public void test_reattach_existed_point_in_device_folder(TestContext context) {
-        final String path = "/api/s/device/" + PrimaryKey.DEVICE_DROPLET + "/folder/" + PrimaryKey.FOLDER_3 + "/point";
+        final String path = "/api/s/folder/" + PrimaryKey.FOLDER_3 + "/point";
         final RequestData r = RequestData.builder()
                                          .body(new JsonObject().put("point_id", PrimaryKey.P_GPIO_HUMIDITY.toString()))
                                          .build();
         final JsonObject resp = new JsonObject().put("code", ErrorCode.ALREADY_EXIST)
                                                 .put("message", "Already existed resource with folder_id=" +
                                                                 UUID64.uuid64ToUuidStr(PrimaryKey.FOLDER_3) + " and " +
-                                                                "device_id=" + PrimaryKey.DEVICE_DROPLET +
-                                                                " and network_id=" + PrimaryKey.DEFAULT_NETWORK +
-                                                                " and point_id=" + PrimaryKey.P_GPIO_HUMIDITY);
+                                                                "network_id=" + PrimaryKey.DEFAULT_NETWORK + " and " +
+                                                                "point_id=" + PrimaryKey.P_GPIO_HUMIDITY);
         assertRestByClient(context, HttpMethod.POST, path, r, 422, resp);
     }
 
