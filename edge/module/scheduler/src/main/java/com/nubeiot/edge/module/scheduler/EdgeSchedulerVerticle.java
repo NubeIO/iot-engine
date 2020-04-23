@@ -1,6 +1,7 @@
 package com.nubeiot.edge.module.scheduler;
 
 import com.nubeiot.core.component.ContainerVerticle;
+import com.nubeiot.core.http.base.EventHttpService;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.register.EventHttpServiceRegister;
@@ -23,7 +24,7 @@ public final class EdgeSchedulerVerticle extends ContainerVerticle {
     private MicroContext microCtx;
 
     public EdgeSchedulerVerticle() {
-        this.entityHandlerClass = SchedulerEntityHandler.class;
+        this(SchedulerEntityHandler.class);
     }
 
     @Override
@@ -42,7 +43,7 @@ public final class EdgeSchedulerVerticle extends ContainerVerticle {
         builder.vertx(vertx)
                .sharedKey(getSharedKey())
                .eventServices(() -> SchedulerService.createServices(entityHandler, schedulerCtx))
-               .afterRegisterEventbusAddress(s -> s.address())
+               .afterRegisterEventbusAddress(EventHttpService::address)
                .build()
                .publish(microCtx.getLocalController())
                .flatMapObservable(ignore -> entityHandler.register(schedulerCtx))

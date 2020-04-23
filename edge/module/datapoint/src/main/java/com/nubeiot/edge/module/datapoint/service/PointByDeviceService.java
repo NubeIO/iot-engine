@@ -16,13 +16,13 @@ import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.DeviceMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
 
 import lombok.NonNull;
 
-public final class PointByTransducerDeviceService extends PointTransducerService {
+public final class PointByDeviceService extends PointTransducerService {
 
-    PointByTransducerDeviceService(@NonNull EntityHandler entityHandler) {
+    PointByDeviceService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
     }
 
@@ -38,7 +38,7 @@ public final class PointByTransducerDeviceService extends PointTransducerService
 
     @Override
     public @NonNull EntityMetadata resource() {
-        return PointMetadata.INSTANCE;
+        return PointCompositeMetadata.INSTANCE;
     }
 
     @Override

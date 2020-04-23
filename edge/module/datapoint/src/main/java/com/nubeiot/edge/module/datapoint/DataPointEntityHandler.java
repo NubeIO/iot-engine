@@ -89,7 +89,7 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
                                        .put(NetworkMetadata.INSTANCE.singularKeyName(),
                                             initNetwork(cfgData, edge.getId()));
         return Single.merge(index().stream()
-                                   .filter(meta -> !(meta instanceof PointCompositeMetadata) &&
+                                   .filter(meta -> !(meta instanceof PointMetadata) &&
                                                    data.containsKey(meta.singularKeyName()))
                                    .sorted(Comparator.comparingInt(m -> dep.getOrDefault(m, 999)))
                                    .map(m -> insert(m, data.getValue(m.singularKeyName())))

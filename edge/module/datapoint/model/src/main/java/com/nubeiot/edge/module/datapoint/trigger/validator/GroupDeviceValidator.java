@@ -8,7 +8,7 @@ import org.jooq.DSLContext;
 
 import com.nubeiot.core.exceptions.AlreadyExistException;
 import com.nubeiot.core.exceptions.ConflictException;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointTransducerMetadata;
 import com.nubeiot.edge.module.datapoint.trigger.validator.GroupLevelValidator.GroupLevelValidatorDecorator;
 import com.nubeiot.iotdata.dto.GroupLevel;
@@ -37,13 +37,14 @@ public final class GroupDeviceValidator extends AbstractGroupLevelValidator impl
 
     @NonNull
     public FolderRef computeReference(@NonNull FolderGroup group) {
-        final PointRecord pt = Optional.ofNullable(dsl().selectFrom(PointMetadata.INSTANCE.table())
-                                                        .where(PointMetadata.INSTANCE.table().ID.eq(group.getPointId()))
-                                                        .limit(1)
-                                                        .fetchOne())
-                                       .orElseThrow(() -> PointMetadata.INSTANCE.notFound(group.getPointId()));
-        final UUID networkId = pt.getNetwork();
-        if (Objects.nonNull(networkId) && !pt.getNetwork().equals(networkId)) {
+        final PointCompositeMetadata pointMetadata = PointCompositeMetadata.INSTANCE;
+        final PointRecord pointRecord = Optional.ofNullable(dsl().selectFrom(pointMetadata.table())
+                                                                 .where(pointMetadata.table().ID.eq(group.getPointId()))
+                                                                 .limit(1)
+                                                                 .fetchOne())
+                                                .orElseThrow(() -> pointMetadata.notFound(group.getPointId()));
+        final UUID networkId = pointRecord.getNetwork();
+        if (Objects.nonNull(networkId) && !pointRecord.getNetwork().equals(networkId)) {
             throw new ConflictException(
                 "Point id " + group.getPointId() + " does not belongs to network id " + networkId);
         }
@@ -60,7 +61,7 @@ public final class GroupDeviceValidator extends AbstractGroupLevelValidator impl
             throw new ConflictException(
                 "Point id " + group.getPointId() + " does not belongs to device id " + group.getDeviceId());
         }
-        return FolderRef.builder().networkId(networkId).deviceId(r.getDeviceId()).pointId(pt.getId()).build();
+        return FolderRef.builder().networkId(networkId).deviceId(r.getDeviceId()).pointId(pointRecord.getId()).build();
     }
 
     @NonNull

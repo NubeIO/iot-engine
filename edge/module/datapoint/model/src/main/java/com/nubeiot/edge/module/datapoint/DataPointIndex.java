@@ -122,7 +122,7 @@ public interface DataPointIndex extends MetadataIndex {
         map.put(NetworkMetadata.INSTANCE, 20);
         map.put(TransducerMetadata.INSTANCE, 20);
         map.put(EdgeDeviceMetadata.INSTANCE, 30);
-        map.put(PointMetadata.INSTANCE, 40);
+        map.put(PointCompositeMetadata.INSTANCE, 40);
         map.put(PointTransducerMetadata.INSTANCE, 50);
         map.put(FolderMetadata.INSTANCE, 60);
         map.put(FolderGroupMetadata.INSTANCE, 70);
@@ -296,7 +296,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull String requestKeyName() {
-            return PointMetadata.INSTANCE.requestKeyName();
+            return PointCompositeMetadata.INSTANCE.requestKeyName();
         }
 
         @Override
@@ -483,7 +483,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull String requestKeyName() {
-            return PointMetadata.INSTANCE.requestKeyName();
+            return EntityMetadata.createRequestKeyName(rawClass(), jsonKeyName());
         }
 
         @Override
@@ -548,7 +548,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull String requestKeyName() {
-            return PointMetadata.INSTANCE.requestKeyName();
+            return PointCompositeMetadata.INSTANCE.requestKeyName();
         }
 
         @Override
@@ -675,7 +675,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull String requestKeyName() {
-            return PointMetadata.INSTANCE.requestKeyName();
+            return PointCompositeMetadata.INSTANCE.requestKeyName();
         }
 
         @Override

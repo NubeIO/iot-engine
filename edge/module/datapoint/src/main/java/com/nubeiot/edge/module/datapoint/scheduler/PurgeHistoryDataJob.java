@@ -10,7 +10,7 @@ import io.vertx.core.json.JsonObject;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.sql.type.Label;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
 import com.nubeiot.edge.module.datapoint.policy.CleanupPolicy;
 import com.nubeiot.edge.module.datapoint.policy.OldestCleanupPolicy;
 
@@ -18,7 +18,7 @@ import lombok.NonNull;
 
 public final class PurgeHistoryDataJob extends AbstractDataJobDefinition implements DataJobDefinition {
 
-    private CleanupPolicy policy = new OldestCleanupPolicy(100, PointMetadata.INSTANCE.requestKeyName(),
+    private CleanupPolicy policy = new OldestCleanupPolicy(100, PointCompositeMetadata.INSTANCE.requestKeyName(),
                                                            Duration.ofDays(30));
 
     PurgeHistoryDataJob() {

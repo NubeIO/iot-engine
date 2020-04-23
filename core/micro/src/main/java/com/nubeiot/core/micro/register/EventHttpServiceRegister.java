@@ -41,7 +41,7 @@ public final class EventHttpServiceRegister<S extends EventHttpService> {
     private final String sharedKey;
     @NonNull
     private final Supplier<Set<S>> eventServices;
-    private Consumer<S> afterRegisterEventbusAddress;
+    private final Consumer<S> afterRegisterEventbusAddress;
 
     /**
      * Publish services to external API and register event listener by address at the same time.

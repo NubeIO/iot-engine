@@ -26,7 +26,7 @@ import com.nubeiot.core.sql.workflow.step.CreationStep;
 import com.nubeiot.core.sql.workflow.step.ModificationStep;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistoryDataMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistorySettingMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
 import com.nubeiot.edge.module.datapoint.cache.DataCacheInitializer;
 import com.nubeiot.edge.module.datapoint.cache.PointHistoryCache;
 import com.nubeiot.edge.module.datapoint.service.extension.PointExtension;
@@ -55,7 +55,8 @@ public final class HistoryDataService extends AbstractReferencingEntityService<P
 
     @Override
     public Set<EventMethodDefinition> definitions() {
-        return EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, context(), PointMetadata.INSTANCE);
+        return EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, context(),
+                                                   PointCompositeMetadata.INSTANCE);
     }
 
     @Override

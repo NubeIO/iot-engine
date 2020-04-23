@@ -28,7 +28,7 @@ import com.nubeiot.edge.module.datapoint.DataPointIndex.FolderMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistoryDataMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.HistorySettingMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointTransducerMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.PointValueMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.ProtocolDispatcherMetadata;
@@ -142,7 +142,7 @@ public final class MockData {
                                                      .setState(State.DISABLED),
                              new ProtocolDispatcher().setProtocol(Protocol.BACNET)
                                                      .setAction(EventAction.CREATE)
-                                                     .setEntity(PointMetadata.INSTANCE.singularKeyName())
+                                                     .setEntity(PointCompositeMetadata.INSTANCE.singularKeyName())
                                                      .setAddress(ProtocolDispatcherAddress.POINT)
                                                      .setState(State.ENABLED),
                              new ProtocolDispatcher().setProtocol(Protocol.BACNET)
@@ -469,7 +469,7 @@ public final class MockData {
     }
 
     public static JsonObject data_Point_Device() {
-        return data_Device_Equip_Transducer().put(PointMetadata.INSTANCE.singularKeyName(), data(POINTS))
+        return data_Device_Equip_Transducer().put(PointCompositeMetadata.INSTANCE.singularKeyName(), data(POINTS))
                                              .put(PointTransducerMetadata.INSTANCE.singularKeyName(),
                                                   data(POINT_TRANSDUCERS));
     }

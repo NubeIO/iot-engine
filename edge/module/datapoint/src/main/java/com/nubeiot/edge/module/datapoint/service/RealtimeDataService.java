@@ -21,7 +21,7 @@ import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractReferencingEntityService;
 import com.nubeiot.core.sql.validation.OperationValidator;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.MeasureUnitMetadata;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.RealtimeDataMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.RealtimeSettingMetadata;
 import com.nubeiot.edge.module.datapoint.service.extension.PointExtension;
@@ -50,7 +50,7 @@ public final class RealtimeDataService extends AbstractReferencingEntityService<
     @Override
     public Set<EventMethodDefinition> definitions() {
         return EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, this::servicePath,
-                                                   context()::requestKeyName, false, PointMetadata.INSTANCE);
+                                                   context()::requestKeyName, false, PointCompositeMetadata.INSTANCE);
     }
 
     protected OperationValidator initCreationValidator() {
@@ -75,8 +75,9 @@ public final class RealtimeDataService extends AbstractReferencingEntityService<
     private Single<DataType> findDataType(@NonNull PointRealtimeData rtData) {
         final EventbusClient client = entityHandler().eventClient();
         final RequestData reqData = RequestData.builder()
-                                               .body(new JsonObject().put(PointMetadata.INSTANCE.requestKeyName(),
-                                                                          rtData.getPoint().toString()))
+                                               .body(new JsonObject().put(
+                                                   PointCompositeMetadata.INSTANCE.requestKeyName(),
+                                                   rtData.getPoint().toString()))
                                                .build();
         return client.request(PointService.class.getName(), EventMessage.initial(EventAction.GET_ONE, reqData.toJson()))
                      .map(EventMessage::getData)
