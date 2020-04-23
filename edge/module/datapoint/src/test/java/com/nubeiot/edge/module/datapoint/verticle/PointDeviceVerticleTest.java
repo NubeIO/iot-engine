@@ -106,7 +106,7 @@ public class PointDeviceVerticleTest extends BaseDataPointVerticleTest {
                                                          "Unsupported HTTP method POST in '/network/default/device/" +
                                                          PrimaryKey.DEVICE_DROPLET + "/point'");
         assertRestByClient(context, HttpMethod.POST,
-                           "/api/s/network/default/device/" + PrimaryKey.DEVICE_DROPLET + "/point", 410, expected);
+                           "/api/s/network/default/device/" + PrimaryKey.DEVICE_DROPLET + "/point", 404, expected);
     }
 
 }

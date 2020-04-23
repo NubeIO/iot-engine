@@ -27,7 +27,7 @@ public class RequestDataTest {
         assertEquals(1, requestData.pagination().getPage());
         assertEquals(20, requestData.pagination().getPerPage());
         assertEquals("{\"headers\":{},\"body\":{\"name\":\"hello\"},\"filter\":{\"x\":\"test\"}," +
-                     "\"pagination\":{\"page\":1,\"perPage\":20}}", requestData.toJson().encode());
+                     "\"pagination\":{\"_page\":1,\"_per_page\":20}}", requestData.toJson().encode());
     }
 
     @Test

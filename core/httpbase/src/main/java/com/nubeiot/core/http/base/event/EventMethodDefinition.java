@@ -19,7 +19,7 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventListener;
-import com.nubeiot.core.exceptions.NotFoundException;
+import com.nubeiot.core.exceptions.ServiceNotFoundException;
 import com.nubeiot.core.utils.Networks;
 
 import lombok.Builder;
@@ -75,7 +75,7 @@ public final class EventMethodDefinition implements JsonData {
 
     static String toRegex(String capturePath) {
         //FIXME check with forward url
-        return capturePath.replaceFirst("/:[^/]+(/?)$", "/[^/]+$1").replaceAll("/:[^/]+", "/[^/]+");
+        return capturePath.replaceFirst("/:[^/]+(/?)$", "/.+$1").replaceAll("/:[^/]+", "/[^/]+");
     }
 
     private static String searchRegex(String servicePath) {
@@ -217,7 +217,8 @@ public final class EventMethodDefinition implements JsonData {
 
     //TODO replace NotFoundException to ServiceNotFound
     public EventAction search(String actualPath, @NonNull HttpMethod method) {
-        final String path = search(actualPath).orElseThrow(() -> new NotFoundException("Not found path " + actualPath));
+        final String path = search(actualPath).orElseThrow(
+            () -> new ServiceNotFoundException("Not found path " + actualPath));
         return mapping.stream()
                       .filter(mapping -> {
                           String regex = Strings.isBlank(mapping.getRegexPath()) ? servicePath : mapping.getRegexPath();
@@ -225,7 +226,7 @@ public final class EventMethodDefinition implements JsonData {
                       })
                       .map(EventMethodMapping::getAction)
                       .findFirst()
-                      .orElseThrow(() -> new NotFoundException(
+                      .orElseThrow(() -> new ServiceNotFoundException(
                           Strings.format("Unsupported HTTP method {0} in ''{1}''", method, actualPath)));
     }
 

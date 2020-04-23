@@ -1,5 +1,6 @@
 package com.nubeiot.core.micro;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -11,6 +12,7 @@ import java.util.function.Supplier;
 import io.github.zero.utils.Functions;
 import io.reactivex.Completable;
 import io.reactivex.Maybe;
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -32,7 +34,7 @@ import io.vertx.servicediscovery.types.HttpLocation;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.dto.ResponseData;
 import com.nubeiot.core.exceptions.NotFoundException;
-import com.nubeiot.core.exceptions.ServiceException;
+import com.nubeiot.core.exceptions.ServiceNotFoundException;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.http.client.HttpClientDelegate;
 import com.nubeiot.core.micro.MicroConfig.BackendConfig;
@@ -137,7 +139,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
 
     public Single<ResponseData> executeHttpService(Predicate<Record> filter, String path, HttpMethod method,
                                                    RequestData requestData, HttpClientOptions options) {
-        return findRecord(filter, HttpEndpoint.TYPE).flatMap(record -> {
+        return findRecord(filter, HttpEndpoint.TYPE).firstOrError().flatMap(record -> {
             ServiceReference reference = get().getReferenceWithConfiguration(record, Objects.isNull(options)
                                                                                      ? null
                                                                                      : options.toJson());
@@ -159,7 +161,11 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
 
     public Single<ResponseData> executeEventMessageService(Predicate<Record> filter, String path, HttpMethod method,
                                                            JsonObject requestData, DeliveryOptions options) {
-        return findRecord(filter, EventMessageService.TYPE).flatMap(record -> {
+        //TODO filter by exact path if many paths
+        final Comparator<Record> comparator = Comparator.comparingInt(
+            r -> EventMethodDefinition.from(r.getMetadata().getJsonObject(EventMessageService.EVENT_METHOD_CONFIG))
+                                      .getOrder());
+        return findRecord(filter, EventMessageService.TYPE).sorted(comparator).firstOrError().flatMap(record -> {
             JsonObject config = new JsonObject().put(EventMessageService.SHARED_KEY_CONFIG, sharedKey)
                                                 .put(EventMessageService.DELIVERY_OPTIONS_CONFIG,
                                                      Objects.isNull(options) ? new JsonObject() : options.toJson());
@@ -171,10 +177,13 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
         }).doOnError(t -> logger.error("Failed when redirect to {} :: {}", t, method, path));
     }
 
-    private Single<Record> findRecord(Predicate<Record> filter, String type) {
-        return getRx().rxGetRecord(Functions.and(r -> type.equals(r.getType()), filter)::test)
-                      .switchIfEmpty(Single.error(
-                          new ServiceException("Service Unavailable", new NotFoundException("Not found " + type))));
+    private Observable<Record> findRecord(Predicate<Record> filter, String type) {
+        return getRx().rxGetRecords(Functions.and(r -> type.equals(r.getType()), filter)::test)
+                      .filter(list -> !list.isEmpty())
+                      .switchIfEmpty(Single.error(new ServiceNotFoundException("Service Unavailable",
+                                                                               new NotFoundException(
+                                                                                   "Not found " + type))))
+                      .flattenAsObservable(r -> r);
     }
 
     public Single<Boolean> contains(Function<Record, Boolean> filter, String type) {
@@ -191,7 +200,7 @@ public abstract class ServiceDiscoveryController implements Supplier<ServiceDisc
 
     public Completable removeRecord(String registration) {
         return getRx().rxGetRecord(r -> r.getRegistration().equals(registration), true)
-                      .switchIfEmpty(Single.error(new NotFoundException("Not found that registration")))
+                      .switchIfEmpty(Single.error(new ServiceNotFoundException("Not found that registration")))
                       .flatMapCompletable(record -> {
                           registrationMap.remove(registration);
                           return getRx().rxUnpublish(registration);
