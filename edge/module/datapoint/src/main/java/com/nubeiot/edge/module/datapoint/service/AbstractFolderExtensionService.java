@@ -1,15 +1,18 @@
 package com.nubeiot.edge.module.datapoint.service;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
 import io.github.zero.utils.UUID64;
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.validation.OperationValidator;
+import com.nubeiot.core.utils.JsonUtils;
 import com.nubeiot.edge.module.datapoint.DataPointIndex;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.FolderMetadata;
 import com.nubeiot.edge.module.datapoint.model.pojos.FolderGroupComposite;
@@ -32,10 +35,19 @@ abstract class AbstractFolderExtensionService extends FolderGroupService impleme
 
     @Override
     protected OperationValidator initCreationValidator() {
-        Supplier<UUID> edge = () -> UUID64.uuid64ToUuid(entityHandler().sharedData(DataPointIndex.EDGE_ID));
+        Supplier<UUID> edgeFunc = () -> UUID64.uuid64ToUuid(entityHandler().sharedData(DataPointIndex.EDGE_ID));
         return super.initCreationValidator().andThen(OperationValidator.create((reqData, pojo) -> {
             final Folder folder = ((FolderGroupComposite) pojo).getOther(FolderMetadata.INSTANCE.singularKeyName());
-            Optional.ofNullable(folder).ifPresent(f -> f.setEdgeId(Optional.ofNullable(f.getEdgeId()).orElseGet(edge)));
+            if (Objects.nonNull(folder)) {
+                folder.setEdgeId(Optional.ofNullable(folder.getEdgeId()).orElseGet(edgeFunc));
+                final com.nubeiot.iotdata.edge.model.tables.@NonNull Folder table
+                    = ((FolderMetadata) resource()).table();
+                return queryExecutor().fetchExists(table, table.NAME.eq(folder.getName()))
+                                      .flatMap(b -> Maybe.error(context().alreadyExisted(
+                                          JsonUtils.kvMsg(table.getJsonField(table.NAME), folder.getName()))))
+                                      .switchIfEmpty(Single.just(false))
+                                      .map(ignore -> pojo);
+            }
             return Single.just(pojo);
         }));
     }

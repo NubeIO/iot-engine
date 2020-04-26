@@ -454,10 +454,16 @@ public final class MockData {
                           .put(NetworkMetadata.INSTANCE.singularKeyName(), data(NETWORKS));
     }
 
-    public static JsonObject data_Device_Equip_Transducer() {
+    public static JsonObject data_Device_Transducer() {
         return data_Edge_Network().put(DeviceMetadata.INSTANCE.singularKeyName(), data(DEVICES))
                                   .put(EdgeDeviceMetadata.INSTANCE.singularKeyName(), data(EDGE_EQUIPS))
                                   .put(TransducerMetadata.INSTANCE.singularKeyName(), data(TRANSDUCERS));
+    }
+
+    public static JsonObject data_Point_Device() {
+        return data_Device_Transducer().put(PointCompositeMetadata.INSTANCE.singularKeyName(), data(POINTS))
+                                       .put(PointTransducerMetadata.INSTANCE.singularKeyName(),
+                                            data(POINT_TRANSDUCERS));
     }
 
     public static JsonObject data_Point_Setting_Tag() {
@@ -466,12 +472,6 @@ public final class MockData {
                                   .put(HistorySettingMetadata.INSTANCE.singularKeyName(), data(HISTORY_SETTINGS))
                                   .put(HistoryDataMetadata.INSTANCE.singularKeyName(), data(HISTORY_DATA))
                                   .put(RealtimeSettingMetadata.INSTANCE.singularKeyName(), data(RT_SETTINGS));
-    }
-
-    public static JsonObject data_Point_Device() {
-        return data_Device_Equip_Transducer().put(PointCompositeMetadata.INSTANCE.singularKeyName(), data(POINTS))
-                                             .put(PointTransducerMetadata.INSTANCE.singularKeyName(),
-                                                  data(POINT_TRANSDUCERS));
     }
 
     public static JsonObject data_Protocol_Dispatcher() {
@@ -484,6 +484,13 @@ public final class MockData {
                                   .put(FolderGroupMetadata.INSTANCE.singularKeyName(), data(FOLDER_GROUPS));
     }
 
+    public static JsonObject all() {
+        return data_Point_Setting_Tag().put(FolderMetadata.INSTANCE.singularKeyName(), data(FOLDERS))
+                                       .put(FolderGroupMetadata.INSTANCE.singularKeyName(), data(FOLDER_GROUPS))
+                                       .put(ProtocolDispatcherMetadata.INSTANCE.singularKeyName(),
+                                            data(PROTOCOL_DISPATCHERS));
+    }
+
     public static <T extends VertxPojo> List<JsonObject> data(List<T> list) {
         return list.stream().map(VertxPojo::toJson).collect(Collectors.toList());
     }
@@ -491,7 +498,7 @@ public final class MockData {
     public static void main(String[] args) {
         IntStream.range(0, 10).forEach(i -> System.out.println(UUID.randomUUID()));
         System.out.println(OffsetDateTime.ofInstant(Instant.now(), ZoneOffset.UTC));
-        System.out.println(JsonData.tryParse(data_Point_Setting_Tag()).toJson(JsonPojo.MAPPER).encodePrettily());
+        System.out.println(JsonData.tryParse(all()).toJson(JsonPojo.MAPPER).encodePrettily());
     }
 
     public static final class PrimaryKey {
@@ -536,8 +543,6 @@ public final class MockData {
             UUID.fromString("60bb45aa-3a20-406a-af24-e3d31c08c86b"));
         public static final String FOLDER_GROUP_6 = UUID64.uuidToBase64(
             UUID.fromString("60400b6a-7ddd-42b6-94b3-793a5d4e6ff8"));
-        public static final String FOLDER_GROUP_7 = UUID64.uuidToBase64(
-            UUID.fromString("6d63f967-37af-4c16-acce-dd5e142d4133"));
 
     }
 

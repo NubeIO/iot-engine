@@ -11,8 +11,9 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
+import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.edge.module.datapoint.BaseDataPointServiceTest;
 import com.nubeiot.edge.module.datapoint.MockData;
@@ -70,7 +71,8 @@ public class FolderServiceTest extends BaseDataPointServiceTest {
     public void test_create_implicit_edge(TestContext context) {
         final String id = UUID64.random();
         final Folder folder = new Folder().setName("folder 3").setId(id);
-        asserter(context, true, createResponseExpected(folder), FolderService.class.getName(), EventAction.CREATE,
+        asserter(context, true, EntityTransformer.fullResponse(EventAction.CREATE, JsonPojo.from(folder).toJson()),
+                 FolderService.class.getName(), EventAction.CREATE,
                  RequestData.builder().body(JsonPojo.from(folder).toJson()).build());
     }
 
@@ -84,10 +86,13 @@ public class FolderServiceTest extends BaseDataPointServiceTest {
                  RequestData.builder().body(JsonPojo.from(folder).toJson()).build());
     }
 
-    private JsonObject createResponseExpected(Folder response) {
-        return new JsonObject().put("action", EventAction.CREATE)
-                               .put("status", Status.SUCCESS)
-                               .put("resource", JsonPojo.from(response).toJson());
+    @Test
+    public void test_create_unique_folder_name(TestContext context) {
+        final Folder folder = new Folder().setName("folder-1");
+        final JsonObject expected = new JsonObject().put("code", ErrorCode.ALREADY_EXIST)
+                                                    .put("message", "Already existed resource with name=folder-1");
+        asserter(context, false, expected, FolderService.class.getName(), EventAction.CREATE,
+                 RequestData.builder().body(JsonPojo.from(folder).toJson()).build());
     }
 
 }

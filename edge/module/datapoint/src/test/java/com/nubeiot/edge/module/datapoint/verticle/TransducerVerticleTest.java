@@ -15,7 +15,7 @@ public class TransducerVerticleTest extends BaseDataPointVerticleTest {
 
     @Override
     protected JsonObject builtinData() {
-        return MockData.data_Device_Equip_Transducer();
+        return MockData.data_Device_Transducer();
     }
 
     @Test

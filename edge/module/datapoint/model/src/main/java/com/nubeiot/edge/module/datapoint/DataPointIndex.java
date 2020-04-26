@@ -886,6 +886,7 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Folder onCreating(@NonNull RequestData reqData) throws IllegalArgumentException {
             final Folder folder = UUID64KeyEntity.super.onCreating(reqData);
+            Strings.requireNotBlank(folder.getName(), () -> mandatoryField(table().NAME));
             return folder.setId(Strings.fallback(folder.getId(), UUID64::random));
         }
 

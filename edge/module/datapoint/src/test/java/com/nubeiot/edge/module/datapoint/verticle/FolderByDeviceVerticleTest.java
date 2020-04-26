@@ -10,9 +10,9 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 
 import com.nubeiot.core.dto.RequestData;
-import com.nubeiot.core.enums.Status;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
+import com.nubeiot.core.sql.decorator.EntityTransformer;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Folder;
@@ -46,9 +46,18 @@ public class FolderByDeviceVerticleTest extends FolderGroupVerticleTest {
         final RequestData reqData = RequestData.builder().body(new JsonObject().put("folder", folder)).build();
         final Folder expected = new Folder().setId(id).setName("folder-xx");
         assertRestByClient(context, HttpMethod.POST, path, reqData, 201,
-                           new JsonObject().put("action", EventAction.CREATE)
-                                           .put("status", Status.SUCCESS)
-                                           .put("resource", JsonPojo.from(expected).toJson()));
+                           EntityTransformer.fullResponse(EventAction.CREATE, JsonPojo.from(expected).toJson()));
+    }
+
+    @Test
+    public void test_create_unique_folder_name_in_device(TestContext context) {
+        final String path = "/api/s/device/" + UUID64.uuidToBase64(PrimaryKey.DEVICE_DROPLET) + "/folder";
+        final String id = UUID64.random();
+        final JsonObject folder = new JsonObject().put("name", "folder-1").put("id", id);
+        final RequestData reqData = RequestData.builder().body(new JsonObject().put("folder", folder)).build();
+        assertRestByClient(context, HttpMethod.POST, path, reqData, 422,
+                           new JsonObject().put("code", ErrorCode.ALREADY_EXIST)
+                                           .put("message", "Already existed resource with name=folder-1"));
     }
 
     @Test

@@ -196,6 +196,11 @@ public interface EntityQueryExecutor<P extends VertxPojo> {
         return executeAny(query).filter(b -> b).switchIfEmpty(Maybe.empty());
     }
 
+    @NonNull
+    default Maybe<Boolean> fetchExists(@NonNull Table table, @NonNull Condition condition) {
+        return fetchExists(queryBuilder().exist(table, condition));
+    }
+
     /**
      * Check resource is able to delete by scanning reference resource to this resource
      *

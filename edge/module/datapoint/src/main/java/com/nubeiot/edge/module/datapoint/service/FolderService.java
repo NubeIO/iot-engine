@@ -4,12 +4,17 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.reactivex.Maybe;
+import io.reactivex.Single;
+
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.decorator.RequestDecorator;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractReferencingEntityService;
 import com.nubeiot.core.sql.service.marker.EntityReferences;
+import com.nubeiot.core.sql.validation.OperationValidator;
+import com.nubeiot.core.utils.JsonUtils;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.FolderMetadata;
 import com.nubeiot.edge.module.datapoint.service.extension.EdgeExtension;
@@ -49,6 +54,19 @@ public final class FolderService extends AbstractReferencingEntityService<Folder
     @Override
     public @NonNull RequestDecorator requestDecorator() {
         return EdgeExtension.create(this);
+    }
+
+    @Override
+    protected OperationValidator initCreationValidator() {
+        return super.initCreationValidator().andThen(OperationValidator.create((reqData, pojo) -> {
+            final String folderName = ((Folder) pojo).getName();
+            final com.nubeiot.iotdata.edge.model.tables.@NonNull Folder table = context().table();
+            return queryExecutor().fetchExists(table, table.NAME.eq(folderName))
+                                  .flatMap(b -> Maybe.error(context().alreadyExisted(
+                                      JsonUtils.kvMsg(table.getJsonField(table.NAME), folderName))))
+                                  .switchIfEmpty(Single.just(false))
+                                  .map(ignore -> pojo);
+        }));
     }
 
 }

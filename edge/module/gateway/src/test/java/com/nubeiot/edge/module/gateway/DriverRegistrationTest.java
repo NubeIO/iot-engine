@@ -138,7 +138,7 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
     @Test
     public void test_unregisterDriver_notFound(TestContext context) {
         restRequest(context, HttpMethod.DELETE, "/gw/register/d", RequestData.builder().build()).subscribe(
-            resp -> context.assertEquals(410, resp.getStatus().code()));
+            resp -> context.assertEquals(404, resp.getStatus().code()));
     }
 
     @Test

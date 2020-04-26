@@ -12,7 +12,6 @@ import org.jooq.Record4;
 import org.jooq.exception.SQLStateClass;
 import org.jooq.impl.DSL;
 
-import io.github.zero.utils.Functions;
 import io.github.zero.utils.Strings;
 
 import com.nubeiot.core.exceptions.NubeException;
@@ -32,9 +31,6 @@ public final class PointTransducerTrigger implements Trigger {
     @Override
     public void fire(Connection conn, Object[] oldRow, Object[] newRow) throws SQLException {
         final DSLContext context = DSL.using(conn);
-        if (Functions.getIfThrow(() -> newRow[6]).isPresent()) { // Tables.POINT_TRANSDUCER.EDGE_ID
-            return;
-        }
         final com.nubeiot.iotdata.edge.model.tables.PointTransducer table = Tables.POINT_TRANSDUCER;
         final PointTransducer pojo = new PointTransducer().setPointId(table.POINT_ID.getDataType().convert(newRow[1]))
                                                           .setDeviceId(table.DEVICE_ID.getDataType().convert(newRow[2]))
