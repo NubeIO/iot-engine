@@ -3,28 +3,28 @@ package com.nubeiot.edge.connector.bacnet.translator;
 import java.util.Objects;
 
 import com.nubeiot.edge.connector.bacnet.translator.BACnetTranslator.BACnetIoTChunkNotionTranslator;
-import com.nubeiot.iotdata.dto.ThingType;
+import com.nubeiot.iotdata.dto.TransducerType;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 
-public class BACnetThingTypeTranslator implements BACnetIoTChunkNotionTranslator<ThingType, ObjectType> {
+public class BACnetTransducerTypeTranslator implements BACnetIoTChunkNotionTranslator<TransducerType, ObjectType> {
 
     @Override
-    public ThingType serialize(ObjectType objectType) {
+    public TransducerType serialize(ObjectType objectType) {
         Objects.requireNonNull(objectType, "Invalid BACnet object type");
         if (objectType.isOneOf(ObjectType.analogInput, ObjectType.analogOutput, ObjectType.analogValue,
                                ObjectType.largeAnalogValue, ObjectType.lightingOutput)) {
-            return ThingType.SENSOR;
+            return TransducerType.SENSOR;
         }
         if (objectType.isOneOf(ObjectType.binaryInput, ObjectType.binaryOutput, ObjectType.binaryValue,
                                ObjectType.binaryLightingOutput)) {
-            return ThingType.ACTUATOR;
+            return TransducerType.ACTUATOR;
         }
         return null;
     }
 
     @Override
-    public Class<ThingType> fromType() {
-        return ThingType.class;
+    public Class<TransducerType> fromType() {
+        return TransducerType.class;
     }
 
     @Override

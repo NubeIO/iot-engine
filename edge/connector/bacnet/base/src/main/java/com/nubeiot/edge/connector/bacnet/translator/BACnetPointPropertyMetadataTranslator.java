@@ -12,7 +12,8 @@ public final class BACnetPointPropertyMetadataTranslator
         return PointPropertyMetadata.builder()
                                     .pointKind(new BACnetPointKindTranslator().serialize(metadata.objectType()))
                                     .pointType(new BACnetPointTypeTranslator().serialize(metadata.objectType()))
-                                    .transducerType(new BACnetThingTypeTranslator().serialize(metadata.objectType()))
+                                    .transducerType(
+                                        new BACnetTransducerTypeTranslator().serialize(metadata.objectType()))
                                     .build();
     }
 
