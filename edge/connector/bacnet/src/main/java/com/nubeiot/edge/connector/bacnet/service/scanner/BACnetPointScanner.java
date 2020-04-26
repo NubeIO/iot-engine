@@ -5,14 +5,14 @@ import io.vertx.core.Vertx;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.nubeiot.edge.connector.bacnet.service.BACnetRpcProtocol;
 import com.nubeiot.edge.connector.bacnet.translator.BACnetPointTranslator;
-import com.nubeiot.edge.module.datapoint.model.pojos.PointThingComposite;
+import com.nubeiot.edge.module.datapoint.model.pojos.PointTransducerComposite;
 import com.nubeiot.edge.module.datapoint.rpc.query.AbstractDataProtocolScanner;
 import com.nubeiot.edge.module.datapoint.rpc.query.DataProtocolPointScanner;
 
 import lombok.NonNull;
 
 public final class BACnetPointScanner
-    extends AbstractDataProtocolScanner<PointThingComposite, PropertyValuesMixin, BACnetPointScanner>
+    extends AbstractDataProtocolScanner<PointTransducerComposite, PropertyValuesMixin, BACnetPointScanner>
     implements DataProtocolPointScanner<PropertyValuesMixin, BACnetPointScanner>, BACnetRpcProtocol {
 
     protected BACnetPointScanner(@NonNull Vertx vertx, @NonNull String sharedKey) {

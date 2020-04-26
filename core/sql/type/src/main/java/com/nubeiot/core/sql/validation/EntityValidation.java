@@ -2,6 +2,8 @@ package com.nubeiot.core.sql.validation;
 
 import java.util.Optional;
 
+import org.jooq.Field;
+
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
 import io.github.zero.utils.Strings;
 import io.vertx.core.json.JsonObject;
@@ -38,6 +40,10 @@ public interface EntityValidation<P extends VertxPojo> {
      * The constant RESOURCE_IS_USING_MSG.
      */
     String RESOURCE_IS_USING_MSG = "Resource with {0} is using by another resource";
+    /**
+     * The constant MANDATORY_MSG.
+     */
+    String MANDATORY_MSG = "{0} is mandatory";
 
     /**
      * Context entity metadata.
@@ -163,6 +169,28 @@ public interface EntityValidation<P extends VertxPojo> {
      */
     default BeingUsedException unableDeleteDueUsing(String pojoKey) {
         return new BeingUsedException(Strings.format(RESOURCE_IS_USING_MSG, pojoKey));
+    }
+
+    /**
+     * Construct {@code IllegalArgumentException exception} by mandatory field.
+     *
+     * @param field the table field
+     * @return the illegal argument exception
+     * @since 1.0.0
+     */
+    default IllegalArgumentException mandatoryField(@NonNull String field) {
+        return new IllegalArgumentException(Strings.format(MANDATORY_MSG, field));
+    }
+
+    /**
+     * Construct {@code IllegalArgumentException exception} by mandatory field.
+     *
+     * @param field the field
+     * @return the illegal argument exception
+     * @since 1.0.0
+     */
+    default IllegalArgumentException mandatoryField(@NonNull Field field) {
+        return mandatoryField(context().table().getJsonField(field));
     }
 
 }

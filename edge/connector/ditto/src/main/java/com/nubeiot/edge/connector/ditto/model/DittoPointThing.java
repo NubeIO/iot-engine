@@ -1,13 +1,13 @@
 package com.nubeiot.edge.connector.ditto.model;
 
 import com.nubeiot.edge.connector.ditto.model.IDittoModel.AbstractDittoModel;
-import com.nubeiot.edge.module.datapoint.model.pojos.PointThingComposite;
+import com.nubeiot.edge.module.datapoint.model.pojos.PointTransducerComposite;
 
 import lombok.NonNull;
 
-public final class DittoPointThing extends AbstractDittoModel<PointThingComposite> {
+public final class DittoPointThing extends AbstractDittoModel<PointTransducerComposite> {
 
-    public DittoPointThing(@NonNull PointThingComposite data) {
+    public DittoPointThing(@NonNull PointTransducerComposite data) {
         super(data);
     }
 

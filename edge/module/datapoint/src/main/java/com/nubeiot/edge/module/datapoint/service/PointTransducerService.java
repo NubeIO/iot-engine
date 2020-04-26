@@ -11,18 +11,24 @@ import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.decorator.RequestDecorator;
 import com.nubeiot.core.sql.http.EntityHttpService;
 import com.nubeiot.core.sql.service.AbstractManyToManyEntityService;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointThingMetadata;
-import com.nubeiot.edge.module.datapoint.model.pojos.PointThingComposite;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointTransducerMetadata;
+import com.nubeiot.edge.module.datapoint.model.pojos.PointTransducerComposite;
 import com.nubeiot.edge.module.datapoint.service.extension.NetworkExtension;
-import com.nubeiot.iotdata.edge.model.tables.PointThing;
+import com.nubeiot.iotdata.edge.model.tables.PointTransducer;
 
 import lombok.NonNull;
 
-abstract class PointThingService extends AbstractManyToManyEntityService<PointThingComposite, PointThingMetadata>
-    implements DataPointService<PointThingComposite, PointThingMetadata> {
+abstract class PointTransducerService
+    extends AbstractManyToManyEntityService<PointTransducerComposite, PointTransducerMetadata>
+    implements DataPointService<PointTransducerComposite, PointTransducerMetadata> {
 
-    PointThingService(@NonNull EntityHandler entityHandler) {
+    PointTransducerService(@NonNull EntityHandler entityHandler) {
         super(entityHandler);
+    }
+
+    @Override
+    public PointTransducerMetadata context() {
+        return PointTransducerMetadata.INSTANCE;
     }
 
     @Override
@@ -32,10 +38,11 @@ abstract class PointThingService extends AbstractManyToManyEntityService<PointTh
 
     @Override
     public Set<String> ignoreFields() {
-        final @NonNull PointThing table = context().table();
+        final @NonNull PointTransducer table = context().table();
         return Stream.of(super.ignoreFields(),
                          Arrays.asList(table.getJsonField(table.DEVICE_ID), table.getJsonField(table.NETWORK_ID),
-                                       table.getJsonField(table.EDGE_ID), table.getJsonField(table.COMPUTED_THING)))
+                                       table.getJsonField(table.EDGE_ID),
+                                       table.getJsonField(table.COMPUTED_TRANSDUCER)))
                      .flatMap(Collection::stream)
                      .collect(Collectors.toSet());
     }

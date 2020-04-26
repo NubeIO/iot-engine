@@ -117,7 +117,8 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
     public void test_getRecords(TestContext context) {
         restRequest(context, HttpMethod.GET, "/gw/index", RequestData.builder().build()).subscribe(resp -> {
             context.assertEquals(200, resp.getStatus().code());
-            context.assertEquals(resp.body().getJsonArray("records").size(), 2);
+            System.out.println(resp.body());
+            context.assertEquals(resp.body().getJsonArray("apis").size(), 1);
         }, context::fail);
     }
 
@@ -137,7 +138,7 @@ public class DriverRegistrationTest extends DynamicServiceTestBase {
     @Test
     public void test_unregisterDriver_notFound(TestContext context) {
         restRequest(context, HttpMethod.DELETE, "/gw/register/d", RequestData.builder().build()).subscribe(
-            resp -> context.assertEquals(410, resp.getStatus().code()));
+            resp -> context.assertEquals(404, resp.getStatus().code()));
     }
 
     @Test

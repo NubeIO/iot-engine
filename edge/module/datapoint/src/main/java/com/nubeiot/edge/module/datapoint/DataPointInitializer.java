@@ -2,7 +2,6 @@ package com.nubeiot.edge.module.datapoint;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import org.jooq.DSLContext;
 import org.jooq.Field;
@@ -31,12 +30,14 @@ final class DataPointInitializer implements SchemaInitializer {
 
     @Override
     public int doMisc(@NonNull DSLContext dsl) {
-        Map<Table, Field<UUID>> map = new HashMap<>();
+        Map<Table, Field<?>> map = new HashMap<>();
         map.put(Tables.EDGE, Tables.EDGE.ID);
         map.put(Tables.DEVICE, Tables.DEVICE.ID);
         map.put(Tables.NETWORK, Tables.NETWORK.ID);
         map.put(Tables.POINT, Tables.POINT.ID);
-        map.put(Tables.THING, Tables.THING.ID);
+        map.put(Tables.TRANSDUCER, Tables.TRANSDUCER.ID);
+        map.put(Tables.FOLDER, Tables.FOLDER.ID);
+        map.put(Tables.FOLDER_GROUP, Tables.FOLDER_GROUP.ID);
         final String sql = "Alter table {0} alter column {1} set default random_uuid()";
         if (dsl.configuration().family() == SQLDialect.H2) {
             return map.entrySet()

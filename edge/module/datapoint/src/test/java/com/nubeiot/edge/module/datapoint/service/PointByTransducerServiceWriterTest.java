@@ -17,7 +17,7 @@ import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 
-public class PointByThingServiceWriterTest extends BaseDataPointServiceTest {
+public class PointByTransducerServiceWriterTest extends BaseDataPointServiceTest {
 
     @Override
     protected JsonObject testData() {
@@ -25,7 +25,7 @@ public class PointByThingServiceWriterTest extends BaseDataPointServiceTest {
     }
 
     @Test
-    public void test_create_point_by_thing_actuator(TestContext context) {
+    public void test_create_point_by_transducer_actuator(TestContext context) {
         final UUID uuid = UUID.randomUUID();
         final Point newOne = MockData.search(PrimaryKey.P_BACNET_TEMP).setId(uuid).setCode("NEW_TEMP");
         final JsonObject expected = new JsonObject(
@@ -34,9 +34,10 @@ public class PointByThingServiceWriterTest extends BaseDataPointServiceTest {
             "\"protocol\":\"BACNET\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"measure_unit\":\"celsius\"," +
             "\"unit_alias\":null,\"min_scale\":null,\"max_scale\":null,\"precision\":3,\"offset\":0,\"version\":null," +
             "\"metadata\":null}},\"action\":\"CREATE\",\"status\":\"SUCCESS\"}");
-        final JsonObject reqBody = new JsonObject().put("thing_id", UUID64.uuidToBase64(PrimaryKey.THING_SWITCH_HVAC))
+        final JsonObject reqBody = new JsonObject().put("transducer_id",
+                                                        UUID64.uuidToBase64(PrimaryKey.TRANSDUCER_SWITCH_HVAC))
                                                    .put("point", JsonPojo.from(newOne).toJson());
-        asserter(context, true, expected, PointByThingService.class.getName(), EventAction.CREATE,
+        asserter(context, true, expected, PointByTransducerService.class.getName(), EventAction.CREATE,
                  RequestData.builder().body(reqBody).build());
     }
 
@@ -45,12 +46,13 @@ public class PointByThingServiceWriterTest extends BaseDataPointServiceTest {
         final UUID uuid = UUID.randomUUID();
         final Point newOne = MockData.search(PrimaryKey.P_BACNET_TEMP).setId(uuid).setCode("NEW_TEMP");
         final JsonObject expected = new JsonObject().put("code", ErrorCode.INVALID_ARGUMENT)
-                                                    .put("message", "Thing " + PrimaryKey.THING_TEMP_HVAC +
+                                                    .put("message", "Transducer " + PrimaryKey.TRANSDUCER_TEMP_HVAC +
                                                                     " with type SENSOR is already assigned to Point " +
                                                                     PrimaryKey.P_BACNET_TEMP);
-        final JsonObject reqBody = new JsonObject().put("thing_id", UUID64.uuidToBase64(PrimaryKey.THING_TEMP_HVAC))
+        final JsonObject reqBody = new JsonObject().put("transducer_id",
+                                                        UUID64.uuidToBase64(PrimaryKey.TRANSDUCER_TEMP_HVAC))
                                                    .put("point", JsonPojo.from(newOne).toJson());
-        asserter(context, false, expected, PointByThingService.class.getName(), EventAction.CREATE,
+        asserter(context, false, expected, PointByTransducerService.class.getName(), EventAction.CREATE,
                  RequestData.builder().body(reqBody).build());
     }
 

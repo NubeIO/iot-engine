@@ -43,14 +43,21 @@ public final class DittoSyncTask extends AbstractDittoTask<VertxPojo> {
             return doOnError(runtimeContext.getThrowable(), runtimeContext.getOriginReqAction(),
                              runtimeContext.getMetadata());
         }
-        return transform(runtimeContext).flatMap(syncData -> doOnSuccess(runtimeContext.getMetadata(), syncData));
+        return transform(runtimeContext).flatMap(syncData -> doOnSuccess(runtimeContext.getMetadata(), syncData))
+                                        .onErrorResumeNext(err -> {
+                                            if (logger.isDebugEnabled()) {
+                                                logger.warn("Unsuccessful sync data", err);
+                                            }
+                                            return Maybe.empty();
+                                        });
     }
 
     private @NonNull Maybe<IDittoModel<VertxPojo>> transform(@NonNull EntityRuntimeContext<VertxPojo> data) {
         ClassGraphCache<EntityMetadata, IDittoModel> cache = definitionContext().getSharedDataValue(SYNC_CONFIG_CACHE);
-        return Maybe.just(Optional.ofNullable(IDittoModel.create(cache, data.getMetadata(), data.getData().toJson())))
-                    .filter(Optional::isPresent)
-                    .map(Optional::get);
+        return Single.just(cache)
+                     .map(c -> Optional.ofNullable(IDittoModel.create(c, data.getMetadata(), data.getData().toJson())))
+                     .filter(Optional::isPresent)
+                     .map(Optional::get);
     }
 
     private Maybe<JsonObject> doOnSuccess(EntityMetadata metadata, IDittoModel<VertxPojo> syncData) {

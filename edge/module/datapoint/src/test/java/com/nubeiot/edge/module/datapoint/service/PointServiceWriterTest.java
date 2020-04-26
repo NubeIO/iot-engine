@@ -354,10 +354,10 @@ public class PointServiceWriterTest extends BaseDataPointServiceTest {
         final UUID p1Id = UUID.randomUUID();
         final JsonObject body = new JsonObject(
             "{\"points\":[{\"resource\":{\"edge\":\"" + PrimaryKey.EDGE + "\"," + "\"network\":\"" +
-            PrimaryKey.DEFAULT_NETWORK + "\",\"measure_unit\":\"number\"," +
-            "\"unit\":{\"type\":\"number\"}},\"error\":{\"code\":\"INVALID_ARGUMENT\",\"message\":\"Point Code is " +
-            "mandatory\"}},{\"resource\":{\"id\":\"" + p1Id + "\",\"code\":\"TET_01\"," + "\"edge\":\"" +
-            PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.DEFAULT_NETWORK + "\"," +
+            PrimaryKey.DEFAULT_NETWORK + "\",\"measure_unit\":\"number\",\"unit\":{\"type\":\"number\"}}," +
+            "\"error\":{\"code\":\"INVALID_ARGUMENT\",\"message\":\"code is mandatory\"}}," +
+            "{\"resource\":{\"id\":\"" + p1Id + "\",\"code\":\"TET_01\",\"edge\":\"" + PrimaryKey.EDGE +
+            "\",\"network\":\"" + PrimaryKey.DEFAULT_NETWORK + "\"," +
             "\"enabled\":true,\"protocol\":\"UNKNOWN\",\"kind\":\"UNKNOWN\",\"type\":\"UNKNOWN\"," +
             "\"unit\":{\"type\":\"bool\",\"category\":\"ALL\"}},\"action\":\"CREATE\",\"status\":\"SUCCESS\"}]}");
         final Point p1 = new Point().setId(p1Id)

@@ -19,7 +19,7 @@ import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
 
-public class NetworkThingForceDeleteTest extends BaseDataPointServiceTest {
+public class NetworkTransducerForceDeleteTest extends BaseDataPointServiceTest {
 
     @Override
     protected JsonObject testData() {

@@ -15,7 +15,7 @@ import io.vertx.core.http.HttpMethod;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.exceptions.NotFoundException;
+import com.nubeiot.core.exceptions.ServiceNotFoundException;
 
 public class EventMethodDefinitionTest {
 
@@ -50,13 +50,13 @@ public class EventMethodDefinitionTest {
         EventMethodDefinition.createDefault("/client/:clientId", "/:productId");
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test(expected = ServiceNotFoundException.class)
     public void test_not_found() {
         EventMethodDefinition definition = EventMethodDefinition.createDefault("/abc", "/:id");
         definition.search("/abcd", HttpMethod.GET);
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test(expected = ServiceNotFoundException.class)
     public void test_not_found_multiParam_pattern() {
         EventMethodDefinition definition = EventMethodDefinition.createDefault("/abc/:cid/prod", "/:pid");
         definition.search("/abc/222/xyz/prod", HttpMethod.GET);
@@ -197,6 +197,18 @@ public class EventMethodDefinitionTest {
         System.out.println(definition.toJson());
         Assert.assertFalse(definition.isUseRequestData());
         Assert.assertEquals(EventAction.GET_LIST, definition.search("/abc", HttpMethod.GET));
+    }
+
+    @Test
+    public void test_search_similar_pattern() {
+        EventMethodDefinition definition1 = EventMethodDefinition.createDefault("/device/:device_id/folder",
+                                                                                "/:folder_id");
+        EventMethodDefinition definition2 = EventMethodDefinition.createDefault(
+            "/device/:device_id/folder/:folder_id/point", "/:point_id");
+        Assert.assertEquals(EventAction.GET_ONE,
+                            definition2.search("/device/123/folder/345/point/abc", HttpMethod.GET));
+        Assert.assertEquals(EventAction.GET_LIST, definition2.search("/device/123/folder/345/point", HttpMethod.GET));
+        Assert.assertEquals(EventAction.GET_ONE, definition1.search("/device/123/folder/345/point", HttpMethod.GET));
     }
 
 }

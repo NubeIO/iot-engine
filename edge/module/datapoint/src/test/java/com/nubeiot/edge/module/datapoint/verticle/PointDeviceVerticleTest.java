@@ -26,14 +26,15 @@ public class PointDeviceVerticleTest extends BaseDataPointVerticleTest {
     @Test
     public void test_get_points_by_device_200(TestContext context) {
         final JsonObject expected = new JsonObject(
-            "{\"points\":[{\"id\":1,\"thing_id\":\"" + PrimaryKey.THING_HUMIDITY_DROPLET + "\",\"point\":{\"id\":\"" +
-            PrimaryKey.P_GPIO_HUMIDITY + "\"," + "\"code\":\"2CB2B763_HUMIDITY\",\"edge\":\"" + PrimaryKey.EDGE +
-            "\",\"network\":\"" + PrimaryKey.DEFAULT_NETWORK +
-            "\",\"enabled\":true,\"protocol\":\"WIRE\",\"kind\":\"INPUT\"," +
+            "{\"points\":[{\"id\":1,\"transducer_id\":\"" + PrimaryKey.TRANSDUCER_HUMIDITY_DROPLET +
+            "\",\"point\":{\"id\":\"" + PrimaryKey.P_GPIO_HUMIDITY + "\"," +
+            "\"code\":\"2CB2B763_HUMIDITY\",\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" +
+            PrimaryKey.DEFAULT_NETWORK + "\",\"enabled\":true,\"protocol\":\"WIRE\",\"kind\":\"INPUT\"," +
             "\"type\":\"DIGITAL\",\"measure_unit\":\"percentage\",\"min_scale\":0,\"max_scale\":100,\"precision\":3," +
-            "\"offset\":0}},{\"id\":2,\"thing_id\":\"" + PrimaryKey.THING_TEMP_DROPLET + "\",\"point\":{\"id\":\"" +
-            PrimaryKey.P_GPIO_TEMP + "\"," + "\"code\":\"2CB2B763_TEMP\",\"edge\":\"" + PrimaryKey.EDGE +
-            "\",\"network\":\"" + PrimaryKey.DEFAULT_NETWORK + "\",\"enabled\":true,\"protocol\":\"WIRE\"," +
+            "\"offset\":0}},{\"id\":2,\"transducer_id\":\"" + PrimaryKey.TRANSDUCER_TEMP_DROPLET +
+            "\",\"point\":{\"id\":\"" + PrimaryKey.P_GPIO_TEMP + "\"," + "\"code\":\"2CB2B763_TEMP\",\"edge\":\"" +
+            PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.DEFAULT_NETWORK +
+            "\",\"enabled\":true,\"protocol\":\"WIRE\"," +
             "\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"measure_unit\":\"celsius\",\"precision\":3,\"offset\":0}}]}");
         assertRestByClient(context, HttpMethod.GET, "/api/s/device/" + PrimaryKey.DEVICE_DROPLET + "/point", 200,
                            expected);
@@ -42,7 +43,7 @@ public class PointDeviceVerticleTest extends BaseDataPointVerticleTest {
     @Test
     public void test_get_point_by_device_200(TestContext context) {
         final JsonObject expected = new JsonObject(
-            "{\"id\":1,\"thing_id\":\"" + PrimaryKey.THING_HUMIDITY_DROPLET + "\",\"point\":{\"id\":\"" +
+            "{\"id\":1,\"transducer_id\":\"" + PrimaryKey.TRANSDUCER_HUMIDITY_DROPLET + "\",\"point\":{\"id\":\"" +
             PrimaryKey.P_GPIO_HUMIDITY + "\",\"code" + "\":\"2CB2B763_HUMIDITY\",\"edge\":\"" + PrimaryKey.EDGE +
             "\",\"network\":\"" + PrimaryKey.DEFAULT_NETWORK + "\",\"enabled\":true," +
             "\"protocol\":\"WIRE\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"measure_unit\":\"percentage\"," +
@@ -55,14 +56,15 @@ public class PointDeviceVerticleTest extends BaseDataPointVerticleTest {
     @Test
     public void test_get_points_by_device_n_network_200(TestContext context) {
         final JsonObject expected = new JsonObject(
-            "{\"points\":[{\"id\":1,\"thing_id\":\"" + PrimaryKey.THING_HUMIDITY_DROPLET + "\",\"point\":{\"id\":\"" +
-            PrimaryKey.P_GPIO_HUMIDITY + "\"," + "\"code\":\"2CB2B763_HUMIDITY\",\"edge\":\"" + PrimaryKey.EDGE +
-            "\",\"network\":\"" + PrimaryKey.DEFAULT_NETWORK +
-            "\",\"enabled\":true,\"protocol\":\"WIRE\",\"kind\":\"INPUT\"," +
+            "{\"points\":[{\"id\":1,\"transducer_id\":\"" + PrimaryKey.TRANSDUCER_HUMIDITY_DROPLET +
+            "\",\"point\":{\"id\":\"" + PrimaryKey.P_GPIO_HUMIDITY + "\"," +
+            "\"code\":\"2CB2B763_HUMIDITY\",\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" +
+            PrimaryKey.DEFAULT_NETWORK + "\",\"enabled\":true,\"protocol\":\"WIRE\",\"kind\":\"INPUT\"," +
             "\"type\":\"DIGITAL\",\"measure_unit\":\"percentage\",\"min_scale\":0,\"max_scale\":100,\"precision\":3," +
-            "\"offset\":0}},{\"id\":2,\"thing_id\":\"" + PrimaryKey.THING_TEMP_DROPLET + "\",\"point\":{\"id\":\"" +
-            PrimaryKey.P_GPIO_TEMP + "\"," + "\"code\":\"2CB2B763_TEMP\",\"edge\":\"" + PrimaryKey.EDGE +
-            "\",\"network\":\"" + PrimaryKey.DEFAULT_NETWORK + "\",\"enabled\":true,\"protocol\":\"WIRE\"," +
+            "\"offset\":0}},{\"id\":2,\"transducer_id\":\"" + PrimaryKey.TRANSDUCER_TEMP_DROPLET +
+            "\",\"point\":{\"id\":\"" + PrimaryKey.P_GPIO_TEMP + "\"," + "\"code\":\"2CB2B763_TEMP\",\"edge\":\"" +
+            PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.DEFAULT_NETWORK +
+            "\",\"enabled\":true,\"protocol\":\"WIRE\"," +
             "\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"measure_unit\":\"celsius\",\"precision\":3,\"offset\":0}}]}");
         assertRestByClient(context, HttpMethod.GET,
                            "/api/s/network/default/device/" + PrimaryKey.DEVICE_DROPLET + "/point", 200, expected);
@@ -71,7 +73,7 @@ public class PointDeviceVerticleTest extends BaseDataPointVerticleTest {
     @Test
     public void test_get_point_by_device_n_network_200(TestContext context) {
         final JsonObject expected = new JsonObject(
-            "{\"id\":2,\"thing_id\":\"" + PrimaryKey.THING_TEMP_DROPLET + "\",\"point\":{\"id\":\"" +
+            "{\"id\":2,\"transducer_id\":\"" + PrimaryKey.TRANSDUCER_TEMP_DROPLET + "\",\"point\":{\"id\":\"" +
             PrimaryKey.P_GPIO_TEMP + "\",\"code" + "\":\"2CB2B763_TEMP\",\"edge\":\"" + PrimaryKey.EDGE +
             "\",\"network\":\"" + PrimaryKey.DEFAULT_NETWORK + "\",\"enabled\":true," +
             "\"protocol\":\"WIRE\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"measure_unit\":\"celsius\"," +
@@ -86,7 +88,7 @@ public class PointDeviceVerticleTest extends BaseDataPointVerticleTest {
         final UUID uuid = UUID.randomUUID();
         final Point newOne = MockData.search(PrimaryKey.P_BACNET_TEMP).setId(uuid).setCode("NEW_TEMP");
         final JsonObject expected = new JsonObject(
-            "{\"resource\":{\"id\":6,\"thing_id\":null,\"point\":{\"id\":\"" + uuid +
+            "{\"resource\":{\"id\":6,\"transducer_id\":null,\"point\":{\"id\":\"" + uuid +
             "\",\"code\":\"NEW_TEMP\",\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.BACNET_NETWORK +
             "\",\"label\":null,\"enabled\":true," +
             "\"protocol\":\"BACNET\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"measure_unit\":\"celsius\"," +
@@ -99,12 +101,12 @@ public class PointDeviceVerticleTest extends BaseDataPointVerticleTest {
 
     @Test
     public void test_unable_create_point_by_device_n_network_404(TestContext context) {
-        final JsonObject expected = new JsonObject().put("code", ErrorCode.NOT_FOUND)
+        final JsonObject expected = new JsonObject().put("code", ErrorCode.SERVICE_NOT_FOUND)
                                                     .put("message",
                                                          "Unsupported HTTP method POST in '/network/default/device/" +
                                                          PrimaryKey.DEVICE_DROPLET + "/point'");
         assertRestByClient(context, HttpMethod.POST,
-                           "/api/s/network/default/device/" + PrimaryKey.DEVICE_DROPLET + "/point", 410, expected);
+                           "/api/s/network/default/device/" + PrimaryKey.DEVICE_DROPLET + "/point", 404, expected);
     }
 
 }

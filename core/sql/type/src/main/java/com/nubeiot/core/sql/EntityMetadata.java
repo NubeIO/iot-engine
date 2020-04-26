@@ -13,9 +13,11 @@ import org.jooq.UpdatableRecord;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
+import io.github.zero.exceptions.HiddenException;
 import io.github.zero.utils.Functions;
 import io.github.zero.utils.Reflections.ReflectionClass;
 import io.github.zero.utils.Strings;
+import io.github.zero.utils.UUID64;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;
@@ -322,7 +324,24 @@ public interface EntityMetadata<K, P extends VertxPojo, R extends UpdatableRecor
 
         default UUID parseKey(String dataKey) throws IllegalArgumentException {
             return Functions.getOrThrow(() -> Functions.toUUID().apply(dataKey),
-                                        t -> new IllegalArgumentException("Invalid key", t));
+                                        t -> new IllegalArgumentException("Invalid key",
+                                                                          t instanceof IllegalArgumentException
+                                                                          ? new HiddenException(t)
+                                                                          : t));
+        }
+
+    }
+
+
+    interface UUID64KeyEntity<P extends VertxPojo, R extends UpdatableRecord<R>, D extends VertxDAO<R, P, String>>
+        extends EntityMetadata<String, P, R, D> {
+
+        default String parseKey(String dataKey) throws IllegalArgumentException {
+            return Functions.getOrThrow(() -> UUID64.uuid64ToUuidStr(dataKey),
+                                        t -> new IllegalArgumentException("Invalid key",
+                                                                          t instanceof IllegalArgumentException
+                                                                          ? new HiddenException(t)
+                                                                          : t));
         }
 
     }

@@ -3,7 +3,7 @@ package com.nubeiot.edge.module.datapoint.service.extension;
 import com.nubeiot.core.sql.service.marker.EntityReferences;
 import com.nubeiot.core.sql.service.marker.OneToOneEntityMarker;
 import com.nubeiot.core.sql.service.marker.ReferencingEntityMarker;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
 
 import lombok.NonNull;
 
@@ -11,7 +11,8 @@ public interface PointExtension extends ReferencingEntityMarker {
 
     @Override
     default EntityReferences referencedEntities() {
-        return new EntityReferences().add(PointMetadata.INSTANCE, PointMetadata.INSTANCE.singularKeyName());
+        return new EntityReferences().add(PointCompositeMetadata.INSTANCE,
+                                          PointCompositeMetadata.INSTANCE.singularKeyName());
     }
 
     interface PointOneToOneExtension extends OneToOneEntityMarker, PointExtension {

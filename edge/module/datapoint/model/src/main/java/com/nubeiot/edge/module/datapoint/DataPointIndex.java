@@ -23,23 +23,28 @@ import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.EntityMetadata.BigSerialKeyEntity;
 import com.nubeiot.core.sql.EntityMetadata.SerialKeyEntity;
 import com.nubeiot.core.sql.EntityMetadata.StringKeyEntity;
+import com.nubeiot.core.sql.EntityMetadata.UUID64KeyEntity;
 import com.nubeiot.core.sql.EntityMetadata.UUIDKeyEntity;
 import com.nubeiot.core.sql.MetadataIndex;
 import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.core.sql.tables.JsonTable;
 import com.nubeiot.edge.module.datapoint.model.pojos.EdgeDeviceComposite;
+import com.nubeiot.edge.module.datapoint.model.pojos.FolderGroupComposite;
 import com.nubeiot.edge.module.datapoint.model.pojos.HasProtocol;
 import com.nubeiot.edge.module.datapoint.model.pojos.PointComposite;
-import com.nubeiot.edge.module.datapoint.model.pojos.PointThingComposite;
+import com.nubeiot.edge.module.datapoint.model.pojos.PointTransducerComposite;
+import com.nubeiot.iotdata.dto.GroupLevel;
 import com.nubeiot.iotdata.dto.HistorySettingType;
 import com.nubeiot.iotdata.dto.PointPriorityValue;
 import com.nubeiot.iotdata.dto.PointPriorityValue.PointValue;
 import com.nubeiot.iotdata.dto.Protocol;
-import com.nubeiot.iotdata.dto.ThingType;
+import com.nubeiot.iotdata.dto.TransducerType;
 import com.nubeiot.iotdata.edge.model.Tables;
 import com.nubeiot.iotdata.edge.model.tables.daos.DeviceDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.EdgeDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.EdgeDeviceDao;
+import com.nubeiot.iotdata.edge.model.tables.daos.FolderDao;
+import com.nubeiot.iotdata.edge.model.tables.daos.FolderGroupDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.HistorySettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.MeasureUnitDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.NetworkDao;
@@ -47,16 +52,18 @@ import com.nubeiot.iotdata.edge.model.tables.daos.PointDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.PointHistoryDataDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.PointRealtimeDataDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.PointTagDao;
-import com.nubeiot.iotdata.edge.model.tables.daos.PointThingDao;
+import com.nubeiot.iotdata.edge.model.tables.daos.PointTransducerDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.PointValueDataDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.ProtocolDispatcherDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.RealtimeSettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.ScheduleSettingDao;
 import com.nubeiot.iotdata.edge.model.tables.daos.SyncDispatcherDao;
-import com.nubeiot.iotdata.edge.model.tables.daos.ThingDao;
+import com.nubeiot.iotdata.edge.model.tables.daos.TransducerDao;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Device;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Edge;
 import com.nubeiot.iotdata.edge.model.tables.pojos.EdgeDevice;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Folder;
+import com.nubeiot.iotdata.edge.model.tables.pojos.FolderGroup;
 import com.nubeiot.iotdata.edge.model.tables.pojos.HistorySetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.MeasureUnit;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Network;
@@ -64,16 +71,18 @@ import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointHistoryData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointRealtimeData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointTag;
-import com.nubeiot.iotdata.edge.model.tables.pojos.PointThing;
+import com.nubeiot.iotdata.edge.model.tables.pojos.PointTransducer;
 import com.nubeiot.iotdata.edge.model.tables.pojos.PointValueData;
 import com.nubeiot.iotdata.edge.model.tables.pojos.ProtocolDispatcher;
 import com.nubeiot.iotdata.edge.model.tables.pojos.RealtimeSetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.ScheduleSetting;
 import com.nubeiot.iotdata.edge.model.tables.pojos.SyncDispatcher;
-import com.nubeiot.iotdata.edge.model.tables.pojos.Thing;
+import com.nubeiot.iotdata.edge.model.tables.pojos.Transducer;
 import com.nubeiot.iotdata.edge.model.tables.records.DeviceRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.EdgeDeviceRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.EdgeRecord;
+import com.nubeiot.iotdata.edge.model.tables.records.FolderGroupRecord;
+import com.nubeiot.iotdata.edge.model.tables.records.FolderRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.HistorySettingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.MeasureUnitRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.NetworkRecord;
@@ -81,13 +90,13 @@ import com.nubeiot.iotdata.edge.model.tables.records.PointHistoryDataRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.PointRealtimeDataRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.PointRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.PointTagRecord;
-import com.nubeiot.iotdata.edge.model.tables.records.PointThingRecord;
+import com.nubeiot.iotdata.edge.model.tables.records.PointTransducerRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.PointValueDataRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.ProtocolDispatcherRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.RealtimeSettingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.ScheduleSettingRecord;
 import com.nubeiot.iotdata.edge.model.tables.records.SyncDispatcherRecord;
-import com.nubeiot.iotdata.edge.model.tables.records.ThingRecord;
+import com.nubeiot.iotdata.edge.model.tables.records.TransducerRecord;
 import com.nubeiot.iotdata.unit.DataType;
 
 import lombok.AccessLevel;
@@ -111,10 +120,12 @@ public interface DataPointIndex extends MetadataIndex {
         map.put(EdgeMetadata.INSTANCE, 10);
         map.put(DeviceMetadata.INSTANCE, 10);
         map.put(NetworkMetadata.INSTANCE, 20);
-        map.put(ThingMetadata.INSTANCE, 20);
+        map.put(TransducerMetadata.INSTANCE, 20);
         map.put(EdgeDeviceMetadata.INSTANCE, 30);
-        map.put(PointMetadata.INSTANCE, 40);
-        map.put(PointThingMetadata.INSTANCE, 50);
+        map.put(PointCompositeMetadata.INSTANCE, 40);
+        map.put(PointTransducerMetadata.INSTANCE, 50);
+        map.put(FolderMetadata.INSTANCE, 60);
+        map.put(FolderGroupMetadata.INSTANCE, 70);
         return map;
     }
 
@@ -129,7 +140,7 @@ public interface DataPointIndex extends MetadataIndex {
         public static final DeviceMetadata INSTANCE = new DeviceMetadata();
 
         @Override
-        public @NonNull JsonTable<DeviceRecord> table() {
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.Device table() {
             return Tables.DEVICE;
         }
 
@@ -145,7 +156,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull Device onCreating(RequestData reqData) throws IllegalArgumentException {
-            Device device = parseFromRequest(reqData.body());
+            Device device = UUIDKeyEntity.super.onCreating(reqData);
             Strings.requireNotBlank(device.getCode(), "Device code is mandatory");
             Strings.requireNotBlank(device.getType(), "Device type is mandatory");
             return device.setId(Optional.ofNullable(device.getId()).orElseGet(UUID::randomUUID));
@@ -181,7 +192,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull Edge onCreating(RequestData reqData) throws IllegalArgumentException {
-            Edge edge = parseFromRequest(reqData.body());
+            Edge edge = UUIDKeyEntity.super.onCreating(reqData);
             edge.setCustomerCode(
                 Strings.requireNotBlank(edge.getCustomerCode(), "Customer code cannot be blank").toUpperCase());
             edge.setSiteCode(Strings.requireNotBlank(edge.getSiteCode(), "Site code cannot be blank").toUpperCase());
@@ -251,7 +262,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull PointHistoryData onCreating(RequestData reqData) throws IllegalArgumentException {
-            final PointHistoryData historyData = parseFromRequest(reqData.body());
+            final PointHistoryData historyData = BigSerialKeyEntity.super.onCreating(reqData);
             Objects.requireNonNull(historyData.getPoint(), "History data point is mandatory");
             Objects.requireNonNull(historyData.getValue(), "History data value is mandatory");
             return historyData.setTime(Optional.ofNullable(historyData.getTime()).orElse(DateTimes.now()))
@@ -285,7 +296,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull String requestKeyName() {
-            return PointMetadata.INSTANCE.requestKeyName();
+            return PointCompositeMetadata.INSTANCE.requestKeyName();
         }
 
         @Override
@@ -301,7 +312,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull HistorySetting onCreating(@NonNull RequestData reqData) throws IllegalArgumentException {
-            return validate(parseFromRequest(reqData.body()));
+            return validate(UUIDKeyEntity.super.onCreating(reqData));
         }
 
         @Override
@@ -402,7 +413,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull Network onCreating(RequestData reqData) throws IllegalArgumentException {
-            Network network = parseFromRequest(reqData.body());
+            Network network = UUIDKeyEntity.super.onCreating(reqData);
             Objects.requireNonNull(network.getEdge(), "Edge is mandatory");
             Strings.requireNotBlank(network.getCode(), "Network code is mandatory");
             return network.setId(Optional.ofNullable(network.getId()).orElseGet(UUID::randomUUID));
@@ -472,7 +483,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull String requestKeyName() {
-            return PointMetadata.INSTANCE.requestKeyName();
+            return EntityMetadata.createRequestKeyName(rawClass(), jsonKeyName());
         }
 
         @Override
@@ -507,7 +518,7 @@ public interface DataPointIndex extends MetadataIndex {
         private PointComposite validate(@NonNull PointComposite point) {
             Objects.requireNonNull(point.getEdge(), "Point must be assigned to Edge");
             Objects.requireNonNull(point.getNetwork(), "Point must be assigned to Network");
-            Strings.requireNotBlank(point.getCode(), "Point Code is mandatory");
+            point.setCode(Strings.requireNotBlank(point.getCode(), () -> mandatoryField(table().CODE)));
             final MeasureUnit other = point.getOther(MeasureUnitMetadata.INSTANCE.singularKeyName());
             if (Objects.isNull(other)) {
                 point.addMeasureUnit(new MeasureUnit().setType(
@@ -537,7 +548,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull String requestKeyName() {
-            return PointMetadata.INSTANCE.requestKeyName();
+            return PointCompositeMetadata.INSTANCE.requestKeyName();
         }
 
         @Override
@@ -664,7 +675,7 @@ public interface DataPointIndex extends MetadataIndex {
 
         @Override
         public @NonNull String requestKeyName() {
-            return PointMetadata.INSTANCE.requestKeyName();
+            return PointCompositeMetadata.INSTANCE.requestKeyName();
         }
 
         @Override
@@ -748,69 +759,70 @@ public interface DataPointIndex extends MetadataIndex {
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    final class ThingMetadata implements UUIDKeyEntity<Thing, ThingRecord, ThingDao> {
+    final class TransducerMetadata implements UUIDKeyEntity<Transducer, TransducerRecord, TransducerDao> {
 
-        public static final ThingMetadata INSTANCE = new ThingMetadata();
+        public static final TransducerMetadata INSTANCE = new TransducerMetadata();
 
         @Override
-        public @NonNull com.nubeiot.iotdata.edge.model.tables.Thing table() {
-            return Tables.THING;
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.Transducer table() {
+            return Tables.TRANSDUCER;
         }
 
         @Override
-        public @NonNull Class<Thing> modelClass() {
-            return Thing.class;
+        public @NonNull Class<Transducer> modelClass() {
+            return Transducer.class;
         }
 
         @Override
-        public @NonNull Class<ThingDao> daoClass() {
-            return ThingDao.class;
+        public @NonNull Class<TransducerDao> daoClass() {
+            return TransducerDao.class;
         }
 
         @Override
-        public @NonNull Thing onCreating(RequestData reqData) throws IllegalArgumentException {
-            Thing thing = parseFromRequest(reqData.body());
-            Strings.requireNotBlank(thing.getCode(), "Thing code is mandatory");
-            Strings.requireNotBlank(thing.getType(), "Thing type is mandatory");
-            Strings.requireNotBlank(thing.getCategory(), "Thing category is mandatory");
-            return thing.setId(Optional.ofNullable(thing.getId()).orElseGet(UUID::randomUUID));
+        public @NonNull Transducer onCreating(RequestData reqData) throws IllegalArgumentException {
+            Transducer transducer = UUIDKeyEntity.super.onCreating(reqData);
+            Strings.requireNotBlank(transducer.getCode(), "Transducer code is mandatory");
+            Strings.requireNotBlank(transducer.getType(), "Transducer type is mandatory");
+            Strings.requireNotBlank(transducer.getCategory(), "Transducer category is mandatory");
+            return transducer.setId(Optional.ofNullable(transducer.getId()).orElseGet(UUID::randomUUID));
         }
 
     }
 
 
-    final class PointThingMetadata
-        extends AbstractCompositeMetadata<Long, PointThing, PointThingRecord, PointThingDao, PointThingComposite>
-        implements BigSerialKeyEntity<PointThing, PointThingRecord, PointThingDao> {
+    final class PointTransducerMetadata extends
+                                        AbstractCompositeMetadata<Long, PointTransducer, PointTransducerRecord,
+                                                                     PointTransducerDao, PointTransducerComposite>
+        implements BigSerialKeyEntity<PointTransducer, PointTransducerRecord, PointTransducerDao> {
 
-        public static final PointThingMetadata INSTANCE = new PointThingMetadata().addSubItem(
-            PointCompositeMetadata.INSTANCE, ThingMetadata.INSTANCE);
+        public static final PointTransducerMetadata INSTANCE = new PointTransducerMetadata().addSubItem(
+            PointCompositeMetadata.INSTANCE, TransducerMetadata.INSTANCE);
 
-        public static String genComputedThing(@NonNull ThingType type, @NonNull UUID thingId) {
-            if (type != ThingType.SENSOR) {
+        public static String genComputedTransducer(@NonNull TransducerType type, @NonNull UUID transducerId) {
+            if (type != TransducerType.SENSOR) {
                 return null;
             }
-            return UUID64.uuidToBase64(thingId) + "-" + type.type();
+            return UUID64.uuidToBase64(transducerId) + "-" + type.type();
         }
 
         @Override
-        public @NonNull Class<PointThing> rawClass() {
-            return PointThing.class;
+        public @NonNull Class<PointTransducer> rawClass() {
+            return PointTransducer.class;
         }
 
         @Override
-        public @NonNull Class<PointThingComposite> modelClass() {
-            return PointThingComposite.class;
+        public @NonNull Class<PointTransducerComposite> modelClass() {
+            return PointTransducerComposite.class;
         }
 
         @Override
-        public @NonNull com.nubeiot.iotdata.edge.model.tables.PointThing table() {
-            return Tables.POINT_THING;
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.PointTransducer table() {
+            return Tables.POINT_TRANSDUCER;
         }
 
         @Override
-        public @NonNull Class<PointThingDao> daoClass() {
-            return PointThingDao.class;
+        public @NonNull Class<PointTransducerDao> daoClass() {
+            return PointTransducerDao.class;
         }
 
     }
@@ -841,6 +853,138 @@ public interface DataPointIndex extends MetadataIndex {
         @Override
         public @NonNull Class<EdgeDeviceDao> daoClass() {
             return EdgeDeviceDao.class;
+        }
+
+    }
+
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    final class FolderMetadata implements UUID64KeyEntity<Folder, FolderRecord, FolderDao> {
+
+        public static final FolderMetadata INSTANCE = new FolderMetadata();
+
+        @Override
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.Folder table() {
+            return Tables.FOLDER;
+        }
+
+        @Override
+        public @NonNull Class<Folder> modelClass() {
+            return Folder.class;
+        }
+
+        @Override
+        public @NonNull Class<FolderDao> daoClass() {
+            return FolderDao.class;
+        }
+
+        @Override
+        public @NonNull String jsonKeyName() {
+            return "id";
+        }
+
+        @Override
+        public @NonNull Folder onCreating(@NonNull RequestData reqData) throws IllegalArgumentException {
+            final Folder folder = UUID64KeyEntity.super.onCreating(reqData);
+            Strings.requireNotBlank(folder.getName(), () -> mandatoryField(table().NAME));
+            return folder.setId(Strings.fallback(folder.getId(), UUID64::random));
+        }
+
+    }
+
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    final class FolderGroupMetadata
+        extends AbstractCompositeMetadata<String, FolderGroup, FolderGroupRecord, FolderGroupDao, FolderGroupComposite>
+        implements UUID64KeyEntity<FolderGroup, FolderGroupRecord, FolderGroupDao> {
+
+        public static final FolderGroupMetadata INSTANCE = new FolderGroupMetadata().addSubItem(FolderMetadata.INSTANCE,
+                                                                                                DeviceMetadata.INSTANCE,
+                                                                                                NetworkMetadata.INSTANCE,
+                                                                                                PointCompositeMetadata.INSTANCE);
+
+        @Override
+        public @NonNull com.nubeiot.iotdata.edge.model.tables.FolderGroup table() {
+            return Tables.FOLDER_GROUP;
+        }
+
+        @Override
+        public @NonNull Class<FolderGroupDao> daoClass() {
+            return FolderGroupDao.class;
+        }
+
+        @Override
+        public @NonNull String jsonKeyName() {
+            return "id";
+        }
+
+        @Override
+        public @NonNull List<OrderField<?>> orderFields() {
+            return Arrays.asList(table().LEVEL.asc(), table().FOLDER_ID.asc());
+        }
+
+        @Override
+        public @NonNull Class<FolderGroupComposite> modelClass() {
+            return FolderGroupComposite.class;
+        }
+
+        @Override
+        public @NonNull Class<FolderGroup> rawClass() {
+            return FolderGroup.class;
+        }
+
+        @Override
+        public @NonNull FolderGroupComposite onCreating(@NonNull RequestData reqData) throws IllegalArgumentException {
+            final FolderGroupComposite pojo = super.onCreating(reqData);
+            final Folder folder = pojo.getOther(FolderMetadata.INSTANCE.singularKeyName());
+            final Device device = pojo.getOther(DeviceMetadata.INSTANCE.singularKeyName());
+            final Point point = pojo.getOther(PointCompositeMetadata.INSTANCE.singularKeyName());
+            pojo.setFolderId(Optional.ofNullable(folder).map(Folder::getId).orElseGet(pojo::getFolderId));
+            pojo.setDeviceId(Optional.ofNullable(device).map(Device::getId).orElseGet(pojo::getDeviceId));
+            pojo.setPointId(Optional.ofNullable(point).map(Point::getId).orElseGet(pojo::getPointId));
+            return (FolderGroupComposite) validate(pojo.setId(Strings.fallback(pojo.getId(), UUID64::random)));
+        }
+
+        @Override
+        public @NonNull FolderGroupComposite onUpdating(@NonNull FolderGroup dbData, @NonNull RequestData reqData)
+            throws IllegalArgumentException {
+            return validate(super.onUpdating(dbData, reqData));
+        }
+
+        @Override
+        public @NonNull FolderGroupComposite onPatching(@NonNull FolderGroup dbData, @NonNull RequestData reqData)
+            throws IllegalArgumentException {
+            return validate(super.onPatching(dbData, reqData));
+        }
+
+        public <PP extends FolderGroup> PP validate(@NonNull PP pojo) {
+            pojo.setFolderId(Strings.requireNotBlank(pojo.getFolderId(), () -> mandatoryField(table().FOLDER_ID)));
+            if (pojo.getLevel() == GroupLevel.EDGE) {
+                final UUID networkId = Strings.requireNotBlank(pojo.getNetworkId(),
+                                                               () -> mandatoryField(table().NETWORK_ID));
+                return (PP) pojo.setNetworkId(networkId).setDeviceId(null).setPointId(null).setParentFolderId(null);
+            }
+            if (pojo.getLevel() == GroupLevel.NETWORK) {
+                if (Objects.isNull(pojo.getNetworkId()) && Objects.isNull(pojo.getDeviceId())) {
+                    throw mandatoryField(table().NETWORK_ID);
+                }
+                return (PP) pojo.setPointId(null).setParentFolderId(null);
+            }
+            if (pojo.getLevel() == GroupLevel.DEVICE) {
+                if (Objects.isNull(pojo.getDeviceId())/* && Objects.isNull(pojo.getPointId())*/) {
+                    throw mandatoryField(table().DEVICE_ID);
+                }
+                return (PP) pojo.setParentFolderId(null);
+            }
+            if (pojo.getLevel() == GroupLevel.FOLDER) {
+                pojo.setParentFolderId(
+                    Strings.requireNotBlank(pojo.getParentFolderId(), () -> mandatoryField(table().PARENT_FOLDER_ID)));
+                if (pojo.getParentFolderId().equals(pojo.getFolderId())) {
+                    throw new IllegalArgumentException("Parent folder cannot be same as itself");
+                }
+                return pojo;
+            }
+            throw new IllegalArgumentException("Unknown group level " + pojo.getLevel());
         }
 
     }

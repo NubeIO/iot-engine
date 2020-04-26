@@ -89,7 +89,7 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
                                        .put(NetworkMetadata.INSTANCE.singularKeyName(),
                                             initNetwork(cfgData, edge.getId()));
         return Single.merge(index().stream()
-                                   .filter(meta -> !(meta instanceof PointCompositeMetadata) &&
+                                   .filter(meta -> !(meta instanceof PointMetadata) &&
                                                    data.containsKey(meta.singularKeyName()))
                                    .sorted(Comparator.comparingInt(m -> dep.getOrDefault(m, 999)))
                                    .map(m -> insert(m, data.getValue(m.singularKeyName())))
@@ -114,7 +114,8 @@ public final class DataPointEntityHandler extends AbstractEntityHandler
         final @NonNull EntityServiceCacheIndex cache = sharedData(EntityServiceIndex.DATA_KEY);
         //TODO: hack due to not yet implemented BATCH_DELETE
         //TODO: https://github.com/NubeIO/iot-engine/issues/294
-        if (service.context() != PointThingMetadata.INSTANCE && service.context() != EdgeDeviceMetadata.INSTANCE) {
+        if (service.context() != PointTransducerMetadata.INSTANCE && service.context() != EdgeDeviceMetadata.INSTANCE &&
+            service.context() != FolderGroupMetadata.INSTANCE) {
             cache.add(service.context(), service.address());
         }
     }

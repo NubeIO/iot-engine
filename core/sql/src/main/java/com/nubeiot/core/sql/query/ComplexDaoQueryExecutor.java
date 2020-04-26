@@ -49,11 +49,10 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
     private Configuration runtimeConfiguration;
     private CompositeMetadata base;
     private EntityMetadata context;
-
-    private EntityMetadata resource;
     private final Predicate<EntityMetadata> existPredicate = m -> Objects.nonNull(context) && !m.singularKeyName()
                                                                                                 .equals(
                                                                                                     context.singularKeyName());
+    private EntityMetadata resource;
     private Predicate<EntityMetadata> viewPredicate = existPredicate;
     private EntityReferences references;
 
@@ -127,8 +126,7 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
 
     @Override
     public Single<CP> lookupByPrimaryKey(@NonNull Object primaryKey) {
-        final RequestFilter filter = (RequestFilter) new RequestFilter().put(base.jsonKeyName(),
-                                                                             JsonData.checkAndConvert(primaryKey));
+        final RequestFilter filter = new RequestFilter().put(base.jsonKeyName(), JsonData.checkAndConvert(primaryKey));
         return executeAny(queryBuilder().viewOne(filter, null)).map(r -> Optional.ofNullable(r.fetchOne(toMapper())))
                                                                .filter(Optional::isPresent)
                                                                .switchIfEmpty(Single.error(base.notFound(primaryKey)))
@@ -153,13 +151,10 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
                     throw new IllegalArgumentException("Missing " + resource.singularKeyName() + " data");
                 }
                 final RequestFilter filter = reqData.filter();
-                return isExist(cKey, sKey, filter).filter(p -> Objects.isNull(p.prop(context.requestKeyName())))
-                                                  .switchIfEmpty(Single.error(
-                                                      base.alreadyExisted(base.msg(filter, references.keys()))))
-                                                  .onErrorResumeNext(EntityQueryExecutor::sneakyThrowDBError)
-                                                  .map(k -> AuditDecorator.addCreationAudit(reqData, base, pojo))
-                                                  .flatMap(p -> ((Single) dao(base).insertReturningPrimary(p)).map(
-                                                      k -> DMLPojo.builder().request(p).primaryKey(k).build()));
+                return isAbleToInsert(cKey, sKey, filter).map(k -> AuditDecorator.addCreationAudit(reqData, base, pojo))
+                                                         .flatMap(p -> doInsertReturnKey(base, p,
+                                                                                         getKey(p.toJson(), base)).map(
+                                                             k -> DMLPojo.builder().request(p).primaryKey(k).build()));
             }
             final Maybe<Boolean> isExist = fetchExists(queryBuilder().exist(context, cKey));
             final String sKeyN = resource.requestKeyName();
@@ -222,15 +217,20 @@ final class ComplexDaoQueryExecutor<CP extends CompositePojo> extends JDBCRXGene
         return Optional.ofNullable(data).map(d -> d.getValue(metadata.jsonKeyName())).orElse(null);
     }
 
-    private Single<CP> isExist(@NonNull Object ctxKey, @NonNull Object resourceKey, @NonNull RequestFilter filter) {
-        final QueryBuilder queryBuilder = queryBuilder().predicate(existPredicate);
-        final Maybe<Boolean> isExist = fetchExists(queryBuilder.exist(context, ctxKey));
-        return isExist.switchIfEmpty(Single.error(context.notFound(ctxKey)))
-                      .flatMap(e -> executeAny(queryBuilder.existQueryByJoin(filter)))
-                      .map(r -> Optional.ofNullable(r.fetchOne(toMapper())))
-                      .filter(Optional::isPresent)
-                      .switchIfEmpty(Single.error(resource.notFound(resourceKey)))
-                      .map(Optional::get);
+    private Single<Boolean> isAbleToInsert(@NonNull Object ctxKey, @NonNull Object resourceKey,
+                                           @NonNull RequestFilter filter) {
+        final QueryBuilder qb = queryBuilder().predicate(existPredicate);
+        return fetchExists(qb.exist(context, ctxKey)).switchIfEmpty(Single.error(context.notFound(ctxKey)))
+                                                     .flatMapMaybe(b -> fetchExists(qb.exist(resource, resourceKey)))
+                                                     .switchIfEmpty(Single.error(resource.notFound(resourceKey)))
+                                                     .flatMap(e -> executeAny(qb.existQueryByJoin(filter)))
+                                                     .map(r -> Optional.ofNullable(r.fetchOne(toMapper()))
+                                                                       .map(cp -> cp.prop(base.jsonKeyName())))
+                                                     .filter(op -> !op.isPresent())
+                                                     .switchIfEmpty(Single.error(
+                                                         base.alreadyExisted(base.msg(filter, references.keys()))))
+                                                     .onErrorResumeNext(EntityQueryExecutor::sneakyThrowDBError)
+                                                     .map(cp -> true);
     }
 
     private RecordMapper<? super Record, CP> toMapper() {

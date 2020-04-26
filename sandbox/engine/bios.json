@@ -171,6 +171,63 @@
                 }
               },
               "__builtin_data__": {
+                "transducer": [
+                  {
+                    "id": "08d66e92-f15d-4fdb-9ed5-fd165b212591",
+                    "code": "DROPLET-2CB2B763-T",
+                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535",
+                    "type": "SENSOR",
+                    "category": "TEMP",
+                    "label": {
+                      "label": "Droplet Temp"
+                    },
+                    "measure_unit": "celsius"
+                  },
+                  {
+                    "id": "5eb7da66-8013-4cc4-9608-ead768eca665",
+                    "code": "DROPLET-2CB2B763-H",
+                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535",
+                    "type": "SENSOR",
+                    "category": "HUMIDITY",
+                    "label": {
+                      "label": "Droplet Humidity"
+                    },
+                    "measure_unit": "percentage"
+                  },
+                  {
+                    "id": "76d34f4e-3b20-4776-99c7-d93d79d5b4a6",
+                    "code": "HVAC-XYZ-FAN-CONTROL",
+                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
+                    "type": "ACTUATOR",
+                    "category": "SWITCH",
+                    "label": {
+                      "label": "HVAC Fan Control"
+                    },
+                    "measure_unit": "bool"
+                  },
+                  {
+                    "id": "388519ef-797f-49ca-a613-204b4587ef28",
+                    "code": "HVAC-XYZ-FAN",
+                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
+                    "type": "SENSOR",
+                    "category": "VELOCITY",
+                    "label": {
+                      "label": "HVAC Fan"
+                    },
+                    "measure_unit": "revolutions_per_minute"
+                  },
+                  {
+                    "id": "960f5686-1dd6-48c0-bb5b-bec79c2b5788",
+                    "code": "HVAC-XYZ-TEMP-01",
+                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
+                    "type": "SENSOR",
+                    "category": "TEMP",
+                    "label": {
+                      "label": "HVAC Temp"
+                    },
+                    "measure_unit": "celsius"
+                  }
+                ],
                 "data": [
                   {
                     "point": "3bea3c91-850d-4409-b594-8ffb5aa6b8a0",
@@ -201,47 +258,6 @@
                       "7": 260.0,
                       "16": 250.0
                     }
-                  }
-                ],
-                "point_thing": [
-                  {
-                    "point_id": "3bea3c91-850d-4409-b594-8ffb5aa6b8a0",
-                    "thing_id": "5eb7da66-8013-4cc4-9608-ead768eca665",
-                    "computed_thing": "XrfaZoATTMSWCOrXaOymZQ-SENSOR",
-                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535",
-                    "network_id": "e3eab951-932e-4fcc-a925-08b31e1014a0",
-                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92"
-                  },
-                  {
-                    "point_id": "1efaf662-1333-48d1-a60f-8fc60f259f0e",
-                    "thing_id": "08d66e92-f15d-4fdb-9ed5-fd165b212591",
-                    "computed_thing": "CNZukvFdT9ue1f0WWyElkQ-SENSOR",
-                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535",
-                    "network_id": "e3eab951-932e-4fcc-a925-08b31e1014a0",
-                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92"
-                  },
-                  {
-                    "point_id": "edbe3acf-5fca-4672-b633-72aa73004917",
-                    "thing_id": "960f5686-1dd6-48c0-bb5b-bec79c2b5788",
-                    "computed_thing": "lg9Whh3WSMC7W77HnCtXiA-SENSOR",
-                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
-                    "network_id": "01fbb11e-45a6-479b-91a4-003534770c1c",
-                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92"
-                  },
-                  {
-                    "point_id": "6997056d-4c1b-4d30-b205-969432f72a93",
-                    "thing_id": "388519ef-797f-49ca-a613-204b4587ef28",
-                    "computed_thing": "OIUZ73l_ScqmEyBLRYfvKA-SENSOR",
-                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
-                    "network_id": "01fbb11e-45a6-479b-91a4-003534770c1c",
-                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92"
-                  },
-                  {
-                    "point_id": "463fbdf0-388d-447e-baef-96dbb8232dd7",
-                    "thing_id": "76d34f4e-3b20-4776-99c7-d93d79d5b4a6",
-                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
-                    "network_id": "01fbb11e-45a6-479b-91a4-003534770c1c",
-                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92"
                   }
                 ],
                 "history": [
@@ -284,6 +300,88 @@
                     "point": "edbe3acf-5fca-4672-b633-72aa73004917",
                     "time": "2019-08-10T09:18:15Z",
                     "value": 20.6
+                  }
+                ],
+                "folder_group": [
+                  {
+                    "id": "_IuzgpsuT7uXHZ0PeXh5xQ",
+                    "level": "NETWORK",
+                    "folder_id": "JWssmgTOSYWlYaZGUXlsSw",
+                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535"
+                  },
+                  {
+                    "id": "8P6qsXSmQPyXQWw6vXarNA",
+                    "level": "NETWORK",
+                    "folder_id": "JWssmgTOSYWlYaZGUXlsSw",
+                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5"
+                  },
+                  {
+                    "id": "107fw3juRaGEio82gMtRUQ",
+                    "level": "DEVICE",
+                    "folder_id": "8ODBGHhLRsmVzSJ3pdZRYw",
+                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535"
+                  },
+                  {
+                    "id": "PdCPgZ8hRiyyUE_qssqGLg",
+                    "level": "DEVICE",
+                    "folder_id": "pYZnqss_S_Sp4IeK67eT4g",
+                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535",
+                    "point_id": "1efaf662-1333-48d1-a60f-8fc60f259f0e"
+                  },
+                  {
+                    "id": "YLtFqjogQGqvJOPTHAjIaw",
+                    "level": "DEVICE",
+                    "folder_id": "pYZnqss_S_Sp4IeK67eT4g",
+                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535",
+                    "point_id": "3bea3c91-850d-4409-b594-8ffb5aa6b8a0"
+                  },
+                  {
+                    "id": "YEALan3dQraUs3k6XU5v-A",
+                    "level": "DEVICE",
+                    "folder_id": "ffgoHB98QpuvF9nG2z_-qA",
+                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535",
+                    "point_id": "1efaf662-1333-48d1-a60f-8fc60f259f0e"
+                  }
+                ],
+                "point_transducer": [
+                  {
+                    "point_id": "3bea3c91-850d-4409-b594-8ffb5aa6b8a0",
+                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535",
+                    "transducer_id": "5eb7da66-8013-4cc4-9608-ead768eca665",
+                    "computed_transducer": "XrfaZoATTMSWCOrXaOymZQ-SENSOR",
+                    "network_id": "e3eab951-932e-4fcc-a925-08b31e1014a0",
+                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92"
+                  },
+                  {
+                    "point_id": "1efaf662-1333-48d1-a60f-8fc60f259f0e",
+                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535",
+                    "transducer_id": "08d66e92-f15d-4fdb-9ed5-fd165b212591",
+                    "computed_transducer": "CNZukvFdT9ue1f0WWyElkQ-SENSOR",
+                    "network_id": "e3eab951-932e-4fcc-a925-08b31e1014a0",
+                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92"
+                  },
+                  {
+                    "point_id": "edbe3acf-5fca-4672-b633-72aa73004917",
+                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
+                    "transducer_id": "960f5686-1dd6-48c0-bb5b-bec79c2b5788",
+                    "computed_transducer": "lg9Whh3WSMC7W77HnCtXiA-SENSOR",
+                    "network_id": "01fbb11e-45a6-479b-91a4-003534770c1c",
+                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92"
+                  },
+                  {
+                    "point_id": "6997056d-4c1b-4d30-b205-969432f72a93",
+                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
+                    "transducer_id": "388519ef-797f-49ca-a613-204b4587ef28",
+                    "computed_transducer": "OIUZ73l_ScqmEyBLRYfvKA-SENSOR",
+                    "network_id": "01fbb11e-45a6-479b-91a4-003534770c1c",
+                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92"
+                  },
+                  {
+                    "point_id": "463fbdf0-388d-447e-baef-96dbb8232dd7",
+                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
+                    "transducer_id": "76d34f4e-3b20-4776-99c7-d93d79d5b4a6",
+                    "network_id": "01fbb11e-45a6-479b-91a4-003534770c1c",
+                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92"
                   }
                 ],
                 "point": [
@@ -458,6 +556,28 @@
                   "customer_code": "NUBEIO",
                   "site_code": "SYDNEY-00001"
                 },
+                "folder": [
+                  {
+                    "id": "JWssmgTOSYWlYaZGUXlsSw",
+                    "name": "folder-1",
+                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92"
+                  },
+                  {
+                    "id": "8ODBGHhLRsmVzSJ3pdZRYw",
+                    "name": "folder-2",
+                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92"
+                  },
+                  {
+                    "id": "pYZnqss_S_Sp4IeK67eT4g",
+                    "name": "folder-3",
+                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92"
+                  },
+                  {
+                    "id": "ffgoHB98QpuvF9nG2z_-qA",
+                    "name": "folder-4",
+                    "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92"
+                  }
+                ],
                 "rt_setting": [
                   {
                     "point": "1efaf662-1333-48d1-a60f-8fc60f259f0e",
@@ -490,85 +610,66 @@
                   {
                     "id": "e43aa03a-4746-4fb5-815d-ee62f709b535",
                     "code": "DROPLET_01",
-                    "type": "DROPLET",
                     "protocol": "WIRE",
+                    "type": "DROPLET",
                     "manufacturer": "NubeIO"
                   },
                   {
                     "id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
                     "code": "HVAC_XYZ",
-                    "type": "HVAC",
                     "protocol": "BACNET",
+                    "type": "HVAC",
                     "manufacturer": "Lennox"
                   }
                 ],
                 "edge_device": [
                   {
                     "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92",
-                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535",
-                    "network_id": "e3eab951-932e-4fcc-a925-08b31e1014a0"
+                    "network_id": "e3eab951-932e-4fcc-a925-08b31e1014a0",
+                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535"
                   },
                   {
                     "edge_id": "d7cd3f57-a188-4462-b959-df7a23994c92",
-                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
-                    "network_id": "01fbb11e-45a6-479b-91a4-003534770c1c"
+                    "network_id": "01fbb11e-45a6-479b-91a4-003534770c1c",
+                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5"
                   }
                 ],
-                "thing": [
+                "dispatcher": [
                   {
-                    "id": "08d66e92-f15d-4fdb-9ed5-fd165b212591",
-                    "code": "DROPLET-2CB2B763-T",
-                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535",
-                    "type": "SENSOR",
-                    "category": "TEMP",
-                    "label": {
-                      "label": "Droplet Temp"
-                    },
-                    "measure_unit": "celsius"
+                    "entity": "network",
+                    "action": "CREATE",
+                    "protocol": "BACNET",
+                    "address": "bacnet.dispatcher.network",
+                    "state": "ENABLED"
                   },
                   {
-                    "id": "5eb7da66-8013-4cc4-9608-ead768eca665",
-                    "code": "DROPLET-2CB2B763-H",
-                    "device_id": "e43aa03a-4746-4fb5-815d-ee62f709b535",
-                    "type": "SENSOR",
-                    "category": "HUMIDITY",
-                    "label": {
-                      "label": "Droplet Humidity"
-                    },
-                    "measure_unit": "percentage"
+                    "entity": "network",
+                    "action": "REMOVE",
+                    "protocol": "BACNET",
+                    "address": "bacnet.dispatcher.network",
+                    "state": "ENABLED"
                   },
                   {
-                    "id": "76d34f4e-3b20-4776-99c7-d93d79d5b4a6",
-                    "code": "HVAC-XYZ-FAN-CONTROL",
-                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
-                    "type": "ACTUATOR",
-                    "category": "SWITCH",
-                    "label": {
-                      "label": "HVAC Fan Control"
-                    },
-                    "measure_unit": "bool"
+                    "entity": "device",
+                    "action": "CREATE",
+                    "protocol": "BACNET",
+                    "address": "bacnet.dispatcher.device",
+                    "state": "DISABLED"
                   },
                   {
-                    "id": "388519ef-797f-49ca-a613-204b4587ef28",
-                    "code": "HVAC-XYZ-FAN",
-                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
-                    "type": "SENSOR",
-                    "category": "VELOCITY",
-                    "label": {
-                      "label": "HVAC Fan"
-                    },
-                    "measure_unit": "revolutions_per_minute"
+                    "entity": "point",
+                    "action": "CREATE",
+                    "protocol": "BACNET",
+                    "address": "bacnet.dispatcher.point",
+                    "state": "ENABLED"
                   },
                   {
-                    "id": "960f5686-1dd6-48c0-bb5b-bec79c2b5788",
-                    "code": "HVAC-XYZ-TEMP-01",
-                    "device_id": "28a4ba1b-154d-4bbf-8537-320be70e50e5",
-                    "type": "SENSOR",
-                    "category": "TEMP",
-                    "label": {
-                      "label": "HVAC Temp"
-                    },
-                    "measure_unit": "celsius"
+                    "entity": "tag",
+                    "action": "CREATE",
+                    "protocol": "BACNET",
+                    "address": "bacnet.dispatcher.tag",
+                    "global": true,
+                    "state": "ENABLED"
                   }
                 ],
                 "history_setting": [

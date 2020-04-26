@@ -42,9 +42,11 @@ public final class HttpStatusMapping {
         map.put(ErrorCode.INVALID_ARGUMENT, HttpResponseStatus.BAD_REQUEST);
         map.put(ErrorCode.HTTP_ERROR, HttpResponseStatus.BAD_REQUEST);
 
+        map.put(ErrorCode.SERVICE_NOT_FOUND, HttpResponseStatus.NOT_FOUND);
         map.put(ErrorCode.ALREADY_EXIST, HttpResponseStatus.UNPROCESSABLE_ENTITY);
         map.put(ErrorCode.BEING_USED, HttpResponseStatus.UNPROCESSABLE_ENTITY);
 
+        map.put(ErrorCode.CONFLICT_ERROR, HttpResponseStatus.CONFLICT);
         map.put(ErrorCode.STATE_ERROR, HttpResponseStatus.CONFLICT);
 
         map.put(ErrorCode.AUTHENTICATION_ERROR, HttpResponseStatus.UNAUTHORIZED);

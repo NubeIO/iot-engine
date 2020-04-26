@@ -16,7 +16,7 @@ import com.nubeiot.edge.module.datapoint.MockData;
 import com.nubeiot.edge.module.datapoint.MockData.PrimaryKey;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 
-public class PointThingVerticleTest extends BaseDataPointVerticleTest {
+public class PointTransducerVerticleTest extends BaseDataPointVerticleTest {
 
     @Override
     protected JsonObject builtinData() {
@@ -24,30 +24,30 @@ public class PointThingVerticleTest extends BaseDataPointVerticleTest {
     }
 
     @Test
-    public void test_get_points_by_thing_200(TestContext context) {
+    public void test_get_points_by_transducer_200(TestContext context) {
         final JsonObject expected = new JsonObject(
             "{\"points\":[{\"id\":4,\"point\":{\"id\":\"" + PrimaryKey.P_BACNET_FAN + "\"," +
             "\"code\":\"HVAC_01_FAN\",\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.BACNET_NETWORK +
             "\",\"enabled\":true,\"protocol\":\"BACNET\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\"," +
             "\"measure_unit\":\"revolutions_per_minute\",\"precision\":3,\"offset\":0}}]}");
-        assertRestByClient(context, HttpMethod.GET, "/api/s/thing/" + PrimaryKey.THING_FAN_HVAC + "/point", 200,
-                           expected);
+        assertRestByClient(context, HttpMethod.GET, "/api/s/transducer/" + PrimaryKey.TRANSDUCER_FAN_HVAC + "/point",
+                           200, expected);
     }
 
     @Test
-    public void test_get_points_by_thing_n_device_200(TestContext context) {
+    public void test_get_points_by_transducer_n_device_200(TestContext context) {
         final JsonObject expected = new JsonObject(
             "{\"points\":[{\"id\":4,\"point\":{\"id\":\"" + PrimaryKey.P_BACNET_FAN + "\",\"code\":\"HVAC_01_FAN\"," +
             "\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.BACNET_NETWORK + "\",\"enabled\":true," +
             "\"protocol\":\"BACNET\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\"," +
             "\"measure_unit\":\"revolutions_per_minute\",\"precision\":3,\"offset\":0}}]}");
         assertRestByClient(context, HttpMethod.GET,
-                           "/api/s/device/" + PrimaryKey.DEVICE_HVAC + "/thing/" + PrimaryKey.THING_FAN_HVAC + "/point",
-                           200, expected);
+                           "/api/s/device/" + PrimaryKey.DEVICE_HVAC + "/transducer/" + PrimaryKey.TRANSDUCER_FAN_HVAC +
+                           "/point", 200, expected);
     }
 
     @Test
-    public void test_get_points_by_thing_n_device_n_network_200(TestContext context) {
+    public void test_get_points_by_transducer_n_device_n_network_200(TestContext context) {
         final JsonObject expected = new JsonObject(
             "{\"points\":[{\"id\":4,\"point\":{\"id\":\"" + PrimaryKey.P_BACNET_FAN + "\",\"code\":\"HVAC_01_FAN\"," +
             "\"edge\":\"" + PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.BACNET_NETWORK + "\",\"enabled\":true," +
@@ -55,34 +55,50 @@ public class PointThingVerticleTest extends BaseDataPointVerticleTest {
             "\"measure_unit\":\"revolutions_per_minute\",\"precision\":3,\"offset\":0}}]}");
         assertRestByClient(context, HttpMethod.GET,
                            "/api/s/network/" + PrimaryKey.BACNET_NETWORK + "/device/" + PrimaryKey.DEVICE_HVAC +
-                           "/thing/" + PrimaryKey.THING_FAN_HVAC + "/point", 200, expected);
+                           "/transducer/" + PrimaryKey.TRANSDUCER_FAN_HVAC + "/point", 200, expected);
     }
 
     @Test
-    public void test_get_point_by_thing_404(TestContext context) {
+    public void test_get_point_by_transducer_404(TestContext context) {
         final JsonObject expected = new JsonObject().put("code", ErrorCode.NOT_FOUND)
-                                                    .put("message", "Not found resource with " + "thing_id=" +
-                                                                    PrimaryKey.THING_FAN_HVAC + " and point_id=" +
+                                                    .put("message", "Not found resource with " + "transducer_id=" +
+                                                                    PrimaryKey.TRANSDUCER_FAN_HVAC + " and point_id=" +
                                                                     PrimaryKey.P_GPIO_TEMP);
         assertRestByClient(context, HttpMethod.GET,
-                           "/api/s/thing/" + PrimaryKey.THING_FAN_HVAC + "/point/" + PrimaryKey.P_GPIO_TEMP, 404,
-                           expected);
+                           "/api/s/transducer/" + PrimaryKey.TRANSDUCER_FAN_HVAC + "/point/" + PrimaryKey.P_GPIO_TEMP,
+                           404, expected);
     }
 
     @Test
-    public void test_get_point_by_thing_n_device_404(TestContext context) {
+    public void test_get_point_by_transducer_n_device_404(TestContext context) {
         final JsonObject expected = new JsonObject().put("code", ErrorCode.NOT_FOUND)
-                                                    .put("message", "Not found resource with thing_id=" +
-                                                                    PrimaryKey.THING_FAN_HVAC + " and device_id=" +
+                                                    .put("message", "Not found resource with transducer_id=" +
+                                                                    PrimaryKey.TRANSDUCER_FAN_HVAC + " and device_id=" +
                                                                     PrimaryKey.DEVICE_DROPLET + " and point_id=" +
                                                                     PrimaryKey.P_GPIO_TEMP);
-        assertRestByClient(context, HttpMethod.GET,
-                           "/api/s/device/" + PrimaryKey.DEVICE_DROPLET + "/thing/" + PrimaryKey.THING_FAN_HVAC +
-                           "/point/" + PrimaryKey.P_GPIO_TEMP, 404, expected);
+        assertRestByClient(context, HttpMethod.GET, "/api/s/device/" + PrimaryKey.DEVICE_DROPLET + "/transducer/" +
+                                                    PrimaryKey.TRANSDUCER_FAN_HVAC + "/point/" + PrimaryKey.P_GPIO_TEMP,
+                           404, expected);
     }
 
     @Test
-    public void test_create_point_by_thing_n_device_201(TestContext context) {
+    public void test_create_point_by_transducer_n_device_201(TestContext context) {
+        final UUID uuid = UUID.randomUUID();
+        final Point newOne = MockData.search(PrimaryKey.P_BACNET_TEMP).setId(uuid).setCode("NEW_TEMP");
+        final JsonObject expected = new JsonObject(
+            "{\"resource\":{\"id\":6,\"point\":{\"id\":\"" + uuid + "\",\"code\":\"NEW_TEMP\",\"edge\":\"" +
+            PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.BACNET_NETWORK + "\",\"label\":null,\"enabled\":true," +
+            "\"protocol\":\"BACNET\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"measure_unit\":\"celsius\"," +
+            "\"unit_alias\":null,\"min_scale\":null,\"max_scale\":null,\"precision\":3,\"offset\":0,\"version\":null," +
+            "\"metadata\":null}},\"action\":\"CREATE\",\"status\":\"SUCCESS\"}");
+        final JsonObject reqBody = new JsonObject().put("point", JsonPojo.from(newOne).toJson());
+        assertRestByClient(context, HttpMethod.POST, "/api/s/device/" + PrimaryKey.DEVICE_HVAC + "/transducer/" +
+                                                     PrimaryKey.TRANSDUCER_SWITCH_HVAC + "/point",
+                           RequestData.builder().body(reqBody).build(), 201, expected);
+    }
+
+    @Test
+    public void test_create_point_by_transducer_201(TestContext context) {
         final UUID uuid = UUID.randomUUID();
         final Point newOne = MockData.search(PrimaryKey.P_BACNET_TEMP).setId(uuid).setCode("NEW_TEMP");
         final JsonObject expected = new JsonObject(
@@ -93,39 +109,24 @@ public class PointThingVerticleTest extends BaseDataPointVerticleTest {
             "\"metadata\":null}},\"action\":\"CREATE\",\"status\":\"SUCCESS\"}");
         final JsonObject reqBody = new JsonObject().put("point", JsonPojo.from(newOne).toJson());
         assertRestByClient(context, HttpMethod.POST,
-                           "/api/s/device/" + PrimaryKey.DEVICE_HVAC + "/thing/" + PrimaryKey.THING_SWITCH_HVAC +
-                           "/point", RequestData.builder().body(reqBody).build(), 201, expected);
-    }
-
-    @Test
-    public void test_create_point_by_thing_201(TestContext context) {
-        final UUID uuid = UUID.randomUUID();
-        final Point newOne = MockData.search(PrimaryKey.P_BACNET_TEMP).setId(uuid).setCode("NEW_TEMP");
-        final JsonObject expected = new JsonObject(
-            "{\"resource\":{\"id\":6,\"point\":{\"id\":\"" + uuid + "\",\"code\":\"NEW_TEMP\",\"edge\":\"" +
-            PrimaryKey.EDGE + "\",\"network\":\"" + PrimaryKey.BACNET_NETWORK + "\",\"label\":null,\"enabled\":true," +
-            "\"protocol\":\"BACNET\",\"kind\":\"INPUT\",\"type\":\"DIGITAL\",\"measure_unit\":\"celsius\"," +
-            "\"unit_alias\":null,\"min_scale\":null,\"max_scale\":null,\"precision\":3,\"offset\":0,\"version\":null," +
-            "\"metadata\":null}},\"action\":\"CREATE\",\"status\":\"SUCCESS\"}");
-        final JsonObject reqBody = new JsonObject().put("point", JsonPojo.from(newOne).toJson());
-        assertRestByClient(context, HttpMethod.POST, "/api/s/thing/" + PrimaryKey.THING_SWITCH_HVAC + "/point",
+                           "/api/s/transducer/" + PrimaryKey.TRANSDUCER_SWITCH_HVAC + "/point",
                            RequestData.builder().body(reqBody).build(), 201, expected);
     }
 
     @Test
-    public void test_create_point_by_thing_unmatched_device_201(TestContext context) {
+    public void test_create_point_by_transducer_unmatched_device_201(TestContext context) {
         final UUID uuid = UUID.randomUUID();
         final Point newOne = MockData.search(PrimaryKey.P_BACNET_TEMP).setId(uuid).setCode("NEW_TEMP");
         final JsonObject expected = new JsonObject().put("code", ErrorCode.INVALID_ARGUMENT)
                                                     .put("message",
                                                          "Input device id " + PrimaryKey.DEVICE_DROPLET + " is " +
                                                          "unmatched with referenced device id " +
-                                                         PrimaryKey.DEVICE_HVAC + " in Thing " +
-                                                         PrimaryKey.THING_SWITCH_HVAC);
+                                                         PrimaryKey.DEVICE_HVAC + " in transducer " +
+                                                         PrimaryKey.TRANSDUCER_SWITCH_HVAC);
         final JsonObject reqBody = new JsonObject().put("point", JsonPojo.from(newOne).toJson());
-        assertRestByClient(context, HttpMethod.POST,
-                           "/api/s/device/" + PrimaryKey.DEVICE_DROPLET + "/thing/" + PrimaryKey.THING_SWITCH_HVAC +
-                           "/point", RequestData.builder().body(reqBody).build(), 400, expected);
+        assertRestByClient(context, HttpMethod.POST, "/api/s/device/" + PrimaryKey.DEVICE_DROPLET + "/transducer/" +
+                                                     PrimaryKey.TRANSDUCER_SWITCH_HVAC + "/point",
+                           RequestData.builder().body(reqBody).build(), 400, expected);
     }
 
 }
