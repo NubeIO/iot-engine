@@ -9,6 +9,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 
+import com.nubeiot.core.TestHelper.JsonHelper;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
@@ -39,7 +40,7 @@ public class FolderByDeviceVerticleTest extends FolderGroupVerticleTest {
     }
 
     @Test
-    public void test_create_folder_in_device(TestContext context) {
+    public void test_create_folder_has_id_in_device(TestContext context) {
         final String path = "/api/s/device/" + UUID64.uuidToBase64(PrimaryKey.DEVICE_DROPLET) + "/folder";
         final String id = UUID64.random();
         final JsonObject folder = new JsonObject().put("name", "folder-xx").put("id", id);
@@ -47,6 +48,16 @@ public class FolderByDeviceVerticleTest extends FolderGroupVerticleTest {
         final Folder expected = new Folder().setId(id).setName("folder-xx");
         assertRestByClient(context, HttpMethod.POST, path, reqData, 201,
                            EntityTransformer.fullResponse(EventAction.CREATE, JsonPojo.from(expected).toJson()));
+    }
+
+    @Test
+    public void test_create_folder_no_id_in_device(TestContext context) {
+        final String path = "/api/s/device/" + UUID64.uuidToBase64(PrimaryKey.DEVICE_DROPLET) + "/folder";
+        final JsonObject folder = new JsonObject().put("name", "folder-no-id");
+        final RequestData reqData = RequestData.builder().body(new JsonObject().put("folder", folder)).build();
+        assertRestByClient(context, HttpMethod.POST, path, reqData, 201,
+                           EntityTransformer.fullResponse(EventAction.CREATE, folder),
+                           JsonHelper.ignore("resource.id"));
     }
 
     @Test
