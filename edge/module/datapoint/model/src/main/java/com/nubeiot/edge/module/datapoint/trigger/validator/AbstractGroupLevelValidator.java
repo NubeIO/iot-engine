@@ -29,4 +29,12 @@ abstract class AbstractGroupLevelValidator implements GroupLevelValidator {
         return table().LEVEL.eq(group.getLevel()).and(table().FOLDER_ID.eq(group.getFolderId()));
     }
 
+    protected final void debug(String message) {
+        logger().debug("FolderGroupTrigger::{}", message);
+    }
+
+    protected final String baseExistedLog(@NonNull FolderGroup group) {
+        return "level=" + group.getLevel() + " and folder_id=" + group.getFolderId();
+    }
+
 }

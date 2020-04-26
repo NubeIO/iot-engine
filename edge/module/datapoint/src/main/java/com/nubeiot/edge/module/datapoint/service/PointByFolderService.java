@@ -7,8 +7,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.nubeiot.core.event.EventAction;
-import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;
 import com.nubeiot.core.sql.EntityMetadata;
@@ -44,11 +42,10 @@ public final class PointByFolderService extends FolderGroupService {
 
     @Override
     public final Set<EventMethodDefinition> definitions() {
-        final @NonNull Collection<EventAction> events = getAvailableEvents();
         return Stream.of(super.definitions(),
-                         EntityHttpService.createDefinitions(ActionMethodMapping.CRUD_MAP, events, resource(), true,
+                         EntityHttpService.createDefinitions(getAvailableEvents(), resource(), true,
                                                              DeviceMetadata.INSTANCE, reference()),
-                         EntityHttpService.createDefinitions(ActionMethodMapping.DQL_MAP, events, resource(), true,
+                         EntityHttpService.createDefinitions(getAvailableEvents(), resource(), true,
                                                              NetworkMetadata.INSTANCE, DeviceMetadata.INSTANCE,
                                                              reference()))
                      .flatMap(Collection::stream)

@@ -37,18 +37,28 @@ public class FolderByPointVerticleTest extends FolderGroupVerticleTest {
     public void test_create_new_folder_then_attach_by_point(TestContext context) {
         final String folderId = UUID64.random();
         final String path = "/api/s/point/" + PrimaryKey.P_GPIO_HUMIDITY + "/folder";
-        final JsonObject req = new JsonObject().put("id", folderId).put("name", "folder-p-test");
-        assertRestByClient(context, HttpMethod.POST, path,
-                           RequestData.builder().body(new JsonObject().put("folder", req)).build(), 201,
-                           EntityTransformer.fullResponse(EventAction.CREATE, req));
+        final JsonObject folder = new JsonObject().put("id", folderId).put("name", "folder-p-test");
+        final RequestData reqData = RequestData.builder()
+                                               .body(new JsonObject().put("folder", folder)
+                                                                     .put("device_id",
+                                                                          PrimaryKey.DEVICE_DROPLET.toString()))
+                                               .build();
+        assertRestByClient(context, HttpMethod.POST, path, reqData, 201,
+                           EntityTransformer.fullResponse(EventAction.CREATE, folder));
     }
 
     @Test
     public void test_attach_existed_point_into_existed_folder(TestContext context) {
         final String path = "/api/s/point/" + PrimaryKey.P_GPIO_HUMIDITY + "/folder";
-        assertRestByClient(context, HttpMethod.POST, path,
-                           RequestData.builder().body(new JsonObject().put("folder_id", PrimaryKey.FOLDER_4)).build(),
-                           201, EntityTransformer.fullResponse(EventAction.CREATE, new JsonObject()));
+        final RequestData req = RequestData.builder()
+                                           .body(new JsonObject().put("folder_id", PrimaryKey.FOLDER_4)
+                                                                 .put("device_id",
+                                                                      PrimaryKey.DEVICE_DROPLET.toString()))
+                                           .build();
+        final JsonObject resp = EntityTransformer.fullResponse(EventAction.CREATE,
+                                                               new JsonObject().put("id", PrimaryKey.FOLDER_4)
+                                                                               .put("name", "folder-4"));
+        assertRestByClient(context, HttpMethod.POST, path, req, 201, resp);
     }
 
 }

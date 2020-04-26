@@ -2,7 +2,7 @@ package com.nubeiot.edge.module.datapoint.trigger.validator;
 
 import org.jooq.DSLContext;
 
-import com.nubeiot.core.exceptions.AlreadyExistException;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.FolderGroupMetadata;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.NetworkMetadata;
 import com.nubeiot.iotdata.edge.model.tables.pojos.FolderGroup;
 
@@ -26,7 +26,8 @@ public final class GroupEdgeValidator extends AbstractGroupLevelValidator {
     @Override
     public @NonNull FolderGroup validateExisted(@NonNull FolderGroup group) {
         if (dsl().fetchExists(table(), baseCondition(group).and(table().NETWORK_ID.eq(group.getNetworkId())))) {
-            throw new AlreadyExistException("Folder id " + group.getFolderId() + " is already existed");
+            throw FolderGroupMetadata.INSTANCE.alreadyExisted(
+                baseExistedLog(group) + " and network_id=" + group.getNetworkId());
         }
         return group;
     }

@@ -101,7 +101,7 @@ public class PointDeviceVerticleTest extends BaseDataPointVerticleTest {
 
     @Test
     public void test_unable_create_point_by_device_n_network_404(TestContext context) {
-        final JsonObject expected = new JsonObject().put("code", ErrorCode.NOT_FOUND)
+        final JsonObject expected = new JsonObject().put("code", ErrorCode.SERVICE_NOT_FOUND)
                                                     .put("message",
                                                          "Unsupported HTTP method POST in '/network/default/device/" +
                                                          PrimaryKey.DEVICE_DROPLET + "/point'");

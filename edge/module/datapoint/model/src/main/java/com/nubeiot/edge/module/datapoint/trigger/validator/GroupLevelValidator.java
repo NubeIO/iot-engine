@@ -4,6 +4,9 @@ import java.util.UUID;
 
 import org.jooq.DSLContext;
 
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+
 import com.nubeiot.iotdata.edge.model.tables.pojos.FolderGroup;
 
 import lombok.Builder;
@@ -22,6 +25,10 @@ public interface GroupLevelValidator {
     default @NonNull FolderGroup compute(@NonNull FolderGroup group) {
         final FolderRef fr = computeReference(group);
         return validateExisted(group.setNetworkId(fr.networkId()).setDeviceId(fr.deviceId()).setPointId(fr.pointId()));
+    }
+
+    default Logger logger() {
+        return LoggerFactory.getLogger(this.getClass());
     }
 
     interface GroupLevelValidatorDecorator extends GroupLevelValidator {

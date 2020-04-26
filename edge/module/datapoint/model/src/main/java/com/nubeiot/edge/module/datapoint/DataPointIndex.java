@@ -970,7 +970,7 @@ public interface DataPointIndex extends MetadataIndex {
                 return (PP) pojo.setPointId(null).setParentFolderId(null);
             }
             if (pojo.getLevel() == GroupLevel.DEVICE) {
-                if (Objects.isNull(pojo.getDeviceId()) && Objects.isNull(pojo.getPointId())) {
+                if (Objects.isNull(pojo.getDeviceId())/* && Objects.isNull(pojo.getPointId())*/) {
                     throw mandatoryField(table().DEVICE_ID);
                 }
                 return (PP) pojo.setParentFolderId(null);
@@ -981,7 +981,7 @@ public interface DataPointIndex extends MetadataIndex {
                 if (pojo.getParentFolderId().equals(pojo.getFolderId())) {
                     throw new IllegalArgumentException("Parent folder cannot be same as itself");
                 }
-                return (PP) pojo;
+                return pojo;
             }
             throw new IllegalArgumentException("Unknown group level " + pojo.getLevel());
         }
