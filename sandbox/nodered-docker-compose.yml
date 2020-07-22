@@ -1,0 +1,11 @@
+version: "2.4"
+services:
+  nodered:
+    image: nodered/node-red:${NODERED_VERSION}
+    ports:
+      - ${NODERED_PORT}:1880
+    volumes:
+      - nodered-data:/data
+volumes:
+  nodered-data:
+    driver: local

@@ -1,0 +1,13 @@
+version: "2.4"
+services:
+  mosquitto:
+    image: eclipse-mosquitto:${MOSQUITO_VERSION}
+    ports:
+      - ${MQTT_PORT_1}:1883
+      - ${MQTT_PORT_2}:9001
+    volumes:
+      - ./mosquitto:/mosquitto/config
+      - mosquitto-data:/mosquitto/data
+volumes:
+  mosquitto-data:
+    driver: local
