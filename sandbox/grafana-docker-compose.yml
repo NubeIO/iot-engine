@@ -1,0 +1,14 @@
+version: "2.4"
+services:
+  grafana:
+    image: grafana/grafana:${GRAFANA_VERSION}
+    ports:
+      - ${GRAFANA_PORT}:3000
+    volumes:
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./grafana/plugins:/var/lib/grafana/plugins
+      - ./grafana/:/etc/grafana/provisioning
+      - grafana-data:/var/lib/grafana
+volumes:
+  grafana-data:
+    driver: local
