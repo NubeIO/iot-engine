@@ -1,8 +1,8 @@
 package com.nubeiot.edge.connector.ditto;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.github.zero.utils.Strings;
-import io.github.zero.utils.UUID64;
+import io.github.zero88.utils.Strings;
+import io.github.zero88.utils.UUID64;
 import io.reactivex.Maybe;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;

@@ -7,7 +7,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
-import io.github.zero.utils.UUID64;
+import io.github.zero88.utils.UUID64;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;

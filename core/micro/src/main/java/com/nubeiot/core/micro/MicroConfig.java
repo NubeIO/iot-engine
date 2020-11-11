@@ -3,7 +3,7 @@ package com.nubeiot.core.micro;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.ServiceDiscoveryOptions;

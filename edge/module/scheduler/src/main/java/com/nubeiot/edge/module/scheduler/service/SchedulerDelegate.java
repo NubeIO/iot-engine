@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.github.zero.utils.Reflections.ReflectionClass;
+import io.github.zero88.utils.Reflections.ReflectionClass;
 
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;

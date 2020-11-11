@@ -3,7 +3,7 @@ package com.nubeiot.core.http.handler;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import io.github.zero.utils.Urls;
+import io.github.zero88.utils.Urls;
 import io.reactivex.Single;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;

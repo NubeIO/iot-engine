@@ -1,6 +1,6 @@
 package com.nubeiot.dashboard.utils;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Single;
 import io.vertx.core.buffer.Buffer;

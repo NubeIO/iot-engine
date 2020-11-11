@@ -8,7 +8,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import io.github.zero.utils.Urls;
+import io.github.zero88.utils.Urls;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;

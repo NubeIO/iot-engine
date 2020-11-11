@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.github.zero.utils.Functions;
+import io.github.zero88.utils.Functions;
 import io.reactivex.functions.Function3;
 import io.vertx.core.json.JsonObject;
 

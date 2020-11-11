@@ -3,7 +3,7 @@ package com.nubeiot.edge.installer.loader;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

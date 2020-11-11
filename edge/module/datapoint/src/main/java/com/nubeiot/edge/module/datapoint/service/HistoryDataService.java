@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import io.github.zero.jpa.Sortable.Direction;
+import io.github.zero88.jpa.Sortable.Direction;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 

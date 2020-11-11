@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

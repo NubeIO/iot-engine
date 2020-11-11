@@ -1,6 +1,6 @@
 package com.nubeiot.edge.connector.bacnet.mixin.deserializer;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.serotonin.bacnet4j.type.constructed.ObjectTypesSupported;

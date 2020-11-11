@@ -2,7 +2,7 @@ package com.nubeiot.edge.connector.bacnet.translator;
 
 import java.util.Objects;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 
 import com.nubeiot.edge.connector.bacnet.mixin.serializer.EncodableSerializer;
 import com.nubeiot.edge.connector.bacnet.translator.BACnetTranslator.BACnetIoTNotionTranslator;

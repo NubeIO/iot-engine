@@ -7,7 +7,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.github.zero.utils.Reflections;
+import io.github.zero88.utils.Reflections;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.nubeiot.core.dto.JsonData;

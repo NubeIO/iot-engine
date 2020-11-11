@@ -6,9 +6,9 @@ import java.util.Objects;
 
 import org.jooq.Configuration;
 
-import io.github.zero.exceptions.HiddenException;
-import io.github.zero.utils.Functions.Silencer;
-import io.github.zero.utils.Reflections.ReflectionClass;
+import io.github.zero88.exceptions.HiddenException;
+import io.github.zero88.utils.Functions.Silencer;
+import io.github.zero88.utils.Reflections.ReflectionClass;
 import io.vertx.core.Vertx;
 
 import com.nubeiot.core.component.UnitContext;

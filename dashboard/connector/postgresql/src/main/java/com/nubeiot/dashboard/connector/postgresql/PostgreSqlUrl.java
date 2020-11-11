@@ -1,6 +1,6 @@
 package com.nubeiot.dashboard.connector.postgresql;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 
 class PostgreSqlUrl {
 

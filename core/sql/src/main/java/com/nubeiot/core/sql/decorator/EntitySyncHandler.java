@@ -10,7 +10,7 @@ import org.jooq.Condition;
 import org.jooq.Field;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.reactivex.Maybe;
 import io.vertx.core.json.JsonObject;
 

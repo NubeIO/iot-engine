@@ -2,7 +2,7 @@ package com.nubeiot.edge.connector.bacnet;
 
 import java.util.concurrent.TimeUnit;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 
 import com.nubeiot.core.IConfig;
 import com.nubeiot.core.NubeConfig.AppConfig;

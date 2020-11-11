@@ -3,7 +3,7 @@ package com.nubeiot.iotdata.unit;
 import java.util.Objects;
 import java.util.Optional;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 
 import com.nubeiot.iotdata.unit.DataTypeCategory.Base;
 

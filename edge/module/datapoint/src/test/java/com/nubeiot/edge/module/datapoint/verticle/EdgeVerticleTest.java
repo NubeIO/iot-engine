@@ -3,7 +3,7 @@ package com.nubeiot.edge.module.datapoint.verticle;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
-import io.github.zero.utils.UUID64;
+import io.github.zero88.utils.UUID64;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;

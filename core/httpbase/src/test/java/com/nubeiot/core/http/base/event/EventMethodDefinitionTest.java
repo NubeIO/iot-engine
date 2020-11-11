@@ -10,7 +10,7 @@ import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
-import io.github.zero.exceptions.InvalidUrlException;
+import io.github.zero88.exceptions.InvalidUrlException;
 import io.vertx.core.http.HttpMethod;
 
 import com.nubeiot.core.dto.JsonData;

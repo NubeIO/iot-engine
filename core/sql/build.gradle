@@ -61,8 +61,8 @@ ext {
                          parser: "java.util.UUID.fromString((String)%s)"),
         //TODO Using base64 in url and json
 //        new JsonDataType(className: UUID.class.getName(),
-//                         converter: "io.github.zero.utils.UUID64.uuidToBase64(%s)",
-//                         parser: "io.github.zero.utils.UUID64.uuid64ToUuid((String)%s)"),
+//                         converter: "io.github.zero88.utils.UUID64.uuidToBase64(%s)",
+//                         parser: "io.github.zero88.utils.UUID64.uuid64ToUuid((String)%s)"),
         new JsonDataType(className: JsonArray.class.getName(),
                          converter: "%s",
                          parser: "(io.vertx.core.json.JsonArray)%s"),
@@ -84,10 +84,11 @@ dependencies {
     compile("io.vertx:vertx-jdbc-client:$project.versions.vertx") {
         exclude group: "com.mchange", module: "c3p0"
     }
+    compile "io.github.zero88:rql-jooq:0.9.0"
+    compile "javax.annotation:javax.annotation-api:1.3.2"
     compile project.deps.database.hikari
     compile project.deps.database.jooqMeta
     compile project(":ext:rx-jdbc")
-    compile project(":ext:jooq-rql")
     compileOnly project(":core:httpbase")
 
     testCompile project(":core:base").sourceSets.test.output

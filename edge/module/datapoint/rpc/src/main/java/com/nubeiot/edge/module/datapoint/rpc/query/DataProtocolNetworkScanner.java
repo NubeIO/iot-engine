@@ -2,7 +2,7 @@ package com.nubeiot.edge.module.datapoint.rpc.query;
 
 import java.util.Map;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.reactivex.Single;
 
 import com.nubeiot.core.dto.RequestData;

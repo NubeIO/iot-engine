@@ -1,6 +1,6 @@
 package com.nubeiot.edge.connector.bacnet.dto;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.EnumType.AbstractEnumType;

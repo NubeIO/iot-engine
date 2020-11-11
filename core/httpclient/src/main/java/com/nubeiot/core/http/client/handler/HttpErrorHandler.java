@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-import io.github.zero.utils.Reflections.ReflectionClass;
+import io.github.zero88.utils.Reflections.ReflectionClass;
 import io.netty.resolver.dns.DnsNameResolverException;
 import io.netty.resolver.dns.DnsNameResolverTimeoutException;
 import io.reactivex.SingleEmitter;

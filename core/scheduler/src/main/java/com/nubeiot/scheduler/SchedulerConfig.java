@@ -3,7 +3,7 @@ package com.nubeiot.scheduler;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

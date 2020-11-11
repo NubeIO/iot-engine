@@ -2,7 +2,7 @@ package com.nubeiot.edge.module.datapoint.service;
 
 import java.util.Set;
 
-import io.github.zero.utils.Urls;
+import io.github.zero88.utils.Urls;
 
 import com.nubeiot.core.http.base.event.EventMethodDefinition;
 import com.nubeiot.core.sql.EntityHandler;

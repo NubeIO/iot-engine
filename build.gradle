@@ -16,13 +16,10 @@ ext {
     baseName = "nubeio"
 }
 
-defaultTasks 'clean', 'jooq', 'build', 'uberJar'
+defaultTasks 'clean', 'jooq', 'build'
 group = 'com.nubeiot'
 
 allprojects {
-    apply plugin: "eclipse"
-    apply plugin: "idea"
-
     repositories project.repos
 
     configurations {
@@ -35,6 +32,8 @@ allprojects {
 }
 
 subprojects {
+    apply plugin: "eclipse"
+    apply plugin: "idea"
     apply plugin: "maven"
     apply plugin: "java-library-distribution"
     apply plugin: "jacoco"
@@ -61,7 +60,7 @@ subprojects {
     }
 
     task dockerBuild(type: DockerBuildTask) {
-        javaVersion = ProjectUtils.extraProp(project, "javaVersion", "8u212")
+        javaVersion = ProjectUtils.extraProp(project, "javaVersion", "8u265")
         javaEdition = JavaEdition.valueOf(ProjectUtils.extraProp(project, "javaEdition", JavaEdition.OPENJDK.name()))
         javaType = JavaType.valueOf(ProjectUtils.extraProp(project, "javaType", JavaType.JRE.name()))
         vcsBranch = ProjectUtils.extraProp(project, "vcsBranch", "")

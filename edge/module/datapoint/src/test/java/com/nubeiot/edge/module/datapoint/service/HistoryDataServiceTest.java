@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
-import io.github.zero.jpa.Sortable.Direction;
+import io.github.zero88.jpa.Sortable.Direction;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;

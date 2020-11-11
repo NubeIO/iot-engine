@@ -3,7 +3,7 @@ package com.nubeiot.edge.installer.loader;
 import java.util.List;
 import java.util.function.Predicate;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 
 import lombok.Getter;
 import lombok.NonNull;

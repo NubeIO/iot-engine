@@ -52,7 +52,6 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
                        .flatMap(this::availableNetworks)
                        .doOnSuccess(protocols -> logger.info("Found {} BACnet networks", protocols.size()))
                        .flattenAsObservable(protocols -> protocols)
-                       .filter(Objects::nonNull)
                        .map(protocol -> BACnetDeviceInitializer.builder()
                                                                .vertx(getVertx())
                                                                .sharedKey(getSharedKey())

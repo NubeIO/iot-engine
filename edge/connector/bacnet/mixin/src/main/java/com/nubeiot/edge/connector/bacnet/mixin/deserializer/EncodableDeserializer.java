@@ -2,8 +2,8 @@ package com.nubeiot.edge.connector.bacnet.mixin.deserializer;
 
 import java.util.Objects;
 
-import io.github.zero.utils.Functions;
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Functions;
+import io.github.zero88.utils.Strings;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 

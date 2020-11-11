@@ -3,7 +3,7 @@ package com.nubeiot.core.event;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.reactivex.Single;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;

@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;

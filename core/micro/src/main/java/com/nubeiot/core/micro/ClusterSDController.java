@@ -1,6 +1,6 @@
 package com.nubeiot.core.micro;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 

@@ -7,8 +7,8 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.github.zero.utils.Reflections.ReflectionClass;
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Reflections.ReflectionClass;
+import io.github.zero88.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;

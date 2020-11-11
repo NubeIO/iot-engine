@@ -4,7 +4,7 @@ import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.github.zero.utils.Functions;
+import io.github.zero88.utils.Functions;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.TestHelper.JsonHelper;

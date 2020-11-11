@@ -8,7 +8,7 @@ import org.jooq.Field;
 import org.jooq.SQLDialect;
 import org.jooq.Table;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 

@@ -4,7 +4,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;
 

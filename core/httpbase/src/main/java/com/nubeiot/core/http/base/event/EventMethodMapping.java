@@ -2,7 +2,7 @@ package com.nubeiot.core.http.base.event;
 
 import java.util.Objects;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.vertx.core.http.HttpMethod;
 
 import com.fasterxml.jackson.annotation.JsonInclude;

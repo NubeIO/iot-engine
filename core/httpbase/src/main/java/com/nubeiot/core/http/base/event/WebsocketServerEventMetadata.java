@@ -2,7 +2,7 @@ package com.nubeiot.core.http.base.event;
 
 import java.util.Objects;
 
-import io.github.zero.utils.Urls;
+import io.github.zero88.utils.Urls;
 
 import com.nubeiot.core.event.EventModel;
 import com.nubeiot.core.event.EventPattern;

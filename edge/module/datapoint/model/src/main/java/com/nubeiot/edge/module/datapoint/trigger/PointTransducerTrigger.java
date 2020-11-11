@@ -12,7 +12,7 @@ import org.jooq.Record4;
 import org.jooq.exception.SQLStateClass;
 import org.jooq.impl.DSL;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeException.ErrorCode;

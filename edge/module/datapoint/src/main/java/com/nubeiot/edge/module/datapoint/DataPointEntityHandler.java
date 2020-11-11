@@ -14,7 +14,7 @@ import org.jooq.Configuration;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.github.zero.utils.Functions;
+import io.github.zero88.utils.Functions;
 import io.reactivex.Single;
 import io.reactivex.functions.Consumer;
 import io.vertx.core.Vertx;

@@ -6,13 +6,13 @@ dependencies {
     compile project.deps.jackson.datetime
     compile project.deps.logs.slf4j
     compile project.deps.logs.logback
-    compile project(":ext:jpa-ext")
-    compile project(":ext:utils")
+    compile "io.github.zero88:java-utils:1.0.0"
+    compile "io.github.zero88:jpa-ext:0.9.0"
+
     compile "io.vertx:vertx-rx-java2:$project.versions.vertx"
     compile "io.vertx:vertx-config:$project.versions.vertx"
 
     compileOnly project.deps.vertx.codegen
 
     testCompile project(":core:cluster:hazelcast")
-    testCompile project(":ext:utils").sourceSets.test.output
 }

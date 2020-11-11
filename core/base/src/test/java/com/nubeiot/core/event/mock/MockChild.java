@@ -1,4 +1,4 @@
-package io.github.zero.utils.mock;
+package com.nubeiot.core.event.mock;
 
 public class MockChild extends MockParent {
 

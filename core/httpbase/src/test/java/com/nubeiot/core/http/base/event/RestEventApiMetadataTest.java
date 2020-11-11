@@ -6,7 +6,7 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.github.zero.utils.Urls;
+import io.github.zero88.utils.Urls;
 import io.vertx.core.http.HttpMethod;
 
 import com.nubeiot.core.event.EventAction;

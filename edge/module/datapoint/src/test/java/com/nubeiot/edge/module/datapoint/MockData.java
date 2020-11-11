@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.github.zero.utils.UUID64;
+import io.github.zero88.utils.UUID64;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;

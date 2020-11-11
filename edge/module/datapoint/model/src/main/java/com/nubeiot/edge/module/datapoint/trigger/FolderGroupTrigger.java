@@ -8,8 +8,8 @@ import org.jooq.DSLContext;
 import org.jooq.exception.SQLStateClass;
 import org.jooq.impl.DSL;
 
-import io.github.zero.utils.Strings;
-import io.github.zero.utils.UUID64;
+import io.github.zero88.utils.Strings;
+import io.github.zero88.utils.UUID64;
 
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.edge.module.datapoint.DataPointIndex.FolderGroupMetadata;

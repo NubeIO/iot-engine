@@ -3,7 +3,7 @@ package com.nubeiot.core.http.rest;
 import java.util.Optional;
 import java.util.Set;
 
-import io.github.zero.utils.Urls;
+import io.github.zero88.utils.Urls;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.types.HttpEndpoint;

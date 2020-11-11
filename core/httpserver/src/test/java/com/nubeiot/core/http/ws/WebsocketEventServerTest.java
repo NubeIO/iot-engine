@@ -8,7 +8,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import io.github.zero.utils.Urls;
+import io.github.zero88.utils.Urls;
 import io.vertx.core.http.WebSocket;
 import io.vertx.core.http.WebsocketRejectedException;
 import io.vertx.core.json.JsonObject;

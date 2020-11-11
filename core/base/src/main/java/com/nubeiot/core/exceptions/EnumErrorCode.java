@@ -2,7 +2,7 @@ package com.nubeiot.core.exceptions;
 
 import java.io.Serializable;
 
-import io.github.zero.exceptions.ErrorCode;
+import io.github.zero88.exceptions.ErrorCode;
 
 import com.nubeiot.core.dto.EnumType;
 import com.nubeiot.core.dto.EnumType.AbstractEnumType;

@@ -3,8 +3,8 @@ package com.nubeiot.core.http.client;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import io.github.zero.utils.Reflections.ReflectionClass;
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Reflections.ReflectionClass;
+import io.github.zero88.utils.Strings;
 import io.vertx.core.http.HttpClientOptions;
 
 import com.fasterxml.jackson.annotation.JsonCreator;

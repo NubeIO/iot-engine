@@ -8,10 +8,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.ws.rs.core.MediaType;
 
-import io.github.zero.exceptions.InvalidUrlException;
-import io.github.zero.utils.Reflections;
-import io.github.zero.utils.Strings;
-import io.github.zero.utils.Urls;
+import io.github.zero88.exceptions.InvalidUrlException;
+import io.github.zero88.utils.Reflections;
+import io.github.zero88.utils.Strings;
+import io.github.zero88.utils.Urls;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;

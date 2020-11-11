@@ -5,7 +5,7 @@ import java.util.UUID;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
-import io.github.zero.utils.UUID64;
+import io.github.zero88.utils.UUID64;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;

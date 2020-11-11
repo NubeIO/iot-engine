@@ -3,8 +3,8 @@ package com.nubeiot.core.http;
 import java.util.HashSet;
 import java.util.Set;
 
-import io.github.zero.utils.HttpScheme;
-import io.github.zero.utils.Urls;
+import io.github.zero88.utils.HttpScheme;
+import io.github.zero88.utils.Urls;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;

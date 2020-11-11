@@ -8,7 +8,7 @@ import static org.junit.Assert.assertTrue;
 import org.json.JSONException;
 import org.junit.Test;
 
-import io.github.zero.jpa.Sortable.Order;
+import io.github.zero88.jpa.Sortable.Order;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.TestHelper.JsonHelper;

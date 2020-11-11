@@ -2,7 +2,7 @@ package com.nubeiot.core.sql.service;
 
 import java.util.Objects;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.sql.AbstractEntityHandler;

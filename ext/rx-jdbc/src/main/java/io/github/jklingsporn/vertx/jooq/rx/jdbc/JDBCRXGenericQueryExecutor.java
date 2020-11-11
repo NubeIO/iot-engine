@@ -16,7 +16,7 @@ import io.github.jklingsporn.vertx.jooq.shared.internal.AbstractQueryExecutor;
 import io.github.jklingsporn.vertx.jooq.shared.internal.QueryResult;
 import io.github.jklingsporn.vertx.jooq.shared.internal.jdbc.JDBCQueryExecutor;
 import io.github.jklingsporn.vertx.jooq.shared.internal.jdbc.JDBCQueryResult;
-import io.github.zero.utils.Functions;
+import io.github.zero88.utils.Functions;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Handler;

@@ -5,7 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-import io.github.zero.utils.UUID64;
+import io.github.zero88.utils.UUID64;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 

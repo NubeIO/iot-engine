@@ -13,11 +13,11 @@ import org.jooq.UpdatableRecord;
 
 import io.github.jklingsporn.vertx.jooq.rx.VertxDAO;
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.github.zero.exceptions.HiddenException;
-import io.github.zero.utils.Functions;
-import io.github.zero.utils.Reflections.ReflectionClass;
-import io.github.zero.utils.Strings;
-import io.github.zero.utils.UUID64;
+import io.github.zero88.exceptions.HiddenException;
+import io.github.zero88.utils.Functions;
+import io.github.zero88.utils.Reflections.ReflectionClass;
+import io.github.zero88.utils.Strings;
+import io.github.zero88.utils.UUID64;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.RequestData;

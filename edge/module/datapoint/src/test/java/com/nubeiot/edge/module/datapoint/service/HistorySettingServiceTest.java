@@ -2,7 +2,7 @@ package com.nubeiot.edge.module.datapoint.service;
 
 import org.junit.Test;
 
-import io.github.zero.utils.UUID64;
+import io.github.zero88.utils.UUID64;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 

@@ -5,7 +5,7 @@ import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.function.Function;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;

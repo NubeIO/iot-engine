@@ -1,18 +1,21 @@
-*.iml
 .idea/
-target/
-.vertx/
+**/target/
+**/.vertx/
 **/bin/
-**/*.db
-**/*.log
-**/*.bak
 **/generated/
 **/logs/
 **/out/
+**/.settings/
+**/.gradle
+**/build/
+
 **/.project
 **/.classpath
-**/.settings/
 **/.factorypath
+**/*.db
+**/*.log
+**/*.bak
+*.iml
 
 # Package Files #
 **/*.jar
@@ -25,9 +28,6 @@ target/
 
 # virtual machine crash logs, see com.zero.oauth.client.http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
-
-**/.gradle
-**/build/
 
 # Ignore Gradle GUI config
 gradle-app.setting

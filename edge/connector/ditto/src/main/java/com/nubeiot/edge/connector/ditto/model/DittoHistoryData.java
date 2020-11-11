@@ -3,7 +3,7 @@ package com.nubeiot.edge.connector.ditto.model;
 import java.util.Map;
 import java.util.UUID;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;

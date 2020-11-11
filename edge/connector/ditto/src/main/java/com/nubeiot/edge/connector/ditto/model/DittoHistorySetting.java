@@ -2,7 +2,7 @@ package com.nubeiot.edge.connector.ditto.model;
 
 import java.util.Map;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

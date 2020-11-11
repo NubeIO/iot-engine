@@ -1,7 +1,7 @@
 package com.nubeiot.core.dto;
 
-import io.github.zero.jpa.Pageable;
-import io.github.zero.utils.Strings;
+import io.github.zero88.jpa.Pageable;
+import io.github.zero88.utils.Strings;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.dto.RequestFilter.Filters;

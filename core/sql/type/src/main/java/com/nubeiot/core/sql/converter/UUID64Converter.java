@@ -5,8 +5,8 @@ import java.util.UUID;
 
 import org.jooq.Converter;
 
-import io.github.zero.utils.Strings;
-import io.github.zero.utils.UUID64;
+import io.github.zero88.utils.Strings;
+import io.github.zero88.utils.UUID64;
 
 public final class UUID64Converter implements Converter<UUID, String> {
 

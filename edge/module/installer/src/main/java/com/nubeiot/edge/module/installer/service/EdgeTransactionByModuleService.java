@@ -3,7 +3,7 @@ package com.nubeiot.edge.module.installer.service;
 import java.util.Collection;
 import java.util.Collections;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;

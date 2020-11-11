@@ -30,12 +30,12 @@ import org.jooq.SelectSeekStepN;
 import org.jooq.Table;
 import org.jooq.impl.DSL;
 
-import io.github.zero.jooq.rql.FieldMapper;
-import io.github.zero.jooq.rql.JooqRqlParser;
-import io.github.zero.jooq.rql.QueryContext;
-import io.github.zero.jooq.rql.visitor.JooqConditionRqlVisitor;
-import io.github.zero.jpa.Sortable.Direction;
-import io.github.zero.utils.Strings;
+import io.github.zero88.jpa.Sortable.Direction;
+import io.github.zero88.rql.jooq.JooqFieldMapper;
+import io.github.zero88.rql.jooq.JooqQueryContext;
+import io.github.zero88.rql.jooq.JooqRqlParser;
+import io.github.zero88.rql.jooq.visitor.JooqConditionRqlVisitor;
+import io.github.zero88.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.Pagination;
@@ -296,12 +296,13 @@ public final class QueryBuilder {
         if (Strings.isBlank(advanceQuery)) {
             return DSL.trueCondition();
         }
-        return JooqRqlParser.DEFAULT.criteria(advanceQuery, JooqConditionRqlVisitor.create(table, new QueryContext() {
-            @Override
-            public @NonNull FieldMapper fieldMapper() {
-                return FieldMapper.SNAKE_UPPERCASE_MAPPER;
-            }
-        }));
+        return JooqRqlParser.DEFAULT.criteria(advanceQuery,
+                                              JooqConditionRqlVisitor.create(table, new JooqQueryContext() {
+                                                  @Override
+                                                  public @NonNull JooqFieldMapper fieldMapper() {
+                                                      return JooqFieldMapper.SNAKE_UPPERCASE_MAPPER;
+                                                  }
+                                              }));
     }
 
     private SelectSeekStepN<? extends Record> orderBy(@NonNull SelectConditionStep<? extends Record> sql, Sort sort) {

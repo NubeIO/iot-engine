@@ -17,8 +17,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
-import io.github.zero.utils.OSHelper;
-import io.github.zero.utils.SystemHelper;
+import io.github.zero88.utils.OSHelper;
+import io.github.zero88.utils.SystemHelper;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 

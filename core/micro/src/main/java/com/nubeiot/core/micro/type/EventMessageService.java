@@ -2,7 +2,7 @@ package com.nubeiot.core.micro.type;
 
 import java.util.Objects;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.spi.ServiceType;

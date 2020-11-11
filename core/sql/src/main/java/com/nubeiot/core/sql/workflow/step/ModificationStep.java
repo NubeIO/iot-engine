@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import org.jooq.Configuration;
 
-import io.github.zero.utils.Functions.TripleConsumer;
+import io.github.zero88.utils.Functions.TripleConsumer;
 import io.reactivex.Single;
 
 import com.nubeiot.core.dto.RequestData;

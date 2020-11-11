@@ -2,7 +2,7 @@ package com.nubeiot.core.component;
 
 import java.util.Objects;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.reactivex.Single;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;

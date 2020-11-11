@@ -2,7 +2,7 @@ package com.nubeiot.edge.connector.bacnet.mixin.deserializer;
 
 import java.util.AbstractMap.SimpleEntry;
 
-import io.github.zero.utils.Functions;
+import io.github.zero88.utils.Functions;
 import io.vertx.core.json.JsonObject;
 
 import com.serotonin.bacnet4j.obj.PropertyTypeDefinition;

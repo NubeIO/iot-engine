@@ -1,6 +1,6 @@
 package com.nubeiot.core.http.base.event;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventModel;

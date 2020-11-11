@@ -2,7 +2,7 @@ package com.nubeiot.core.micro.filter;
 
 import java.util.function.Predicate;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 

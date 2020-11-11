@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 
-import io.github.zero.utils.Reflections.ReflectionClass;
+import io.github.zero88.utils.Reflections.ReflectionClass;
 
 import com.serotonin.bacnet4j.obj.PropertyTypeDefinition;
 import com.serotonin.bacnet4j.type.Encodable;

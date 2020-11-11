@@ -11,7 +11,7 @@ import org.quartz.CronTrigger;
 import org.quartz.ScheduleBuilder;
 import org.quartz.TriggerKey;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

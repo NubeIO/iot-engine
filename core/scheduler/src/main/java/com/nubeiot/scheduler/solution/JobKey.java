@@ -1,6 +1,6 @@
 package com.nubeiot.scheduler.solution;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 
 import lombok.NonNull;
 

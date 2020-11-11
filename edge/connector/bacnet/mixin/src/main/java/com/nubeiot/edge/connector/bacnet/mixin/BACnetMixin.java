@@ -1,6 +1,6 @@
 package com.nubeiot.edge.connector.bacnet.mixin;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.core.dto.JsonData;

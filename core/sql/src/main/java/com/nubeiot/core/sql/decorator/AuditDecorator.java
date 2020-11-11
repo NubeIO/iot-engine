@@ -3,7 +3,7 @@ package com.nubeiot.core.sql.decorator;
 import java.util.Optional;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 
 import com.nubeiot.core.dto.DataTransferObject.Headers;
 import com.nubeiot.core.dto.RequestData;

@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.github.zero.utils.Reflections.ReflectionClass;
+import io.github.zero88.utils.Reflections.ReflectionClass;
 
 import com.nubeiot.core.cluster.ClusterDelegate;
 import com.nubeiot.core.cluster.ClusterType;

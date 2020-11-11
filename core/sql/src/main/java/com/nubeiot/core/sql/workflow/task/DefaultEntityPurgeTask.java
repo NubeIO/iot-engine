@@ -5,8 +5,8 @@ import java.util.List;
 import org.jooq.Condition;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.github.zero.utils.Functions;
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Functions;
+import io.github.zero88.utils.Strings;
 import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;

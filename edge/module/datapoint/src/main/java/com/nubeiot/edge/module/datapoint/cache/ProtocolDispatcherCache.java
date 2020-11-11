@@ -2,8 +2,8 @@ package com.nubeiot.edge.module.datapoint.cache;
 
 import java.util.Optional;
 
-import io.github.zero.utils.Functions;
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Functions;
+import io.github.zero88.utils.Strings;
 import io.reactivex.Maybe;
 
 import com.nubeiot.core.cache.AbstractLocalCache;

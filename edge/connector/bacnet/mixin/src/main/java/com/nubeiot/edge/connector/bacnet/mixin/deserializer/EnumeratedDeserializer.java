@@ -1,6 +1,6 @@
 package com.nubeiot.edge.connector.bacnet.mixin.deserializer;
 
-import io.github.zero.utils.Reflections.ReflectionMethod;
+import io.github.zero88.utils.Reflections.ReflectionMethod;
 
 import com.serotonin.bacnet4j.type.primitive.Enumerated;
 

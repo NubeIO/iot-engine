@@ -6,7 +6,7 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.github.zero.utils.OSHelper;
+import io.github.zero88.utils.OSHelper;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.auth.BasicCredential;

@@ -6,7 +6,7 @@ import static com.nubeiot.dashboard.constants.Collection.SITE;
 import static com.nubeiot.dashboard.constants.Collection.USER;
 import static com.nubeiot.dashboard.constants.Collection.USER_GROUP;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Future;

@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.github.jklingsporn.vertx.jooq.shared.internal.VertxPojo;
-import io.github.zero.utils.Urls;
+import io.github.zero88.utils.Urls;
 
 import com.nubeiot.core.http.base.EventHttpService;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;

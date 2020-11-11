@@ -12,7 +12,7 @@ import org.jooq.Key;
 import org.jooq.Table;
 import org.jooq.UniqueKey;
 
-import io.github.zero.utils.Reflections.ReflectionField;
+import io.github.zero88.utils.Reflections.ReflectionField;
 
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.core.sql.ReferenceEntityMetadata;

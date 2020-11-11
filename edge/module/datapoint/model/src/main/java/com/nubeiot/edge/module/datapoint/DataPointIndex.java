@@ -11,9 +11,9 @@ import java.util.UUID;
 
 import org.jooq.OrderField;
 
-import io.github.zero.utils.DateTimes;
-import io.github.zero.utils.Strings;
-import io.github.zero.utils.UUID64;
+import io.github.zero88.utils.DateTimes;
+import io.github.zero88.utils.Strings;
+import io.github.zero88.utils.UUID64;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.dto.JsonData;

@@ -4,7 +4,7 @@ import static com.nubeiot.core.http.base.HttpUtils.HttpRequests;
 
 import java.util.Objects;
 
-import io.github.zero.utils.Urls;
+import io.github.zero88.utils.Urls;
 import io.reactivex.Single;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;

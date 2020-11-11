@@ -3,7 +3,7 @@ package com.nubeiot.core.micro.discovery;
 import java.util.Optional;
 import java.util.function.Function;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Status;

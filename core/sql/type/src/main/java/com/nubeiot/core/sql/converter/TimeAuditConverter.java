@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import org.jooq.Converter;
 
-import io.github.zero.utils.Strings;
+import io.github.zero88.utils.Strings;
 
 import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.sql.type.TimeAudit;

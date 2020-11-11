@@ -96,7 +96,8 @@ ext.genProps = [
 
 ext.repos = {
     mavenLocal()
-    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+    maven { url "https://oss.sonatype.org/content/groups/public/" }
+    maven { url "https://maven.pkg.github.com/zero88/java-utils" }
     mavenCentral()
     jcenter()
     maven { url "http://45.63.30.129:8081/repository/maven-releases/" }
