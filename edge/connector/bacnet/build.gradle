@@ -8,7 +8,7 @@ dependencies {
     }
     compile project(':edge:module:datapoint:rpc')
     compile project(':edge:connector:bacnet:base')
-    compile project.deps.database.jooqVertxShared {
+    compile(project.deps.database.jooqVertxShared) {
         exclude group: 'org.jooq', module: 'jooq'
     }
 
