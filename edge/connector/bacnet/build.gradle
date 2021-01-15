@@ -8,6 +8,9 @@ dependencies {
     }
     compile project(':edge:module:datapoint:rpc')
     compile project(':edge:connector:bacnet:base')
+    compile project.deps.database.jooqVertxShared {
+        exclude group: 'org.jooq', module: 'jooq'
+    }
 
     testCompile project(":core:base").sourceSets.test.output
     testCompile project(":core:micro")
