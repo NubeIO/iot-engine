@@ -117,9 +117,11 @@ final class DefaultBACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
     public Single<RemoteDevice> discoverRemoteDevice(@NonNull ObjectIdentifier deviceCode,
                                                      @NonNull DiscoverOptions options) {
         long timeout = TimeUnit.MILLISECONDS.convert(options.getTimeout(), options.getTimeUnit());
+        logger.info("Start discovering device {} with force={} in timeout {}ms ", deviceCode, options.isForce(),
+                    timeout);
         return init(options.isForce()).map(
             ld -> Functions.getOrThrow(t -> new NotFoundException("Not found device id " + deviceCode, t),
-                                       () -> ld.getRemoteDeviceBlocking(deviceCode.getInstanceNumber(), timeout)));
+                                       () -> ld.getRemoteDevice(deviceCode.getInstanceNumber()).get(timeout)));
     }
 
     private Single<LocalDevice> init(boolean force) {
