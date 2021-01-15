@@ -1,0 +1,23 @@
+version: "2.4"
+
+services:
+  sonar:
+    image: sonarqube:${SONAR_VERSION}
+    ports:
+      - ${SONAR_PORT}:9000
+    restart: always
+    volumes:
+      - sonar-conf:/opt/sonarqube/conf
+      - sonar-exts:/opt/sonarqube/extensions
+      - sonar-logs:/opt/sonarqube/logs
+      - sonar-data:/opt/sonarqube/data
+
+volumes:
+  sonar-conf:
+    driver: local
+  sonar-exts:
+    driver: local
+  sonar-logs:
+    driver: local
+  sonar-data:
+    driver: local

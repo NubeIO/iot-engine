@@ -3,6 +3,7 @@ package com.nubeiot.buildscript.jooq
 import java.nio.charset.StandardCharsets
 
 import org.gradle.api.logging.Logger
+import org.jooq.meta.extensions.ddl.DDLDatabase
 import org.jooq.meta.jaxb.Configuration
 import org.jooq.meta.jaxb.Database
 import org.jooq.meta.jaxb.ForcedType
@@ -61,7 +62,7 @@ abstract class JooqProvider {
         logger.info("-" * 58)
         forcedTypes.each { logger.info("${it.types} - ${it.userType} - ${it.expression}") }
         logger.info("")
-        return new Database().withName("org.jooq.meta.extensions.ddl.DDLDatabase")
+        return new Database().withName(DDLDatabase.class.getName())
                              .withProperties(new Property().withKey("scripts").withValue(ddlDir))
                              .withUnsignedTypes(false).withIncludes(".*").withForcedTypes(forcedTypes)
     }
