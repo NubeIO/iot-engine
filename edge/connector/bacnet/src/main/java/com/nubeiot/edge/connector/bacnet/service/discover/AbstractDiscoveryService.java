@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import io.github.zero.utils.Functions;
+import io.github.zero88.utils.Functions;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
@@ -139,6 +139,5 @@ abstract class AbstractDiscoveryService extends AbstractSharedDataDelegate<Abstr
         final BACnetDevice device = deviceCache().get(protocol);
         return new DiscoveryRequestWrapper(request, options, device);
     }
-
 
 }

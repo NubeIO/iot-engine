@@ -2,7 +2,7 @@ package com.nubeiot.edge.connector.bacnet.mixin.deserializer;
 
 import java.util.Objects;
 
-import io.github.zero.utils.Reflections.ReflectionClass;
+import io.github.zero88.utils.Reflections.ReflectionClass;
 
 import com.serotonin.bacnet4j.type.constructed.PriorityValue;
 import com.serotonin.bacnet4j.type.primitive.Boolean;

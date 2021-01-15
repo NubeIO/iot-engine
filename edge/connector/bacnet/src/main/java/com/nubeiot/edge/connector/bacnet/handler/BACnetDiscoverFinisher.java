@@ -4,7 +4,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
-import io.github.zero.utils.UUID64;
+import io.github.zero88.utils.UUID64;
 import io.reactivex.Observable;
 import io.vertx.core.Vertx;
 

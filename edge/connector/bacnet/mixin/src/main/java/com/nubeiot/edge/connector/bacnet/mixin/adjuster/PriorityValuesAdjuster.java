@@ -3,7 +3,7 @@ package com.nubeiot.edge.connector.bacnet.mixin.adjuster;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
-import io.github.zero.utils.Functions;
+import io.github.zero88.utils.Functions;
 
 import com.nubeiot.edge.connector.bacnet.mixin.deserializer.EncodableDeserializer;
 import com.nubeiot.edge.connector.bacnet.mixin.deserializer.EncodableDeserializerRegistry;

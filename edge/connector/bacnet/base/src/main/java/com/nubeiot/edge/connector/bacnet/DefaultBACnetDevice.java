@@ -5,7 +5,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import io.github.zero.utils.Functions;
+import io.github.zero88.utils.Functions;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
