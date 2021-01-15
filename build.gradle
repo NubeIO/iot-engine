@@ -26,7 +26,7 @@ allprojects {
         providedRuntime
     }
 
-    version = project.version + "-" + project.semanticVersion
+    version = project.version + (!project.semanticVersion?.trim() ? "" : ("-" + project.semanticVersion?.trim()))
     project.ext.computeBaseName = { -> ProjectUtils.computeBaseName(project) }
     project.ext.loadSecretProps = { f -> ProjectUtils.loadSecretProps(project, f) }
 }
