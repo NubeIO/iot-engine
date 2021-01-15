@@ -1,6 +1,6 @@
 def versions = [
     vertx     : "3.6.0",
-    lombok    : "edge-SNAPSHOT",
+    lombok    : "1.18.16",
     oshi      : "3.13.3",
     classgraph: "4.6.23",
     jackson   : "2.9.8",
@@ -97,11 +97,11 @@ ext.genProps = [
 ext.repos = {
     mavenLocal()
     maven { url "https://oss.sonatype.org/content/groups/public/" }
-    maven { url "https://maven.pkg.github.com/zero88/java-utils" }
     mavenCentral()
     jcenter()
-    maven { url "http://45.63.30.129:8081/repository/maven-releases/" }
     maven { url 'https://projectlombok.org/edge-releases' }
+    maven { url 'https://maven.mangoautomation.net/repository/ias-snapshot/' }
+    maven { url 'https://maven.mangoautomation.net/repository/ias-release/' }
 }
 
 ext.loggers = [
