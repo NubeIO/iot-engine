@@ -37,13 +37,13 @@ public final class BACnetSimulator extends AbstractBACnetVerticle<SimulatorConfi
     @Override
     @NonNull
     protected Single<JsonObject> registerApis(@NonNull EventbusClient client, @NonNull SimulatorConfig config) {
-        return Single.just(new JsonObject().put("message", "No BACnet services")).doOnSuccess(logger::info);
+        return Single.just(new JsonObject().put("message", "No BACnet services"));
     }
 
     @Override
     @NonNull
     protected Single<JsonObject> registerSubscriber(@NonNull EventbusClient client, @NonNull SimulatorConfig config) {
-        return Single.just(new JsonObject().put("message", "No BACnet Subscriber")).doOnSuccess(logger::info);
+        return Single.just(new JsonObject().put("message", "No BACnet Subscriber"));
     }
 
     @Override

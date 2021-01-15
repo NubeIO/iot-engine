@@ -33,9 +33,8 @@ public final class BACnetDiscoverFinisher extends DiscoverCompletionHandler
     private final String sharedKey;
 
     @Override
-    @SuppressWarnings("unchecked")
     public <D> D getSharedDataValue(String dataKey) {
-        return (D) SharedDataDelegate.getLocalDataValue(vertx, sharedKey, dataKey);
+        return SharedDataDelegate.getLocalDataValue(vertx, sharedKey, dataKey);
     }
 
     @Override
