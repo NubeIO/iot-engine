@@ -15,6 +15,10 @@ public final class EncodedValueSerializer extends EncodableSerializer<EncodedVal
 
     @Override
     public void serialize(EncodedValue value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+        serializeIfAnyErrorFallback(this::serialize, value, gen);
+    }
+
+    private void serialize(EncodedValue value, JsonGenerator gen) throws IOException {
         gen.writeString(Base64.getEncoder().encodeToString(value.getData()));
     }
 

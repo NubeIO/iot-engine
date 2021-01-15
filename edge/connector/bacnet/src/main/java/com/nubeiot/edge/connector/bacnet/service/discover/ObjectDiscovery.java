@@ -134,8 +134,8 @@ public final class ObjectDiscovery extends AbstractDiscoveryService implements B
         return Observable.fromIterable(Functions.getOrThrow(t -> new NubeException(ErrorCode.ENGINE_ERROR, t),
                                                             () -> RequestUtils.getObjectList(device.localDevice(), rd)))
                          .filter(objId -> objId.getObjectType() != ObjectType.device)
-                         .flatMapSingle(objId -> parseRemoteObject(device, rd, objId, detail, false).map(
-                             props -> new SimpleEntry<>(objId, props)))
+                         .flatMapSingle(objId -> this.parseRemoteObject(device, rd, objId, detail, false)
+                                                     .map(props -> new SimpleEntry<>(objId, props)))
                          .collect(ObjectPropertyValues::new,
                                   (values, entry) -> values.add(entry.getKey(), entry.getValue()))
                          .doFinally(device::stop);

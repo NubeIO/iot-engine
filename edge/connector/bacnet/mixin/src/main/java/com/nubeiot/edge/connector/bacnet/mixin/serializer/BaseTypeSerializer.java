@@ -28,7 +28,11 @@ public final class BaseTypeSerializer extends EncodableSerializer<BaseType> {
 
     @Override
     public void serialize(BaseType value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-        gen.writeObject(toObject(value));
+        serializeIfAnyErrorFallback(this::serialize, value, gen);
+    }
+
+    private void serialize(BaseType v, JsonGenerator g) throws IOException {
+        g.writeObject(toObject(v));
     }
 
     private Map<String, Encodable> toObject(BaseType value) {

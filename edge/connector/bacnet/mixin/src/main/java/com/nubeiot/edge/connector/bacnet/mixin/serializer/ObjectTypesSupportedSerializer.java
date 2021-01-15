@@ -18,6 +18,10 @@ public final class ObjectTypesSupportedSerializer extends EncodableSerializer<Ob
     @Override
     public void serialize(ObjectTypesSupported value, JsonGenerator gen, SerializerProvider provider)
         throws IOException {
+        serializeIfAnyErrorFallback(this::serialize, value, gen);
+    }
+
+    private void serialize(ObjectTypesSupported value, JsonGenerator gen) throws IOException {
         gen.writeObject(IntStream.range(0, ObjectType.size())
                                  .boxed()
                                  .map(ObjectType::forId)

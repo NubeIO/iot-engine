@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Map.Entry;
 import java.util.Objects;
 
+import io.reactivex.functions.BiConsumer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -40,7 +41,20 @@ public abstract class EncodableSerializer<T extends Encodable> extends StdSerial
 
     @Override
     public void serialize(T value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+        defaultSerialize(value, gen);
+    }
+
+    private void defaultSerialize(T value, JsonGenerator gen) throws IOException {
         gen.writeString(value.toString());
+    }
+
+    void serializeIfAnyErrorFallback(BiConsumer<T, JsonGenerator> write, T v, JsonGenerator gen) throws IOException {
+        try {
+            write.accept(v, gen);
+        } catch (Exception e) {
+            LOGGER.warn(e);
+            defaultSerialize(v, gen);
+        }
     }
 
 }
