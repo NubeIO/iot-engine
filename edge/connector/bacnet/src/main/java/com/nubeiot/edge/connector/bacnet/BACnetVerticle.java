@@ -13,13 +13,15 @@ import io.vertx.servicediscovery.Record;
 
 import com.nubeiot.core.component.SharedDataDelegate;
 import com.nubeiot.core.event.EventbusClient;
+import com.nubeiot.core.http.HttpServerProvider;
+import com.nubeiot.core.http.HttpServerRouter;
 import com.nubeiot.core.micro.MicroContext;
 import com.nubeiot.core.micro.MicroserviceProvider;
 import com.nubeiot.core.micro.ServiceDiscoveryController;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
-import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.handler.BACnetDiscoverFinisher;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
 import com.nubeiot.edge.connector.bacnet.listener.WhoIsListener;
@@ -40,9 +42,15 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
     private BACnetSubscription subscription;
 
     @Override
+    public String configFile() {
+        return "bacnet.json";
+    }
+
+    @Override
     public void start() {
         super.start();
-        this.addProvider(new MicroserviceProvider(), ctx -> microContext = (MicroContext) ctx);
+        this.addProvider(new HttpServerProvider(new HttpServerRouter()))
+            .addProvider(new MicroserviceProvider(), ctx -> microContext = (MicroContext) ctx);
     }
 
     @Override
@@ -65,8 +73,7 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
                          .flatMap(s -> registerEndpoint(microContext.getLocalController(), s))
                          .map(Record::toJson)
                          .count()
-                         .map(total -> new JsonObject().put("message", "Registered " + total + " BACnet APIs"))
-                         .doOnSuccess(logger::info);
+                         .map(total -> new JsonObject().put("message", "Registered " + total + " BACnet APIs"));
     }
 
     @Override
@@ -78,8 +85,7 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
                          .count()
                          .map(total -> new JsonObject().put("message",
                                                             "Registered " + subscription.subscribers().size() + " in " +
-                                                            total + " BACnet Subscribers"))
-                         .doOnSuccess(logger::info);
+                                                            total + " BACnet Subscribers"));
     }
 
     @Override

@@ -32,6 +32,7 @@ public abstract class AbstractBACnetConfig implements IConfig {
     private TimeUnit maxDiscoverTimeoutUnit = TimeUnit.SECONDS;
     private String completeDiscoverAddress = AbstractBACnetConfig.class.getPackage().getName() + ".discover.complete";
     private String readinessAddress = AbstractBACnetConfig.class.getPackage().getName() + ".readiness";
+    private boolean enableSubscriber = false;
 
     @Override
     public final String key() {

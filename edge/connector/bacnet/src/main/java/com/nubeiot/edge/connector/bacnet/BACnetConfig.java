@@ -7,7 +7,7 @@ import lombok.NonNull;
 public final class BACnetConfig extends AbstractBACnetConfig {
 
     @NonNull
-    private String gatewayAddress;
+    private String gatewayAddress = "nubeio.bacnet.gateway.index";
 
     @Override
     protected int maxDeviceId() {

@@ -47,8 +47,8 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
     protected void successHandler(@NonNull C config) {
         ExecutorHelpers.blocking(getVertx(), this::getEventbusClient)
                        .map(c -> c.register(config.getCompleteDiscoverAddress(), createDiscoverCompletionHandler()))
-                       .flatMap(client -> registerApis(client, config).map(ignore -> client))
-                       .flatMap(client -> registerSubscriber(client, config))
+                       .flatMap(client -> registerApis(client, config).doOnSuccess(logger::info).map(ignore -> client))
+                       .flatMap(client -> invokeSubscriberRegistration(client, config).doOnSuccess(logger::info))
                        .map(r -> config)
                        .flatMap(this::availableNetworks)
                        .doOnSuccess(protocols -> logger.info("Found {} BACnet networks", protocols.size()))
@@ -62,6 +62,13 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
                        .count()
                        .map(total -> new JsonObject().put("total", total))
                        .subscribe((d, e) -> readinessHandler(config, d, e));
+    }
+
+    private Single<JsonObject> invokeSubscriberRegistration(EventbusClient client, C config) {
+        if (config.isEnableSubscriber()) {
+            return registerSubscriber(client, config);
+        }
+        return Single.just(new JsonObject().put("message", "BACnet subscriber feature is disabled"));
     }
 
     private void readinessHandler(@NonNull C config, JsonObject d, Throwable e) {

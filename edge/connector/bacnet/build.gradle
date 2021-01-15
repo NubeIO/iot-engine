@@ -1,6 +1,11 @@
 dependencies {
     compile project(':core:micro')
-    compile project(':edge:module:datapoint:model')
+    compile(project(':core:httpserver')) {
+        exclude group: 'org.jboss.resteasy', module: 'resteasy-jaxrs'
+    }
+    compile(project(':edge:module:datapoint:model')) {
+        exclude group: 'org.jooq', module: 'jooq'
+    }
     compile project(':edge:module:datapoint:rpc')
     compile project(':edge:connector:bacnet:base')
 
