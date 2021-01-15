@@ -1,6 +1,10 @@
 dependencies {
     compile project(':core:sql:type')
 
+    compile project.deps.database.jpa
+    compileOnly project.deps.database.jooq
+    compileOnly project.deps.database.jooqVertxRx
+
     testCompile project(":core:base").sourceSets.test.output
     testCompile project(':core:sql')
 }

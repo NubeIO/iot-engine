@@ -8,6 +8,10 @@ import com.nubeiot.buildscript.jooq.JooqGenerateTask.JsonDataType
 dependencies {
     compile project(":core:iotdata")
     compile project(":core:sql:type")
+
+    compileOnly project.deps.database.jpa
+    compileOnly project.deps.database.jooq
+    compileOnly project.deps.database.jooqVertxRx
     compileOnly project(":core:sql")
     compileOnly project.deps.database.h2
 }
