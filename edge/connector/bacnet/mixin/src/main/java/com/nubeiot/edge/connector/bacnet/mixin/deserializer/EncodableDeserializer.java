@@ -1,6 +1,7 @@
 package com.nubeiot.edge.connector.bacnet.mixin.deserializer;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import io.github.zero88.utils.Functions;
 import io.github.zero88.utils.Strings;
@@ -10,14 +11,27 @@ import io.vertx.core.logging.LoggerFactory;
 import com.nubeiot.core.exceptions.NubeException;
 import com.nubeiot.core.exceptions.NubeExceptionConverter;
 import com.serotonin.bacnet4j.obj.ObjectProperties;
+import com.serotonin.bacnet4j.obj.ObjectPropertyTypeDefinition;
 import com.serotonin.bacnet4j.obj.PropertyTypeDefinition;
 import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
+import com.serotonin.bacnet4j.type.primitive.Null;
+import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
 import lombok.NonNull;
 
+/**
+ * The interface Encodable deserializer.
+ *
+ * @param <T> Type of {@code Encodable}
+ * @param <V> Type of {@code Java object}
+ * @since 1.0.0
+ */
 public interface EncodableDeserializer<T extends Encodable, V> {
 
+    /**
+     * The constant LOGGER.
+     */
     Logger LOGGER = LoggerFactory.getLogger(EncodableDeserializer.class);
 
     /**
@@ -27,15 +41,16 @@ public interface EncodableDeserializer<T extends Encodable, V> {
      * @param value              Given value
      * @return BACnet Encodable value
      * @throws NubeException if catching any error when parsing
+     * @since 1.0.0
      */
     static Encodable parse(@NonNull PropertyIdentifier propertyIdentifier, Object value) {
         if (Objects.isNull(value)) {
-            return null;
+            return Null.instance;
         }
         final PropertyTypeDefinition definition = ObjectProperties.getPropertyTypeDefinition(propertyIdentifier);
         if (Objects.isNull(definition)) {
             LOGGER.warn("Not found Encodable definition of {}", propertyIdentifier);
-            return null;
+            return Null.instance;
         }
         final EncodableDeserializer deserializer = EncodableDeserializerRegistry.lookup(definition);
         if (definition.isCollection() && Objects.isNull(definition.getInnerType())) {
@@ -44,6 +59,45 @@ public interface EncodableDeserializer<T extends Encodable, V> {
         return parse(value, definition, deserializer);
     }
 
+    /**
+     * Parse value based on object identifier and property identifier
+     *
+     * @param objectIdentifier   the object identifier
+     * @param propertyIdentifier Given property identifier
+     * @param value              Given value
+     * @return BACnet Encodable value
+     * @throws NubeException if catching any error when parsing
+     * @since 1.0.0
+     */
+    static Encodable parse(@NonNull ObjectIdentifier objectIdentifier, @NonNull PropertyIdentifier propertyIdentifier,
+                           Object value) {
+        if (Objects.isNull(value)) {
+            return Null.instance;
+        }
+        final PropertyTypeDefinition definition = Optional.ofNullable(
+            ObjectProperties.getObjectPropertyTypeDefinition(objectIdentifier.getObjectType(), propertyIdentifier))
+                                                          .map(ObjectPropertyTypeDefinition::getPropertyTypeDefinition)
+                                                          .orElse(null);
+        if (Objects.isNull(definition)) {
+            throw new IllegalArgumentException(
+                "Object code " + objectIdentifier + " doesn't support " + propertyIdentifier);
+        }
+        final EncodableDeserializer deserializer = EncodableDeserializerRegistry.lookup(definition);
+        if (definition.isCollection() && Objects.isNull(definition.getInnerType())) {
+            return parse(value, definition, new SequenceOfDeserializer(definition, deserializer));
+        }
+        return parse(value, definition, deserializer);
+    }
+
+    /**
+     * Parse encodable.
+     *
+     * @param value        the value
+     * @param definition   the definition
+     * @param deserializer the deserializer
+     * @return the encodable
+     * @since 1.0.0
+     */
     @SuppressWarnings("unchecked")
     static Encodable parse(@NonNull Object value, @NonNull PropertyTypeDefinition definition,
                            @NonNull EncodableDeserializer deserializer) {
@@ -59,26 +113,54 @@ public interface EncodableDeserializer<T extends Encodable, V> {
     }
 
     /**
-     * Same with {@link #parse(PropertyIdentifier, Object)} but with lenient that means returns {@code null} if {@code
-     * value} is non-parsable
+     * Same with {@link #parse(PropertyIdentifier, Object)} but with lenient that means returns {@link Null#instance} if
+     * {@code value} is non-parsable
      *
      * @param propertyIdentifier Given property identifier
      * @param value              Given value
      * @return BACnet Encodable value
+     * @see Null#instance
+     * @since 1.0.0
      */
     static Encodable parseLenient(@NonNull PropertyIdentifier propertyIdentifier, Object value) {
-        return Functions.getIfThrow(() -> parse(propertyIdentifier, value)).orElse(null);
+        return Functions.getIfThrow(() -> parse(propertyIdentifier, value)).orElse(Null.instance);
     }
 
+    /**
+     * Defines Encodable class.
+     *
+     * @return the class
+     * @since 1.0.0
+     */
     @NonNull Class<T> encodableClass();
 
-    @NonNull Class<V> fromClass();
+    /**
+     * Defines java class.
+     *
+     * @return the class
+     * @since 1.0.0
+     */
+    @NonNull Class<V> javaClass();
 
+    /**
+     * Cast given value to java object.
+     *
+     * @param value the value
+     * @return the v
+     * @since 1.0.0
+     */
     @NonNull
     default V cast(@NonNull Object value) {
-        return fromClass().cast(value);
+        return javaClass().cast(value);
     }
 
+    /**
+     * Parse t.
+     *
+     * @param value the value
+     * @return the t
+     * @since 1.0.0
+     */
     T parse(@NonNull V value);
 
 }

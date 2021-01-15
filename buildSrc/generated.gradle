@@ -71,6 +71,14 @@ task generateConfigs(group: 'build') {
                 include "*.json"
             }
         }
+        if (project.hasProperty("service") && project.service == "true") {
+            copy {
+                into confDir
+                from("${projectDir}/src/service") {
+                    include "*.service"
+                }
+            }
+        }
         if (configurations.runtimeClasspath.any { it.name.contains("cluster-hazelcast") }) {
             copy {
                 into confDir

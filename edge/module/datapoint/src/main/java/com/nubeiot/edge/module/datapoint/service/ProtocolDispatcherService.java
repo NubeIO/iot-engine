@@ -42,9 +42,8 @@ public final class ProtocolDispatcherService
 
     @Override
     public @NonNull EntityTaskManager taskManager() {
-        return EntityTaskManagerImpl.builder()
+        return EntityTaskManagerImpl.builder().prePersistTask(super.taskManager().prePersistTask())
                                     .postPersistTask(super.taskManager().postPersistTask())
-                                    .postPersistAsyncTask(super.taskManager().postPersistAsyncTask())
                                     .build();
     }
 

@@ -19,7 +19,7 @@ public class DeviceDiscoveryTest extends BACnetWithoutGatewayTest {
 
     @Test
     public void test_network_without_device(TestContext context) {
-        Async async = context.async();
+        final Async async = context.async();
         final UdpProtocol protocol = UdpProtocol.builder().ip(Ipv4Network.getFirstActiveIp()).port(47808).build();
         final JsonObject body = new JsonObject().put("networkCode", protocol.identifier());
         final JsonObject expected = EventMessage.success(EventAction.GET_LIST,

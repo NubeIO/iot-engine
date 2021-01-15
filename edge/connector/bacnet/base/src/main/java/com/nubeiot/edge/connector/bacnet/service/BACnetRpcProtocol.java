@@ -19,7 +19,7 @@ public interface BACnetRpcProtocol extends RpcProtocol {
         if (isMaster) {
             throw error;
         }
-        logger.warn("Failed to connect to remote service", error);
+        logger.debug("Failed to connect to remote service", error);
     }
 
     @Override

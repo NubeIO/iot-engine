@@ -13,8 +13,12 @@ public final class SequenceOfSerializer extends EncodableSerializer<SequenceOf> 
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void serialize(SequenceOf value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+        serializeIfAnyErrorFallback(this::serialize, value, gen);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void serialize(SequenceOf value, JsonGenerator gen) throws IOException {
         gen.writeStartArray();
         value.forEach(o -> write(gen, o));
         gen.writeEndArray();

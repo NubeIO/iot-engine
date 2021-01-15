@@ -1,6 +1,7 @@
 package com.nubeiot.core.http;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -29,8 +30,11 @@ public final class HttpServerRouter {
 
     @SafeVarargs
     public final HttpServerRouter registerEventBusApi(Class<? extends RestEventApi>... eventBusApiClass) {
-        restEventApiClasses.addAll(
-            Arrays.stream(eventBusApiClass).filter(Objects::nonNull).collect(Collectors.toList()));
+        return registerEventBusApi(Arrays.stream(eventBusApiClass).collect(Collectors.toList()));
+    }
+
+    public final HttpServerRouter registerEventBusApi(Collection<Class<? extends RestEventApi>> eventBusApiClass) {
+        restEventApiClasses.addAll(eventBusApiClass.stream().filter(Objects::nonNull).collect(Collectors.toList()));
         return this;
     }
 

@@ -9,7 +9,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-class BaseTypeDeserializer<T extends BaseType> implements EncodableDeserializer<T, JsonObject> {
+public abstract class BaseTypeDeserializer<T extends BaseType> implements EncodableDeserializer<T, JsonObject> {
 
     @NonNull
     private final Class<T> clazz;
@@ -20,13 +20,8 @@ class BaseTypeDeserializer<T extends BaseType> implements EncodableDeserializer<
     }
 
     @Override
-    public @NonNull Class<JsonObject> fromClass() {
+    public @NonNull Class<JsonObject> javaClass() {
         return JsonObject.class;
-    }
-
-    @Override
-    public T parse(@NonNull JsonObject value) {
-        return null;
     }
 
 }

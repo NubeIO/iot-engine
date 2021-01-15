@@ -16,6 +16,10 @@ public final class TimeSerializer extends EncodableSerializer<Time> {
 
     @Override
     public void serialize(Time value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+        serializeIfAnyErrorFallback(this::serialize, value, gen);
+    }
+
+    private void serialize(Time value, JsonGenerator gen) throws IOException {
         Object v = value.isFullySpecified() ? of(value) : value.toString();
         gen.writeObject(v);
     }

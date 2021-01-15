@@ -3,6 +3,7 @@ package com.nubeiot.edge.connector.bacnet.mixin;
 import io.github.zero88.utils.Reflections.ReflectionClass;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.nubeiot.edge.connector.bacnet.mixin.ObjectPropertyValues.ObjectPropertyValuesSerializer;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin.PropertyValuesSerializer;
 import com.nubeiot.edge.connector.bacnet.mixin.serializer.EncodableSerializer;
 import com.nubeiot.edge.connector.bacnet.mixin.serializer.ObjectIdentifierKeySerializer;
@@ -25,5 +26,6 @@ final class BACnetJsonModule {
                        .forEach(MODULE::addSerializer);
         MODULE.addSerializer(Encodable.class, EncodableSerializer.DEFAULT);
         MODULE.addSerializer(PropertyValuesMixin.class, new PropertyValuesSerializer());
+        MODULE.addSerializer(ObjectPropertyValues.class, new ObjectPropertyValuesSerializer());
     }
 }

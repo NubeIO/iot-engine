@@ -3,7 +3,10 @@ package com.nubeiot.edge.connector.bacnet.service.discover;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
+import io.github.zero88.utils.Functions;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
@@ -15,17 +18,20 @@ import com.nubeiot.core.dto.JsonData;
 import com.nubeiot.core.dto.RequestData;
 import com.nubeiot.core.event.EventAction;
 import com.nubeiot.core.event.EventContractor;
+import com.nubeiot.core.exceptions.ErrorMessage;
+import com.nubeiot.core.exceptions.ErrorMessageConverter;
 import com.nubeiot.core.http.base.event.ActionMethodMapping;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetObjectCache;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
 import com.nubeiot.edge.connector.bacnet.dto.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
-import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.obj.ObjectProperties;
 import com.serotonin.bacnet4j.obj.ObjectPropertyTypeDefinition;
@@ -70,19 +76,31 @@ abstract class AbstractDiscoveryService extends AbstractSharedDataDelegate<Abstr
     @EventContractor(action = EventAction.CREATE, returnType = Single.class)
     public abstract Single<JsonObject> discoverThenDoPersist(RequestData reqData);
 
+    final BACnetNetworkCache networkCache() {
+        return getSharedDataValue(BACnetCacheInitializer.EDGE_NETWORK_CACHE);
+    }
+
+    final BACnetDeviceCache deviceCache() {
+        return getSharedDataValue(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
+    }
+
+    final BACnetObjectCache objectCache() {
+        return getSharedDataValue(BACnetCacheInitializer.BACNET_OBJECT_CACHE);
+    }
+
     final DiscoverOptions parseDiscoverOptions(@NonNull RequestData reqData) {
         final LocalDeviceMetadata metadata = getSharedDataValue(BACnetDevice.EDGE_BACNET_METADATA);
         return DiscoverOptions.from(metadata.getMaxTimeoutInMS(), reqData);
     }
 
     final CommunicationProtocol parseNetworkProtocol(@NonNull DiscoverRequest request) {
-        final BACnetNetworkCache networkCache = getSharedDataValue(BACnetCacheInitializer.EDGE_NETWORK_CACHE);
-        final CommunicationProtocol cacheProtocol = networkCache.get(request.getNetworkCode());
-        final CommunicationProtocol reqBodyProtocol = BACnetNetwork.factory(request.getNetwork()).toProtocol();
+        final CommunicationProtocol cacheProtocol = networkCache().get(request.getNetworkCode());
+        final CommunicationProtocol reqBodyProtocol = BACnetNetwork.factory(
+            Optional.ofNullable(request.getNetwork()).orElse(new JsonObject())).toProtocol();
         return JsonData.from(cacheProtocol.toJson().mergeIn(reqBodyProtocol.toJson()), CommunicationProtocol.class);
     }
 
-    final Single<PropertyValuesMixin> parseRemoteObject(@NonNull LocalDevice localDevice,
+    final Single<PropertyValuesMixin> parseRemoteObject(@NonNull BACnetDevice device,
                                                         @NonNull RemoteDevice remoteDevice,
                                                         @NonNull ObjectIdentifier objId, boolean detail,
                                                         boolean includeError) {
@@ -92,7 +110,8 @@ abstract class AbstractDiscoveryService extends AbstractSharedDataDelegate<Abstr
                          .collect(PropertyReferences::new,
                                   (refs, opr) -> refs.addIndex(objId, opr.getPropertyIdentifier(),
                                                                opr.getPropertyArrayIndex()))
-                         .map(propRefs -> RequestUtils.readProperties(localDevice, remoteDevice, propRefs, true, null))
+                         .map(propertyRefs -> RequestUtils.readProperties(device.localDevice(), remoteDevice,
+                                                                          propertyRefs, true, null))
                          .map(pvs -> PropertyValuesMixin.create(objId, pvs, includeError));
     }
 
@@ -100,6 +119,25 @@ abstract class AbstractDiscoveryService extends AbstractSharedDataDelegate<Abstr
         return detail
                ? ObjectProperties.getObjectPropertyTypeDefinitions(objectType)
                : ObjectProperties.getRequiredObjectPropertyTypeDefinitions(objectType);
+    }
+
+    protected String parsePersistResponse(@NonNull JsonObject output) {
+        final ErrorMessage error = Functions.getIfThrow(() -> ErrorMessage.parse(output)).orElse(null);
+        if (Objects.nonNull(error)) {
+            throw ErrorMessageConverter.from(error);
+        }
+        return parseResourceId(output.getJsonObject("resource", new JsonObject()));
+    }
+
+    protected abstract String parseResourceId(@NonNull JsonObject resource);
+
+    protected final @NonNull DiscoveryRequestWrapper toRequest(@NonNull RequestData reqData,
+                                                               @NonNull DiscoverRequest.DiscoverLevel level) {
+        final DiscoverRequest request = DiscoverRequest.from(reqData, level);
+        final DiscoverOptions options = parseDiscoverOptions(reqData);
+        final CommunicationProtocol protocol = parseNetworkProtocol(request);
+        final BACnetDevice device = deviceCache().get(protocol);
+        return new DiscoveryRequestWrapper(request, options, device);
     }
 
 }

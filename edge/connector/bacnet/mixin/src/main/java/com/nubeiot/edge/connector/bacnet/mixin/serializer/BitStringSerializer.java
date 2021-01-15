@@ -25,6 +25,10 @@ public final class BitStringSerializer extends EncodableSerializer<BitString> {
 
     @Override
     public void serialize(BitString value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+        serializeIfAnyErrorFallback(this::serialize, value, gen);
+    }
+
+    private void serialize(BitString value, JsonGenerator gen) throws IOException {
         final @NonNull Predicate<Method> predicate = m -> m.getReturnType() == boolean.class &&
                                                           m.getParameterCount() == 0 && m.getName().startsWith("is");
         final Map<String, Boolean> kv = ReflectionMethod.find(predicate, value.getClass())

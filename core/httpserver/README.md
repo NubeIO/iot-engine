@@ -41,7 +41,7 @@ The register task is implemented by [`:core:micro`](../micro/README.md). So, to 
   compile project(':core:micro')
   ```
 
-- See [sample implementation](src/test/java/com/nubeiot/core/http/dynamic/mock/GatewayServer.java)
+- See [sample implementation](src/test/java/com/nubeiot/core/http/dynamic/mock/MockGatewayServer.java)
 
 ### Dynamic HTTP REST
 
@@ -52,7 +52,7 @@ The register task is implemented by [`:core:micro`](../micro/README.md). So, to 
   compile project(':core:micro')
   ```
 
-- See [sample implementation](src/test/java/com/nubeiot/core/http/dynamic/mock/HttpServiceServer.java)
+- See [sample implementation](src/test/java/com/nubeiot/core/http/dynamic/mock/MockHttpServiceServer.java)
 
 ### Dynamic Event Message REST
 
@@ -62,4 +62,5 @@ The register task is implemented by [`:core:micro`](../micro/README.md). So, to 
   compile project(':core:micro')
   ```
 
-- See [sample implementation](src/test/java/com/nubeiot/core/http/dynamic/mock/EventMessageService.java)
+- See [sample implementation 1](src/test/java/com/nubeiot/core/http/dynamic/mock/MockEventOneApiOneLocService.java)
+- See [sample implementation 2](src/test/java/com/nubeiot/core/http/dynamic/mock/MockEventOneApiOneLocService.java)

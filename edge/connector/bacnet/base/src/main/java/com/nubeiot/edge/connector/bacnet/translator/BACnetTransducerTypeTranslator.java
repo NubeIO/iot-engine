@@ -1,18 +1,24 @@
 package com.nubeiot.edge.connector.bacnet.translator;
 
-import com.nubeiot.edge.connector.bacnet.translator.BACnetTranslator.BACnetIoTNotionTranslator;
+import java.util.Objects;
+
+import com.nubeiot.edge.connector.bacnet.translator.BACnetTranslator.BACnetIoTChunkNotionTranslator;
 import com.nubeiot.iotdata.dto.TransducerType;
-import com.serotonin.bacnet4j.type.Encodable;
+import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 
-public class BACnetTransducerTypeTranslator implements BACnetIoTNotionTranslator<TransducerType, Encodable> {
-
-    @Override
-    public TransducerType serialize(Encodable object) {
-        return null;
-    }
+public class BACnetTransducerTypeTranslator implements BACnetIoTChunkNotionTranslator<TransducerType, ObjectType> {
 
     @Override
-    public Encodable deserialize(TransducerType concept) {
+    public TransducerType serialize(ObjectType objectType) {
+        Objects.requireNonNull(objectType, "Invalid BACnet object type");
+        if (objectType.isOneOf(ObjectType.analogInput, ObjectType.analogOutput, ObjectType.analogValue,
+                               ObjectType.largeAnalogValue, ObjectType.lightingOutput)) {
+            return TransducerType.SENSOR;
+        }
+        if (objectType.isOneOf(ObjectType.binaryInput, ObjectType.binaryOutput, ObjectType.binaryValue,
+                               ObjectType.binaryLightingOutput)) {
+            return TransducerType.ACTUATOR;
+        }
         return null;
     }
 
@@ -22,8 +28,8 @@ public class BACnetTransducerTypeTranslator implements BACnetIoTNotionTranslator
     }
 
     @Override
-    public Class<Encodable> toType() {
-        return Encodable.class;
+    public Class<ObjectType> toType() {
+        return ObjectType.class;
     }
 
 }

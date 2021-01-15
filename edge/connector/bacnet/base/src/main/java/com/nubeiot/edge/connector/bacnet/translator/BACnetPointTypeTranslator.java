@@ -1,19 +1,25 @@
 package com.nubeiot.edge.connector.bacnet.translator;
 
-import com.nubeiot.edge.connector.bacnet.translator.BACnetTranslator.BACnetIoTNotionTranslator;
+import java.util.Objects;
+
+import com.nubeiot.edge.connector.bacnet.translator.BACnetTranslator.BACnetIoTChunkNotionTranslator;
 import com.nubeiot.iotdata.dto.PointType;
-import com.serotonin.bacnet4j.type.Encodable;
+import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 
-public final class BACnetPointTypeTranslator implements BACnetIoTNotionTranslator<PointType, Encodable> {
-
-    @Override
-    public PointType serialize(Encodable object) {
-        return null;
-    }
+public final class BACnetPointTypeTranslator implements BACnetIoTChunkNotionTranslator<PointType, ObjectType> {
 
     @Override
-    public Encodable deserialize(PointType concept) {
-        return null;
+    public PointType serialize(ObjectType objectType) {
+        Objects.requireNonNull(objectType, "Invalid BACnet object type");
+        if (objectType.isOneOf(ObjectType.analogInput, ObjectType.analogOutput, ObjectType.analogValue,
+                               ObjectType.largeAnalogValue)) {
+            return PointType.ANALOG;
+        }
+        if (objectType.isOneOf(ObjectType.binaryInput, ObjectType.binaryOutput, ObjectType.binaryValue,
+                               ObjectType.binaryLightingOutput)) {
+            return PointType.DIGITAL;
+        }
+        return PointType.UNKNOWN;
     }
 
     @Override
@@ -22,8 +28,8 @@ public final class BACnetPointTypeTranslator implements BACnetIoTNotionTranslato
     }
 
     @Override
-    public Class<Encodable> toType() {
-        return Encodable.class;
+    public Class<ObjectType> toType() {
+        return ObjectType.class;
     }
 
 }

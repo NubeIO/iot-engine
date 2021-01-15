@@ -12,7 +12,7 @@ public final class UnsignedIntegerDeserializer implements NumberDeserializer<Uns
     }
 
     @Override
-    public @NonNull Class<Long> fromClass() {
+    public @NonNull Class<Long> javaClass() {
         return Long.class;
     }
 

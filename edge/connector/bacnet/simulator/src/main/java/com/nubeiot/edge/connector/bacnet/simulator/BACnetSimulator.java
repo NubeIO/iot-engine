@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 
 import io.reactivex.Single;
-import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.event.EventbusClient;
@@ -38,18 +37,18 @@ public final class BACnetSimulator extends AbstractBACnetVerticle<SimulatorConfi
     @Override
     @NonNull
     protected Single<JsonObject> registerApis(@NonNull EventbusClient client, @NonNull SimulatorConfig config) {
-        return Single.just(new JsonObject().put("message", "No BACnet services")).doOnSuccess(logger::info);
+        return Single.just(new JsonObject().put("message", "No BACnet services"));
     }
 
     @Override
     @NonNull
     protected Single<JsonObject> registerSubscriber(@NonNull EventbusClient client, @NonNull SimulatorConfig config) {
-        return Single.just(new JsonObject().put("message", "No BACnet Subscriber")).doOnSuccess(logger::info);
+        return Single.just(new JsonObject().put("message", "No BACnet Subscriber"));
     }
 
     @Override
-    protected void addListenerOnEachDevice(BACnetDevice device) {
-        device.addListener(new WhoIsListener());
+    protected void addListenerOnEachDevice(@NonNull BACnetDevice device) {
+        device.addListeners(new WhoIsListener());
     }
 
     @Override
@@ -62,8 +61,8 @@ public final class BACnetSimulator extends AbstractBACnetVerticle<SimulatorConfi
     }
 
     @Override
-    protected Future<Void> stopBACnet() {
-        return Future.succeededFuture();
+    protected Single<JsonObject> stopBACnet() {
+        return Single.just(new JsonObject());
     }
 
     @Override

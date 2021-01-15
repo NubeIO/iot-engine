@@ -40,14 +40,15 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
 
     @Override
     public void stop(Future<Void> future) {
-        super.stop(future);
+        stopBACnet().doOnSuccess(result -> logger.info(result.encode()))
+                    .subscribe(ignore -> super.stop(future), future::fail);
     }
 
     protected void successHandler(@NonNull C config) {
         ExecutorHelpers.blocking(getVertx(), this::getEventbusClient)
                        .map(c -> c.register(config.getCompleteDiscoverAddress(), createDiscoverCompletionHandler()))
-                       .flatMap(client -> registerApis(client, config).map(ignore -> client))
-                       .flatMap(client -> registerSubscriber(client, config))
+                       .flatMap(client -> registerApis(client, config).doOnSuccess(logger::info).map(ignore -> client))
+                       .flatMap(client -> invokeSubscriberRegistration(client, config).doOnSuccess(logger::info))
                        .map(r -> config)
                        .flatMap(this::availableNetworks)
                        .doOnSuccess(protocols -> logger.info("Found {} BACnet networks", protocols.size()))
@@ -61,6 +62,13 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
                        .count()
                        .map(total -> new JsonObject().put("total", total))
                        .subscribe((d, e) -> readinessHandler(config, d, e));
+    }
+
+    private Single<JsonObject> invokeSubscriberRegistration(EventbusClient client, C config) {
+        if (config.isEnableSubscriber()) {
+            return registerSubscriber(client, config);
+        }
+        return Single.just(new JsonObject().put("message", "BACnet subscriber feature is disabled"));
     }
 
     private void readinessHandler(@NonNull C config, JsonObject d, Throwable e) {
@@ -105,6 +113,7 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
      * Add one or more {@code BACnet listeners} after each {@code BACnet device} on each network starts
      *
      * @param device BACnet device
+     * @see BACnetDevice
      * @see DeviceEventListener
      * @see BACnetNotifier
      */
@@ -120,7 +129,7 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
     protected abstract @NonNull Single<? extends Collection<CommunicationProtocol>> availableNetworks(
         @NonNull C config);
 
-    protected abstract Future<Void> stopBACnet();
+    protected abstract Single<JsonObject> stopBACnet();
 
     @NonNull
     protected DiscoverCompletionHandler createDiscoverCompletionHandler() {

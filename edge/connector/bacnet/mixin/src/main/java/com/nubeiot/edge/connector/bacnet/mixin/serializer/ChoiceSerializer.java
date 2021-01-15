@@ -15,6 +15,10 @@ public final class ChoiceSerializer extends EncodableSerializer<Choice> {
 
     @Override
     public void serialize(Choice value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+        serializeIfAnyErrorFallback(this::serialize, value, gen);
+    }
+
+    private void serialize(Choice value, JsonGenerator gen) throws IOException {
         final Object datum = value.getChoiceOptions()
                                   .getPrimitives()
                                   .stream()

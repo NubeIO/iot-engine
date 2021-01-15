@@ -53,7 +53,9 @@ public final class DiscoverOptions implements JsonData {
             () -> Functions.toInt().apply(Strings.toString(f.getValue(Fields.maxItem)))).orElse(-1);
         final boolean detail = Boolean.parseBoolean(Strings.toString(f.getValue(Fields.detail)));
         final boolean force = Boolean.parseBoolean(Strings.toString(f.getValue(Fields.force)));
-        final TimeUnit timeUnit = timeoutOpt.isPresent() ? timeUnitOpt.orElse(TimeUnit.SECONDS) : TimeUnit.MILLISECONDS;
+        final TimeUnit timeUnit = timeoutOpt.isPresent()
+                                  ? timeUnitOpt.orElse(TimeUnit.MILLISECONDS)
+                                  : TimeUnit.MILLISECONDS;
         final long maxTimeout = timeUnit.convert(maxTimeoutInMS, TimeUnit.MILLISECONDS);
         final long defTimeout = timeUnit.convert(DEFAULT_TIMEOUT_IN_MS, TimeUnit.MILLISECONDS);
         final long timeout = Math.min(timeoutOpt.orElse(defTimeout), maxTimeout);

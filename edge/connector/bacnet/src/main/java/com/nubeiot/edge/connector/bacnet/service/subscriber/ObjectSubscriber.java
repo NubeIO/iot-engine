@@ -5,7 +5,7 @@ import io.vertx.core.Vertx;
 
 import com.nubeiot.core.sql.EntityMetadata;
 import com.nubeiot.edge.connector.bacnet.service.BACnetSubscriber;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.PointCompositeMetadata;
+import com.nubeiot.edge.module.datapoint.DataPointIndex.PointTransducerMetadata;
 import com.nubeiot.edge.module.datapoint.rpc.subscriber.AbstractProtocolSubscriber;
 import com.nubeiot.iotdata.edge.model.tables.pojos.Point;
 
@@ -20,7 +20,7 @@ public final class ObjectSubscriber extends AbstractProtocolSubscriber<Point> im
 
     @Override
     public @NonNull EntityMetadata context() {
-        return PointCompositeMetadata.INSTANCE;
+        return PointTransducerMetadata.INSTANCE;
     }
 
     @Override

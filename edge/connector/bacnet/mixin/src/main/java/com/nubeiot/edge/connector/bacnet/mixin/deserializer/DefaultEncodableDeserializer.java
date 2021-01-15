@@ -16,7 +16,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-final class DefaultEncodableDeserializer implements EncodableDeserializer<Encodable, Object> {
+public final class DefaultEncodableDeserializer
+    implements EncodableDeserializer<Encodable, Object>, NonRegistryDeserializer {
 
     private final Class<? extends Encodable> actualEncodableClass;
 
@@ -41,7 +42,7 @@ final class DefaultEncodableDeserializer implements EncodableDeserializer<Encoda
     }
 
     @Override
-    public @NonNull Class<Object> fromClass() {
+    public @NonNull Class<Object> javaClass() {
         return Object.class;
     }
 

@@ -24,7 +24,7 @@ public final class DateDeserializer implements EncodableDeserializer<Date, Strin
     }
 
     @Override
-    public @NonNull Class<String> fromClass() {
+    public @NonNull Class<String> javaClass() {
         return String.class;
     }
 

@@ -12,7 +12,7 @@ public final class BooleanDeserializer implements EncodableDeserializer<Boolean,
     }
 
     @Override
-    public @NonNull Class<java.lang.Boolean> fromClass() {
+    public @NonNull Class<java.lang.Boolean> javaClass() {
         return java.lang.Boolean.class;
     }
 

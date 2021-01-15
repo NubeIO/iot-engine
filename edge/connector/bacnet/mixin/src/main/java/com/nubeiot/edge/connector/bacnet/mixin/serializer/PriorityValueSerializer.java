@@ -14,6 +14,10 @@ public final class PriorityValueSerializer extends EncodableSerializer<PriorityV
 
     @Override
     public void serialize(PriorityValue value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+        serializeIfAnyErrorFallback(this::serialize, value, gen);
+    }
+
+    private void serialize(PriorityValue value, JsonGenerator gen) throws IOException {
         gen.writeObject(value.getConstructedValue());
     }
 

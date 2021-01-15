@@ -18,6 +18,7 @@ public final class BACnetCacheInitializer implements CacheInitializer<BACnetCach
 
     public static final String EDGE_NETWORK_CACHE = "EDGE_NETWORK_CACHE";
     public static final String BACNET_DEVICE_CACHE = "BACNET_DEVICE_CACHE";
+    public static final String BACNET_OBJECT_CACHE = "BACNET_OBJECT_CACHE";
     @NonNull
     @Getter
     private final BACnetConfig config;
@@ -29,6 +30,7 @@ public final class BACnetCacheInitializer implements CacheInitializer<BACnetCach
         addBlockingCache(context, EDGE_NETWORK_CACHE, BACnetNetworkCache::init);
         addBlockingCache(context, BACNET_DEVICE_CACHE,
                          () -> BACnetDeviceCache.init(context.getVertx(), context.getSharedKey()));
+        addBlockingCache(context, BACNET_OBJECT_CACHE, BACnetObjectCache::new);
         return this;
     }
 

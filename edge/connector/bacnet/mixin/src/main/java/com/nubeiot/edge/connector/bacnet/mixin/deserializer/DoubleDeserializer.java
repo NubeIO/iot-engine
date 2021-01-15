@@ -12,7 +12,7 @@ public final class DoubleDeserializer implements NumberDeserializer<Double, java
     }
 
     @Override
-    public @NonNull Class<java.lang.Double> fromClass() {
+    public @NonNull Class<java.lang.Double> javaClass() {
         return java.lang.Double.class;
     }
 
