@@ -44,11 +44,10 @@ include ':edge:connector:bacnet'
 include ':edge:connector:bacnet:mixin'
 include ':edge:connector:bacnet:base'
 include ':edge:connector:bacnet:simulator'
-include ':edge:connector:sample:kafka'
+include ':edge:connector:kafka'
 include ':edge:rule'
 
 include ':eventbus:edge:installer'
-include ':eventbus:edge:datapoint'
 include ':eventbus:edge:gateway'
 
 include ':ext:rx-jdbc'

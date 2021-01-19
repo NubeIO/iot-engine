@@ -89,6 +89,7 @@ dependencies {
     compile project.deps.database.hikari
     compile project.deps.database.jooqMeta
     compile project(":ext:rx-jdbc")
+//    compile project.deps.zero88.sql.rxJdbc
     compileOnly project(":core:httpbase")
 
     testCompile project(":core:base").sourceSets.test.output
