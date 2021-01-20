@@ -14,7 +14,7 @@
       "__gateway__": {
         "enabled": true,
         "indexAddress": "nubeio.bacnet.gateway.index",
-        "localAnnounceMonitorClass": "com.nubeiot.core.http.gateway.RouterAnnounceListener"
+        "localAnnounceMonitorClass": "io.github.zero88.qwe.http.server.gateway.RouterAnnounceListener"
       },
       "__serviceDiscovery__": {
         "enabled": false
