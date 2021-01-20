@@ -1,11 +1,9 @@
 import com.nubeiot.buildscript.ProjectUtils
-import com.nubeiot.buildscript.docker.DockerBuildTask
-import com.nubeiot.buildscript.docker.internal.JavaEdition
-import com.nubeiot.buildscript.docker.internal.JavaType
 
 plugins {
     id "eclipse"
     id "idea"
+    id "java-test-fixtures"
     id "org.sonarqube" apply false
     id "net.ltgt.apt" apply false
 }
@@ -36,6 +34,7 @@ subprojects {
     apply plugin: "idea"
     apply plugin: "maven"
     apply plugin: "java-library-distribution"
+    apply plugin: "java-test-fixtures"
     apply plugin: "jacoco"
     apply plugin: "net.ltgt.apt"
 
@@ -59,12 +58,13 @@ subprojects {
         testAnnotationProcessor project.deps.lombok
     }
 
-    task dockerBuild(type: DockerBuildTask) {
-        javaVersion = ProjectUtils.extraProp(project, "javaVersion", "8u265")
-        javaEdition = JavaEdition.valueOf(ProjectUtils.extraProp(project, "javaEdition", JavaEdition.OPENJDK.name()))
-        javaType = JavaType.valueOf(ProjectUtils.extraProp(project, "javaType", JavaType.JRE.name()))
-        vcsBranch = ProjectUtils.extraProp(project, "vcsBranch", "")
-    }
+    //TODO docker
+//    task dockerBuild(type: DockerBuildTask) {
+//        javaVersion = ProjectUtils.extraProp(project, "javaVersion", "8u265")
+//        javaEdition = JavaEdition.valueOf(ProjectUtils.extraProp(project, "javaEdition", JavaEdition.OPENJDK.name()))
+//        javaType = JavaType.valueOf(ProjectUtils.extraProp(project, "javaType", JavaType.JRE.name()))
+//        vcsBranch = ProjectUtils.extraProp(project, "vcsBranch", "")
+//    }
 
     apply from: "$rootDir/buildSrc/generated.gradle"
     apply from: "$rootDir/buildSrc/javadoc.gradle"
