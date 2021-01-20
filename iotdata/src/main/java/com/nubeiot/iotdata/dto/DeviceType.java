@@ -1,8 +1,8 @@
 package com.nubeiot.iotdata.dto;
 
-import io.github.zero88.msa.bp.dto.EnumType;
-import io.github.zero88.msa.bp.dto.EnumType.AbstractEnumType;
-import io.github.zero88.msa.bp.dto.PlainType;
+import io.github.zero88.qwe.dto.EnumType;
+import io.github.zero88.qwe.dto.EnumType.AbstractEnumType;
+import io.github.zero88.qwe.dto.PlainType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 

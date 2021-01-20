@@ -8,9 +8,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import io.github.zero88.msa.bp.exceptions.CommunicationProtocolException;
-import io.github.zero88.msa.bp.exceptions.NotFoundException;
-import io.github.zero88.msa.bp.utils.Networks;
+import io.github.zero88.qwe.exceptions.CommunicationProtocolException;
+import io.github.zero88.qwe.exceptions.NotFoundException;
+import io.github.zero88.qwe.utils.Networks;
 import io.github.zero88.utils.Strings;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;

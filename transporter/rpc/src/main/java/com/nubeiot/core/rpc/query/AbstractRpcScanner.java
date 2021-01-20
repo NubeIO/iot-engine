@@ -1,6 +1,6 @@
 package com.nubeiot.core.rpc.query;
 
-import io.github.zero88.msa.bp.dto.JsonData;
+import io.github.zero88.qwe.dto.JsonData;
 import io.vertx.core.Vertx;
 
 import com.nubeiot.core.rpc.BaseRpcProtocol;

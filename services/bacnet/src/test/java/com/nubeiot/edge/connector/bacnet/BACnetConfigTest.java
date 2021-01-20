@@ -6,9 +6,9 @@ import org.json.JSONException;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.Customization;
 
-import io.github.zero88.msa.bp.IConfig;
-import io.github.zero88.msa.bp.TestHelper.JsonHelper;
-import io.github.zero88.msa.bp.utils.Configs;
+import io.github.zero88.qwe.IConfig;
+import io.github.zero88.qwe.TestHelper.JsonHelper;
+import io.github.zero88.qwe.utils.Configs;
 
 public class BACnetConfigTest {
 

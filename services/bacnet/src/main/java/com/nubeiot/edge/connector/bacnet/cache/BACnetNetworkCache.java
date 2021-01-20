@@ -6,8 +6,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import io.github.zero88.msa.bp.cache.AbstractLocalCache;
-import io.github.zero88.msa.bp.cache.LocalDataCache;
+import io.github.zero88.qwe.cache.AbstractLocalCache;
+import io.github.zero88.qwe.cache.LocalDataCache;
 import io.github.zero88.utils.Strings;
 import io.github.zero88.utils.UUID64;
 

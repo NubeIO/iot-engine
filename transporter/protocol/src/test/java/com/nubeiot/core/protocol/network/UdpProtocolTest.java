@@ -4,8 +4,8 @@ import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.github.zero88.msa.bp.TestHelper.JsonHelper;
-import io.github.zero88.msa.bp.dto.JsonData;
+import io.github.zero88.qwe.TestHelper.JsonHelper;
+import io.github.zero88.qwe.dto.JsonData;
 import io.vertx.core.json.JsonObject;
 
 public class UdpProtocolTest {

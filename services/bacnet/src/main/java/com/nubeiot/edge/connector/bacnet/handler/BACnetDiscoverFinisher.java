@@ -4,11 +4,11 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
-import io.github.zero88.msa.bp.component.SharedDataDelegate;
-import io.github.zero88.msa.bp.dto.ErrorData;
-import io.github.zero88.msa.bp.dto.JsonData;
-import io.github.zero88.msa.bp.dto.msg.RequestData;
-import io.github.zero88.msa.bp.utils.ExecutorHelpers;
+import io.github.zero88.qwe.component.SharedDataDelegate;
+import io.github.zero88.qwe.dto.ErrorData;
+import io.github.zero88.qwe.dto.JsonData;
+import io.github.zero88.qwe.dto.msg.RequestData;
+import io.github.zero88.qwe.utils.ExecutorHelpers;
 import io.github.zero88.utils.UUID64;
 import io.reactivex.Observable;
 import io.vertx.core.Vertx;

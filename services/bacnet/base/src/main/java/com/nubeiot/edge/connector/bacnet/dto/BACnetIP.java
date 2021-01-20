@@ -1,6 +1,6 @@
 package com.nubeiot.edge.connector.bacnet.dto;
 
-import io.github.zero88.msa.bp.utils.Networks;
+import io.github.zero88.qwe.utils.Networks;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;

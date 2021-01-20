@@ -5,12 +5,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 
-import io.github.zero88.msa.bp.BlueprintConfig;
-import io.github.zero88.msa.bp.BlueprintConfig.AppConfig;
-import io.github.zero88.msa.bp.IConfig;
-import io.github.zero88.msa.bp.TestHelper;
-import io.github.zero88.msa.bp.TestHelper.VertxHelper;
-import io.github.zero88.msa.bp.event.EventbusClient;
+import io.github.zero88.qwe.CarlConfig;
+import io.github.zero88.qwe.CarlConfig.AppConfig;
+import io.github.zero88.qwe.IConfig;
+import io.github.zero88.qwe.TestHelper;
+import io.github.zero88.qwe.TestHelper.VertxHelper;
+import io.github.zero88.qwe.event.EventbusClient;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -53,8 +53,8 @@ public abstract class BaseBACnetVerticleTest {
     protected abstract void deployServices(TestContext context);
 
     protected final DeploymentOptions createDeploymentOptions(@NonNull IConfig cfg) {
-        final BlueprintConfig nubeConfig = IConfig.from(
-            new JsonObject().put(AppConfig.NAME, new JsonObject().put(cfg.key(), cfg.toJson())), BlueprintConfig.class);
+        final CarlConfig nubeConfig = IConfig.from(
+            new JsonObject().put(AppConfig.NAME, new JsonObject().put(cfg.key(), cfg.toJson())), CarlConfig.class);
         return new DeploymentOptions().setConfig(nubeConfig.toJson());
     }
 

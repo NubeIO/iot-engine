@@ -1,8 +1,8 @@
 package com.nubeiot.edge.connector.bacnet.service;
 
-import io.github.zero88.msa.bp.dto.JsonData;
-import io.github.zero88.msa.bp.exceptions.BlueprintException;
-import io.github.zero88.msa.bp.exceptions.converter.BlueprintExceptionConverter;
+import io.github.zero88.qwe.dto.JsonData;
+import io.github.zero88.qwe.exceptions.CarlException;
+import io.github.zero88.qwe.exceptions.converter.CarlExceptionConverter;
 import io.vertx.core.logging.Logger;
 
 import com.nubeiot.core.rpc.RpcProtocol;
@@ -17,7 +17,7 @@ import lombok.NonNull;
 public interface BACnetRpcProtocol<P extends JsonData> extends RpcProtocol<P> {
 
     static void sneakyThrowable(@NonNull Logger logger, @NonNull Throwable t, boolean isMaster) {
-        final BlueprintException error = BlueprintExceptionConverter.friendly(t);
+        final CarlException error = CarlExceptionConverter.friendly(t);
         if (isMaster) {
             throw error;
         }

@@ -3,8 +3,8 @@ package com.nubeiot.edge.connector.bacnet.simulator;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.github.zero88.msa.bp.IConfig;
-import io.github.zero88.msa.bp.utils.Configs;
+import io.github.zero88.qwe.IConfig;
+import io.github.zero88.qwe.utils.Configs;
 
 public class SimulatorConfigTest {
 

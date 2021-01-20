@@ -1,5 +1,5 @@
 dependencies {
-    compile project.deps.zero88.bp.base
+    compile project.deps.zero88.qwe.base
     compile project(':transporter:protocol')
 
     compile "com.infiniteautomation:bacnet4j:5.0.2"

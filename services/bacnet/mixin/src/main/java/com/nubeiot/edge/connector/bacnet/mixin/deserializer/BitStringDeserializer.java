@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 
 import io.github.classgraph.MethodInfo;
 import io.github.classgraph.MethodParameterInfo;
-import io.github.zero88.msa.bp.exceptions.converter.BlueprintExceptionConverter;
+import io.github.zero88.qwe.exceptions.converter.CarlExceptionConverter;
 import io.github.zero88.utils.Functions;
 import io.github.zero88.utils.Reflections.ReflectionClass;
 import io.github.zero88.utils.Reflections.ReflectionExecutable;
@@ -70,7 +70,7 @@ public abstract class BitStringDeserializer<T extends BitString> implements Enco
                 return null;
             }
             final Class[] classes = IntStream.range(0, ps.length).mapToObj(i -> boolean.class).toArray(Class[]::new);
-            return Functions.getOrThrow(BlueprintExceptionConverter::friendly,
+            return Functions.getOrThrow(CarlExceptionConverter::friendly,
                                         () -> ReflectionClass.createObject(clazz, classes, ps));
         }
 

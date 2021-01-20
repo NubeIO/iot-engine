@@ -1,9 +1,9 @@
 package com.nubeiot.core.rpc;
 
-import io.github.zero88.msa.bp.component.SharedDataDelegate;
-import io.github.zero88.msa.bp.dto.JsonData;
-import io.github.zero88.msa.bp.event.EventbusClient;
-import io.github.zero88.msa.bp.micro.discovery.GatewayServiceInvoker;
+import io.github.zero88.qwe.component.SharedDataDelegate;
+import io.github.zero88.qwe.dto.JsonData;
+import io.github.zero88.qwe.event.EventbusClient;
+import io.github.zero88.qwe.micro.discovery.GatewayServiceInvoker;
 
 import com.nubeiot.iotdata.dto.Protocol;
 

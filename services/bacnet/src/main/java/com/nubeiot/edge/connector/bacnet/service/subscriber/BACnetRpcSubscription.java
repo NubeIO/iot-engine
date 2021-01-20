@@ -1,6 +1,6 @@
 package com.nubeiot.edge.connector.bacnet.service.subscriber;
 
-import io.github.zero88.msa.bp.dto.JsonData;
+import io.github.zero88.qwe.dto.JsonData;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;

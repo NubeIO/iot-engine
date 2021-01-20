@@ -4,11 +4,11 @@ import java.util.Optional;
 
 import org.junit.Test;
 
-import io.github.zero88.msa.bp.dto.msg.RequestData;
-import io.github.zero88.msa.bp.event.EventAction;
-import io.github.zero88.msa.bp.event.EventMessage;
-import io.github.zero88.msa.bp.event.Status;
-import io.github.zero88.msa.bp.exceptions.NetworkException;
+import io.github.zero88.qwe.dto.msg.RequestData;
+import io.github.zero88.qwe.event.EventAction;
+import io.github.zero88.qwe.event.EventMessage;
+import io.github.zero88.qwe.event.Status;
+import io.github.zero88.qwe.exceptions.NetworkException;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;

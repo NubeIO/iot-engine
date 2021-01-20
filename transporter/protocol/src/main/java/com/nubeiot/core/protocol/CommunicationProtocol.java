@@ -2,9 +2,9 @@ package com.nubeiot.core.protocol;
 
 import java.util.Map;
 
-import io.github.zero88.msa.bp.dto.EnumType;
-import io.github.zero88.msa.bp.dto.JsonData;
-import io.github.zero88.msa.bp.exceptions.CommunicationProtocolException;
+import io.github.zero88.qwe.dto.EnumType;
+import io.github.zero88.qwe.dto.JsonData;
+import io.github.zero88.qwe.exceptions.CommunicationProtocolException;
 import io.github.zero88.utils.Strings;
 
 import com.fasterxml.jackson.annotation.JsonCreator;

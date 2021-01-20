@@ -1,6 +1,6 @@
 package com.nubeiot.iotdata.translator;
 
-import io.github.zero88.msa.bp.dto.JsonData;
+import io.github.zero88.qwe.dto.JsonData;
 
 /**
  * Represents {@code translator} between {@code Nube IoT database entity} and the equivalent entity in another {@code

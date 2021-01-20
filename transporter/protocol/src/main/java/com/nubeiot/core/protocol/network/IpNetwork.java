@@ -13,10 +13,10 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import io.github.zero88.msa.bp.dto.JsonData;
-import io.github.zero88.msa.bp.exceptions.CommunicationProtocolException;
-import io.github.zero88.msa.bp.exceptions.NotFoundException;
-import io.github.zero88.msa.bp.utils.Networks;
+import io.github.zero88.qwe.dto.JsonData;
+import io.github.zero88.qwe.exceptions.CommunicationProtocolException;
+import io.github.zero88.qwe.exceptions.NotFoundException;
+import io.github.zero88.qwe.utils.Networks;
 import io.github.zero88.utils.Functions;
 import io.github.zero88.utils.Strings;
 import io.vertx.core.logging.Logger;

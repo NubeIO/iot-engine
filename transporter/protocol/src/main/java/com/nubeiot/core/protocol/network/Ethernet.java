@@ -1,6 +1,6 @@
 package com.nubeiot.core.protocol.network;
 
-import io.github.zero88.msa.bp.exceptions.CommunicationProtocolException;
+import io.github.zero88.qwe.exceptions.CommunicationProtocolException;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.core.protocol.CommunicationProtocol;

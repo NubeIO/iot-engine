@@ -2,7 +2,7 @@ package com.nubeiot.core.rpc.query;
 
 import java.util.Map;
 
-import io.github.zero88.msa.bp.dto.msg.RequestData;
+import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.utils.Strings;
 import io.reactivex.Single;
 

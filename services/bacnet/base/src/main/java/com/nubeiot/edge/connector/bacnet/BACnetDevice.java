@@ -3,7 +3,7 @@ package com.nubeiot.edge.connector.bacnet;
 import java.util.Arrays;
 import java.util.List;
 
-import io.github.zero88.msa.bp.component.SharedDataDelegate;
+import io.github.zero88.qwe.component.SharedDataDelegate;
 import io.reactivex.Single;
 
 import com.nubeiot.core.protocol.CommunicationProtocol;

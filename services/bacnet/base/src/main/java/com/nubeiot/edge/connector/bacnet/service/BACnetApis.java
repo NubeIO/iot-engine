@@ -1,6 +1,6 @@
 package com.nubeiot.edge.connector.bacnet.service;
 
-import io.github.zero88.msa.bp.micro.metadata.EventHttpService;
+import io.github.zero88.qwe.micro.metadata.EventHttpService;
 
 /**
  * Represents {@code BACnet public API} services

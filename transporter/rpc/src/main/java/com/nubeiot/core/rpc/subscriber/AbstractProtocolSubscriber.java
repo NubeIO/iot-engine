@@ -1,8 +1,8 @@
 package com.nubeiot.core.rpc.subscriber;
 
-import io.github.zero88.msa.bp.dto.JsonData;
-import io.github.zero88.msa.bp.dto.msg.RequestData;
-import io.github.zero88.msa.bp.event.EventContractor;
+import io.github.zero88.qwe.dto.JsonData;
+import io.github.zero88.qwe.dto.msg.RequestData;
+import io.github.zero88.qwe.event.EventContractor;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 

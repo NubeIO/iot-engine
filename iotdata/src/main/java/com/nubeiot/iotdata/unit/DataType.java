@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import io.github.classgraph.ClassInfo;
-import io.github.zero88.msa.bp.dto.EnumType;
+import io.github.zero88.qwe.dto.EnumType;
 import io.github.zero88.utils.Reflections.ReflectionClass;
 import io.github.zero88.utils.Reflections.ReflectionField;
 import io.github.zero88.utils.Strings;

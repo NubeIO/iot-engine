@@ -3,8 +3,8 @@ package com.nubeiot.edge.connector.bacnet.mixin.deserializer;
 import java.util.Objects;
 import java.util.Optional;
 
-import io.github.zero88.msa.bp.exceptions.BlueprintException;
-import io.github.zero88.msa.bp.exceptions.converter.BlueprintExceptionConverter;
+import io.github.zero88.qwe.exceptions.CarlException;
+import io.github.zero88.qwe.exceptions.converter.CarlExceptionConverter;
 import io.github.zero88.utils.Functions;
 import io.github.zero88.utils.Strings;
 import io.vertx.core.logging.Logger;
@@ -40,7 +40,7 @@ public interface EncodableDeserializer<T extends Encodable, V> {
      * @param propertyIdentifier Given property identifier
      * @param value              Given value
      * @return BACnet Encodable value
-     * @throws BlueprintException if catching any error when parsing
+     * @throws CarlException if catching any error when parsing
      * @since 1.0.0
      */
     static Encodable parse(@NonNull PropertyIdentifier propertyIdentifier, Object value) {
@@ -66,7 +66,7 @@ public interface EncodableDeserializer<T extends Encodable, V> {
      * @param propertyIdentifier Given property identifier
      * @param value              Given value
      * @return BACnet Encodable value
-     * @throws BlueprintException if catching any error when parsing
+     * @throws CarlException if catching any error when parsing
      * @since 1.0.0
      */
     static Encodable parse(@NonNull ObjectIdentifier objectIdentifier, @NonNull PropertyIdentifier propertyIdentifier,
@@ -106,9 +106,9 @@ public interface EncodableDeserializer<T extends Encodable, V> {
                                               definition.isCollection() ? "list item" : "value", value,
                                               definition.getPropertyIdentifier(), definition.getClazz().getName());
             if (t instanceof IllegalArgumentException && Objects.nonNull(t.getCause())) {
-                return BlueprintExceptionConverter.friendly(t.getCause(), msg);
+                return CarlExceptionConverter.friendly(t.getCause(), msg);
             }
-            return BlueprintExceptionConverter.friendly(t, msg);
+            return CarlExceptionConverter.friendly(t, msg);
         });
     }
 

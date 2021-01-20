@@ -1,6 +1,6 @@
 package com.nubeiot.core.rpc;
 
-import io.github.zero88.msa.bp.dto.JsonData;
+import io.github.zero88.qwe.dto.JsonData;
 
 import com.nubeiot.iotdata.dto.Protocol;
 

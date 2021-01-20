@@ -2,8 +2,8 @@ package com.nubeiot.edge.connector.bacnet;
 
 import java.util.concurrent.TimeUnit;
 
-import io.github.zero88.msa.bp.BlueprintConfig.AppConfig;
-import io.github.zero88.msa.bp.IConfig;
+import io.github.zero88.qwe.CarlConfig.AppConfig;
+import io.github.zero88.qwe.IConfig;
 import io.github.zero88.utils.Strings;
 
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;

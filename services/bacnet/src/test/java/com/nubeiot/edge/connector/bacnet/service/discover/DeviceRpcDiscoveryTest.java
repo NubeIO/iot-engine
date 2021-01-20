@@ -2,9 +2,9 @@ package com.nubeiot.edge.connector.bacnet.service.discover;
 
 import org.junit.Test;
 
-import io.github.zero88.msa.bp.dto.msg.RequestData;
-import io.github.zero88.msa.bp.event.EventAction;
-import io.github.zero88.msa.bp.event.EventMessage;
+import io.github.zero88.qwe.dto.msg.RequestData;
+import io.github.zero88.qwe.event.EventAction;
+import io.github.zero88.qwe.event.EventMessage;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;

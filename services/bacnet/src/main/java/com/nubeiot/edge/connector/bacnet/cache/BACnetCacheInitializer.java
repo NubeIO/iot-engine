@@ -2,7 +2,7 @@ package com.nubeiot.edge.connector.bacnet.cache;
 
 import java.util.function.Supplier;
 
-import io.github.zero88.msa.bp.cache.CacheInitializer;
+import io.github.zero88.qwe.cache.CacheInitializer;
 import io.github.zero88.utils.Strings;
 
 import com.nubeiot.core.rpc.RpcClient;

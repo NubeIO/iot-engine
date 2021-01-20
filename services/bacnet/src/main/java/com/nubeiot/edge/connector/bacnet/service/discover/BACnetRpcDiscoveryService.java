@@ -8,8 +8,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import io.github.zero88.msa.bp.dto.JsonData;
-import io.github.zero88.msa.bp.event.EventAction;
+import io.github.zero88.qwe.dto.JsonData;
+import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.utils.Reflections.ReflectionClass;
 import io.vertx.core.Vertx;
 

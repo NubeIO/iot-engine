@@ -2,7 +2,7 @@ package com.nubeiot.edge.connector.bacnet.dto;
 
 import java.util.concurrent.TimeUnit;
 
-import io.github.zero88.msa.bp.dto.JsonData;
+import io.github.zero88.qwe.dto.JsonData;
 import io.vertx.core.shareddata.Shareable;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

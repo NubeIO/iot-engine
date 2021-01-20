@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-import io.github.zero88.msa.bp.exceptions.CommunicationProtocolException;
-import io.github.zero88.msa.bp.exceptions.NotFoundException;
+import io.github.zero88.qwe.exceptions.CommunicationProtocolException;
+import io.github.zero88.qwe.exceptions.NotFoundException;
 import io.github.zero88.utils.Functions;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

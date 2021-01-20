@@ -5,10 +5,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import io.github.zero88.msa.bp.BlueprintConfig;
-import io.github.zero88.msa.bp.IConfig;
-import io.github.zero88.msa.bp.TestHelper;
-import io.github.zero88.msa.bp.TestHelper.VertxHelper;
+import io.github.zero88.qwe.CarlConfig;
+import io.github.zero88.qwe.IConfig;
+import io.github.zero88.qwe.TestHelper;
+import io.github.zero88.qwe.TestHelper.VertxHelper;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
@@ -53,7 +53,7 @@ public class BACnetSimulatorTest {
                                                     .put("localDevice", localDevice);
         final SimulatorCompletionAsserter handler = new SimulatorCompletionAsserter(context, async, expected);
         final DeploymentOptions options = new DeploymentOptions().setConfig(
-            IConfig.fromClasspath("test-config.json", BlueprintConfig.class).toJson());
+            IConfig.fromClasspath("test-config.json", CarlConfig.class).toJson());
         deployThenWait(context, async, options, handler);
     }
 

@@ -2,7 +2,7 @@ package com.nubeiot.edge.connector.bacnet.dto;
 
 import java.util.function.Supplier;
 
-import io.github.zero88.msa.bp.exceptions.CommunicationProtocolException;
+import io.github.zero88.qwe.exceptions.CommunicationProtocolException;
 
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.protocol.network.UdpProtocol;

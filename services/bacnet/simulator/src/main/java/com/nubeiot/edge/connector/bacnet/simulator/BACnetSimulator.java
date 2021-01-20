@@ -3,8 +3,8 @@ package com.nubeiot.edge.connector.bacnet.simulator;
 import java.util.List;
 import java.util.Optional;
 
-import io.github.zero88.msa.bp.event.EventbusClient;
-import io.github.zero88.msa.bp.utils.Configs;
+import io.github.zero88.qwe.event.EventbusClient;
+import io.github.zero88.qwe.utils.Configs;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 

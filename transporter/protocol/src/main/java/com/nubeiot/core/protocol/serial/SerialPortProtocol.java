@@ -3,7 +3,7 @@ package com.nubeiot.core.protocol.serial;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.zero88.msa.bp.exceptions.CommunicationProtocolException;
+import io.github.zero88.qwe.exceptions.CommunicationProtocolException;
 
 import com.nubeiot.core.protocol.CommunicationProtocol;
 

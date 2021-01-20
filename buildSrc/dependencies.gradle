@@ -1,5 +1,5 @@
 def versions = [
-    vertx     : "3.6.0",
+    vertx     : "4.0.0",
     lombok    : "1.18.16",
     oshi      : "3.13.3",
     classgraph: "4.6.23",
@@ -31,7 +31,7 @@ def versions = [
         "javaUtils": "1.0.1",
         "jpaExt"   : "0.0.9",
         "rqlJooq"  : "0.0.9",
-        "bp"       : "0.5.3",
+        "qwe"      : "0.6.0-SNAPSHOT",
         "sql"      : "0.1.0-SNAPSHOT",
     ]
 ]
@@ -90,24 +90,24 @@ ext.deps = [
         javaUtils: "io.github.zero88:java-utils:$versions.zero88.javaUtils",
         jpaExt   : "io.github.zero88:jpa-ext:$versions.zero88.jpaExt",
         rqlJooq  : "io.github.zero88:rql-jooq:$versions.zero88.rqlJooq",
-        bp       : [
-            base : "io.github.zero88.msa.bp:base:$versions.zero88.bp",
-            cache: "io.github.zero88.msa.bp:cache:$versions.zero88.bp",
+        qwe       : [
+            base : "io.github.zero88.qwe:base:$versions.zero88.qwe",
+            cache: "io.github.zero88.qwe:cache:$versions.zero88.qwe",
             micro: [
-                core    : "io.github.zero88.msa.bp:micro:$versions.zero88.bp",
-                metadata: "io.github.zero88.msa.bp.micro:metadata:$versions.zero88.bp",
+                core    : "io.github.zero88.qwe:micro:$versions.zero88.qwe",
+                metadata: "io.github.zero88.qwe.micro:metadata:$versions.zero88.qwe",
             ],
             http : [
-                core  : "io.github.zero88.msa.bp:http:$versions.zero88.bp",
-                client: "io.github.zero88.msa.bp.http:client:$versions.zero88.bp",
-                server: "io.github.zero88.msa.bp.http:server:$versions.zero88.bp",
+                core  : "io.github.zero88.qwe:http:$versions.zero88.qwe",
+                client: "io.github.zero88.qwe.http:client:$versions.zero88.qwe",
+                server: "io.github.zero88.qwe.http:server:$versions.zero88.qwe",
             ]
         ],
         sql      : [
-            core   : "io.github.zero88.msa.sql:core:$versions.zero88.sql",
-            rxJdbc : "io.github.zero88.msa.sql:rx-jdbc:$versions.zero88.sql",
-            type   : "io.github.zero88.msa.sql:type:$versions.zero88.sql",
-            service: "io.github.zero88.msa.sql:service:$versions.zero88.sql"
+            core   : "io.github.zero88.qwe.sql:core:$versions.zero88.sql",
+            rxJdbc : "io.github.zero88.qwe.sql:rx-jdbc:$versions.zero88.sql",
+            type   : "io.github.zero88.qwe.sql:type:$versions.zero88.sql",
+            service: "io.github.zero88.qwe.sql:service:$versions.zero88.sql"
         ],
     ]
 ]

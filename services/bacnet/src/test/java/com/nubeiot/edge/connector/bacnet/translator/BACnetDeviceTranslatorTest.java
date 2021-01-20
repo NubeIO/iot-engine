@@ -5,7 +5,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.github.zero88.msa.bp.TestHelper.JsonHelper;
+import io.github.zero88.qwe.TestHelper.JsonHelper;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;

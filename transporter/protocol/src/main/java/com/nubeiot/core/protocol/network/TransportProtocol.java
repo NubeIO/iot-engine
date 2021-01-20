@@ -2,10 +2,10 @@ package com.nubeiot.core.protocol.network;
 
 import java.util.Map;
 
-import io.github.zero88.msa.bp.dto.JsonData;
-import io.github.zero88.msa.bp.exceptions.CommunicationProtocolException;
-import io.github.zero88.msa.bp.exceptions.NotFoundException;
-import io.github.zero88.msa.bp.utils.Networks;
+import io.github.zero88.qwe.dto.JsonData;
+import io.github.zero88.qwe.exceptions.CommunicationProtocolException;
+import io.github.zero88.qwe.exceptions.NotFoundException;
+import io.github.zero88.qwe.utils.Networks;
 import io.github.zero88.utils.Functions;
 import io.github.zero88.utils.Strings;
 

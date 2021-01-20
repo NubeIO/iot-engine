@@ -2,7 +2,7 @@ package com.nubeiot.edge.connector.bacnet.service.notifier;
 
 import java.util.function.Function;
 
-import io.github.zero88.msa.bp.dto.JsonData;
+import io.github.zero88.qwe.dto.JsonData;
 
 import com.nubeiot.edge.connector.bacnet.service.BACnetRpcNotifier;
 import com.serotonin.bacnet4j.event.DeviceEventAdapter;

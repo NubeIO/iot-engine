@@ -3,10 +3,10 @@ package com.nubeiot.core.rpc.discovery;
 import java.util.Collections;
 import java.util.Set;
 
-import io.github.zero88.msa.bp.dto.JsonData;
-import io.github.zero88.msa.bp.micro.metadata.ActionMethodMapping;
-import io.github.zero88.msa.bp.micro.metadata.EventHttpService;
-import io.github.zero88.msa.bp.micro.metadata.EventMethodDefinition;
+import io.github.zero88.qwe.dto.JsonData;
+import io.github.zero88.qwe.micro.metadata.ActionMethodMapping;
+import io.github.zero88.qwe.micro.metadata.EventHttpService;
+import io.github.zero88.qwe.micro.metadata.EventMethodDefinition;
 import io.github.zero88.utils.Urls;
 
 import lombok.NonNull;

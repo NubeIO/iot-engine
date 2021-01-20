@@ -5,9 +5,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.github.zero88.msa.bp.TestHelper.JsonHelper;
-import io.github.zero88.msa.bp.dto.JsonData;
-import io.github.zero88.msa.bp.exceptions.BlueprintException;
+import io.github.zero88.qwe.TestHelper.JsonHelper;
+import io.github.zero88.qwe.dto.JsonData;
+import io.github.zero88.qwe.exceptions.CarlException;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.iotdata.dto.PointPriorityValue.PointValue;
@@ -75,7 +75,7 @@ public class PointPriorityValueTest {
     public void test_deserialize_invalid_priority() throws Throwable {
         try {
             JsonData.from(new JsonObject("{\"90\":3.5}"), PointPriorityValue.class);
-        } catch (BlueprintException e) {
+        } catch (CarlException e) {
             final Throwable rootCause = e.getCause().getCause().getCause().getCause();
             Assert.assertEquals("Priority is only in range [1, 17]", rootCause.getMessage());
             throw rootCause;
@@ -86,7 +86,7 @@ public class PointPriorityValueTest {
     public void test_deserialize_invalid_value() throws Throwable {
         try {
             JsonData.from(new JsonObject("{\"12\":\"444.5s\"}"), PointPriorityValue.class);
-        } catch (BlueprintException e) {
+        } catch (CarlException e) {
             final Throwable rootCause = e.getCause().getCause().getCause().getCause();
             Assert.assertEquals("Value must be number", rootCause.getMessage());
             throw rootCause;

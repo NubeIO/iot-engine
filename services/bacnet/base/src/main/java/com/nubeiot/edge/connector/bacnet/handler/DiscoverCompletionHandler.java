@@ -1,9 +1,9 @@
 package com.nubeiot.edge.connector.bacnet.handler;
 
-import io.github.zero88.msa.bp.component.ApplicationProbeHandler.ApplicationReadinessHandler;
-import io.github.zero88.msa.bp.dto.ErrorData;
-import io.github.zero88.msa.bp.dto.msg.RequestData;
-import io.github.zero88.msa.bp.event.EventContractor;
+import io.github.zero88.qwe.component.ApplicationProbeHandler.ApplicationReadinessHandler;
+import io.github.zero88.qwe.dto.ErrorData;
+import io.github.zero88.qwe.dto.msg.RequestData;
+import io.github.zero88.qwe.event.EventContractor;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 

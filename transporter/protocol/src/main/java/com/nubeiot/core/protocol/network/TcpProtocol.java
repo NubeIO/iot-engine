@@ -4,7 +4,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.Optional;
 
-import io.github.zero88.msa.bp.exceptions.CommunicationProtocolException;
+import io.github.zero88.qwe.exceptions.CommunicationProtocolException;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;

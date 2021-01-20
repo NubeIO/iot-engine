@@ -1,7 +1,7 @@
 dependencies {
-    compile project.deps.zero88.bp.base
+    compile project.deps.zero88.qwe.base
 
-    testImplementation(testFixtures(project.deps.zero88.bp.base))
+    testImplementation(testFixtures(project.deps.zero88.qwe.base))
 //    compile project(':core:sql:type')
 //
 //    compile project.deps.database.jpa

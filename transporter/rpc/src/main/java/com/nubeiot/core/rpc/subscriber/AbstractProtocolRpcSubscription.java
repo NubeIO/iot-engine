@@ -3,7 +3,7 @@ package com.nubeiot.core.rpc.subscriber;
 import java.util.HashSet;
 import java.util.Set;
 
-import io.github.zero88.msa.bp.dto.JsonData;
+import io.github.zero88.qwe.dto.JsonData;
 import io.vertx.core.Vertx;
 
 import com.nubeiot.core.rpc.BaseRpcProtocol;

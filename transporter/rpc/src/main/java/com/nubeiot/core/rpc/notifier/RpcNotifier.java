@@ -1,6 +1,6 @@
 package com.nubeiot.core.rpc.notifier;
 
-import io.github.zero88.msa.bp.dto.JsonData;
+import io.github.zero88.qwe.dto.JsonData;
 
 import com.nubeiot.core.rpc.RpcClient;
 

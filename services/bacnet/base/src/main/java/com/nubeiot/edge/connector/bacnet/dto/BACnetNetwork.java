@@ -1,7 +1,7 @@
 package com.nubeiot.edge.connector.bacnet.dto;
 
-import io.github.zero88.msa.bp.dto.EnumType.AbstractEnumType;
-import io.github.zero88.msa.bp.dto.JsonData;
+import io.github.zero88.qwe.dto.EnumType.AbstractEnumType;
+import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.utils.Strings;
 import io.vertx.core.json.JsonObject;
 

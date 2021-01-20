@@ -1,6 +1,6 @@
 dependencies {
-    compile project.deps.zero88.bp.base
+    compile project.deps.zero88.qwe.base
 
-    testImplementation(testFixtures(project.deps.zero88.bp.base))
+    testImplementation(testFixtures(project.deps.zero88.qwe.base))
 
 }

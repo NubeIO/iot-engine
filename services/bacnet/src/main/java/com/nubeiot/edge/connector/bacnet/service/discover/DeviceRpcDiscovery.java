@@ -3,9 +3,9 @@ package com.nubeiot.edge.connector.bacnet.service.discover;
 import java.util.Optional;
 import java.util.UUID;
 
-import io.github.zero88.msa.bp.dto.msg.RequestData;
-import io.github.zero88.msa.bp.exceptions.AlreadyExistException;
-import io.github.zero88.msa.bp.exceptions.NotFoundException;
+import io.github.zero88.qwe.dto.msg.RequestData;
+import io.github.zero88.qwe.exceptions.AlreadyExistException;
+import io.github.zero88.qwe.exceptions.NotFoundException;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
