@@ -12,6 +12,9 @@ on:
     types: [ opened, synchronize, reopened, closed ]
     branches: [ main ]
 
+env:
+  ENABLED_TEST: false
+
 jobs:
   context:
     runs-on: ubuntu-latest
@@ -101,7 +104,7 @@ jobs:
                           -PbuildBy="GitHub Action" -PbuildHash=${{ github.sha }}
 
       - name: Test
-        if: 'true' == 'false'
+        if: env.ENABLED_TEST == 'true'
         run: ./gradlew -PexcludeTests=**/Postgres*Test* test jacocoTestReport --stacktrace
 
       - name: Publish GitHub Package
