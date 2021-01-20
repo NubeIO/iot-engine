@@ -1,4 +1,4 @@
-package com.nubeiot.iotdata.dto;
+package com.nubeiot.iotdata.property;
 
 import org.json.JSONException;
 import org.junit.Assert;
@@ -10,7 +10,7 @@ import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.exceptions.CarlException;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.iotdata.dto.PointPriorityValue.PointValue;
+import com.nubeiot.iotdata.property.PointPriorityValue.PointValue;
 
 public class PointPriorityValueTest {
 

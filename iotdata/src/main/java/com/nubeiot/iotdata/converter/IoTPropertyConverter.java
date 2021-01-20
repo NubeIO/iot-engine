@@ -1,6 +1,6 @@
-package com.nubeiot.iotdata.translator;
+package com.nubeiot.iotdata.converter;
 
-import com.nubeiot.iotdata.dto.IoTNotion;
+import com.nubeiot.iotdata.IoTProperty;
 
 /**
  * Represents {@code translator} between {@code Nube IoT enum type} and the equivalent enum type in another {@code
@@ -8,9 +8,9 @@ import com.nubeiot.iotdata.dto.IoTNotion;
  *
  * @param <T> Nube IoT notion type
  * @param <U> Protocol notion type
- * @see IoTNotion
+ * @see IoTProperty
  * @since 1.0.0
  */
-public interface IoTNotionTranslator<T extends IoTNotion, U> extends IoTTranslator<T, U> {
+public interface IoTPropertyConverter<T extends IoTProperty, U extends IoTProperty> extends IoTConverter<T, U> {
 
 }

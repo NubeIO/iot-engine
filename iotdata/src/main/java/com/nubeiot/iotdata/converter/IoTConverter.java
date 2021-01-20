@@ -1,30 +1,23 @@
-package com.nubeiot.iotdata.translator;
+package com.nubeiot.iotdata.converter;
 
 import java.io.Serializable;
 
-import com.nubeiot.iotdata.dto.Protocol;
+import com.nubeiot.iotdata.HasProtocol;
+import com.nubeiot.iotdata.IoTObject;
+import com.nubeiot.iotdata.Protocol;
 
 import lombok.NonNull;
 
 /**
- * Represents {@code translator} between {@code Nube IoT concept} object and the equivalent concept object in another
- * {@code protocol}
+ * Represents a {@code converter} between two equivalent types of {@code IoT object} with different protocol
  *
- * @param <T> Nube IoT concept type
- * @param <U> Protocol object type
+ * @param <T> Type of IoT object
+ * @param <U> Type of IoT object
  * @see Protocol
+ * @see IoTObject
  * @since 1.0.0
  */
-public interface IoTTranslator<T, U> extends Serializable {
-
-    /**
-     * Defines translator for which protocol type
-     *
-     * @return protocol type
-     * @see Protocol
-     * @since 1.0.0
-     */
-    @NonNull Protocol protocol();
+public interface IoTConverter<T, U> extends HasProtocol, Serializable {
 
     /**
      * Translate a {@code protocol} object to a {@code Nube IoT concept}

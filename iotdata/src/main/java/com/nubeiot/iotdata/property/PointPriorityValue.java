@@ -1,4 +1,4 @@
-package com.nubeiot.iotdata.dto;
+package com.nubeiot.iotdata.property;
 
 import java.util.Map;
 import java.util.Objects;
@@ -10,6 +10,7 @@ import io.github.zero88.utils.Functions;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.nubeiot.iotdata.IoTProperty;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,7 +24,7 @@ import lombok.NonNull;
  * @since 1.0.0
  */
 @NoArgsConstructor
-public final class PointPriorityValue implements JsonData, IoTNotion {
+public final class PointPriorityValue implements JsonData, IoTProperty {
 
     /**
      * The constant DEFAULT_PRIORITY.
