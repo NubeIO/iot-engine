@@ -1,0 +1,14 @@
+dependencies {
+    compile project.deps.zero88.bp.micro.core
+    compile project(':services:bacnet:mixin')
+    compile project(':iotdata')
+    compile project(':transporter:rpc')
+
+//    compileOnly project(':edge:module:datapoint:rpc')
+//    compileOnly project.deps.database.jooq
+//    compileOnly project.deps.database.jooqVertxRx
+
+//    testCompile project(":core:base").sourceSets.test.output
+//    testImplementation(testFixtures(project(":base")))
+
+}

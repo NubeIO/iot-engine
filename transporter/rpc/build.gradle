@@ -1,0 +1,6 @@
+dependencies {
+    compile project(':transporter:protocol')
+    compile project(':iotdata')
+    compile project.deps.zero88.bp.http.core
+    compile project.deps.zero88.bp.micro.core
+}

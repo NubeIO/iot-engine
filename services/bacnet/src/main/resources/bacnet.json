@@ -1,0 +1,51 @@
+{
+  "__system__": {
+    "__eventBus__": {
+      "clientAuth": "NONE",
+      "ssl": false,
+      "clustered": false
+    },
+    "__cluster__": {
+      "active": false
+    }
+  },
+  "__app__": {
+    "__micro__": {
+      "__gateway__": {
+        "enabled": true,
+        "indexAddress": "nubeio.bacnet.gateway.index",
+        "localAnnounceMonitorClass": "com.nubeiot.core.http.gateway.RouterAnnounceListener"
+      },
+      "__serviceDiscovery__": {
+        "enabled": false
+      },
+      "__localServiceDiscovery__": {
+        "enabled": true
+      },
+      "__circuitBreaker__": {
+        "enabled": false
+      }
+    },
+    "__http__": {
+      "port": 8888,
+      "__rest__": {
+        "__dynamic__": {
+          "enabled": true,
+          "path": ""
+        }
+      },
+      "__api_gateway__": {
+        "enabled": true,
+        "path": "/gw",
+        "address": "nubeio.bacnet.gateway.index"
+      }
+    },
+    "__bacnet__": {
+      "modelName": "NubeIO-Edge28",
+      "maxDiscoverTimeout": 6,
+      "maxDiscoverTimeoutUnit": "SECONDS",
+      "allowSlave": true,
+      "gatewayAddress": "nubeio.bacnet.gateway.index"
+    }
+  }
+}

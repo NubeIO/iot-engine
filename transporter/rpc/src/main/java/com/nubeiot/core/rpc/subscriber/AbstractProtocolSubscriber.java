@@ -1,0 +1,66 @@
+package com.nubeiot.core.rpc.subscriber;
+
+import io.github.zero88.msa.bp.dto.JsonData;
+import io.github.zero88.msa.bp.dto.msg.RequestData;
+import io.github.zero88.msa.bp.event.EventContractor;
+import io.reactivex.Single;
+import io.vertx.core.Vertx;
+
+import com.nubeiot.core.rpc.BaseRpcProtocol;
+
+import lombok.NonNull;
+
+public abstract class AbstractProtocolSubscriber<P extends JsonData>
+    extends BaseRpcProtocol<P, AbstractProtocolSubscriber> implements RpcSubscriber<P> {
+
+    protected AbstractProtocolSubscriber(@NonNull Vertx vertx, @NonNull String sharedKey) {
+        super(vertx, sharedKey);
+    }
+
+    @Override
+    @EventContractor(action = "CREATE", returnType = Single.class)
+    public Single<P> create(@NonNull RequestData requestData) {
+        final P pojo = parseEntity(requestData);
+        return shouldSkip(pojo) ? Single.just(pojo) : doCreate(pojo);
+    }
+
+    @Override
+    @EventContractor(action = "UPDATE", returnType = Single.class)
+    public Single<P> update(@NonNull RequestData requestData) {
+        final P pojo = parseEntity(requestData);
+        return shouldSkip(pojo) ? Single.just(pojo) : doUpdate(pojo);
+    }
+
+    @Override
+    @EventContractor(action = "PATCH", returnType = Single.class)
+    public Single<P> patch(@NonNull RequestData requestData) {
+        final P pojo = parseEntity(requestData);
+        return shouldSkip(pojo) ? Single.just(pojo) : doPatch(pojo);
+    }
+
+    @Override
+    @EventContractor(action = "REMOVE", returnType = Single.class)
+    public Single<P> delete(@NonNull RequestData requestData) {
+        final P pojo = parseEntity(requestData);
+        return shouldSkip(pojo) ? Single.just(pojo) : doDelete(pojo);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected P parseEntity(@NonNull RequestData requestData) {
+        return (P) context().parseFromRequest(requestData.body());
+    }
+
+    @SuppressWarnings("unchecked")
+    protected boolean shouldSkip(P pojo) {
+        return !(context() instanceof HasProtocol) || !((HasProtocol) context()).getProtocol(pojo).equals(protocol());
+    }
+
+    protected abstract Single<P> doCreate(@NonNull P pojo);
+
+    protected abstract Single<P> doUpdate(@NonNull P pojo);
+
+    protected abstract Single<P> doPatch(@NonNull P pojo);
+
+    protected abstract Single<P> doDelete(@NonNull P pojo);
+
+}

@@ -1,0 +1,6 @@
+dependencies {
+    compile project.deps.zero88.bp.base
+    compile project(':services:bacnet:base')
+
+    testImplementation(testFixtures(project.deps.zero88.bp.base))
+}

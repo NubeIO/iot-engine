@@ -1,0 +1,12 @@
+dependencies {
+    compile project.deps.zero88.bp.base
+    compile project(':transporter:protocol')
+
+    compile "com.infiniteautomation:bacnet4j:5.0.2"
+    compile "lohbihler:sero-warp:1.0.0"
+    compile "lohbihler:sero-scheduler:1.1.0"
+    //TODO Remove it
+//    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.7'
+
+//    testCompile project(":core:base").sourceSets.test.output
+}
