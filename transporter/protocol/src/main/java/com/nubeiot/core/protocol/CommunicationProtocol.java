@@ -17,7 +17,8 @@ import com.nubeiot.core.protocol.usb.UsbProtocol;
 import lombok.NonNull;
 
 /**
- * Represents communication protocol information could be discovered and realized by computer
+ * Represents a communication protocol that is a physical layer and could be discovered and realized by
+ * computer/machine.
  */
 public interface CommunicationProtocol extends EnumType {
 

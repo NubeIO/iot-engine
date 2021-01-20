@@ -1,8 +1,7 @@
 package com.nubeiot.core.rpc.notifier;
 
-import io.github.zero88.qwe.dto.JsonData;
-
 import com.nubeiot.core.rpc.RpcClient;
+import com.nubeiot.iotdata.IoTEntity;
 
 /**
  * Represents for a {@code Notifier RPC client} that watches the specific {@code Protocol} event then do notify to
@@ -12,4 +11,4 @@ import com.nubeiot.core.rpc.RpcClient;
  * @param <T> Type of notifier client
  * @see RpcClient
  */
-public interface RpcNotifier<P extends JsonData, T extends RpcNotifier> extends RpcClient<P, T> {}
+public interface RpcNotifier<P extends IoTEntity, T extends RpcNotifier> extends RpcClient<P, T> {}

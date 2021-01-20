@@ -1,16 +1,16 @@
 package com.nubeiot.core.rpc.subscriber;
 
-import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventContractor;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 
 import com.nubeiot.core.rpc.BaseRpcProtocol;
+import com.nubeiot.iotdata.IoTEntity;
 
 import lombok.NonNull;
 
-public abstract class AbstractProtocolSubscriber<P extends JsonData>
+public abstract class AbstractProtocolSubscriber<P extends IoTEntity>
     extends BaseRpcProtocol<P, AbstractProtocolSubscriber> implements RpcSubscriber<P> {
 
     protected AbstractProtocolSubscriber(@NonNull Vertx vertx, @NonNull String sharedKey) {
@@ -45,14 +45,14 @@ public abstract class AbstractProtocolSubscriber<P extends JsonData>
         return shouldSkip(pojo) ? Single.just(pojo) : doDelete(pojo);
     }
 
-    @SuppressWarnings("unchecked")
-    protected P parseEntity(@NonNull RequestData requestData) {
+    protected abstract P parseEntity(@NonNull RequestData requestData);/* {
         return (P) context().parseFromRequest(requestData.body());
-    }
+    }*/
 
-    @SuppressWarnings("unchecked")
     protected boolean shouldSkip(P pojo) {
-        return !(context() instanceof HasProtocol) || !((HasProtocol) context()).getProtocol(pojo).equals(protocol());
+        //        return !(context() instanceof HasProtocol) || !((HasProtocol) context()).getProtocol(pojo).equals
+        //        (protocol());
+        return true;
     }
 
     protected abstract Single<P> doCreate(@NonNull P pojo);

@@ -1,8 +1,7 @@
 package com.nubeiot.core.rpc;
 
-import io.github.zero88.qwe.dto.JsonData;
-
-import com.nubeiot.iotdata.dto.Protocol;
+import com.nubeiot.iotdata.HasProtocol;
+import com.nubeiot.iotdata.IoTEntity;
 
 import lombok.NonNull;
 
@@ -11,23 +10,14 @@ import lombok.NonNull;
  *
  * @since 1.0.0
  */
-public interface RpcProtocol<T extends JsonData> {
+public interface RpcProtocol<T extends IoTEntity> extends HasProtocol {
 
     /**
      * Declares context that represents for the entity model
      *
      * @return entity metadata
-     * @see JsonData
+     * @see IoTEntity
      */
-    @NonNull T context();
-
-    /**
-     * Defines service protocol
-     *
-     * @return protocol protocol
-     * @see Protocol
-     * @since 1.0.0
-     */
-    @NonNull Protocol protocol();
+    @NonNull Class<T> context();
 
 }

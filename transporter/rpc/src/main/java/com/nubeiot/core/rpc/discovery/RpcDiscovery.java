@@ -1,11 +1,11 @@
 package com.nubeiot.core.rpc.discovery;
 
-import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.event.EventAction;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.rpc.RpcClient;
+import com.nubeiot.iotdata.IoTEntity;
 
 import lombok.NonNull;
 
@@ -16,7 +16,7 @@ import lombok.NonNull;
  * @param <T> Type of discovery client
  * @see RpcClient
  */
-public interface RpcDiscovery<P extends JsonData, T extends RpcDiscovery> extends RpcClient<P, T> {
+public interface RpcDiscovery<P extends IoTEntity, T extends RpcDiscovery> extends RpcClient<P, T> {
 
     @NonNull
     default EventAction batchPersistAction() {

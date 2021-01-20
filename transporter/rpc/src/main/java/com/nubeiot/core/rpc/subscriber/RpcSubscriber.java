@@ -5,11 +5,13 @@ import java.util.Collection;
 import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
+import io.github.zero88.qwe.event.EventContractor;
 import io.github.zero88.qwe.event.EventListener;
 import io.github.zero88.qwe.micro.metadata.ActionMethodMapping;
 import io.reactivex.Single;
 
 import com.nubeiot.core.rpc.RpcProtocol;
+import com.nubeiot.iotdata.IoTEntity;
 
 import lombok.NonNull;
 
@@ -21,7 +23,7 @@ import lombok.NonNull;
  * @see EventListener
  * @see JsonData
  */
-public interface RpcSubscriber<P extends JsonData> extends EventListener, RpcProtocol<P> {
+public interface RpcSubscriber<P extends IoTEntity> extends EventListener, RpcProtocol<P> {
 
     @Override
     default @NonNull Collection<EventAction> getAvailableEvents() {
@@ -56,6 +58,7 @@ public interface RpcSubscriber<P extends JsonData> extends EventListener, RpcPro
      * @return json object that includes status message
      * @see EventAction#CREATE
      */
+    @EventContractor(action = "CREATE", returnType = Single.class)
     @NonNull Single<P> create(@NonNull RequestData requestData);
 
     /**
@@ -65,6 +68,7 @@ public interface RpcSubscriber<P extends JsonData> extends EventListener, RpcPro
      * @return json object that includes status message
      * @see EventAction#UPDATE
      */
+    @EventContractor(action = "UPDATE", returnType = Single.class)
     @NonNull Single<P> update(@NonNull RequestData requestData);
 
     /**
@@ -74,6 +78,7 @@ public interface RpcSubscriber<P extends JsonData> extends EventListener, RpcPro
      * @return json object that includes status message
      * @see EventAction#PATCH
      */
+    @EventContractor(action = "PATCH", returnType = Single.class)
     @NonNull Single<P> patch(@NonNull RequestData requestData);
 
     /**
@@ -83,6 +88,7 @@ public interface RpcSubscriber<P extends JsonData> extends EventListener, RpcPro
      * @return json object that includes status message
      * @see EventAction#REMOVE
      */
+    @EventContractor(action = "REMOVE", returnType = Single.class)
     @NonNull Single<P> delete(@NonNull RequestData requestData);
 
 }

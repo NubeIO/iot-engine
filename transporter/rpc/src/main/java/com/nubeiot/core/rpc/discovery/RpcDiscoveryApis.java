@@ -3,11 +3,12 @@ package com.nubeiot.core.rpc.discovery;
 import java.util.Collections;
 import java.util.Set;
 
-import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.micro.metadata.ActionMethodMapping;
 import io.github.zero88.qwe.micro.metadata.EventHttpService;
 import io.github.zero88.qwe.micro.metadata.EventMethodDefinition;
 import io.github.zero88.utils.Urls;
+
+import com.nubeiot.iotdata.IoTEntity;
 
 import lombok.NonNull;
 
@@ -18,7 +19,7 @@ import lombok.NonNull;
  * @see RpcDiscovery
  * @see EventHttpService
  */
-public interface RpcDiscoveryApis<P extends JsonData, T extends RpcDiscoveryApis>
+public interface RpcDiscoveryApis<P extends IoTEntity, T extends RpcDiscoveryApis>
     extends RpcDiscovery<P, T>, EventHttpService {
 
     /**

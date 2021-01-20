@@ -1,11 +1,11 @@
 package com.nubeiot.core.rpc;
 
 import io.github.zero88.qwe.component.SharedDataDelegate;
-import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.event.EventbusClient;
 import io.github.zero88.qwe.micro.discovery.GatewayServiceInvoker;
 
-import com.nubeiot.iotdata.dto.Protocol;
+import com.nubeiot.iotdata.IoTEntity;
+import com.nubeiot.iotdata.Protocol;
 
 import lombok.NonNull;
 
@@ -17,7 +17,7 @@ import lombok.NonNull;
  * @see SharedDataDelegate
  * @see Protocol
  */
-public interface RpcClient<P extends JsonData, T extends RpcClient>
+public interface RpcClient<P extends IoTEntity, T extends RpcClient>
     extends GatewayServiceInvoker, RpcProtocol<P>, SharedDataDelegate<T> {
 
     String GATEWAY_ADDRESS = "GATEWAY_ADDRESS";
@@ -29,7 +29,7 @@ public interface RpcClient<P extends JsonData, T extends RpcClient>
     }
 
     @Override
-    @NonNull String destination();
+    default @NonNull String destination() { return ""; }
 
     @Override
     @NonNull
