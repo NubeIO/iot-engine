@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.bacnet.dto;
+package com.nubeiot.edge.connector.bacnet.entity;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;

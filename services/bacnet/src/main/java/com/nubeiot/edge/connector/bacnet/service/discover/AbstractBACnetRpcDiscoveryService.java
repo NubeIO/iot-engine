@@ -29,9 +29,10 @@ import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetObjectCache;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
-import com.nubeiot.edge.connector.bacnet.dto.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
+import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
+import com.nubeiot.iotdata.IoTEntity;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.obj.ObjectProperties;
 import com.serotonin.bacnet4j.obj.ObjectPropertyTypeDefinition;
@@ -46,10 +47,10 @@ import lombok.NonNull;
 /**
  * Defines public service to expose HTTP API for end-user and/or nube-io service
  */
-abstract class AbstractRpcDiscoveryService extends AbstractSharedDataDelegate<AbstractRpcDiscoveryService>
-    implements BACnetRpcDiscoveryService {
+abstract class AbstractBACnetRpcDiscoveryService<P extends IoTEntity>
+    extends AbstractSharedDataDelegate<AbstractBACnetRpcDiscoveryService> implements BACnetRpcDiscoveryService<P> {
 
-    AbstractRpcDiscoveryService(@NonNull Vertx vertx, @NonNull String sharedKey) {
+    AbstractBACnetRpcDiscoveryService(@NonNull Vertx vertx, @NonNull String sharedKey) {
         super(vertx);
         registerSharedKey(sharedKey);
     }

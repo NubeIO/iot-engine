@@ -10,7 +10,6 @@ import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.discover.RemoteDeviceScanner;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
-import com.nubeiot.iotdata.dto.Protocol;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
@@ -29,8 +28,6 @@ public interface BACnetDevice extends SharedDataDelegate<BACnetDevice> {
      * The constant EDGE_BACNET_METADATA in cache.
      */
     String EDGE_BACNET_METADATA = "EDGE_BACNET_METADATA";
-
-    Protocol BACNET = Protocol.factory("BACnet");
 
     /**
      * Gets local device metadata.

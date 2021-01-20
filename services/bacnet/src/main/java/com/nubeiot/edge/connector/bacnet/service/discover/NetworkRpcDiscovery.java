@@ -1,10 +1,6 @@
 package com.nubeiot.edge.connector.bacnet.service.discover;
 
-import java.util.Optional;
-import java.util.UUID;
-
 import io.github.zero88.qwe.dto.msg.RequestData;
-import io.github.zero88.qwe.exceptions.AlreadyExistException;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
@@ -17,19 +13,20 @@ import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.Fields;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
-import com.nubeiot.edge.connector.bacnet.translator.BACnetNetworkTranslator;
+import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;
 
 import lombok.NonNull;
 
-public final class NetworkRpcDiscovery extends AbstractRpcDiscoveryService implements BACnetRpcDiscoveryService {
+public final class NetworkRpcDiscovery extends AbstractBACnetRpcDiscoveryService<BACnetNetwork>
+    implements BACnetRpcDiscoveryService<BACnetNetwork> {
 
     NetworkRpcDiscovery(@NonNull Vertx vertx, @NonNull String sharedKey) {
         super(vertx, sharedKey);
     }
 
     @Override
-    public @NonNull EntityMetadata context() {
-        return NetworkMetadata.INSTANCE;
+    public @NonNull Class<BACnetNetwork> context() {
+        return BACnetNetwork.class;
     }
 
     @Override
@@ -69,15 +66,16 @@ public final class NetworkRpcDiscovery extends AbstractRpcDiscoveryService imple
 
     @Override
     public Single<JsonObject> discoverThenDoPersist(RequestData reqData) {
-        final CommunicationProtocol protocol = parseProtocol(reqData);
-        final BACnetNetworkCache cache = networkCache();
-        final Optional<UUID> networkId = cache.getDataKey(protocol.identifier());
-        if (networkId.isPresent()) {
-            throw new AlreadyExistException(
-                "Already persisted network code " + protocol.identifier() + " with id " + networkId.get());
-        }
-        final JsonObject network = JsonPojo.from(new BACnetNetworkTranslator().serialize(protocol)).toJson();
-        return doPersist(network).doOnSuccess(response -> cache.addDataKey(protocol, parsePersistResponse(response)));
+        return Single.just(new JsonObject());
+        //        final CommunicationProtocol protocol = parseProtocol(reqData);
+        //        final BACnetNetworkCache cache = networkCache();
+        //        final Optional<UUID> networkId = cache.getDataKey(protocol.identifier());
+        //        if (networkId.isPresent()) {
+        //            throw new AlreadyExistException(
+        //                "Already persisted network code " + protocol.identifier() + " with id " + networkId.get());
+        //        }
+        //        final JsonObject network = JsonPojo.from(new BACnetNetworkTranslator().serialize(protocol)).toJson();
+        //        return doPersist(network).doOnSuccess(response -> cache.addDataKey(protocol, parsePersistResponse(response)));
     }
 
     @Override

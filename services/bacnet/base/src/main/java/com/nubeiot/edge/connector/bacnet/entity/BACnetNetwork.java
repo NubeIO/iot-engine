@@ -1,22 +1,26 @@
-package com.nubeiot.edge.connector.bacnet.dto;
+package com.nubeiot.edge.connector.bacnet.entity;
 
-import io.github.zero88.qwe.dto.EnumType.AbstractEnumType;
 import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.protocol.CommunicationProtocol;
+import com.nubeiot.iotdata.entity.HasType;
+import com.nubeiot.iotdata.entity.INetwork;
 
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.experimental.Accessors;
 
 @Getter
-public abstract class BACnetNetwork extends AbstractEnumType {
+@Accessors(fluent = true)
+public abstract class BACnetNetwork implements HasType<String>, BACnetEntity<String>, INetwork<String> {
 
+    private final String type;
     private final String label;
 
     BACnetNetwork(String type, String label) {
-        super(type);
+        this.type = type;
         this.label = label;
     }
 
@@ -34,6 +38,11 @@ public abstract class BACnetNetwork extends AbstractEnumType {
     }
 
     public abstract @NonNull CommunicationProtocol toProtocol();
+
+    @Override
+    public @NonNull String key() {
+        return toProtocol().identifier();
+    }
 
     @SuppressWarnings("unchecked")
     static abstract class BACnetNetworkBuilder<T extends BACnetNetwork, B extends BACnetNetworkBuilder> {

@@ -8,7 +8,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.utils.Reflections.ReflectionClass;
 import io.vertx.core.Vertx;
@@ -19,6 +18,7 @@ import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
 import com.nubeiot.edge.connector.bacnet.service.BACnetApis;
 import com.nubeiot.edge.connector.bacnet.service.BACnetRpcProtocol;
+import com.nubeiot.iotdata.IoTEntity;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
 import lombok.AccessLevel;
@@ -27,8 +27,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 
-public interface BACnetRpcDiscoveryService<P extends JsonData>
-    extends BACnetApis, BACnetRpcProtocol<P>, RpcDiscoveryApis<P, AbstractRpcDiscoveryService> {
+public interface BACnetRpcDiscoveryService<P extends IoTEntity>
+    extends BACnetApis, BACnetRpcProtocol<P>, RpcDiscoveryApis<P, AbstractBACnetRpcDiscoveryService> {
 
     static Set<? extends BACnetRpcDiscoveryService> createServices(@NonNull Vertx vertx, @NonNull String sharedKey) {
         final Map<Class, Object> inputs = new LinkedHashMap<>();

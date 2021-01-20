@@ -26,13 +26,14 @@ public class MockProtocolDispatcherService implements EventListener, EventHttpSe
 
     @Override
     public String api() {
-        return DataPointApiService.DEFAULT.lookupApiName(ProtocolDispatcherMetadata.INSTANCE);
+        //        return DataPointApiService.DEFAULT.lookupApiName(ProtocolDispatcherMetadata.INSTANCE);
+        return "";
     }
 
     @Override
     public Set<EventMethodDefinition> definitions() {
         final ActionMethodMapping mapping = ActionMethodMapping.create(
-            Collections.singletonMap(EventAction.CREATE_OR_UPDATE, HttpMethod.OTHER));
+            Collections.singletonMap(EventAction.CREATE_OR_UPDATE, HttpMethod.valueOf("OTHER")));
         return Collections.singleton(EventMethodDefinition.create("/dispatcher", "dispatcher_id", mapping));
     }
 
@@ -41,12 +42,13 @@ public class MockProtocolDispatcherService implements EventListener, EventHttpSe
         return Arrays.asList(EventAction.GET_ONE, EventAction.CREATE_OR_UPDATE);
     }
 
-    @EventContractor(action = EventAction.CREATE_OR_UPDATE, returnType = Single.class)
+    @EventContractor(action = "CREATE_OR_UPDATE", returnType = Single.class)
     public Single<JsonObject> createOrUpdate(RequestData reqData) {
-        final JsonObject resource = JsonPojo.from(
-            new ProtocolDispatcher().fromJson(reqData.body()).setId(counter.incrementAndGet())).toJson();
-        return Single.just(
-            new JsonObject().put("action", EventAction.CREATE).put("status", Status.SUCCESS).put("resource", resource));
+        //        final JsonObject resource = JsonPojo.from(
+        //            new ProtocolDispatcher().fromJson(reqData.body()).setId(counter.incrementAndGet())).toJson();
+        return Single.just(new JsonObject().put("action", EventAction.CREATE)
+                                           .put("status", Status.SUCCESS)
+                                           .put("resource", "resource"));
     }
 
 }

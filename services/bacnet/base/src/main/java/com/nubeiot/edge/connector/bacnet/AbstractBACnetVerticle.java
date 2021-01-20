@@ -12,7 +12,7 @@ import io.github.zero88.qwe.event.EventMessage;
 import io.github.zero88.qwe.event.EventbusClient;
 import io.github.zero88.qwe.utils.ExecutorHelpers;
 import io.reactivex.Single;
-import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.protocol.CommunicationProtocol;
@@ -39,7 +39,7 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
     }
 
     @Override
-    public void stop(Future<Void> future) {
+    public void stop(Promise<Void> future) {
         stopBACnet().doOnSuccess(result -> logger.info(result.encode()))
                     .subscribe(ignore -> super.stop(future), future::fail);
     }
@@ -47,8 +47,10 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
     protected void successHandler(@NonNull C config) {
         ExecutorHelpers.blocking(getVertx(), this::getEventbusClient)
                        .map(c -> c.register(config.getCompleteDiscoverAddress(), createDiscoverCompletionHandler()))
-                       .flatMap(client -> registerApis(client, config).doOnSuccess(logger::info).map(ignore -> client))
-                       .flatMap(client -> invokeSubscriberRegistration(client, config).doOnSuccess(logger::info))
+                       .flatMap(client -> registerApis(client, config).doOnSuccess(o -> logger.info(o.encode()))
+                                                                      .map(ignore -> client))
+                       .flatMap(client -> this.invokeSubscriberRegistration(client, config)
+                                              .doOnSuccess(o -> logger.info(o.encode())))
                        .map(r -> config)
                        .flatMap(this::availableNetworks)
                        .doOnSuccess(protocols -> logger.info("Found {} BACnet networks", protocols.size()))

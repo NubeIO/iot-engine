@@ -1,20 +1,20 @@
 package com.nubeiot.edge.connector.bacnet.service;
 
-import io.github.zero88.qwe.dto.JsonData;
+import org.slf4j.Logger;
+
 import io.github.zero88.qwe.exceptions.CarlException;
 import io.github.zero88.qwe.exceptions.converter.CarlExceptionConverter;
-import io.vertx.core.logging.Logger;
 
 import com.nubeiot.core.rpc.RpcProtocol;
-import com.nubeiot.edge.connector.bacnet.BACnetDevice;
-import com.nubeiot.iotdata.dto.Protocol;
+import com.nubeiot.edge.connector.bacnet.entity.BACnetProtocol;
+import com.nubeiot.iotdata.IoTEntity;
 
 import lombok.NonNull;
 
 /**
- * Represents for BACnet RPC protocol that interacts with {@code data-point services}
+ * Represents for BACnet RPC protocol that interacts with {@code external services}
  */
-public interface BACnetRpcProtocol<P extends JsonData> extends RpcProtocol<P> {
+public interface BACnetRpcProtocol<P extends IoTEntity> extends RpcProtocol<P>, BACnetProtocol {
 
     static void sneakyThrowable(@NonNull Logger logger, @NonNull Throwable t, boolean isMaster) {
         final CarlException error = CarlExceptionConverter.friendly(t);
@@ -22,11 +22,6 @@ public interface BACnetRpcProtocol<P extends JsonData> extends RpcProtocol<P> {
             throw error;
         }
         logger.debug("Failed to connect to remote service", error);
-    }
-
-    @Override
-    default @NonNull Protocol protocol() {
-        return BACnetDevice.BACNET;
     }
 
 }

@@ -11,7 +11,7 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.AbstractBACnetVerticle;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
-import com.nubeiot.edge.connector.bacnet.dto.BACnetNetwork;
+import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
 import com.nubeiot.edge.connector.bacnet.listener.WhoIsListener;
 

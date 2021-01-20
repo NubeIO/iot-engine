@@ -8,21 +8,5 @@ dependencies {
     testCompile(project.deps.zero88.qwe.micro.core)
     testCompile(project.deps.zero88.qwe.http.client)
     testImplementation(testFixtures(project.deps.zero88.qwe.base))
-    testImplementation(testFixtures(project.deps.zero88.qwe.micro.core))
-    testImplementation(testFixtures(project.deps.zero88.qwe.http.server))
 
-//    compileOnly(project(':edge:module:datapoint:model')) {
-//        exclude group: 'org.jooq', module: 'jooq'
-//    }
-//    compileOnly(project(':edge:module:datapoint:rpc'))
-//    compileOnly(project.deps.database.jooqVertxShared) {
-//        exclude group: 'org.jooq', module: 'jooq'
-//    }
-
-//    testCompile project(":core:base").sourceSets.test.output
-//    testCompile project(":core:micro")
-//    testCompile project(":core:httpclient")
-//    testCompile project(":core:httpserver").sourceSets.test.output
-//
-//    testCompile "org.mockito:mockito-core:1.+"
 }

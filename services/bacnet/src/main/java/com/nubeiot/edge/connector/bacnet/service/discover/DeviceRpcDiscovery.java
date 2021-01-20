@@ -10,31 +10,29 @@ import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.sql.EntityMetadata;
-import com.nubeiot.core.sql.pojos.JsonPojo;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.Fields;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
 import com.nubeiot.edge.connector.bacnet.discover.RemoteDeviceScanner;
+import com.nubeiot.edge.connector.bacnet.entity.BACnetDeviceEntity;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
-import com.nubeiot.edge.connector.bacnet.translator.BACnetDeviceTranslator;
-import com.nubeiot.edge.module.datapoint.DataPointIndex.EdgeDeviceMetadata;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
 import lombok.NonNull;
 
-public final class DeviceRpcDiscovery extends AbstractRpcDiscoveryService implements BACnetRpcDiscoveryService {
+public final class DeviceRpcDiscovery extends AbstractBACnetRpcDiscoveryService<BACnetDeviceEntity>
+    implements BACnetRpcDiscoveryService<BACnetDeviceEntity> {
 
     DeviceRpcDiscovery(@NonNull Vertx vertx, @NonNull String sharedKey) {
         super(vertx, sharedKey);
     }
 
     @Override
-    public @NonNull EntityMetadata context() {
-        return EdgeDeviceMetadata.INSTANCE;
+    public @NonNull Class<BACnetDeviceEntity> context() {
+        return BACnetDeviceEntity.class;
     }
 
     @Override
@@ -74,12 +72,14 @@ public final class DeviceRpcDiscovery extends AbstractRpcDiscoveryService implem
 
     @Override
     public Single<JsonObject> discoverThenDoPersist(RequestData requestData) {
-        final DiscoveryRequestWrapper req = validateCache(toRequest(requestData, DiscoverLevel.DEVICE));
-        return doGet(req).map(rd -> new BACnetDeviceTranslator().serialize(rd))
-                         .map(pojo -> JsonPojo.from(pojo).toJson())
-                         .flatMap(this::doPersist)
-                         .doOnSuccess(r -> deviceCache().addDataKey(req.device().protocol(), req.remoteDeviceId(),
-                                                                    parsePersistResponse(r)));
+        return Single.just(new JsonObject());
+        //        final DiscoveryRequestWrapper req = validateCache(toRequest(requestData, DiscoverLevel.DEVICE));
+        //        return doGet(req).map(rd -> new BACnetDeviceConverter().serialize(rd))
+        //                         .map(pojo -> JsonPojo.from(pojo).toJson())
+        //                         .flatMap(this::doPersist)
+        //                         .doOnSuccess(r -> deviceCache().addDataKey(req.device().protocol(), req
+        //                         .remoteDeviceId(),
+        //                                                                    parsePersistResponse(r)));
     }
 
     @Override

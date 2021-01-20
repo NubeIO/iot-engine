@@ -1,5 +1,6 @@
 dependencies {
     compile project.deps.zero88.qwe.base
+    compile project(':iotdata')
     compile project(':transporter:protocol')
 
     compile "com.infiniteautomation:bacnet4j:5.0.2"
@@ -8,5 +9,5 @@ dependencies {
     //TODO Remove it
 //    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.7'
 
-//    testCompile project(":core:base").sourceSets.test.output
+    testImplementation(testFixtures(project.deps.zero88.qwe.base))
 }

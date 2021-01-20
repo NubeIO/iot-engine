@@ -3,9 +3,11 @@ package com.nubeiot.edge.connector.bacnet.service.scanner;
 import io.vertx.core.Vertx;
 
 import com.nubeiot.core.protocol.CommunicationProtocol;
+import com.nubeiot.core.rpc.query.AbstractRpcScanner;
 import com.nubeiot.core.rpc.query.NetworkRpcScanner;
+import com.nubeiot.edge.connector.bacnet.converter.BACnetNetworkConverter;
+import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.service.BACnetRpcProtocol;
-import com.nubeiot.edge.connector.bacnet.translator.BACnetNetworkTranslator;
 
 import lombok.NonNull;
 
@@ -15,11 +17,17 @@ import lombok.NonNull;
  * @since 1.0.0
  */
 public final class BACnetNetworkRpcScanner
-    extends AbstractDataProtocolScanner<Network, CommunicationProtocol, BACnetNetworkRpcScanner>
-    implements NetworkRpcScanner<BACnetNetworkRpcScanner>, BACnetRpcProtocol {
+    extends AbstractRpcScanner<BACnetNetwork, CommunicationProtocol, BACnetNetworkRpcScanner>
+    implements NetworkRpcScanner<BACnetNetwork, CommunicationProtocol, BACnetNetworkRpcScanner>,
+               BACnetRpcProtocol<BACnetNetwork> {
 
     BACnetNetworkRpcScanner(@NonNull Vertx vertx, @NonNull String sharedKey) {
-        super(vertx, sharedKey, new BACnetNetworkTranslator());
+        super(vertx, sharedKey, new BACnetNetworkConverter());
+    }
+
+    @Override
+    public @NonNull Class<BACnetNetwork> context() {
+        return BACnetNetwork.class;
     }
 
 }

@@ -7,6 +7,9 @@ import io.github.zero88.qwe.exceptions.CommunicationProtocolException;
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.core.protocol.network.UdpProtocol;
 import com.nubeiot.core.protocol.serial.SerialPortProtocol;
+import com.nubeiot.edge.connector.bacnet.entity.BACnetIP;
+import com.nubeiot.edge.connector.bacnet.entity.BACnetMSTP;
+import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;
 import com.serotonin.bacnet4j.transport.Transport;
 
 import lombok.NonNull;

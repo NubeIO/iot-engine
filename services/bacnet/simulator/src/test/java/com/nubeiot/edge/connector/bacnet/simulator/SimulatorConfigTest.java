@@ -19,7 +19,7 @@ public class SimulatorConfigTest {
         Assert.assertEquals(2, fromFile.getNetworks().size());
         fromFile.getNetworks().toNetworks().forEach(ipConfig -> {
             Assert.assertNotNull(ipConfig);
-            Assert.assertFalse(ipConfig.getLabel().isEmpty());
+            Assert.assertFalse(ipConfig.label().isEmpty());
         });
     }
 

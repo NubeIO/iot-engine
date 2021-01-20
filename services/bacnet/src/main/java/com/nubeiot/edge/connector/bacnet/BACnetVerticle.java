@@ -2,9 +2,9 @@ package com.nubeiot.edge.connector.bacnet;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import io.github.zero88.qwe.component.SharedDataDelegate;
 import io.github.zero88.qwe.event.EventbusClient;
@@ -13,6 +13,7 @@ import io.github.zero88.qwe.http.server.HttpServerRouter;
 import io.github.zero88.qwe.micro.MicroContext;
 import io.github.zero88.qwe.micro.MicroserviceProvider;
 import io.github.zero88.qwe.micro.ServiceDiscoveryController;
+import io.github.zero88.qwe.micro.metadata.EventMethodDefinition;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
@@ -25,9 +26,7 @@ import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.handler.BACnetDiscoverFinisher;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
 import com.nubeiot.edge.connector.bacnet.listener.WhoIsListener;
-import com.nubeiot.edge.connector.bacnet.service.BACnetRpcProtocol;
 import com.nubeiot.edge.connector.bacnet.service.discover.BACnetRpcDiscoveryService;
-import com.nubeiot.edge.connector.bacnet.service.scanner.BACnetScannerHelper;
 import com.nubeiot.edge.connector.bacnet.service.subscriber.BACnetRpcClientHelper;
 import com.nubeiot.edge.connector.bacnet.service.subscriber.BACnetRpcSubscription;
 
@@ -84,8 +83,8 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
                          .flatMapSingle(subscription::register)
                          .count()
                          .map(total -> new JsonObject().put("message",
-                                                            "Registered " + subscription.subscribers().size() + " in " +
-                                                            total + " BACnet Subscribers"));
+                                                            "Registered " + 0/*subscription.subscribers().size()*/ +
+                                                            " in " + total + " BACnet Subscribers"));
     }
 
     @Override
@@ -97,29 +96,36 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
     protected @NonNull Single<Collection<CommunicationProtocol>> availableNetworks(@NonNull BACnetConfig config) {
         final BACnetNetworkCache cache = SharedDataDelegate.getLocalDataValue(getVertx(), getSharedKey(),
                                                                               BACnetCacheInitializer.EDGE_NETWORK_CACHE);
-        return BACnetScannerHelper.createNetworkScanner(getVertx(), getSharedKey())
-                                  .scan()
-                                  .doOnSuccess(map -> map.forEach((key, value) -> cache.addDataKey(value, key)))
-                                  .map(Map::values)
-                                  .onErrorReturn(t -> {
-                                      BACnetRpcProtocol.sneakyThrowable(logger, t, config.isAllowSlave());
-                                      return Collections.emptyList();
-                                  });
+        return Single.just(Collections.emptyList());
+        //        return BACnetScannerHelper.createNetworkScanner(getVertx(), getSharedKey())
+        //                                  .scan()
+        //                                  .doOnSuccess(map -> map.forEach((key, value) -> cache.addDataKey(value,
+        //                                  key)))
+        //                                  .map(Map::values)
+        //                                  .onErrorReturn(t -> {
+        //                                      BACnetRpcProtocol.sneakyThrowable(logger, t, config.isAllowSlave());
+        //                                      return Collections.emptyList();
+        //                                  });
     }
 
     @Override
     protected Single<JsonObject> stopBACnet() {
         final BACnetDeviceCache deviceCache = SharedDataDelegate.getLocalDataValue(getVertx(), getSharedKey(),
                                                                                    BACnetCacheInitializer.BACNET_DEVICE_CACHE);
-        return subscription.unregisterAll()
-                           .flatMap(output -> Observable.fromIterable(deviceCache.all().values())
-                                                        .flatMapSingle(BACnetDevice::stop)
-                                                        .collect(JsonObject::new, (object, device) -> object.put(
-                                                            device.protocol().identifier(), device.metadata().toJson()))
-                                                        .map(devices -> new JsonObject().put("terminated", devices))
-                                                        .map(json -> json.put("unsubscribed",
-                                                                              "Unregistered " + output.size() +
-                                                                              " BACnet Subscribers")));
+        return Single.just(new JsonObject());
+        //        return subscription.unregisterAll()
+        //                           .flatMap(output -> Observable.fromIterable(deviceCache.all().values())
+        //                                                        .flatMapSingle(BACnetDevice::stop)
+        //                                                        .collect(JsonObject::new, (object, device) ->
+        //                                                        object.put(
+        //                                                            device.protocol().identifier(), device.metadata
+        //                                                            ().toJson()))
+        //                                                        .map(devices -> new JsonObject().put("terminated",
+        //                                                        devices))
+        //                                                        .map(json -> json.put("unsubscribed",
+        //                                                                              "Unregistered " + output.size
+        //                                                                              () +
+        //                                                                              " BACnet Subscribers")));
     }
 
     @Override
@@ -128,7 +134,7 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
     }
 
     private Observable<Record> registerEndpoint(ServiceDiscoveryController discovery, BACnetRpcDiscoveryService s) {
-        return Observable.fromIterable(s.definitions())
+        return Observable.fromIterable((Set<EventMethodDefinition>) s.definitions())
                          .flatMapSingle(e -> discovery.addEventMessageRecord(s.api(), s.address(), e));
     }
 

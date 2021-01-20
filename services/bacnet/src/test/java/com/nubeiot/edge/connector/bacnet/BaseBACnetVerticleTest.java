@@ -10,6 +10,7 @@ import io.github.zero88.qwe.CarlConfig.AppConfig;
 import io.github.zero88.qwe.IConfig;
 import io.github.zero88.qwe.TestHelper;
 import io.github.zero88.qwe.TestHelper.VertxHelper;
+import io.github.zero88.qwe.component.ReadinessAsserter;
 import io.github.zero88.qwe.event.EventbusClient;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;

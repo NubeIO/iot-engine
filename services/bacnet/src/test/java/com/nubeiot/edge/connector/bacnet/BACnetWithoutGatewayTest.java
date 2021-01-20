@@ -1,5 +1,6 @@
 package com.nubeiot.edge.connector.bacnet;
 
+import io.github.zero88.qwe.component.ReadinessAsserter;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;

@@ -1,19 +1,18 @@
 package com.nubeiot.edge.connector.bacnet.dto;
 
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-
 import com.nubeiot.core.protocol.serial.SerialPortProtocol;
+import com.nubeiot.edge.connector.bacnet.entity.BACnetMSTP;
 import com.serotonin.bacnet4j.transport.DefaultTransport;
 
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 final class TransportMstp implements TransportProvider {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(TransportMstp.class);
     @NonNull
     private final SerialPortProtocol protocol;
 

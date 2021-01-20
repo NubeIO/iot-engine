@@ -17,8 +17,6 @@ import io.github.zero88.utils.Functions;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
@@ -40,11 +38,12 @@ import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Accessors(fluent = true)
 final class DefaultBACnetDevice extends AbstractSharedDataDelegate<BACnetDevice> implements BACnetDevice {
 
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
     @Getter
     private final LocalDeviceMetadata metadata;
     @Getter
@@ -83,9 +82,7 @@ final class DefaultBACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
 
     @Override
     public BACnetDevice addListeners(@NonNull List<DeviceEventListener> listeners) {
-        listeners.stream()
-                 .filter(Objects::nonNull)
-                 .forEachOrdered(listener -> this.localDevice.getEventHandler().addListener(listener));
+        listeners.stream().filter(Objects::nonNull).forEachOrdered(listener -> this.localDevice.getEventHandler().addListener(listener));
         return this;
     }
 
@@ -140,10 +137,7 @@ final class DefaultBACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
     }
 
     private EventMessage createSuccessDiscoverMsg(@NonNull RemoteDeviceScanner scanner) {
-        final List<RemoteDeviceMixin> remotes = scanner.getRemoteDevices()
-                                                       .stream()
-                                                       .map(RemoteDeviceMixin::create)
-                                                       .collect(Collectors.toList());
+        final List<RemoteDeviceMixin> remotes = scanner.getRemoteDevices().stream().map(RemoteDeviceMixin::create).collect(Collectors.toList());
         final JsonObject body = DiscoverResponse.builder()
                                                 .network(protocol())
                                                 .localDevice(metadata())
@@ -154,11 +148,7 @@ final class DefaultBACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
     }
 
     private EventMessage createErrorDiscoverMsg(@NonNull Throwable t) {
-        final JsonObject extraInfo = DiscoverResponse.builder()
-                                                     .network(protocol())
-                                                     .localDevice(metadata())
-                                                     .build()
-                                                     .toJson();
+        final JsonObject extraInfo = DiscoverResponse.builder().network(protocol()).localDevice(metadata()).build().toJson();
         return EventMessage.initial(EventAction.NOTIFY_ERROR,
                                     ErrorData.builder().throwable(t).extraInfo(extraInfo).build());
     }

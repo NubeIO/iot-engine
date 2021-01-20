@@ -9,6 +9,7 @@ import io.github.zero88.qwe.TestHelper;
 import io.github.zero88.qwe.TestHelper.VertxHelper;
 import io.github.zero88.qwe.component.ContainerVerticle;
 import io.github.zero88.qwe.component.EventClientProxy;
+import io.github.zero88.qwe.component.ReadinessAsserter;
 import io.github.zero88.qwe.micro.MicroConfig;
 import io.github.zero88.qwe.micro.MicroContext;
 import io.github.zero88.qwe.micro.Microservice;

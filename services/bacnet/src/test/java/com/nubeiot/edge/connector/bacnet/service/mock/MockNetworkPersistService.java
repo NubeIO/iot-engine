@@ -10,6 +10,7 @@ import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventContractor;
 import io.github.zero88.qwe.event.EventListener;
+import io.github.zero88.qwe.event.Status;
 import io.github.zero88.qwe.exceptions.CarlException;
 import io.github.zero88.qwe.micro.metadata.EventHttpService;
 import io.github.zero88.qwe.micro.metadata.EventMethodDefinition;
@@ -19,7 +20,6 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.protocol.network.Ipv4Network;
 import com.nubeiot.core.protocol.network.UdpProtocol;
-import com.nubeiot.edge.connector.bacnet.translator.BACnetNetworkTranslator;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -40,7 +40,8 @@ public class MockNetworkPersistService implements EventListener, EventHttpServic
 
     @Override
     public String api() {
-        return DataPointApiService.DEFAULT.lookupApiName(NetworkMetadata.INSTANCE);
+        //        return DataPointApiService.DEFAULT.lookupApiName(NetworkMetadata.INSTANCE);
+        return "";
     }
 
     @Override
@@ -53,18 +54,20 @@ public class MockNetworkPersistService implements EventListener, EventHttpServic
         return Arrays.asList(EventAction.CREATE, EventAction.GET_LIST);
     }
 
-    @EventContractor(action = EventAction.CREATE, returnType = Single.class)
+    @EventContractor(action = "CREATE", returnType = Single.class)
     public Single<JsonObject> create(RequestData reqData) {
         if (errorInCreate) {
             return Single.error(new CarlException("Failed"));
         }
-        final JsonObject resource = JsonPojo.from(new Network().fromJson(reqData.body()).setId(UUID.randomUUID()))
-                                            .toJson();
-        return Single.just(
-            new JsonObject().put("action", EventAction.CREATE).put("status", Status.SUCCESS).put("resource", resource));
+        //        final JsonObject resource = JsonPojo.from(new Network().fromJson(reqData.body()).setId(UUID
+        //        .randomUUID()))
+        //                                            .toJson();
+        return Single.just(new JsonObject().put("action", EventAction.CREATE)
+                                           .put("status", Status.SUCCESS)
+                                           .put("resource", "resource"));
     }
 
-    @EventContractor(action = EventAction.GET_LIST, returnType = Single.class)
+    @EventContractor(action = "GET_LIST", returnType = Single.class)
     public Single<JsonObject> list(RequestData reqData) {
         return Single.just(new JsonObject().put("networks", defaultNetworks()));
     }
@@ -74,8 +77,9 @@ public class MockNetworkPersistService implements EventListener, EventHttpServic
             return new JsonArray();
         }
         final UdpProtocol protocol = UdpProtocol.builder().port(47808).canReusePort(true).ip(network).build();
-        final Network network = new BACnetNetworkTranslator().serialize(protocol).setId(id);
-        return new JsonArray().add(JsonPojo.from(network).toJson());
+        //        final Network network = new BACnetNetworkConverter().serialize(protocol).setId(id);
+        //        return new JsonArray().add(JsonPojo.from(network).toJson());
+        return new JsonArray().add(protocol.toJson());
     }
 
 }

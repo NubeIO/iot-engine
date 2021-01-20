@@ -25,22 +25,22 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
-import com.nubeiot.edge.connector.bacnet.ObjectTypeCategory;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.Fields;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
+import com.nubeiot.edge.connector.bacnet.entity.BACnetPointEntity;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectPropertyValues;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.nubeiot.edge.connector.bacnet.service.subscriber.PointValueSubscriber;
-import com.nubeiot.edge.connector.bacnet.translator.BACnetPointTranslator;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.util.RequestUtils;
 
 import lombok.NonNull;
 
-public final class ObjectRpcDiscovery extends AbstractRpcDiscoveryService implements BACnetRpcDiscoveryService {
+public final class ObjectRpcDiscovery extends AbstractBACnetRpcDiscoveryService<BACnetPointEntity>
+    implements BACnetRpcDiscoveryService<BACnetPointEntity> {
 
     ObjectRpcDiscovery(@NonNull Vertx vertx, @NonNull String sharedKey) {
         super(vertx, sharedKey);
@@ -99,15 +99,17 @@ public final class ObjectRpcDiscovery extends AbstractRpcDiscoveryService implem
     public Single<JsonObject> discoverThenDoPersist(RequestData requestData) {
         final DiscoveryRequestWrapper request = validateCache(toRequest(requestData, DiscoverLevel.OBJECT));
         final ObjectType objectType = request.objectCode().getObjectType();
-        if (ObjectTypeCategory.isPoint(objectType)) {
-            return doGet(request).map(properties -> new BACnetPointTranslator().serialize(properties))
-                                 .map(pojo -> JsonPojo.from(pojo).toJson())
-                                 .flatMap(this::doPersist)
-                                 .doOnSuccess(response -> objectCache().addDataKey(request.device().protocol(),
-                                                                                   request.remoteDeviceId(),
-                                                                                   request.objectCode(),
-                                                                                   parsePersistResponse(response)));
-        }
+        //        if (ObjectTypeCategory.isPoint(objectType)) {
+        //            return doGet(request).map(properties -> new BACnetPointConverter().serialize(properties))
+        //                                 .map(pojo -> JsonPojo.from(pojo).toJson())
+        //                                 .flatMap(this::doPersist)
+        //                                 .doOnSuccess(response -> objectCache().addDataKey(request.device()
+        //                                 .protocol(),
+        //                                                                                   request.remoteDeviceId(),
+        //                                                                                   request.objectCode(),
+        //                                                                                   parsePersistResponse
+        //                                                                                   (response)));
+        //        }
         return Single.error(new IllegalArgumentException("Unsupported persist object type " + objectType));
     }
 
@@ -117,8 +119,8 @@ public final class ObjectRpcDiscovery extends AbstractRpcDiscoveryService implem
     }
 
     @Override
-    public @NonNull EntityMetadata context() {
-        return PointCompositeMetadata.INSTANCE;
+    public @NonNull Class<BACnetPointEntity> context() {
+        return BACnetPointEntity.class;
     }
 
     @EventContractor(action = "PATCH", returnType = Single.class)

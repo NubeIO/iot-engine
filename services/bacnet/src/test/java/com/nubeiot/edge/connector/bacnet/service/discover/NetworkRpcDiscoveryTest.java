@@ -4,6 +4,8 @@ import java.util.Optional;
 
 import org.junit.Test;
 
+import io.github.zero88.qwe.TestHelper;
+import io.github.zero88.qwe.TestHelper.EventbusHelper;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventMessage;
@@ -18,7 +20,7 @@ import com.nubeiot.core.protocol.network.IpNetwork;
 import com.nubeiot.core.protocol.network.Ipv4Network;
 import com.nubeiot.core.protocol.network.UdpProtocol;
 import com.nubeiot.edge.connector.bacnet.BACnetWithoutGatewayTest;
-import com.nubeiot.edge.connector.bacnet.dto.BACnetIP;
+import com.nubeiot.edge.connector.bacnet.entity.BACnetIP;
 
 public class NetworkRpcDiscoveryTest extends BACnetWithoutGatewayTest {
 

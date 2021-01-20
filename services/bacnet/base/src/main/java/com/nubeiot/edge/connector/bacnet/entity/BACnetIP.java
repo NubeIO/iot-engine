@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.bacnet.dto;
+package com.nubeiot.edge.connector.bacnet.entity;
 
 import io.github.zero88.qwe.utils.Networks;
 
@@ -20,23 +20,25 @@ public final class BACnetIP extends BACnetNetwork {
     private final String subnet;
     private final String networkInterface;
     private final int port;
+    private final UdpProtocol protocol;
 
     private BACnetIP(String label, int port, String subnet, String networkInterface) {
         super(TYPE, label);
         this.subnet = subnet;
         this.networkInterface = networkInterface;
         this.port = Networks.validPort(port, IpNetwork.DEFAULT_PORT);
+        this.protocol = UdpProtocol.builder()
+                                   .port(port)
+                                   .ifName(networkInterface)
+                                   .cidrAddress(subnet)
+                                   .displayName(label())
+                                   .canReusePort(true)
+                                   .build();
     }
 
     @Override
     public @NonNull UdpProtocol toProtocol() {
-        return UdpProtocol.builder()
-                          .port(port)
-                          .ifName(networkInterface)
-                          .cidrAddress(subnet)
-                          .displayName(getLabel())
-                          .canReusePort(true)
-                          .build();
+        return protocol;
     }
 
     @JsonPOJOBuilder(withPrefix = "")
