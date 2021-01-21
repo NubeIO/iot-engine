@@ -1,13 +1,12 @@
 import java.time.Instant
 import java.util.jar.Attributes.Name
 
-import org.gradle.util.GradleVersion
 
 jar {
     archiveBaseName.set(project.computeBaseName())
     doFirst {
         def javaVersion = System.getProperty('java.version') + ' (' + System.getProperty('java.vendor') + ')'
-        GradleVersion gradleVersion = GradleVersion.current()
+        def gradleVersion = gradle.gradleVersion
 
         println '- Project Name:     ' + archiveBaseName
         println '- Project Title:    ' + project.title
@@ -16,7 +15,7 @@ jar {
         println '- Semantic Version: ' + project.semanticVersion
         println '- Build Number:     ' + project.buildNumber
         println '- Java Version:     ' + javaVersion
-        println '- Gradle Version:   ' + gradleVersion.version
+        println '- Gradle Version:   ' + gradleVersion
         println '- Vertx Version:    ' + project.versions.vertx
         
         def manifestMap = [
@@ -31,7 +30,7 @@ jar {
             'Build-Date'                            : Instant.now(),
             'Build-By'                              : "${project.buildBy}",
             'Java-Version'                          : "${javaVersion}",
-            'Gradle-Version'                        : "${gradleVersion.version}",
+            'Gradle-Version'                        : "${gradleVersion}",
             'Vertx-Version'                         : "${project.versions.vertx}"
         ]
         if (project.hasProperty("executable") && project.executable == "true") {
