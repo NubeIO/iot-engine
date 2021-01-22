@@ -1,4 +1,3 @@
-.idea/
 **/target/
 **/.vertx/
 **/bin/
@@ -44,3 +43,7 @@ demo/*.md
 
 # Exculde launcher
 !.idea/runConfigurations
+.idea/*.xml
+.idea/codeStyles
+.idea/dictionaries
+.idea/inspectionProfiles
