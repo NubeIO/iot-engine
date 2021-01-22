@@ -5,9 +5,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-
 import com.nubeiot.edge.connector.bacnet.listener.ReceiveIAmListener;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
@@ -18,11 +15,11 @@ import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
 import lombok.Builder;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Builder(builderClassName = "Builder")
 public final class RemoteDeviceScanner {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(RemoteDeviceScanner.class);
 
     @NonNull
     private final LocalDevice localDevice;
@@ -48,7 +45,7 @@ public final class RemoteDeviceScanner {
     }
 
     public RemoteDeviceScanner start() {
-        LOGGER.info("Send Global broadcast then capture remote device {}-{}", minDevice, maxDevice);
+        log.info("Send Global broadcast then capture remote device {}-{}", minDevice, maxDevice);
         localDevice.getEventHandler().addListener(listener);
         localDevice.sendGlobalBroadcast(new WhoIsRequest(minDevice, maxDevice));
         return this;

@@ -6,6 +6,9 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.serotonin.bacnet4j.type.constructed.SequenceOf;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public final class SequenceOfSerializer extends EncodableSerializer<SequenceOf> {
 
     SequenceOfSerializer() {
@@ -28,8 +31,8 @@ public final class SequenceOfSerializer extends EncodableSerializer<SequenceOf> 
         try {
             gen.writeObject(o);
         } catch (IOException e) {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("Something is wrong in json writer of {}", e, SequenceOf.class);
+            if (log.isTraceEnabled()) {
+                log.trace("Something is wrong in json writer of {}", SequenceOf.class, e);
             }
         }
     }

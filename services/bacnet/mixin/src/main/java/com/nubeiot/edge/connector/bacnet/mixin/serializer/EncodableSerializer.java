@@ -7,8 +7,6 @@ import java.util.Objects;
 
 import io.reactivex.functions.BiConsumer;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -17,11 +15,12 @@ import com.nubeiot.edge.connector.bacnet.mixin.BACnetMixin;
 import com.serotonin.bacnet4j.type.Encodable;
 
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public abstract class EncodableSerializer<T extends Encodable> extends StdSerializer<T> {
 
     public static final EncodableSerializer<Encodable> DEFAULT = new EncodableSerializer<Encodable>(Encodable.class) {};
-    static final Logger LOGGER = LoggerFactory.getLogger(EncodableSerializer.class);
 
     EncodableSerializer(@NonNull Class<T> clazz) {
         super(clazz);
@@ -52,7 +51,7 @@ public abstract class EncodableSerializer<T extends Encodable> extends StdSerial
         try {
             write.accept(v, gen);
         } catch (Exception e) {
-            LOGGER.warn(e);
+            log.warn("Fallback to default serialize", e);
             defaultSerialize(v, gen);
         }
     }

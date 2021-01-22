@@ -24,7 +24,9 @@ import com.nubeiot.edge.connector.bacnet.service.scanner.BACnetScannerHelper;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public final class BACnetDiscoverFinisher extends DiscoverCompletionHandler
     implements SharedDataDelegate<BACnetDiscoverFinisher> {
@@ -62,7 +64,8 @@ public final class BACnetDiscoverFinisher extends DiscoverCompletionHandler
                        .doOnNext(
                            entry -> deviceCache.addDataKey(protocol, entry.getValue().getObjectId(), entry.getKey()))
                        .flatMapSingle(entry -> pointScanner.scan(networkId, UUID64.uuid64ToUuid(entry.getKey())))
-                       .subscribe(logger::info, logger::error);
+                       .subscribe(s -> log.info("Finished BACnet scan [{}]", s.keySet()),
+                                  err -> log.warn("Unable to scan network. Error: {}", err.getMessage(), err));
         return true;
     }
 

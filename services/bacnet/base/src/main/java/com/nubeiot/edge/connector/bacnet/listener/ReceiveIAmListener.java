@@ -2,19 +2,17 @@ package com.nubeiot.edge.connector.bacnet.listener;
 
 import java.util.function.Consumer;
 
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.event.DeviceEventAdapter;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public final class ReceiveIAmListener extends DeviceEventAdapter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(WhoIsListener.class);
     @NonNull
     private final Consumer<RemoteDevice> handler;
 
@@ -24,8 +22,7 @@ public final class ReceiveIAmListener extends DeviceEventAdapter {
     }
 
     private void log(RemoteDevice d) {
-        LOGGER.info("Receive IAm from Instance: {} - Address: {}", d.getInstanceNumber(),
-                    d.getAddress().getDescription());
+        log.info("Receive IAm from Instance: {} - Address: {}", d.getInstanceNumber(), d.getAddress().getDescription());
     }
 
 }

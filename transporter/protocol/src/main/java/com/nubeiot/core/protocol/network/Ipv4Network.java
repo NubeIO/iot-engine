@@ -12,8 +12,6 @@ import io.github.zero88.qwe.exceptions.CommunicationProtocolException;
 import io.github.zero88.qwe.exceptions.NotFoundException;
 import io.github.zero88.qwe.utils.Networks;
 import io.github.zero88.utils.Strings;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -29,7 +27,6 @@ import lombok.experimental.Accessors;
 @JsonDeserialize(builder = Ipv4Network.Builder.class)
 public final class Ipv4Network extends IpNetwork<Ipv4Network> implements Ethernet {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Ipv4Network.class);
     private static final String IPV4_REGEX
         = "(([0-1]?\\d{1,2}|2[0-4]\\d|25[0-5])\\.){3}([0-1]?\\d{1,2}|2[0-4]\\d|25[0-5])";
     @Setter

@@ -3,12 +3,13 @@ package com.nubeiot.edge.connector.bacnet.mixin.deserializer;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.github.zero88.qwe.exceptions.CarlException;
 import io.github.zero88.qwe.exceptions.converter.CarlExceptionConverter;
 import io.github.zero88.utils.Functions;
 import io.github.zero88.utils.Strings;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 import com.serotonin.bacnet4j.obj.ObjectProperties;
 import com.serotonin.bacnet4j.obj.ObjectPropertyTypeDefinition;

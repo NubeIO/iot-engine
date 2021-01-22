@@ -19,8 +19,6 @@ import io.github.zero88.qwe.exceptions.NotFoundException;
 import io.github.zero88.qwe.utils.Networks;
 import io.github.zero88.utils.Functions;
 import io.github.zero88.utils.Strings;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -33,7 +31,9 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
 @Setter(value = AccessLevel.PROTECTED)
 @Accessors(chain = true)
@@ -41,7 +41,6 @@ import lombok.experimental.Accessors;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class IpNetwork<T extends IpNetwork> implements Ethernet {
 
-    protected static final Logger LOGGER = LoggerFactory.getLogger(IpNetwork.class);
     private Integer ifIndex;
     private String ifName;
     private String displayName;
@@ -76,8 +75,7 @@ public abstract class IpNetwork<T extends IpNetwork> implements Ethernet {
         return Ipv4Network.getActiveIpByName(getInterfaceName(splitter[0]));
     }
 
-    static <T extends IpNetwork> List<T> getActiveInterfaces(@NonNull Predicate<NetworkInterface> interfacePredicate,
-                                                             @NonNull Predicate<InterfaceAddress> addressPredicate,
+    static <T extends IpNetwork> List<T> getActiveInterfaces(@NonNull Predicate<NetworkInterface> interfacePredicate, @NonNull Predicate<InterfaceAddress> addressPredicate,
                                                              @NonNull BiFunction<NetworkInterface, InterfaceAddress,
                                                                                     T> parser) {
         List<T> list = new ArrayList<>();
@@ -100,8 +98,7 @@ public abstract class IpNetwork<T extends IpNetwork> implements Ethernet {
         return list;
     }
 
-    static <T extends IpNetwork> T getActiveIpByName(String interfaceName,
-                                                     @NonNull Predicate<InterfaceAddress> iaPredicate,
+    static <T extends IpNetwork> T getActiveIpByName(String interfaceName, @NonNull Predicate<InterfaceAddress> iaPredicate,
                                                      @NonNull BiFunction<NetworkInterface, InterfaceAddress, T> parser) {
         return getActiveInterfaces(ni -> ni.getName().equalsIgnoreCase(getInterfaceName(interfaceName)), iaPredicate,
                                    parser).stream().findFirst().orElseThrow(notFound(interfaceName));
@@ -138,8 +135,8 @@ public abstract class IpNetwork<T extends IpNetwork> implements Ethernet {
         try {
             return mac(networkInterface.getHardwareAddress());
         } catch (SocketException | NullPointerException e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.warn("Cannot compute MAC address");
+            if (log.isDebugEnabled()) {
+                log.warn("Cannot compute MAC address");
             }
             return null;
         }
@@ -225,8 +222,7 @@ public abstract class IpNetwork<T extends IpNetwork> implements Ethernet {
         return Short.parseShort(cidrAddress.substring(cidrAddress.lastIndexOf("/") + 1));
     }
 
-    T isReachable(@NonNull Predicate<InterfaceAddress> predicate,
-                  @NonNull BiFunction<NetworkInterface, InterfaceAddress, T> parser, @NonNull Supplier<T> fallback)
+    T isReachable(@NonNull Predicate<InterfaceAddress> predicate, @NonNull BiFunction<NetworkInterface, InterfaceAddress, T> parser, @NonNull Supplier<T> fallback)
         throws CommunicationProtocolException {
         if (Strings.isBlank(getIfName()) && Strings.isBlank(getCidrAddress())) {
             return reload(fallback.get());
@@ -240,7 +236,7 @@ public abstract class IpNetwork<T extends IpNetwork> implements Ethernet {
             throw new CommunicationProtocolException("Interface name " + name + " is obsolete or down");
         }
         if (interfaces.size() > 1) {
-            LOGGER.warn("Has more than one CIDR with same given interface {}", name);
+            log.warn("Has more than one CIDR with same given interface {}", name);
         }
         return reload(interfaces.get(0));
     }

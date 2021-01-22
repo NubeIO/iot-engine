@@ -4,12 +4,11 @@ import io.github.zero88.qwe.component.ApplicationProbeHandler.ApplicationReadine
 import io.github.zero88.qwe.dto.ErrorData;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventContractor;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Represents for {@code discover completion handler} that listens {@code success} or {@code error} event after scanning
@@ -18,21 +17,20 @@ import lombok.NonNull;
  * @see BACnetDevice
  * @since 1.0.0
  */
+@Slf4j
 public class DiscoverCompletionHandler implements ApplicationReadinessHandler {
-
-    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
     @EventContractor(action = "NOTIFY", returnType = boolean.class)
     public boolean success(@NonNull RequestData requestData) {
-        logger.info(requestData.toJson());
+        log.info(requestData.toJson().encode());
         return true;
     }
 
     @Override
     @EventContractor(action = "NOTIFY_ERROR", returnType = boolean.class)
     public boolean error(@NonNull ErrorData error) {
-        logger.info(error.toJson());
+        log.info(error.toJson().encode());
         return true;
     }
 
