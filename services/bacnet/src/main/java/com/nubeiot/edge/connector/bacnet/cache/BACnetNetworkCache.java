@@ -48,7 +48,7 @@ public final class BACnetNetworkCache extends AbstractLocalCache<String, Communi
     }
 
     @Override
-    public BACnetNetworkCache add(@NonNull String key, CommunicationProtocol protocol) {
+    public BACnetNetworkCache add(@NonNull String key, @NonNull CommunicationProtocol protocol) {
         cache().put(key, protocol);
         return this;
     }

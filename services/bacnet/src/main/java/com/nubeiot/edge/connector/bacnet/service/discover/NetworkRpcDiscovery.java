@@ -8,9 +8,9 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverLevel;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
-import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.Fields;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;

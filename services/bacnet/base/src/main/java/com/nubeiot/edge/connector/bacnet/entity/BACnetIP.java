@@ -20,25 +20,23 @@ public final class BACnetIP extends BACnetNetwork {
     private final String subnet;
     private final String networkInterface;
     private final int port;
-    private final UdpProtocol protocol;
 
     private BACnetIP(String label, int port, String subnet, String networkInterface) {
         super(TYPE, label);
         this.subnet = subnet;
         this.networkInterface = networkInterface;
         this.port = Networks.validPort(port, IpNetwork.DEFAULT_PORT);
-        this.protocol = UdpProtocol.builder()
-                                   .port(port)
-                                   .ifName(networkInterface)
-                                   .cidrAddress(subnet)
-                                   .displayName(label())
-                                   .canReusePort(true)
-                                   .build();
     }
 
     @Override
     public @NonNull UdpProtocol toProtocol() {
-        return protocol;
+        return UdpProtocol.builder()
+                          .port(this.port)
+                          .ifName(this.networkInterface)
+                          .cidrAddress(this.subnet)
+                          .displayName(label())
+                          .canReusePort(true)
+                          .build();
     }
 
     @JsonPOJOBuilder(withPrefix = "")

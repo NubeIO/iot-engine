@@ -8,7 +8,6 @@ import java.util.Optional;
 
 import io.github.zero88.qwe.component.SharedDataDelegate.AbstractSharedDataDelegate;
 import io.github.zero88.qwe.dto.ErrorMessage;
-import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.dto.converter.ErrorMessageConverter;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
@@ -27,6 +26,7 @@ import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetObjectCache;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverLevel;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
@@ -95,10 +95,10 @@ abstract class AbstractBACnetRpcDiscoveryService<P extends IoTEntity>
     }
 
     final CommunicationProtocol parseNetworkProtocol(@NonNull DiscoverRequest request) {
-        final CommunicationProtocol cacheProtocol = networkCache().get(request.getNetworkCode());
-        final CommunicationProtocol reqBodyProtocol = BACnetNetwork.factory(
-            Optional.ofNullable(request.getNetwork()).orElse(new JsonObject())).toProtocol();
-        return JsonData.from(cacheProtocol.toJson().mergeIn(reqBodyProtocol.toJson()), CommunicationProtocol.class);
+        return Optional.ofNullable(request.getNetwork())
+                       .map(n -> BACnetNetwork.factory(n).toProtocol())
+                       .map(p -> networkCache().add(p.identifier(), p).get(p.identifier()))
+                       .orElseGet(() -> networkCache().get(request.getNetworkCode()));
     }
 
     final Single<PropertyValuesMixin> parseRemoteObject(@NonNull BACnetDevice device,
@@ -132,8 +132,8 @@ abstract class AbstractBACnetRpcDiscoveryService<P extends IoTEntity>
 
     protected abstract String parseResourceId(@NonNull JsonObject resource);
 
-    protected final @NonNull DiscoveryRequestWrapper toRequest(@NonNull RequestData reqData,
-                                                               @NonNull DiscoverRequest.DiscoverLevel level) {
+    protected final @NonNull DiscoveryRequestWrapper createDiscoveryRequest(@NonNull RequestData reqData,
+                                                                            @NonNull DiscoverLevel level) {
         final DiscoverRequest request = DiscoverRequest.from(reqData, level);
         final DiscoverOptions options = parseDiscoverOptions(reqData);
         final CommunicationProtocol protocol = parseNetworkProtocol(request);

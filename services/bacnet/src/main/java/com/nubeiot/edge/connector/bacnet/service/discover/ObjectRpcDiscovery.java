@@ -25,7 +25,7 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
-import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverLevel;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.Fields;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetPointEntity;
@@ -72,7 +72,7 @@ public final class ObjectRpcDiscovery extends AbstractBACnetRpcDiscoveryService<
 
     @Override
     public Single<JsonObject> list(RequestData requestData) {
-        final DiscoveryRequestWrapper request = toRequest(requestData, DiscoverLevel.DEVICE);
+        final DiscoveryRequestWrapper request = createDiscoveryRequest(requestData, DiscoverLevel.DEVICE);
         logger.info("Discovering objects in device '{}' in network {}...",
                     ObjectIdentifierMixin.serialize(request.remoteDeviceId()),
                     request.device().protocol().identifier());
@@ -86,7 +86,7 @@ public final class ObjectRpcDiscovery extends AbstractBACnetRpcDiscoveryService<
 
     @Override
     public Single<JsonObject> get(RequestData requestData) {
-        final DiscoveryRequestWrapper request = toRequest(requestData, DiscoverLevel.OBJECT);
+        final DiscoveryRequestWrapper request = createDiscoveryRequest(requestData, DiscoverLevel.OBJECT);
         return doGet(request).map(PropertyValuesMixin::toJson);
     }
 
@@ -97,7 +97,8 @@ public final class ObjectRpcDiscovery extends AbstractBACnetRpcDiscoveryService<
 
     @Override
     public Single<JsonObject> discoverThenDoPersist(RequestData requestData) {
-        final DiscoveryRequestWrapper request = validateCache(toRequest(requestData, DiscoverLevel.OBJECT));
+        final DiscoveryRequestWrapper request = validateCache(
+            createDiscoveryRequest(requestData, DiscoverLevel.OBJECT));
         final ObjectType objectType = request.objectCode().getObjectType();
         //        if (ObjectTypeCategory.isPoint(objectType)) {
         //            return doGet(request).map(properties -> new BACnetPointConverter().serialize(properties))
@@ -125,7 +126,8 @@ public final class ObjectRpcDiscovery extends AbstractBACnetRpcDiscoveryService<
 
     @EventContractor(action = "PATCH", returnType = Single.class)
     public Single<JsonObject> patchValue(RequestData requestData) {
-        return PointValueSubscriber.write(toRequest(requestData, DiscoverLevel.OBJECT), requestData.body());
+        return PointValueSubscriber.write(createDiscoveryRequest(requestData, DiscoverLevel.OBJECT),
+                                          requestData.body());
     }
 
     private Single<ObjectPropertyValues> getRemoteObjects(@NonNull BACnetDevice device, @NonNull RemoteDevice rd,

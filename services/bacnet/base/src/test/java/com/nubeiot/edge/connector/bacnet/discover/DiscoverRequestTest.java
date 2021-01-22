@@ -7,7 +7,6 @@ import io.github.zero88.qwe.TestHelper.JsonHelper;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.protocol.network.Ipv4Network;
-import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
 
 public class DiscoverRequestTest {
 

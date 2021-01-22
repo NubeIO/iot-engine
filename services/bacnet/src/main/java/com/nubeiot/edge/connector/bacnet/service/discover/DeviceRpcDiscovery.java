@@ -11,7 +11,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
-import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.DiscoverLevel;
+import com.nubeiot.edge.connector.bacnet.discover.DiscoverLevel;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverRequest.Fields;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
 import com.nubeiot.edge.connector.bacnet.discover.RemoteDeviceScanner;
@@ -47,7 +47,7 @@ public final class DeviceRpcDiscovery extends AbstractBACnetRpcDiscoveryService<
 
     @Override
     public Single<JsonObject> list(RequestData reqData) {
-        final DiscoveryRequestWrapper request = toRequest(reqData, DiscoverLevel.NETWORK);
+        final DiscoveryRequestWrapper request = createDiscoveryRequest(reqData, DiscoverLevel.NETWORK);
         logger.info("Discovering devices in network {}...", request.device().protocol().identifier());
         return request.device()
                       .scanRemoteDevices(request.options())
@@ -61,7 +61,7 @@ public final class DeviceRpcDiscovery extends AbstractBACnetRpcDiscoveryService<
 
     @Override
     public Single<JsonObject> get(RequestData reqData) {
-        final DiscoveryRequestWrapper request = toRequest(reqData, DiscoverLevel.DEVICE);
+        final DiscoveryRequestWrapper request = createDiscoveryRequest(reqData, DiscoverLevel.DEVICE);
         return doGet(request).map(RemoteDeviceMixin::toJson);
     }
 
