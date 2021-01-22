@@ -41,3 +41,6 @@ gradle-app.setting
 settings*.xml
 demo/*.md
 *.secret.properties
+
+# Exculde launcher
+!.idea/runConfigurations
