@@ -2,15 +2,16 @@ name: build-release
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
     tags: [ 'v*' ]
     paths-ignore:
       - '.github/ISSUE_TEMPLATE/**'
-      - 'README.md'
+      - '.github/*.yml'
+      - '*.md'
       - 'LICENSE'
   pull_request:
     types: [ opened, synchronize, reopened, closed ]
-    branches: [ main ]
+    branches: [ main, master ]
 
 env:
   ENABLED_TEST: false
@@ -20,16 +21,16 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       branch: ${{ steps.context.outputs.branch }}
-      version: ${{ steps.context.outputs.version }}
-      semanticVersion: ${{ steps.conclusion.outputs.semanticVersion }}
-      shouldBuild: ${{ steps.conclusion.outputs.shouldBuild }}
-      shouldPublish: ${{ steps.conclusion.outputs.shouldPublish }}
+      shouldBuild: ${{ steps.context.outputs.decision_build }}
+      shouldPublish: ${{ steps.context.outputs.decision_publish }}
       isRelease: ${{ steps.context.outputs.isTag }}
+      version: ${{ steps.context.outputs.version }}
+      semanticVersion: ${{ steps.semantic.outputs.semanticVersion }}
 
     steps:
       - uses: actions/checkout@v2
         with:
-          token: ${{ secrets.OSS_GITHUB_TOKEN }}
+          token: ${{ secrets.NUBEIO_CI_GITHUBPROJECT_TOKEN }}
 
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v3
@@ -46,27 +47,13 @@ jobs:
         uses: zero88/gh-project-context@v1.0.0-rc2
         with:
           dry: false
+          defaultBranch: master
 
-      - name: Conclusion
-        id: conclusion
+      - name: Find semantic version
+        id: semantic
         shell: bash
         run: |
-          shouldBuild=${{ steps.context.outputs.ci_isPushed != 'true' && steps.context.outputs.isClosed != 'true' }}
-          onTagOrMaster=${{ steps.context.outputs.onDefaultBranch == 'true' || steps.context.outputs.isTag == 'true' }}
-          [[ "$shouldBuild" == 'true' && "$onTagOrMaster" == 'true' ]] && shouldPublish=true || shouldPublish=false
-
-          version="${{ steps.context.outputs.version }}"
-          branch="${{ steps.context.outputs.branch }}"
-          version=$([[ -z "$version" ]] && echo "${branch//\//-}" || echo "$version")
-          semantic=$(grep semanticVersion gradle.properties | cut -d'=' -f2)
-
-          echo "Conclusion:"
-          echo "- Branch? ${{ steps.context.outputs.branch }}"
-          echo "- Version? $version"
-          echo "- Semantic version? $semantic"
-
-          echo ::set-output name=shouldBuild::$shouldBuild
-          echo ::set-output name=shouldBuild::$shouldPublish
+          echo ::set-output name=semanticVersion::$(grep semanticVersion gradle.properties | cut -d'=' -f2)
 
   build:
     runs-on: ubuntu-latest

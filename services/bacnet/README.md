@@ -1,6 +1,6 @@
 # BACnet
 
-BACnet is a communications protocol for Building Automation and Control (BAC) networks that leverage the ASHRAE, ANSI,
+BACnet is a communication protocol for Building Automation and Control (BAC) networks that leverage the ASHRAE, ANSI,
 and ISO 16484-5 standard protocol.
 
 ## BACnet router and BACnet Gateway
