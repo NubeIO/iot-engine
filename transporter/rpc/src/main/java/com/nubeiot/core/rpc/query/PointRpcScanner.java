@@ -14,11 +14,9 @@ import lombok.NonNull;
  * The interface Data protocol point scanner.
  *
  * @param <X> Type of {@code protocol object}
- * @param <T> Type of {@code DataProtocolPointScanner}
  * @since 1.0.0
  */
-public interface PointRpcScanner<P extends IPoint, X, T extends PointRpcScanner>/*
-    extends RpcScanner<P, X, T>*/ {
+public interface PointRpcScanner<P extends IPoint, X> extends RpcScanner<P, X> {
 
     //    @Override
     //    default @NonNull Class<P> context() {

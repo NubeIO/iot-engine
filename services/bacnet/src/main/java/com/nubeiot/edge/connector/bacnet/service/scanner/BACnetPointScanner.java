@@ -11,10 +11,8 @@ import com.nubeiot.edge.connector.bacnet.service.BACnetRpcProtocol;
 
 import lombok.NonNull;
 
-public final class BACnetPointScanner
-    extends AbstractRpcScanner<BACnetPointEntity, PropertyValuesMixin, BACnetPointScanner>
-    implements PointRpcScanner<BACnetPointEntity, PropertyValuesMixin, BACnetPointScanner>,
-               BACnetRpcProtocol<BACnetPointEntity> {
+public final class BACnetPointScanner extends AbstractRpcScanner<BACnetPointEntity, PropertyValuesMixin>
+    implements PointRpcScanner<BACnetPointEntity, PropertyValuesMixin>, BACnetRpcProtocol<BACnetPointEntity> {
 
     protected BACnetPointScanner(@NonNull SharedDataLocalProxy sharedDataProxy) {
         super(sharedDataProxy, new BACnetPointConverter());

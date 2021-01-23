@@ -16,10 +16,8 @@ import lombok.NonNull;
  *
  * @since 1.0.0
  */
-public final class BACnetNetworkRpcScanner
-    extends AbstractRpcScanner<BACnetNetwork, CommunicationProtocol, BACnetNetworkRpcScanner>
-    implements NetworkRpcScanner<BACnetNetwork, CommunicationProtocol, BACnetNetworkRpcScanner>,
-               BACnetRpcProtocol<BACnetNetwork> {
+public final class BACnetNetworkRpcScanner extends AbstractRpcScanner<BACnetNetwork, CommunicationProtocol>
+    implements NetworkRpcScanner<BACnetNetwork>, BACnetRpcProtocol<BACnetNetwork> {
 
     BACnetNetworkRpcScanner(@NonNull SharedDataLocalProxy sharedDataProxy) {
         super(sharedDataProxy, new BACnetNetworkConverter());

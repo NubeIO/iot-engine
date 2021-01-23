@@ -7,8 +7,7 @@ import com.serotonin.bacnet4j.event.DeviceEventListener;
 /**
  * Represents {@code BACnet notifier} that watches the {@code BACnet event} then do notify to {@code external services}
  *
- * @param <P>
- * @param <T>
+ * @param <P> Type of IoTEntity
  */
-public interface BACnetRpcNotifier<P extends IoTEntity, T extends BACnetRpcNotifier>
-    extends BACnetRpcProtocol<P>, RpcNotifier<P, T>, DeviceEventListener {}
+public interface BACnetRpcNotifier<P extends IoTEntity>
+    extends BACnetRpcProtocol<P>, RpcNotifier<P>, DeviceEventListener {}

@@ -15,10 +15,9 @@ import lombok.NonNull;
  * The interface Data protocol device scanner.
  *
  * @param <X> Type of {@code protocol object}
- * @param <T> Type of {@code DataProtocolDeviceScanner}
  * @since 1.0.0
  */
-public interface DeviceRpcScanner<P extends IDevice, X, T extends DeviceRpcScanner> /*extends RpcScanner<P, X, T>*/ {
+public interface DeviceRpcScanner<P extends IDevice, X> extends RpcScanner<P, X> {
 
     //    @Override
     default @NonNull String parseKey(@NonNull P entity) {

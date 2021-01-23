@@ -12,8 +12,8 @@ import lombok.experimental.Accessors;
 
 @Getter
 @Accessors(fluent = true)
-public abstract class AbstractRpcScanner<P extends IoTEntity, X, T extends AbstractRpcScanner>
-    extends BaseRpcProtocol<P> implements RpcScanner<P, X, T> {
+public abstract class AbstractRpcScanner<P extends IoTEntity, X> extends BaseRpcProtocol<P>
+    implements RpcScanner<P, X> {
 
     private final IoTEntityConverter<P, X> translator;
 

@@ -1,16 +1,15 @@
 package com.nubeiot.core.rpc.query;
 
+import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.iotdata.entity.INetwork;
 
 /**
  * Represents a service that scans {@code network} in {@code Data Point repository} when startup the specified {@code
  * protocol application}.
  *
- * @param <T> Type of {@code DataProtocolNetworkScanner}
  * @since 1.0.0
  */
-public interface NetworkRpcScanner<N extends INetwork, X, T extends NetworkRpcScanner>
-    /*extends RpcScanner<N, CommunicationProtocol, T>*/ {
+public interface NetworkRpcScanner<N extends INetwork> extends RpcScanner<N, CommunicationProtocol> {
 
     //    @Override
     //    default @NonNull Class<N> context() {

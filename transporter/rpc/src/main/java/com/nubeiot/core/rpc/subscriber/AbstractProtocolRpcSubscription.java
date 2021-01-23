@@ -14,7 +14,7 @@ import lombok.experimental.Accessors;
 
 @Accessors(fluent = true)
 public abstract class AbstractProtocolRpcSubscription<P extends IoTEntity, S extends RpcSubscriber<P>>
-    extends BaseRpcProtocol<P> implements RpcSubscription/*<P, T, S>*/ {
+    extends BaseRpcProtocol<P> implements RpcSubscription<P, S> {
 
     @Getter
     private final Set<S> subscribers = new HashSet<>();

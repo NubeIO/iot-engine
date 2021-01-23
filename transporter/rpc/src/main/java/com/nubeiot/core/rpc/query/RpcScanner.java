@@ -1,5 +1,6 @@
 package com.nubeiot.core.rpc.query;
 
+import com.nubeiot.core.rpc.RpcClient;
 import com.nubeiot.iotdata.IoTEntity;
 
 /**
@@ -7,10 +8,9 @@ import com.nubeiot.iotdata.IoTEntity;
  *
  * @param <P> Type of {@code VertxPojo}
  * @param <X> Type of {@code Protocol object}
- * @param <T> Type of {@code DataProtocolQuery}
  * @since 1.0.0
  */
-public interface RpcScanner<P extends IoTEntity, X, T extends RpcScanner> /*extends RpcClient<P, T>*/ {
+public interface RpcScanner<P extends IoTEntity, X> extends RpcClient<P> {
 
     //    /**
     //     * Query data.
