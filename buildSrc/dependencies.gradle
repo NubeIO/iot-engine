@@ -31,7 +31,7 @@ def versions = [
         "javaUtils": "1.0.1",
         "jpaExt"   : "0.0.9",
         "rqlJooq"  : "0.0.9",
-        "qwe"      : "0.6.0-SNAPSHOT",
+        "qwe"      : "0.6.1-SNAPSHOT",
         "sql"      : "0.1.0-SNAPSHOT",
     ]
 ]

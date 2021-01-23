@@ -9,10 +9,10 @@ import java.util.concurrent.ConcurrentMap;
 
 import io.github.zero88.qwe.cache.AbstractLocalCache;
 import io.github.zero88.qwe.cache.LocalDataCache;
+import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.exceptions.NotFoundException;
 import io.github.zero88.utils.Strings;
 import io.github.zero88.utils.UUID64;
-import io.vertx.core.Vertx;
 
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
@@ -31,12 +31,9 @@ public final class BACnetDeviceCache extends AbstractLocalCache<CommunicationPro
     private final ConcurrentMap<CommunicationProtocol, Map<ObjectIdentifier, String>> remoteDeviceCache
         = new ConcurrentHashMap<>();
 
-    static BACnetDeviceCache init(@NonNull Vertx vertx, @NonNull String sharedKey) {
-        return new BACnetDeviceCache().register(protocol -> BACnetDeviceInitializer.builder()
-                                                                                   .vertx(vertx)
-                                                                                   .sharedKey(sharedKey)
-                                                                                   .build()
-                                                                                   .asyncStart(protocol));
+    static BACnetDeviceCache init(@NonNull SharedDataLocalProxy proxy) {
+        return new BACnetDeviceCache().register(
+            protocol -> BACnetDeviceInitializer.builder().proxy(proxy).build().asyncStart(protocol));
     }
 
     @Override

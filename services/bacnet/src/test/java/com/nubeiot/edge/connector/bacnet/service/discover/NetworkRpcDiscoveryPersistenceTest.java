@@ -12,7 +12,7 @@ import io.github.zero88.qwe.TestHelper;
 import io.github.zero88.qwe.TestHelper.EventbusHelper;
 import io.github.zero88.qwe.TestHelper.JsonHelper;
 import io.github.zero88.qwe.component.ReadinessAsserter;
-import io.github.zero88.qwe.component.SharedDataDelegate;
+import io.github.zero88.qwe.component.SharedLocalDataHelper;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventMessage;
@@ -138,8 +138,8 @@ public class NetworkRpcDiscoveryPersistenceTest extends BACnetWithGatewayTest {
     }
 
     private BACnetNetworkCache getCache() {
-        return SharedDataDelegate.getLocalDataValue(vertx, BACnetVerticle.class.getName(),
-                                                    BACnetCacheInitializer.EDGE_NETWORK_CACHE);
+        return SharedLocalDataHelper.getLocalDataValue(vertx, BACnetVerticle.class.getName(),
+                                                       BACnetCacheInitializer.EDGE_NETWORK_CACHE);
     }
 
 }

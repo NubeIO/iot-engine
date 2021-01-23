@@ -1,6 +1,6 @@
 package com.nubeiot.edge.connector.bacnet.service.scanner;
 
-import io.vertx.core.Vertx;
+import io.github.zero88.qwe.component.SharedDataLocalProxy;
 
 import com.nubeiot.core.rpc.query.AbstractRpcScanner;
 import com.nubeiot.core.rpc.query.DeviceRpcScanner;
@@ -16,8 +16,8 @@ public final class BACnetDeviceRpcScanner
     implements DeviceRpcScanner<BACnetDeviceEntity, RemoteDeviceMixin, BACnetDeviceRpcScanner>,
                BACnetRpcProtocol<BACnetDeviceEntity> {
 
-    BACnetDeviceRpcScanner(@NonNull Vertx vertx, @NonNull String sharedKey) {
-        super(vertx, sharedKey, new BACnetDeviceConverter());
+    BACnetDeviceRpcScanner(@NonNull SharedDataLocalProxy sharedDataProxy) {
+        super(sharedDataProxy, new BACnetDeviceConverter());
     }
 
     @Override

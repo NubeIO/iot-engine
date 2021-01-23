@@ -5,7 +5,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import io.github.zero88.qwe.component.SharedDataDelegate.AbstractSharedDataDelegate;
+import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.dto.ErrorData;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
@@ -15,7 +15,6 @@ import io.github.zero88.qwe.exceptions.NotFoundException;
 import io.github.zero88.qwe.utils.ExecutorHelpers;
 import io.github.zero88.utils.Functions;
 import io.reactivex.Single;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.protocol.CommunicationProtocol;
@@ -42,21 +41,23 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Accessors(fluent = true)
-final class DefaultBACnetDevice extends AbstractSharedDataDelegate<BACnetDevice> implements BACnetDevice {
+final class DefaultBACnetDevice implements BACnetDevice {
 
+    @NonNull
+    private final SharedDataLocalProxy proxy;
     @Getter
     private final LocalDeviceMetadata metadata;
     @Getter
     private final LocalDevice localDevice;
     private final TransportProvider transportProvider;
 
-    DefaultBACnetDevice(@NonNull Vertx vertx, @NonNull String sharedKey, @NonNull CommunicationProtocol protocol) {
-        this(vertx, sharedKey, TransportProvider.byProtocol(protocol));
+    DefaultBACnetDevice(@NonNull SharedDataLocalProxy proxy, @NonNull CommunicationProtocol protocol) {
+        this(proxy, TransportProvider.byProtocol(protocol));
     }
 
-    private DefaultBACnetDevice(@NonNull Vertx vertx, @NonNull String sharedKey, @NonNull TransportProvider provider) {
-        super(vertx);
-        this.metadata = registerSharedKey(sharedKey).getSharedDataValue(EDGE_BACNET_METADATA);
+    private DefaultBACnetDevice(@NonNull SharedDataLocalProxy proxy, @NonNull TransportProvider provider) {
+        this.proxy = proxy;
+        this.metadata = proxy.getData(EDGE_BACNET_METADATA);
         this.transportProvider = provider;
         this.localDevice = create(metadata, transportProvider);
     }
@@ -82,7 +83,9 @@ final class DefaultBACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
 
     @Override
     public BACnetDevice addListeners(@NonNull List<DeviceEventListener> listeners) {
-        listeners.stream().filter(Objects::nonNull).forEachOrdered(listener -> this.localDevice.getEventHandler().addListener(listener));
+        listeners.stream()
+                 .filter(Objects::nonNull)
+                 .forEachOrdered(listener -> this.localDevice.getEventHandler().addListener(listener));
         return this;
     }
 
@@ -97,7 +100,7 @@ final class DefaultBACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
     }
 
     public Single<BACnetDevice> stop() {
-        return ExecutorHelpers.blocking(getVertx(), () -> {
+        return ExecutorHelpers.blocking(this.proxy.getVertx(), () -> {
             localDevice.terminate();
             return this;
         });
@@ -114,15 +117,14 @@ final class DefaultBACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
     public Single<RemoteDevice> discoverRemoteDevice(@NonNull ObjectIdentifier deviceCode,
                                                      @NonNull DiscoverOptions options) {
         long timeout = TimeUnit.MILLISECONDS.convert(options.getTimeout(), options.getTimeUnit());
-        logger.info("Start discovering device {} with force={} in timeout {}ms ", deviceCode, options.isForce(),
-                    timeout);
+        log.info("Start discovering device {} with force={} in timeout {}ms ", deviceCode, options.isForce(), timeout);
         return init(options.isForce()).map(
             ld -> Functions.getOrThrow(t -> new NotFoundException("Not found device id " + deviceCode, t),
                                        () -> ld.getRemoteDevice(deviceCode.getInstanceNumber()).get(timeout)));
     }
 
     private Single<LocalDevice> init(boolean force) {
-        return ExecutorHelpers.blocking(getVertx(), () -> {
+        return ExecutorHelpers.blocking(this.proxy.getVertx(), () -> {
             if (force || !localDevice.isInitialized()) {
                 return localDevice.initialize();
             }
@@ -131,13 +133,16 @@ final class DefaultBACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
     }
 
     private void handleAfterScan(RemoteDeviceScanner scanner, Throwable t) {
-        final EventbusClient client = getSharedDataValue(SHARED_EVENTBUS);
+        final EventbusClient client = EventbusClient.create(this.proxy.getVertx(), this.proxy.getSharedKey());
         final EventMessage msg = Objects.isNull(t) ? createSuccessDiscoverMsg(scanner) : createErrorDiscoverMsg(t);
         client.publish(metadata.getDiscoverCompletionAddress(), msg);
     }
 
     private EventMessage createSuccessDiscoverMsg(@NonNull RemoteDeviceScanner scanner) {
-        final List<RemoteDeviceMixin> remotes = scanner.getRemoteDevices().stream().map(RemoteDeviceMixin::create).collect(Collectors.toList());
+        final List<RemoteDeviceMixin> remotes = scanner.getRemoteDevices()
+                                                       .stream()
+                                                       .map(RemoteDeviceMixin::create)
+                                                       .collect(Collectors.toList());
         final JsonObject body = DiscoverResponse.builder()
                                                 .network(protocol())
                                                 .localDevice(metadata())
@@ -148,7 +153,11 @@ final class DefaultBACnetDevice extends AbstractSharedDataDelegate<BACnetDevice>
     }
 
     private EventMessage createErrorDiscoverMsg(@NonNull Throwable t) {
-        final JsonObject extraInfo = DiscoverResponse.builder().network(protocol()).localDevice(metadata()).build().toJson();
+        final JsonObject extraInfo = DiscoverResponse.builder()
+                                                     .network(protocol())
+                                                     .localDevice(metadata())
+                                                     .build()
+                                                     .toJson();
         return EventMessage.initial(EventAction.NOTIFY_ERROR,
                                     ErrorData.builder().throwable(t).extraInfo(extraInfo).build());
     }

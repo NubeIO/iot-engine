@@ -11,7 +11,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.connector.bacnet.mixin.BACnetExceptionConverter;
 import com.nubeiot.edge.connector.bacnet.mixin.deserializer.EncodableDeserializer;
-import com.nubeiot.edge.connector.bacnet.service.discover.BACnetRpcDiscoveryService;
+import com.nubeiot.edge.connector.bacnet.service.discover.DiscoveryRequestWrapper;
 import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
@@ -28,8 +28,7 @@ public final class PointValueSubscriber /*extends AbstractProtocolSubscriber<Poi
     }
 
     //TODO refactor it
-    public static Single<JsonObject> write(@NonNull BACnetRpcDiscoveryService.DiscoveryRequestWrapper request,
-                                           JsonObject pointValueData) {
+    public static Single<JsonObject> write(@NonNull DiscoveryRequestWrapper request, JsonObject pointValueData) {
         final Encodable encodable = EncodableDeserializer.parse(request.objectCode(), PropertyIdentifier.presentValue,
                                                                 pointValueData.remove("value"));
         if (Objects.isNull(encodable)) {

@@ -7,9 +7,10 @@ import java.util.function.Supplier;
 import io.github.zero88.qwe.IConfig;
 import io.github.zero88.qwe.TestHelper;
 import io.github.zero88.qwe.TestHelper.VertxHelper;
-import io.github.zero88.qwe.component.ContainerVerticle;
-import io.github.zero88.qwe.component.EventClientProxy;
+import io.github.zero88.qwe.component.ApplicationVerticle;
+import io.github.zero88.qwe.component.ComponentSharedDataHelper;
 import io.github.zero88.qwe.component.ReadinessAsserter;
+import io.github.zero88.qwe.event.EventClientProxy;
 import io.github.zero88.qwe.micro.MicroConfig;
 import io.github.zero88.qwe.micro.MicroContext;
 import io.github.zero88.qwe.micro.Microservice;
@@ -41,8 +42,10 @@ public abstract class BACnetWithGatewayTest extends BaseBACnetVerticleTest {
         return IConfig.fromClasspath("mockGateway.json", MicroConfig.class);
     }
 
-    protected void deployVerticle(Vertx vertx, TestContext context, Async async, Supplier<ContainerVerticle> supplier) {
-        final Microservice v = new MicroserviceProvider().get();
+    protected void deployVerticle(Vertx vertx, TestContext context, Async async,
+                                  Supplier<ApplicationVerticle> supplier) {
+        final Microservice v = new MicroserviceProvider().provide(
+            ComponentSharedDataHelper.create(vertx, Microservice.class));
         VertxHelper.deploy(vertx, context, createDeploymentOptions(getMicroConfig()), v, id -> {
             registerMockService(v.getContext()).map(i -> supplier.get())
                                                .subscribe(i -> TestHelper.testComplete(async), context::fail);

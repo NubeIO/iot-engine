@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventContractor;
@@ -20,7 +21,6 @@ import io.github.zero88.qwe.micro.metadata.ActionMethodMapping;
 import io.github.zero88.utils.Functions;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 
@@ -38,12 +38,14 @@ import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.util.RequestUtils;
 
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public final class ObjectRpcDiscovery extends AbstractBACnetRpcDiscoveryService<BACnetPointEntity>
     implements BACnetRpcDiscoveryService<BACnetPointEntity> {
 
-    ObjectRpcDiscovery(@NonNull Vertx vertx, @NonNull String sharedKey) {
-        super(vertx, sharedKey);
+    ObjectRpcDiscovery(@NonNull SharedDataLocalProxy sharedDataProxy) {
+        super(sharedDataProxy);
     }
 
     @Override
@@ -73,9 +75,8 @@ public final class ObjectRpcDiscovery extends AbstractBACnetRpcDiscoveryService<
     @Override
     public Single<JsonObject> list(RequestData requestData) {
         final DiscoveryRequestWrapper request = createDiscoveryRequest(requestData, DiscoverLevel.DEVICE);
-        logger.info("Discovering objects in device '{}' in network {}...",
-                    ObjectIdentifierMixin.serialize(request.remoteDeviceId()),
-                    request.device().protocol().identifier());
+        log.info("Discovering objects in device '{}' in network {}...",
+                 ObjectIdentifierMixin.serialize(request.remoteDeviceId()), request.device().protocol().identifier());
         return request.device()
                       .discoverRemoteDevice(request.remoteDeviceId(), request.options())
                       .flatMap(remote -> getRemoteObjects(request.device(), remote, request.options().isDetail()))
@@ -86,8 +87,7 @@ public final class ObjectRpcDiscovery extends AbstractBACnetRpcDiscoveryService<
 
     @Override
     public Single<JsonObject> get(RequestData requestData) {
-        final DiscoveryRequestWrapper request = createDiscoveryRequest(requestData, DiscoverLevel.OBJECT);
-        return doGet(request).map(PropertyValuesMixin::toJson);
+        return doGet(createDiscoveryRequest(requestData, DiscoverLevel.OBJECT)).map(PropertyValuesMixin::toJson);
     }
 
     @Override
@@ -97,8 +97,7 @@ public final class ObjectRpcDiscovery extends AbstractBACnetRpcDiscoveryService<
 
     @Override
     public Single<JsonObject> discoverThenDoPersist(RequestData requestData) {
-        final DiscoveryRequestWrapper request = validateCache(
-            createDiscoveryRequest(requestData, DiscoverLevel.OBJECT));
+        final DiscoveryRequestWrapper request = validateCache(createDiscoveryRequest(requestData, DiscoverLevel.OBJECT));
         final ObjectType objectType = request.objectCode().getObjectType();
         //        if (ObjectTypeCategory.isPoint(objectType)) {
         //            return doGet(request).map(properties -> new BACnetPointConverter().serialize(properties))
@@ -126,8 +125,7 @@ public final class ObjectRpcDiscovery extends AbstractBACnetRpcDiscoveryService<
 
     @EventContractor(action = "PATCH", returnType = Single.class)
     public Single<JsonObject> patchValue(RequestData requestData) {
-        return PointValueSubscriber.write(createDiscoveryRequest(requestData, DiscoverLevel.OBJECT),
-                                          requestData.body());
+        return PointValueSubscriber.write(createDiscoveryRequest(requestData, DiscoverLevel.OBJECT), requestData.body());
     }
 
     private Single<ObjectPropertyValues> getRemoteObjects(@NonNull BACnetDevice device, @NonNull RemoteDevice rd,
@@ -143,10 +141,9 @@ public final class ObjectRpcDiscovery extends AbstractBACnetRpcDiscoveryService<
     }
 
     private Single<PropertyValuesMixin> doGet(@NonNull DiscoveryRequestWrapper request) {
-        logger.info("Discovering object '{}' in device '{}' in network {}...",
-                    ObjectIdentifierMixin.serialize(request.objectCode()),
-                    ObjectIdentifierMixin.serialize(request.remoteDeviceId()),
-                    request.device().protocol().identifier());
+        log.info("Discovering object '{}' in device '{}' in network {}...",
+                 ObjectIdentifierMixin.serialize(request.objectCode()),
+                 ObjectIdentifierMixin.serialize(request.remoteDeviceId()), request.device().protocol().identifier());
         return request.device()
                       .discoverRemoteDevice(request.remoteDeviceId(), request.options())
                       .flatMap(rd -> parseRemoteObject(request.device(), rd, request.objectCode(), true,

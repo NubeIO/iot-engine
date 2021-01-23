@@ -1,5 +1,7 @@
 package com.nubeiot.core.rpc;
 
+import io.github.zero88.qwe.component.HasSharedData;
+
 import com.nubeiot.iotdata.HasProtocol;
 import com.nubeiot.iotdata.IoTEntity;
 
@@ -10,7 +12,7 @@ import lombok.NonNull;
  *
  * @since 1.0.0
  */
-public interface RpcProtocol<T extends IoTEntity> extends HasProtocol {
+public interface RpcProtocol<T extends IoTEntity> extends HasProtocol, HasSharedData {
 
     /**
      * Declares context that represents for the entity model

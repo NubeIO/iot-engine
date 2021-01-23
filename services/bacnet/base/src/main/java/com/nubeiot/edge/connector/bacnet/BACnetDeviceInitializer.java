@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import io.vertx.core.Vertx;
+import io.github.zero88.qwe.component.SharedDataLocalProxy;
 
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
@@ -16,14 +16,12 @@ import lombok.NonNull;
 public final class BACnetDeviceInitializer {
 
     @NonNull
-    private final Vertx vertx;
-    @NonNull
-    private final String sharedKey;
+    private final SharedDataLocalProxy proxy;
     private final Consumer<BACnetDevice> preFunction;
     private final List<DeviceEventListener> listeners;
 
     public BACnetDevice asyncStart(@NonNull CommunicationProtocol protocol) {
-        final BACnetDevice device = new DefaultBACnetDevice(vertx, sharedKey, protocol);
+        final BACnetDevice device = new DefaultBACnetDevice(proxy, protocol);
         Optional.ofNullable(preFunction).ifPresent(f -> f.accept(device));
         Optional.ofNullable(listeners).ifPresent(device::addListeners);
         return device.asyncStart();

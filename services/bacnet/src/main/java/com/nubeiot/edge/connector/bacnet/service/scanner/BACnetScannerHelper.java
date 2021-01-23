@@ -1,21 +1,21 @@
 package com.nubeiot.edge.connector.bacnet.service.scanner;
 
-import io.vertx.core.Vertx;
+import io.github.zero88.qwe.component.SharedDataLocalProxy;
 
 import lombok.NonNull;
 
 public interface BACnetScannerHelper {
 
-    static BACnetNetworkRpcScanner createNetworkScanner(@NonNull Vertx vertx, @NonNull String sharedKey) {
-        return new BACnetNetworkRpcScanner(vertx, sharedKey);
+    static BACnetNetworkRpcScanner createNetworkScanner(@NonNull SharedDataLocalProxy sharedDataProxy) {
+        return new BACnetNetworkRpcScanner(sharedDataProxy);
     }
 
-    static BACnetDeviceRpcScanner createDeviceScanner(@NonNull Vertx vertx, @NonNull String sharedKey) {
-        return new BACnetDeviceRpcScanner(vertx, sharedKey);
+    static BACnetDeviceRpcScanner createDeviceScanner(@NonNull SharedDataLocalProxy sharedDataProxy) {
+        return new BACnetDeviceRpcScanner(sharedDataProxy);
     }
 
-    static BACnetPointScanner createPointScanner(@NonNull Vertx vertx, @NonNull String sharedKey) {
-        return new BACnetPointScanner(vertx, sharedKey);
+    static BACnetPointScanner createPointScanner(@NonNull SharedDataLocalProxy sharedDataProxy) {
+        return new BACnetPointScanner(sharedDataProxy);
     }
 
 }

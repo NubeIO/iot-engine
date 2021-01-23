@@ -3,18 +3,18 @@ package com.nubeiot.edge.connector.bacnet.cache;
 import java.util.function.Supplier;
 
 import io.github.zero88.qwe.cache.CacheInitializer;
+import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.utils.Strings;
 
 import com.nubeiot.core.rpc.RpcClient;
 import com.nubeiot.edge.connector.bacnet.BACnetConfig;
-import com.nubeiot.edge.connector.bacnet.BACnetVerticle;
 
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public final class BACnetCacheInitializer implements CacheInitializer<BACnetCacheInitializer, BACnetVerticle> {
+public final class BACnetCacheInitializer implements CacheInitializer<BACnetCacheInitializer, SharedDataLocalProxy> {
 
     public static final String EDGE_NETWORK_CACHE = "EDGE_NETWORK_CACHE";
     public static final String BACNET_DEVICE_CACHE = "BACNET_DEVICE_CACHE";
@@ -24,21 +24,20 @@ public final class BACnetCacheInitializer implements CacheInitializer<BACnetCach
     private final BACnetConfig config;
 
     @Override
-    public BACnetCacheInitializer init(@NonNull BACnetVerticle context) {
-        context.addSharedData(RpcClient.GATEWAY_ADDRESS,
-                              Strings.requireNotBlank(config.getGatewayAddress(), "Missing gateway address config"));
+    public BACnetCacheInitializer init(@NonNull SharedDataLocalProxy context) {
+        context.addData(RpcClient.GATEWAY_ADDRESS,
+                        Strings.requireNotBlank(config.getGatewayAddress(), "Missing gateway address config"));
         addBlockingCache(context, EDGE_NETWORK_CACHE, BACnetNetworkCache::init);
-        addBlockingCache(context, BACNET_DEVICE_CACHE,
-                         () -> BACnetDeviceCache.init(context.getVertx(), context.getSharedKey()));
+        addBlockingCache(context, BACNET_DEVICE_CACHE, () -> BACnetDeviceCache.init(context));
         addBlockingCache(context, BACNET_OBJECT_CACHE, BACnetObjectCache::new);
         return this;
     }
 
-    private <T> void addBlockingCache(@NonNull BACnetVerticle context, @NonNull String cacheKey,
+    private <T> void addBlockingCache(@NonNull SharedDataLocalProxy context, @NonNull String cacheKey,
                                       @NonNull Supplier<T> blockingCacheProvider) {
         context.getVertx()
                .executeBlocking(future -> future.complete(blockingCacheProvider.get()),
-                                result -> context.addSharedData(cacheKey, result.result()));
+                                result -> context.addData(cacheKey, result.result()));
     }
 
 }

@@ -11,4 +11,4 @@ import com.nubeiot.iotdata.IoTEntity;
  * @param <T> Type of notifier client
  * @see RpcClient
  */
-public interface RpcNotifier<P extends IoTEntity, T extends RpcNotifier> extends RpcClient<P, T> {}
+public interface RpcNotifier<P extends IoTEntity, T extends RpcNotifier> extends RpcClient<P> {}

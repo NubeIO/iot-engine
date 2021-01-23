@@ -4,7 +4,8 @@ import java.util.Collection;
 import java.util.Objects;
 
 import io.github.zero88.qwe.IConfig;
-import io.github.zero88.qwe.component.ContainerVerticle;
+import io.github.zero88.qwe.component.ApplicationVerticle;
+import io.github.zero88.qwe.component.ContextLookup;
 import io.github.zero88.qwe.dto.ErrorData;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
@@ -25,7 +26,7 @@ import com.serotonin.bacnet4j.event.DeviceEventListener;
 
 import lombok.NonNull;
 
-public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> extends ContainerVerticle {
+public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> extends ApplicationVerticle {
 
     @Override
     public void start() {
@@ -34,8 +35,7 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
         if (logger.isDebugEnabled()) {
             logger.debug("BACnet verticle configuration: {}", config.toJson());
         }
-        this.addSharedData(BACnetDevice.EDGE_BACNET_METADATA, LocalDeviceMetadata.from(config))
-            .registerSuccessHandler(event -> successHandler(config));
+        this.addData(BACnetDevice.EDGE_BACNET_METADATA, LocalDeviceMetadata.from(config));
     }
 
     @Override
@@ -44,8 +44,13 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
                     .subscribe(ignore -> super.stop(future), future::fail);
     }
 
-    protected void successHandler(@NonNull C config) {
-        ExecutorHelpers.blocking(getVertx(), this::getEventbusClient)
+    @Override
+    public void onInstallCompleted(ContextLookup lookup) {
+        successHandler(lookup, IConfig.from(this.config.getAppConfig(), bacnetConfigClass()));
+    }
+
+    protected void successHandler(ContextLookup lookup, @NonNull C config) {
+        ExecutorHelpers.blocking(getVertx(), this::getEventbus)
                        .map(c -> c.register(config.getCompleteDiscoverAddress(), createDiscoverCompletionHandler()))
                        .flatMap(client -> registerApis(client, config).doOnSuccess(o -> logger.info(o.encode()))
                                                                       .map(ignore -> client))
@@ -55,9 +60,7 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
                        .flatMap(this::availableNetworks)
                        .doOnSuccess(protocols -> logger.info("Found {} BACnet networks", protocols.size()))
                        .flattenAsObservable(protocols -> protocols)
-                       .map(protocol -> BACnetDeviceInitializer.builder()
-                                                               .vertx(getVertx())
-                                                               .sharedKey(getSharedKey())
+                       .map(protocol -> BACnetDeviceInitializer.builder().proxy(this)
                                                                .preFunction(this::addListenerOnEachDevice)
                                                                .build()
                                                                .asyncStart(protocol))
@@ -78,7 +81,7 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
                                  ? EventMessage.initial(EventAction.NOTIFY_ERROR,
                                                         ErrorData.builder().throwable(e).build())
                                  : EventMessage.initial(EventAction.NOTIFY, RequestData.builder().body(d).build());
-        getEventbusClient().publish(config.getReadinessAddress(), msg);
+        getEventbus().publish(config.getReadinessAddress(), msg);
     }
 
     /**

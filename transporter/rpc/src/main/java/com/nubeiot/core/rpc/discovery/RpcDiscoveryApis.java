@@ -15,22 +15,20 @@ import lombok.NonNull;
 /**
  * Represents for {@code Discovery APIs} that expose as public endpoints
  *
- * @param <T> Type of Discovery APIs
+ * @param <P> Type of IoT entity
  * @see RpcDiscovery
  * @see EventHttpService
  */
-public interface RpcDiscoveryApis<P extends IoTEntity, T extends RpcDiscoveryApis>
-    extends RpcDiscovery<P, T>, EventHttpService {
-
-    /**
-     * Base Discovery path
-     */
-    String BASE_PATH = "/com/nubeiot/core/rpc/discovery";
+public interface RpcDiscoveryApis<P extends IoTEntity> extends RpcDiscovery<P>, EventHttpService {
 
     @Override
     default Set<EventMethodDefinition> definitions() {
-        final String path = Urls.combinePath(BASE_PATH, protocol().type().toLowerCase(), servicePath());
+        final String path = Urls.combinePath(basePath(), protocol().type().toLowerCase(), servicePath());
         return Collections.singleton(EventMethodDefinition.create(path, paramPath(), eventMethodMap()));
+    }
+
+    default String basePath() {
+        return "/rpc/discovery";
     }
 
     /**

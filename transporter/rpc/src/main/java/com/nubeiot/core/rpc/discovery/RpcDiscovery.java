@@ -13,10 +13,10 @@ import lombok.NonNull;
  * Represents for a {@code Protocol Discovery service} that is able to persist data into {@code Data Point repository}
  * by {@code RPC client}
  *
- * @param <T> Type of discovery client
+ * @param <P> Type of IoT entity
  * @see RpcClient
  */
-public interface RpcDiscovery<P extends IoTEntity, T extends RpcDiscovery> extends RpcClient<P, T> {
+public interface RpcDiscovery<P extends IoTEntity> extends RpcClient<P> {
 
     @NonNull
     default EventAction batchPersistAction() {

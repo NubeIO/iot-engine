@@ -69,7 +69,7 @@ public abstract class BaseBACnetVerticleTest {
         final BACnetVerticle verticle = new BACnetVerticle();
         return VertxHelper.deploy(vertx, context, options, verticle, deployId -> {
             bacnetVerticleDeployId = deployId;
-            busClient = verticle.getEventbusClient()
+            busClient = verticle.getEventbus()
                                 .register(bacnetCfg.getReadinessAddress(), createReadinessHandler(context, async));
         });
     }

@@ -3,7 +3,6 @@ package com.nubeiot.edge.connector.bacnet;
 import java.util.Arrays;
 import java.util.List;
 
-import io.github.zero88.qwe.component.SharedDataDelegate;
 import io.reactivex.Single;
 
 import com.nubeiot.core.protocol.CommunicationProtocol;
@@ -22,7 +21,7 @@ import lombok.NonNull;
  *
  * @since 1.0.0
  */
-public interface BACnetDevice extends SharedDataDelegate<BACnetDevice> {
+public interface BACnetDevice {
 
     /**
      * The constant EDGE_BACNET_METADATA in cache.

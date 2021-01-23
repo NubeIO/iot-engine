@@ -1,9 +1,9 @@
 package com.nubeiot.edge.connector.bacnet.service.discover;
 
+import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.protocol.CommunicationProtocol;
@@ -20,8 +20,8 @@ import lombok.NonNull;
 public final class NetworkRpcDiscovery extends AbstractBACnetRpcDiscoveryService<BACnetNetwork>
     implements BACnetRpcDiscoveryService<BACnetNetwork> {
 
-    NetworkRpcDiscovery(@NonNull Vertx vertx, @NonNull String sharedKey) {
-        super(vertx, sharedKey);
+    NetworkRpcDiscovery(@NonNull SharedDataLocalProxy sharedDataProxy) {
+        super(sharedDataProxy);
     }
 
     @Override

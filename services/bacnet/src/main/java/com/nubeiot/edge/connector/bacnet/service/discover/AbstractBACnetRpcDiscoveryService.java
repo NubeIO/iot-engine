@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import io.github.zero88.qwe.component.SharedDataDelegate.AbstractSharedDataDelegate;
+import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.dto.ErrorMessage;
 import io.github.zero88.qwe.dto.converter.ErrorMessageConverter;
 import io.github.zero88.qwe.dto.msg.RequestData;
@@ -16,11 +16,11 @@ import io.github.zero88.qwe.micro.metadata.ActionMethodMapping;
 import io.github.zero88.utils.Functions;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.protocol.CommunicationProtocol;
+import com.nubeiot.core.rpc.BaseRpcProtocol;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
@@ -47,12 +47,11 @@ import lombok.NonNull;
 /**
  * Defines public service to expose HTTP API for end-user and/or nube-io service
  */
-abstract class AbstractBACnetRpcDiscoveryService<P extends IoTEntity>
-    extends AbstractSharedDataDelegate<AbstractBACnetRpcDiscoveryService> implements BACnetRpcDiscoveryService<P> {
+abstract class AbstractBACnetRpcDiscoveryService<P extends IoTEntity> extends BaseRpcProtocol<P>
+    implements BACnetRpcDiscoveryService<P> {
 
-    AbstractBACnetRpcDiscoveryService(@NonNull Vertx vertx, @NonNull String sharedKey) {
-        super(vertx);
-        registerSharedKey(sharedKey);
+    AbstractBACnetRpcDiscoveryService(@NonNull SharedDataLocalProxy sharedDataProxy) {
+        super(sharedDataProxy);
     }
 
     @Override
@@ -78,19 +77,19 @@ abstract class AbstractBACnetRpcDiscoveryService<P extends IoTEntity>
     public abstract Single<JsonObject> discoverThenDoPersist(RequestData reqData);
 
     final BACnetNetworkCache networkCache() {
-        return getSharedDataValue(BACnetCacheInitializer.EDGE_NETWORK_CACHE);
+        return sharedData().getData(BACnetCacheInitializer.EDGE_NETWORK_CACHE);
     }
 
     final BACnetDeviceCache deviceCache() {
-        return getSharedDataValue(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
+        return sharedData().getData(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
     }
 
     final BACnetObjectCache objectCache() {
-        return getSharedDataValue(BACnetCacheInitializer.BACNET_OBJECT_CACHE);
+        return sharedData().getData(BACnetCacheInitializer.BACNET_OBJECT_CACHE);
     }
 
     final DiscoverOptions parseDiscoverOptions(@NonNull RequestData reqData) {
-        final LocalDeviceMetadata metadata = getSharedDataValue(BACnetDevice.EDGE_BACNET_METADATA);
+        final LocalDeviceMetadata metadata = sharedData().getData(BACnetDevice.EDGE_BACNET_METADATA);
         return DiscoverOptions.from(metadata.getMaxTimeoutInMS(), reqData);
     }
 

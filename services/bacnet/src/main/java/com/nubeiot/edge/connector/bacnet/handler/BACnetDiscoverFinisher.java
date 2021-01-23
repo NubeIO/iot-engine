@@ -2,16 +2,14 @@ package com.nubeiot.edge.connector.bacnet.handler;
 
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Function;
 
-import io.github.zero88.qwe.component.SharedDataDelegate;
+import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.dto.ErrorData;
 import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.utils.ExecutorHelpers;
 import io.github.zero88.utils.UUID64;
 import io.reactivex.Observable;
-import io.vertx.core.Vertx;
 
 import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
@@ -28,37 +26,25 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public final class BACnetDiscoverFinisher extends DiscoverCompletionHandler
-    implements SharedDataDelegate<BACnetDiscoverFinisher> {
+public final class BACnetDiscoverFinisher extends DiscoverCompletionHandler {
 
-    private final Vertx vertx;
-    private final String sharedKey;
-
-    @Override
-    public <D> D getSharedDataValue(String dataKey) {
-        return SharedDataDelegate.getLocalDataValue(vertx, sharedKey, dataKey);
-    }
-
-    @Override
-    public BACnetDiscoverFinisher registerSharedData(@NonNull Function<String, Object> sharedDataFunc) {
-        return this;
-    }
+    private final SharedDataLocalProxy proxy;
 
     //TODO need scan network to find device/point then caching data
     @Override
     public boolean success(@NonNull RequestData requestData) {
         final DiscoverResponse info = JsonData.from(requestData.body(), DiscoverResponse.class);
-        final BACnetNetworkCache networkCache = getSharedDataValue(BACnetCacheInitializer.EDGE_NETWORK_CACHE);
-        final BACnetDeviceCache deviceCache = getSharedDataValue(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
-        final BACnetObjectCache objectCache = getSharedDataValue(BACnetCacheInitializer.BACNET_OBJECT_CACHE);
+        final BACnetNetworkCache networkCache = proxy.getData(BACnetCacheInitializer.EDGE_NETWORK_CACHE);
+        final BACnetDeviceCache deviceCache = proxy.getData(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
+        final BACnetObjectCache objectCache = proxy.getData(BACnetCacheInitializer.BACNET_OBJECT_CACHE);
         final CommunicationProtocol protocol = networkCache.get(info.getNetwork().identifier());
         final Optional<UUID> optional = networkCache.getDataKey(protocol.identifier());
         if (!optional.isPresent()) {
             return super.success(requestData);
         }
         final UUID networkId = optional.get();
-        final BACnetPointScanner pointScanner = BACnetScannerHelper.createPointScanner(vertx, sharedKey);
-        ExecutorHelpers.blocking(vertx, () -> BACnetScannerHelper.createDeviceScanner(vertx, sharedKey))
+        final BACnetPointScanner pointScanner = BACnetScannerHelper.createPointScanner(proxy);
+        ExecutorHelpers.blocking(proxy.getVertx(), () -> BACnetScannerHelper.createDeviceScanner(proxy))
                        .flatMap(deviceScanner -> deviceScanner.scan(networkId))
                        .flatMapObservable(map -> Observable.fromIterable(map.entrySet()))
                        .doOnNext(

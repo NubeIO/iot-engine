@@ -1,31 +1,27 @@
 package com.nubeiot.core.rpc;
 
-import io.github.zero88.qwe.component.SharedDataDelegate;
 import io.github.zero88.qwe.event.EventbusClient;
 import io.github.zero88.qwe.micro.discovery.GatewayServiceInvoker;
 
 import com.nubeiot.iotdata.IoTEntity;
-import com.nubeiot.iotdata.Protocol;
 
 import lombok.NonNull;
 
 /**
  * Represents {@code data-point RPC client} that supports remote call to {@code data-point services}
  *
- * @param <T> Type of RPC client
+ * @param <P> Type of IoT entity
  * @see GatewayServiceInvoker
- * @see SharedDataDelegate
- * @see Protocol
+ * @see IoTEntity
  */
-public interface RpcClient<P extends IoTEntity, T extends RpcClient>
-    extends GatewayServiceInvoker, RpcProtocol<P>, SharedDataDelegate<T> {
+public interface RpcClient<P extends IoTEntity> extends GatewayServiceInvoker, RpcProtocol<P> {
 
     String GATEWAY_ADDRESS = "GATEWAY_ADDRESS";
 
     @Override
     @NonNull
     default String gatewayAddress() {
-        return getSharedDataValue(GATEWAY_ADDRESS);
+        return sharedData().getData(GATEWAY_ADDRESS);
     }
 
     @Override
@@ -39,12 +35,12 @@ public interface RpcClient<P extends IoTEntity, T extends RpcClient>
 
     @Override
     default String serviceLabel() {
-        return "Edge data-point service";
+        return "RPC client";
     }
 
     @Override
-    default EventbusClient transporter() {
-        return getSharedDataValue(SHARED_EVENTBUS);
+    default @NonNull EventbusClient transporter() {
+        return EventbusClient.create(sharedData());
     }
 
 }

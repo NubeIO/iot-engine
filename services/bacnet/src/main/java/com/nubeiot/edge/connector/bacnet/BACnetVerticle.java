@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import io.github.zero88.qwe.component.SharedDataDelegate;
+import io.github.zero88.qwe.component.ContextLookup;
 import io.github.zero88.qwe.event.EventbusClient;
 import io.github.zero88.qwe.http.server.HttpServerProvider;
 import io.github.zero88.qwe.http.server.HttpServerRouter;
@@ -48,14 +48,14 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
     @Override
     public void start() {
         super.start();
-        this.addProvider(new HttpServerProvider(new HttpServerRouter()))
-            .addProvider(new MicroserviceProvider(), ctx -> microContext = (MicroContext) ctx);
+        this.addProvider(new HttpServerProvider(new HttpServerRouter())).addProvider(new MicroserviceProvider());
     }
 
     @Override
-    protected void successHandler(@NonNull BACnetConfig config) {
+    protected void successHandler(ContextLookup lookup, @NonNull BACnetConfig config) {
         this.subscription = new BACnetRpcSubscription(getVertx(), getSharedKey(), config.isAllowSlave());
-        super.successHandler(new BACnetCacheInitializer(config).init(this).getConfig());
+        this.microContext = lookup.query(MicroContext.class);
+        super.successHandler(lookup, new BACnetCacheInitializer(config).init(this).getConfig());
     }
 
     @Override
@@ -65,7 +65,7 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
 
     @Override
     protected @NonNull Single<JsonObject> registerApis(@NonNull EventbusClient client, @NonNull BACnetConfig config) {
-        return Observable.fromIterable(BACnetRpcDiscoveryService.createServices(getVertx(), getSharedKey()))
+        return Observable.fromIterable(BACnetRpcDiscoveryService.createServices(this))
                          .doOnEach(s -> Optional.ofNullable(s.getValue())
                                                 .ifPresent(service -> client.register(service.address(), service)))
                          .filter(s -> Objects.nonNull(s.definitions()))
@@ -94,8 +94,7 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
 
     @Override
     protected @NonNull Single<Collection<CommunicationProtocol>> availableNetworks(@NonNull BACnetConfig config) {
-        final BACnetNetworkCache cache = SharedDataDelegate.getLocalDataValue(getVertx(), getSharedKey(),
-                                                                              BACnetCacheInitializer.EDGE_NETWORK_CACHE);
+        final BACnetNetworkCache cache = this.sharedData().getData(BACnetCacheInitializer.EDGE_NETWORK_CACHE);
         return Single.just(Collections.emptyList());
         //        return BACnetScannerHelper.createNetworkScanner(getVertx(), getSharedKey())
         //                                  .scan()
@@ -110,8 +109,7 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
 
     @Override
     protected Single<JsonObject> stopBACnet() {
-        final BACnetDeviceCache deviceCache = SharedDataDelegate.getLocalDataValue(getVertx(), getSharedKey(),
-                                                                                   BACnetCacheInitializer.BACNET_DEVICE_CACHE);
+        final BACnetDeviceCache deviceCache = this.sharedData().getData(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
         return Single.just(new JsonObject());
         //        return subscription.unregisterAll()
         //                           .flatMap(output -> Observable.fromIterable(deviceCache.all().values())
@@ -130,7 +128,7 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
 
     @Override
     protected DiscoverCompletionHandler createDiscoverCompletionHandler() {
-        return new BACnetDiscoverFinisher(getVertx(), getSharedKey());
+        return new BACnetDiscoverFinisher(this);
     }
 
     private Observable<Record> registerEndpoint(ServiceDiscoveryController discovery, BACnetRpcDiscoveryService s) {

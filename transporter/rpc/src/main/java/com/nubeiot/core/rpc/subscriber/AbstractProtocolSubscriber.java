@@ -1,20 +1,20 @@
 package com.nubeiot.core.rpc.subscriber;
 
+import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventContractor;
 import io.reactivex.Single;
-import io.vertx.core.Vertx;
 
 import com.nubeiot.core.rpc.BaseRpcProtocol;
 import com.nubeiot.iotdata.IoTEntity;
 
 import lombok.NonNull;
 
-public abstract class AbstractProtocolSubscriber<P extends IoTEntity>
-    extends BaseRpcProtocol<P, AbstractProtocolSubscriber> implements RpcSubscriber<P> {
+public abstract class AbstractProtocolSubscriber<P extends IoTEntity> extends BaseRpcProtocol<P>
+    implements RpcSubscriber<P> {
 
-    protected AbstractProtocolSubscriber(@NonNull Vertx vertx, @NonNull String sharedKey) {
-        super(vertx, sharedKey);
+    protected AbstractProtocolSubscriber(@NonNull SharedDataLocalProxy sharedData) {
+        super(sharedData);
     }
 
     @Override
