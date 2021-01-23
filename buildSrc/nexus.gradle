@@ -22,11 +22,20 @@ publishing {
     repositories {
         maven {
             credentials {
-                username project.nexusUsername
-                password project.nexusPassword
+                setUsername(project.findProperty("nexus.username") as String)
+                setPassword(project.findProperty("nexus.password") as String)
             }
-            url = project.semanticVersion.endsWith('SNAPSHOT') ? project.nexusSnapshotUrl : project.nexusReleaseUrl
+            def path = project.hasProperty("github")
+                ? "${project.property("github.nexus.url")}/${project.property("nexus.username")}/${rootProject.name}"
+                : project.hasProperty("release") ? project.findProperty("ossrh.release.url") :
+                  project.findProperty("ossrh.snapshot.url")
+            url = path == null ? "" : uri(path)
         }
+    }
+
+    signing {
+        useGpgCmd()
+        sign(publishing.publications["maven"])
     }
 }
 

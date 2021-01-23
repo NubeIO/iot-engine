@@ -99,7 +99,7 @@ jobs:
         run: |
           args=( -Psigning.gnupg.homeDir=/home/runner/.gnupg \
                  -Psigning.gnupg.keyName=${{ steps.import_gpg.outputs.keyid }} \
-                 -Psigning.gnupg.passphrase=${{ secrets.CI_GPG_PASSPHARSE }} \
+                 -Psigning.gnupg.passphrase=${{ secrets.NUBEIO_CI_GPG_PASSPHARSE }} \
                  -Pnexus.username=${{ github.repository_owner }} \
                  -Pnexus.password=${{ secrets.NUBEIO_CI_GITHUBPACKAGE_TOKEN }} )
           args+=( -Pgithub )
