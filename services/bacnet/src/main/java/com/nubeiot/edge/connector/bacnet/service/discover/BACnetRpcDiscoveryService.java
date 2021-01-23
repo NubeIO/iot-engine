@@ -32,6 +32,11 @@ public interface BACnetRpcDiscoveryService<P extends IoTEntity>
     }
 
     @Override
+    default String basePath() {
+        return "/discovery";
+    }
+
+    @Override
     default @NonNull Collection<EventAction> getAvailableEvents() {
         return Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.BATCH_CREATE, EventAction.CREATE);
     }
