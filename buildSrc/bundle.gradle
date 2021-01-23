@@ -1,27 +1,26 @@
 import java.time.Instant
 import java.util.jar.Attributes.Name
 
-import org.gradle.util.GradleVersion
 
 jar {
-    baseName = project.computeBaseName()
+    archiveBaseName.set(project.computeBaseName())
     doFirst {
         def javaVersion = System.getProperty('java.version') + ' (' + System.getProperty('java.vendor') + ')'
-        GradleVersion gradleVersion = GradleVersion.current()
+        def gradleVersion = gradle.gradleVersion
 
-        println '- Project Name:     ' + baseName
+        println '- Project Name:     ' + archiveBaseName
         println '- Project Title:    ' + project.title
         println '- Project Group:    ' + project.group
         println '- Project Version:  ' + project.version
         println '- Semantic Version: ' + project.semanticVersion
         println '- Build Number:     ' + project.buildNumber
         println '- Java Version:     ' + javaVersion
-        println '- Gradle Version:   ' + gradleVersion.version
+        println '- Gradle Version:   ' + gradleVersion
         println '- Vertx Version:    ' + project.versions.vertx
         
         def manifestMap = [
             (Name.MANIFEST_VERSION.toString())      : '1.0',
-            (Name.IMPLEMENTATION_TITLE.toString())  : "${baseName}",
+            (Name.IMPLEMENTATION_TITLE.toString())  : "${archiveBaseName}",
             (Name.IMPLEMENTATION_VENDOR.toString()) : "${project.vendor}",
             (Name.IMPLEMENTATION_VERSION.toString()): "${project.buildNumber}",
             (Name.SIGNATURE_VERSION.toString())     : "${project.buildHash}",
@@ -31,7 +30,7 @@ jar {
             'Build-Date'                            : Instant.now(),
             'Build-By'                              : "${project.buildBy}",
             'Java-Version'                          : "${javaVersion}",
-            'Gradle-Version'                        : "${gradleVersion.version}",
+            'Gradle-Version'                        : "${gradleVersion}",
             'Vertx-Version'                         : "${project.versions.vertx}"
         ]
         if (project.hasProperty("executable") && project.executable == "true") {
@@ -72,15 +71,15 @@ distTar {
 }
 
 task sourcesJar(type: Jar, dependsOn: classes, group: 'distribution') {
-    baseName = project.computeBaseName()
+    archiveBaseName.set(project.computeBaseName())
     from sourceSets.main.allSource
-    classifier = 'sources'
+    archiveClassifier.set('sources')
 }
 
 task testsJar(type: Jar, group: 'distribution') {
-    baseName = project.computeBaseName()
+    archiveBaseName.set(project.computeBaseName())
     from sourceSets.test.output
-    classifier = 'tests'
+    archiveClassifier.set('tests')
 }
 
 task dist(group: 'distribution') {
@@ -91,8 +90,8 @@ task uberJar(type: Jar) {
     onlyIf {
         project.hasProperty("standalone") && project.standalone == "true"
     }
-    classifier = 'fat'
-    baseName = project.computeBaseName()
+    archiveClassifier.set('fat')
+    archiveBaseName.set(project.computeBaseName())
     from sourceSets.main.output
     dependsOn configurations.runtimeClasspath
     from {

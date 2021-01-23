@@ -1,0 +1,118 @@
+import java.time.Duration
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.OffsetDateTime
+import java.time.Period
+
+import org.jooq.meta.jaxb.ForcedType
+
+import io.vertx.core.json.JsonArray
+import com.nubeiot.buildscript.jooq.DB
+import com.nubeiot.buildscript.jooq.JooqGenerateTask
+import com.nubeiot.buildscript.jooq.JooqGenerateTask.JsonDataType
+
+ext {
+    enumTypes = [
+        "com.nubeiot.core.enums.State", "com.nubeiot.core.enums.Status",
+        "com.nubeiot.core.event.EventAction", "com.nubeiot.core.event.EventPattern",
+        "com.nubeiot.core.exceptions.NubeException.ErrorCode", "com.nubeiot.core.cluster.ClusterType"
+    ]
+    dbTypes = [
+        new ForcedType(types: DB.TYPES.timestamp, userType: OffsetDateTime.class.name,
+                       converter: "com.nubeiot.core.sql.converter.TimestampOffsetConverter"),
+        new ForcedType(types: DB.TYPES.timestampz, userType: Instant.class.name,
+                       converter: "com.nubeiot.core.sql.converter.TimestampZConverter"),
+        new ForcedType(types: DB.TYPES.date, userType: LocalDate.class.name,
+                       converter: "com.nubeiot.core.sql.converter.DateConverter"),
+        new ForcedType(types: DB.TYPES.time, userType: LocalTime.class.name,
+                       converter: "com.nubeiot.core.sql.converter.TimeConverter"),
+        new ForcedType(types: DB.TYPES.varchar, userType: Duration.class.name, expression: DB.COL_REGEX.duration,
+                       converter: "com.nubeiot.core.sql.converter.DurationConverter"),
+        new ForcedType(types: DB.TYPES.varchar, userType: Period.class.name, expression: DB.COL_REGEX.period,
+                       converter: "com.nubeiot.core.sql.converter.PeriodConverter"),
+        new ForcedType(types: DB.TYPES.varchar, userType: "com.nubeiot.core.sql.type.TimeAudit",
+                       expression: DB.COL_REGEX.timeAudit,
+                       converter: "com.nubeiot.core.sql.converter.TimeAuditConverter"),
+        new ForcedType(types: DB.TYPES.varchar, userType: "com.nubeiot.core.sql.type.Label",
+                       expression: DB.COL_REGEX.label,
+                       converter: "com.nubeiot.core.sql.converter.LabelConverter"),
+        new ForcedType(types: DB.TYPES.text, userType: "com.nubeiot.core.sql.type.SyncAudit",
+                       expression: DB.COL_REGEX.syncAudit,
+                       converter: "com.nubeiot.core.sql.converter.SyncAuditConverter"),
+    ]
+    javaTypes = [
+        new JsonDataType(className: Instant.class.getName(), converter: "%s.toString()",
+                         parser: "java.time.Instant.parse((String)%s))"),
+        new JsonDataType(className: OffsetDateTime.class.getName(), converter: "%s.toString()",
+                         parser: "java.time.OffsetDateTime.parse((String)%s, java.time.format.DateTimeFormatter.ISO_DATE_TIME)"),
+        new JsonDataType(className: LocalDateTime.class.getName(), converter: "%s.toString()",
+                         parser: "java.time.LocalDateTime.parse((String)%s, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME)"),
+        new JsonDataType(className: LocalDate.class.getName(), converter: "%s.toString()",
+                         parser: "java.time.LocalDate.parse((String)%s, java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)"),
+        new JsonDataType(className: LocalTime.class.getName(), converter: "%s.toString()",
+                         parser: "java.time.LocalTime.parse((String)%s, java.time.format.DateTimeFormatter.ISO_LOCAL_TIME)"),
+        new JsonDataType(className: Duration.class.getName(), converter: "%s.toString()",
+                         parser: "java.time.Duration.parse((String)%s)"),
+        new JsonDataType(className: Period.class.getName(), converter: "%s.toString()",
+                         parser: "java.time.Period.parse((String)%s)"),
+        new JsonDataType(className: UUID.class.getName(), converter: "%s.toString()",
+                         parser: "java.util.UUID.fromString((String)%s)"),
+        //TODO Using base64 in url and json
+//        new JsonDataType(className: UUID.class.getName(),
+//                         converter: "io.github.zero88.utils.UUID64.uuidToBase64(%s)",
+//                         parser: "io.github.zero88.utils.UUID64.uuid64ToUuid((String)%s)"),
+        new JsonDataType(className: JsonArray.class.getName(),
+                         converter: "%s",
+                         parser: "(io.vertx.core.json.JsonArray)%s"),
+        new JsonDataType(className: "com.nubeiot.core.sql.type.TimeAudit",
+                         converter: "%s.toJson()",
+                         parser: "com.nubeiot.core.dto.JsonData.from(%s, com.nubeiot.core.sql.type.TimeAudit.class)"),
+        new JsonDataType(className: "com.nubeiot.core.sql.type.Label",
+                         converter: "%s.toJson()",
+                         parser: "com.nubeiot.core.dto.JsonData.from(%s, com.nubeiot.core.sql.type.Label.class)"),
+        new JsonDataType(className: "com.nubeiot.core.sql.type.SyncAudit",
+                         converter: "%s.toJson()",
+                         parser: "com.nubeiot.core.dto.JsonData.from(%s, com.nubeiot.core.sql.type.SyncAudit.class)")
+    ]
+}
+
+dependencies {
+    compile project(":core:cache")
+    compile project(":core:sql:type")
+    compile("io.vertx:vertx-jdbc-client:$project.versions.vertx") {
+        exclude group: "com.mchange", module: "c3p0"
+    }
+    compile "io.github.zero88:rql-jooq:0.9.0"
+    compile "javax.annotation:javax.annotation-api:1.3.2"
+    compile project.deps.database.hikari
+    compile project.deps.database.jooqMeta
+    compile project(":ext:rx-jdbc")
+//    compile project.deps.zero88.sql.rxJdbc
+    compileOnly project(":core:httpbase")
+
+    testCompile project(":core:base").sourceSets.test.output
+    testCompile project.deps.database.h2
+    testCompile project.deps.database.pgsql
+    testCompile "com.opentable.components:otj-pg-embedded:0.13.1"
+    testCompile project(":core:httpbase")
+}
+
+task jooqGen1(type: JooqGenerateTask) {
+    ddlDir = "src/test/resources/default_schema.sql"
+    packageName = "com.nubeiot.core.sql.mock.oneschema"
+    targetDir = project.genProps.javaTestSrcDir
+    enumTypes = project.enumTypes
+    dbTypes = project.dbTypes
+    javaTypes = project.javaTypes
+}
+
+task jooqGen2(type: JooqGenerateTask) {
+    ddlDir = "src/test/resources/many_schema.sql"
+    packageName = "com.nubeiot.core.sql.mock.manyschema"
+    targetDir = project.genProps.javaTestSrcDir
+    enumTypes = project.enumTypes
+    dbTypes = project.dbTypes
+    javaTypes = project.javaTypes
+}

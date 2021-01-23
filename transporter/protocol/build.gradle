@@ -1,0 +1,7 @@
+dependencies {
+    compile project.deps.zero88.qwe.base
+    compile 'com.github.seancfoley:ipaddress:5.1.0'
+
+    testImplementation(testFixtures(project.deps.zero88.qwe.base))
+
+}

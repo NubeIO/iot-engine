@@ -1,0 +1,10 @@
+name: test
+on: workflow_dispatch
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo ${{ secrets.NUBEIO_CI_GPG_PRIVATE_KEY }} > /tmp/xx
+          cat /tmp/xx

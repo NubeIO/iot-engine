@@ -66,13 +66,17 @@ task jacocoMerge(type: JacocoMerge, group: "verification") {
     executionData = files(subprojects.tasks.jacocoTestReport.executionData).filter { f -> f.exists() }
 }
 
-jacocoTestReport {
-    dependsOn jacocoMerge
+task jacocoRootReport(type: JacocoReport) {
+    dependsOn(subprojects.tasks.find { it.withType(Test) || it.withType(JacocoReport) })
+    additionalSourceDirs.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+    sourceDirectories.setFrom files(subprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories.setFrom files(subprojects.sourceSets.main.output)
+    executionData.setFrom project.fileTree(dir: '.', include: '**/build/jacoco/test.exec')
     reports {
+        csv.enabled = false
         xml.enabled = true
-        html.enabled = true
+        xml.destination = file("${buildDir}/reports/jacoco/coverage.xml")
+        html.enabled = Boolean.valueOf(project.extensions.hasProperty("jacocoHtml") ?: true as String)
+        html.destination = file("${buildDir}/reports/jacoco/html")
     }
-    additionalSourceDirs = files(subprojects.sourceSets.main.allSource.srcDirs)
-    sourceDirectories = files(subprojects.sourceSets.main.allSource.srcDirs)
-    classDirectories = files(subprojects.sourceSets.main.output)
 }

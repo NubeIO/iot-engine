@@ -1,4 +1,3 @@
-.idea/
 **/target/
 **/.vertx/
 **/bin/
@@ -41,3 +40,10 @@ gradle-app.setting
 settings*.xml
 demo/*.md
 *.secret.properties
+
+# Exculde launcher
+!.idea/runConfigurations
+.idea/*.xml
+.idea/codeStyles
+.idea/dictionaries
+.idea/inspectionProfiles

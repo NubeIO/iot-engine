@@ -1,0 +1,10 @@
+dependencies {
+    compile project(":core:base")
+
+    compile project.deps.database.jpa
+    compileOnly project.deps.database.jooq
+    compileOnly project.deps.database.jooqVertxRx
+
+    testCompileOnly project.deps.database.jooq
+    testCompileOnly project.deps.database.jooqVertxRx
+}

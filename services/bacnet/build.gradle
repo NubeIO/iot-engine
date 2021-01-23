@@ -1,0 +1,13 @@
+dependencies {
+    compile project.deps.zero88.qwe.cache
+    compile project.deps.zero88.qwe.micro.core
+    compile project.deps.zero88.qwe.http.server
+    compile project(':services:bacnet:base')
+    compile project(':transporter:rpc')
+    compile project.deps.logs.logback
+
+    testCompile(project.deps.zero88.qwe.micro.core)
+    testCompile(project.deps.zero88.qwe.http.client)
+    testImplementation(testFixtures(project.deps.zero88.qwe.base))
+
+}
