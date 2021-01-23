@@ -2,11 +2,12 @@ package com.nubeiot.core.cluster;
 
 import java.util.List;
 
+import io.vertx.core.spi.cluster.ClusterManager;
+
 import com.nubeiot.core.NubeConfig;
 import com.nubeiot.core.exceptions.ClusterException;
 import com.nubeiot.core.exceptions.NotFoundException;
 
-import io.vertx.core.spi.cluster.ClusterManager;
 import lombok.NonNull;
 
 public interface IClusterDelegate {
