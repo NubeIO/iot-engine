@@ -18,21 +18,21 @@ import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventMessage;
 import io.github.zero88.qwe.event.Status;
 import io.github.zero88.qwe.exceptions.ErrorCode;
-import io.github.zero88.qwe.micro.metadata.EventHttpService;
+import io.github.zero88.qwe.micro.http.EventHttpService;
+import io.github.zero88.qwe.protocol.Protocol;
+import io.github.zero88.qwe.protocol.network.Ipv4Network;
+import io.github.zero88.qwe.protocol.network.UdpProtocol;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 
-import com.nubeiot.core.protocol.network.Ipv4Network;
-import com.nubeiot.core.protocol.network.UdpProtocol;
 import com.nubeiot.edge.connector.bacnet.BACnetVerticle;
 import com.nubeiot.edge.connector.bacnet.BACnetWithGatewayTest;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.service.mock.MockNetworkPersistService;
 import com.nubeiot.edge.connector.bacnet.service.mock.MockProtocolDispatcherService;
-import com.nubeiot.iotdata.Protocol;
 import com.nubeiot.iotdata.enums.State;
 
 public class NetworkRpcDiscoveryPersistenceTest extends BACnetWithGatewayTest {
@@ -54,9 +54,9 @@ public class NetworkRpcDiscoveryPersistenceTest extends BACnetWithGatewayTest {
         final JsonObject reqBody = new JsonObject().put("networkCode", "xyz");
         final EventMessage expected = EventMessage.error(EventAction.CREATE, ErrorCode.NOT_FOUND,
                                                          "Not found active IP network interface with name xyz");
-        busClient.request(NetworkRpcDiscovery.class.getName(),
-                          EventMessage.initial(EventAction.CREATE, RequestData.builder().body(reqBody).build()),
-                          EventbusHelper.replyAsserter(context, async, expected.toJson()));
+        eventbus.request(NetworkRpcDiscovery.class.getName(),
+                         EventMessage.initial(EventAction.CREATE, RequestData.builder().body(reqBody).build()),
+                         EventbusHelper.replyAsserter(context, async, expected.toJson()));
     }
 
     @Test
@@ -71,27 +71,27 @@ public class NetworkRpcDiscoveryPersistenceTest extends BACnetWithGatewayTest {
         final JsonObject expected = new JsonObject().put("action", EventAction.CREATE)
                                                     .put("status", Status.SUCCESS)
                                                     .put("resource",
-                                                         new JsonObject().put("protocol", Protocol.BACNET.type())
+                                                         new JsonObject().put("protocol", Protocol.BACnet.type())
                                                                          .put("state", State.ENABLED)
                                                                          .put("code", protocol.identifier())
                                                                          .put("metadata", protocol.toJson())
                                                                          .put("id", "exclude"));
-        busClient.request(NetworkRpcDiscovery.class.getName(),
-                          EventMessage.initial(EventAction.CREATE, RequestData.builder().body(reqBody).build()))
-                 .filter(EventMessage::isSuccess)
-                 .switchIfEmpty(Single.error(new RuntimeException("Failed in setup mock service persist")))
-                 .map(EventMessage::getData)
-                 .map(data -> {
+        eventbus.request(NetworkRpcDiscovery.class.getName(),
+                         EventMessage.initial(EventAction.CREATE, RequestData.builder().body(reqBody).build()))
+                .filter(EventMessage::isSuccess)
+                .switchIfEmpty(Single.error(new RuntimeException("Failed in setup mock service persist")))
+                .map(EventMessage::getData)
+                .map(data -> {
                      JsonHelper.assertJson(context, async, expected, data, JsonHelper.ignore("resource.id"));
                      return data.getJsonObject("resource").getString("id");
                  })
-                 .map(id -> {
+                .map(id -> {
                      final UUID key = getCache().getDataKey(protocol.identifier()).orElse(null);
                      Assert.assertNotNull(key);
                      context.assertEquals(id, key.toString());
                      return id;
                  })
-                 .subscribe(t -> TestHelper.testComplete(async), context::fail);
+                .subscribe(t -> TestHelper.testComplete(async), context::fail);
     }
 
     @Test
@@ -108,9 +108,9 @@ public class NetworkRpcDiscoveryPersistenceTest extends BACnetWithGatewayTest {
         final EventMessage expected = EventMessage.error(EventAction.CREATE, ErrorCode.ALREADY_EXIST,
                                                          "Already persisted network code " + protocol.identifier() +
                                                          " with id " + networkId);
-        busClient.request(NetworkRpcDiscovery.class.getName(),
-                          EventMessage.initial(EventAction.CREATE, RequestData.builder().body(reqBody).build()),
-                          EventbusHelper.replyAsserter(context, async, expected.toJson()));
+        eventbus.request(NetworkRpcDiscovery.class.getName(),
+                         EventMessage.initial(EventAction.CREATE, RequestData.builder().body(reqBody).build()),
+                         EventbusHelper.replyAsserter(context, async, expected.toJson()));
     }
 
     @Test
@@ -124,17 +124,17 @@ public class NetworkRpcDiscoveryPersistenceTest extends BACnetWithGatewayTest {
                                                 .build();
         final JsonObject reqBody = new JsonObject().put("networkCode", protocol.identifier());
         final JsonObject expected = new JsonObject().put("code", ErrorCode.UNKNOWN_ERROR).put("message", "Failed");
-        busClient.request(NetworkRpcDiscovery.class.getName(),
-                          EventMessage.initial(EventAction.CREATE, RequestData.builder().body(reqBody).build()))
-                 .filter(EventMessage::isError)
-                 .switchIfEmpty(Single.error(new RuntimeException("Failed in setup mock service persist")))
-                 .map(EventMessage::getError)
-                 .map(error -> {
+        eventbus.request(NetworkRpcDiscovery.class.getName(),
+                         EventMessage.initial(EventAction.CREATE, RequestData.builder().body(reqBody).build()))
+                .filter(EventMessage::isError)
+                .switchIfEmpty(Single.error(new RuntimeException("Failed in setup mock service persist")))
+                .map(EventMessage::getError)
+                .map(error -> {
                      context.assertFalse(getCache().getDataKey(protocol.identifier()).isPresent());
                      return error;
                  })
-                 .doOnSuccess(error -> JsonHelper.assertJson(context, async, expected, error.toJson()))
-                 .subscribe(t -> TestHelper.testComplete(async), context::fail);
+                .doOnSuccess(error -> JsonHelper.assertJson(context, async, expected, error.toJson()))
+                .subscribe(t -> TestHelper.testComplete(async), context::fail);
     }
 
     private BACnetNetworkCache getCache() {

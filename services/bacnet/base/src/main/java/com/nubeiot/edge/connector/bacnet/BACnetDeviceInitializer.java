@@ -5,8 +5,8 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
+import io.github.zero88.qwe.protocol.CommunicationProtocol;
 
-import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
 
 import lombok.Builder;

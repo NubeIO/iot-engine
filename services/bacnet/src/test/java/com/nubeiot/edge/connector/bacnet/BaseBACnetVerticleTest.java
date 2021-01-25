@@ -25,7 +25,7 @@ import lombok.NonNull;
 public abstract class BaseBACnetVerticleTest {
 
     protected Vertx vertx;
-    protected EventbusClient busClient;
+    protected EventbusClient eventbus;
     protected String bacnetVerticleDeployId;
 
     @BeforeClass
@@ -69,8 +69,8 @@ public abstract class BaseBACnetVerticleTest {
         final BACnetVerticle verticle = new BACnetVerticle();
         return VertxHelper.deploy(vertx, context, options, verticle, deployId -> {
             bacnetVerticleDeployId = deployId;
-            busClient = verticle.getEventbus()
-                                .register(bacnetCfg.getReadinessAddress(), createReadinessHandler(context, async));
+            eventbus = verticle.getEventbus()
+                               .register(bacnetCfg.getReadinessAddress(), createReadinessHandler(context, async));
         });
     }
 

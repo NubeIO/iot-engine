@@ -1,6 +1,7 @@
 package com.nubeiot.core.rpc.query;
 
-import com.nubeiot.core.protocol.CommunicationProtocol;
+import io.github.zero88.qwe.protocol.CommunicationProtocol;
+
 import com.nubeiot.iotdata.entity.INetwork;
 
 /**

@@ -1,6 +1,5 @@
 package com.nubeiot.core.rpc;
 
-import io.github.zero88.qwe.event.EventbusClient;
 import io.github.zero88.qwe.micro.discovery.GatewayServiceInvoker;
 
 import com.nubeiot.iotdata.IoTEntity;
@@ -8,7 +7,7 @@ import com.nubeiot.iotdata.IoTEntity;
 import lombok.NonNull;
 
 /**
- * Represents {@code data-point RPC client} that supports remote call to {@code data-point services}
+ * Represents {@code RPC client} that supports remote call to {@code external services} via service Locator
  *
  * @param <P> Type of IoT entity
  * @see GatewayServiceInvoker
@@ -36,11 +35,6 @@ public interface RpcClient<P extends IoTEntity> extends GatewayServiceInvoker, R
     @Override
     default String serviceLabel() {
         return "RPC client";
-    }
-
-    @Override
-    default @NonNull EventbusClient transporter() {
-        return EventbusClient.create(sharedData());
     }
 
 }

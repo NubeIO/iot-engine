@@ -1,6 +1,7 @@
 package com.nubeiot.edge.connector.bacnet.dto;
 
-import com.nubeiot.core.protocol.network.UdpProtocol;
+import io.github.zero88.qwe.protocol.network.UdpProtocol;
+
 import com.nubeiot.edge.connector.bacnet.entity.BACnetIP;
 import com.serotonin.bacnet4j.npdu.ip.IpNetwork;
 import com.serotonin.bacnet4j.npdu.ip.IpNetworkBuilder;

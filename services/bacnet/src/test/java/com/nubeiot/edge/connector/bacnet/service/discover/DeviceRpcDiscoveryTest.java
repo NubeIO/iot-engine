@@ -6,13 +6,13 @@ import io.github.zero88.qwe.TestHelper.EventbusHelper;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventMessage;
+import io.github.zero88.qwe.protocol.network.Ipv4Network;
+import io.github.zero88.qwe.protocol.network.UdpProtocol;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 
-import com.nubeiot.core.protocol.network.Ipv4Network;
-import com.nubeiot.core.protocol.network.UdpProtocol;
 import com.nubeiot.edge.connector.bacnet.BACnetWithoutGatewayTest;
 
 public class DeviceRpcDiscoveryTest extends BACnetWithoutGatewayTest {
@@ -25,9 +25,9 @@ public class DeviceRpcDiscoveryTest extends BACnetWithoutGatewayTest {
         final JsonObject expected = EventMessage.success(EventAction.GET_LIST,
                                                          new JsonObject().put("remoteDevices", new JsonArray()))
                                                 .toJson();
-        busClient.request(DeviceRpcDiscovery.class.getName(),
-                          EventMessage.initial(EventAction.GET_LIST, RequestData.builder().body(body).build()),
-                          EventbusHelper.replyAsserter(context, async, expected));
+        eventbus.request(DeviceRpcDiscovery.class.getName(),
+                         EventMessage.initial(EventAction.GET_LIST, RequestData.builder().body(body).build()),
+                         EventbusHelper.replyAsserter(context, async, expected));
     }
 
 }

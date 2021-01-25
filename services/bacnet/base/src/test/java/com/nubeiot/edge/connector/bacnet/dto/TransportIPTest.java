@@ -4,8 +4,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import io.github.zero88.qwe.exceptions.CommunicationProtocolException;
+import io.github.zero88.qwe.protocol.network.Ipv4Network;
 
-import com.nubeiot.core.protocol.network.Ipv4Network;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetIP;
 
 public class TransportIPTest {

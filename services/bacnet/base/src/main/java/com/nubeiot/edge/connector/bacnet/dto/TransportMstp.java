@@ -1,6 +1,7 @@
 package com.nubeiot.edge.connector.bacnet.dto;
 
-import com.nubeiot.core.protocol.serial.SerialPortProtocol;
+import io.github.zero88.qwe.protocol.serial.SerialPortProtocol;
+
 import com.nubeiot.edge.connector.bacnet.entity.BACnetMSTP;
 import com.serotonin.bacnet4j.transport.DefaultTransport;
 

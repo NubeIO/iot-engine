@@ -4,22 +4,21 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 import io.github.zero88.qwe.component.ContextLookup;
 import io.github.zero88.qwe.event.EventbusClient;
 import io.github.zero88.qwe.http.server.HttpServerProvider;
 import io.github.zero88.qwe.http.server.HttpServerRouter;
 import io.github.zero88.qwe.micro.MicroContext;
-import io.github.zero88.qwe.micro.MicroserviceProvider;
-import io.github.zero88.qwe.micro.ServiceDiscoveryController;
-import io.github.zero88.qwe.micro.metadata.EventMethodDefinition;
+import io.github.zero88.qwe.micro.MicroVerticleProvider;
+import io.github.zero88.qwe.micro.ServiceDiscoveryInvoker;
+import io.github.zero88.qwe.micro.http.EventMethodDefinition;
+import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
 
-import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
@@ -48,7 +47,7 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
     @Override
     public void start() {
         super.start();
-        this.addProvider(new HttpServerProvider(new HttpServerRouter())).addProvider(new MicroserviceProvider());
+        this.addProvider(new HttpServerProvider(new HttpServerRouter())).addProvider(new MicroVerticleProvider());
     }
 
     @Override
@@ -69,7 +68,7 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
                          .doOnEach(s -> Optional.ofNullable(s.getValue())
                                                 .ifPresent(service -> client.register(service.address(), service)))
                          .filter(s -> Objects.nonNull(s.definitions()))
-                         .flatMap(s -> registerEndpoint(microContext.getLocalController(), s))
+                         .flatMap(s -> registerEndpoint(microContext.getLocalInvoker(), s))
                          .map(Record::toJson)
                          .count()
                          .map(total -> new JsonObject().put("message", "Registered " + total + " BACnet APIs"));
@@ -131,9 +130,12 @@ public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
         return new BACnetDiscoverFinisher(this);
     }
 
-    private Observable<Record> registerEndpoint(ServiceDiscoveryController discovery, BACnetRpcDiscoveryService s) {
-        return Observable.fromIterable((Set<EventMethodDefinition>) s.definitions())
-                         .flatMapSingle(e -> discovery.addEventMessageRecord(s.api(), s.address(), e));
+    @SuppressWarnings("unchecked")
+    private Observable<Record> registerEndpoint(ServiceDiscoveryInvoker discovery, BACnetRpcDiscoveryService s) {
+        return Observable.fromIterable(s.definitions())
+                         .flatMapSingle(e -> e)
+                         .flatMapSingle(
+                             e -> discovery.addEventMessageRecord(s.api(), s.address(), (EventMethodDefinition) e));
     }
 
 }

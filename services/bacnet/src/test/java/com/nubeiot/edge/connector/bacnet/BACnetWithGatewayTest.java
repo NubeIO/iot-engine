@@ -10,12 +10,12 @@ import io.github.zero88.qwe.TestHelper.VertxHelper;
 import io.github.zero88.qwe.component.ApplicationVerticle;
 import io.github.zero88.qwe.component.ComponentSharedDataHelper;
 import io.github.zero88.qwe.component.ReadinessAsserter;
-import io.github.zero88.qwe.event.EventClientProxy;
+import io.github.zero88.qwe.event.EventbusClient;
 import io.github.zero88.qwe.micro.MicroConfig;
 import io.github.zero88.qwe.micro.MicroContext;
-import io.github.zero88.qwe.micro.Microservice;
-import io.github.zero88.qwe.micro.MicroserviceProvider;
-import io.github.zero88.qwe.micro.metadata.EventHttpService;
+import io.github.zero88.qwe.micro.MicroVerticle;
+import io.github.zero88.qwe.micro.MicroVerticleProvider;
+import io.github.zero88.qwe.micro.http.EventHttpService;
 import io.github.zero88.qwe.micro.register.EventHttpServiceRegister;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
@@ -33,7 +33,7 @@ public abstract class BACnetWithGatewayTest extends BaseBACnetVerticleTest {
     }
 
     protected void deployServices(TestContext context) {
-        busClient = EventClientProxy.create(vertx, null).transporter();
+        eventbus = EventbusClient.create(vertx);
         final Async async = context.async(2);
         deployVerticle(vertx, context, async, () -> deployBACnetVerticle(context, async));
     }
@@ -44,8 +44,8 @@ public abstract class BACnetWithGatewayTest extends BaseBACnetVerticleTest {
 
     protected void deployVerticle(Vertx vertx, TestContext context, Async async,
                                   Supplier<ApplicationVerticle> supplier) {
-        final Microservice v = new MicroserviceProvider().provide(
-            ComponentSharedDataHelper.create(vertx, Microservice.class));
+        final MicroVerticle v = new MicroVerticleProvider().provide(
+            ComponentSharedDataHelper.create(vertx, MicroVerticle.class));
         VertxHelper.deploy(vertx, context, createDeploymentOptions(getMicroConfig()), v, id -> {
             registerMockService(v.getContext()).map(i -> supplier.get())
                                                .subscribe(i -> TestHelper.testComplete(async), context::fail);
@@ -60,7 +60,7 @@ public abstract class BACnetWithGatewayTest extends BaseBACnetVerticleTest {
                                        .sharedKey(BACnetVerticle.class.getName())
                                        .eventServices(this::serviceDefinitions)
                                        .build()
-                                       .publish(microContext.getLocalController());
+                                       .publish(microContext.getLocalInvoker());
     }
 
 }

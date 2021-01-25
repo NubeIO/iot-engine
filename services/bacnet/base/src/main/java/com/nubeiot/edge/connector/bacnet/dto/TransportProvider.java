@@ -3,10 +3,10 @@ package com.nubeiot.edge.connector.bacnet.dto;
 import java.util.function.Supplier;
 
 import io.github.zero88.qwe.exceptions.CommunicationProtocolException;
+import io.github.zero88.qwe.protocol.CommunicationProtocol;
+import io.github.zero88.qwe.protocol.network.UdpProtocol;
+import io.github.zero88.qwe.protocol.serial.SerialPortProtocol;
 
-import com.nubeiot.core.protocol.CommunicationProtocol;
-import com.nubeiot.core.protocol.network.UdpProtocol;
-import com.nubeiot.core.protocol.serial.SerialPortProtocol;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetIP;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetMSTP;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;

@@ -90,14 +90,15 @@ ext.deps = [
         javaUtils: "io.github.zero88:java-utils:$versions.zero88.javaUtils",
         jpaExt   : "io.github.zero88:jpa-ext:$versions.zero88.jpaExt",
         rqlJooq  : "io.github.zero88:rql-jooq:$versions.zero88.rqlJooq",
-        qwe       : [
-            base : "io.github.zero88.qwe:base:$versions.zero88.qwe",
-            cache: "io.github.zero88.qwe:cache:$versions.zero88.qwe",
-            micro: [
+        qwe      : [
+            base    : "io.github.zero88.qwe:base:$versions.zero88.qwe",
+            cache   : "io.github.zero88.qwe:cache:$versions.zero88.qwe",
+            protocol: "io.github.zero88.qwe:protocol:$versions.zero88.qwe",
+            micro   : [
                 core    : "io.github.zero88.qwe:micro:$versions.zero88.qwe",
                 metadata: "io.github.zero88.qwe.micro:metadata:$versions.zero88.qwe",
             ],
-            http : [
+            http    : [
                 core  : "io.github.zero88.qwe:http:$versions.zero88.qwe",
                 client: "io.github.zero88.qwe.http:client:$versions.zero88.qwe",
                 server: "io.github.zero88.qwe.http:server:$versions.zero88.qwe",

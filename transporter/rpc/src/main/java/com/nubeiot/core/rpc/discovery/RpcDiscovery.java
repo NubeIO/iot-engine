@@ -10,7 +10,7 @@ import com.nubeiot.iotdata.IoTEntity;
 import lombok.NonNull;
 
 /**
- * Represents for a {@code Protocol Discovery service} that is able to persist data into {@code Data Point repository}
+ * Represents for a {@code Protocol Discovery service} that is able to discover a particular data object in {@code protocol}
  * by {@code RPC client}
  *
  * @param <P> Type of IoT entity

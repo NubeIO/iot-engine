@@ -4,9 +4,8 @@ import org.json.JSONException;
 import org.junit.Test;
 
 import io.github.zero88.qwe.TestHelper.JsonHelper;
+import io.github.zero88.qwe.protocol.network.Ipv4Network;
 import io.vertx.core.json.JsonObject;
-
-import com.nubeiot.core.protocol.network.Ipv4Network;
 
 public class DiscoverRequestTest {
 

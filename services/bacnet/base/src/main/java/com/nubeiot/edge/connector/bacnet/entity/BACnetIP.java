@@ -1,10 +1,10 @@
 package com.nubeiot.edge.connector.bacnet.entity;
 
+import io.github.zero88.qwe.protocol.network.UdpProtocol;
 import io.github.zero88.qwe.utils.Networks;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import com.nubeiot.core.protocol.network.UdpProtocol;
 import com.serotonin.bacnet4j.npdu.ip.IpNetwork;
 
 import lombok.Builder;

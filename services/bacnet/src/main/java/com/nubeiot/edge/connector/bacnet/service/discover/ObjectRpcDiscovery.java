@@ -17,7 +17,7 @@ import io.github.zero88.qwe.exceptions.AlreadyExistException;
 import io.github.zero88.qwe.exceptions.CarlException;
 import io.github.zero88.qwe.exceptions.EngineException;
 import io.github.zero88.qwe.exceptions.NotFoundException;
-import io.github.zero88.qwe.micro.metadata.ActionMethodMapping;
+import io.github.zero88.qwe.micro.http.ActionMethodMapping;
 import io.github.zero88.utils.Functions;
 import io.reactivex.Observable;
 import io.reactivex.Single;

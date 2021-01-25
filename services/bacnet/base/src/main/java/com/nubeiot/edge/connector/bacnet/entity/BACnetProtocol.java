@@ -1,7 +1,7 @@
 package com.nubeiot.edge.connector.bacnet.entity;
 
-import com.nubeiot.iotdata.HasProtocol;
-import com.nubeiot.iotdata.Protocol;
+import io.github.zero88.qwe.protocol.HasProtocol;
+import io.github.zero88.qwe.protocol.Protocol;
 
 import lombok.NonNull;
 
@@ -9,7 +9,7 @@ public interface BACnetProtocol extends HasProtocol {
 
     @Override
     default @NonNull Protocol protocol() {
-        return Protocol.BACNET;
+        return Protocol.BACnet;
     }
 
 }

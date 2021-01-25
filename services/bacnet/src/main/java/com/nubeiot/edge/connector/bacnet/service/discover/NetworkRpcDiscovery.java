@@ -2,11 +2,11 @@ package com.nubeiot.edge.connector.bacnet.service.discover;
 
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.dto.msg.RequestData;
+import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverLevel;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;

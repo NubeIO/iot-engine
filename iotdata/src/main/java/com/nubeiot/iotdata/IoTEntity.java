@@ -1,6 +1,7 @@
 package com.nubeiot.iotdata;
 
 import io.github.zero88.qwe.dto.JsonData;
+import io.github.zero88.qwe.protocol.HasProtocol;
 
 import lombok.NonNull;
 

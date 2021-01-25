@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Optional;
 
 import io.github.zero88.qwe.event.EventbusClient;
+import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.github.zero88.qwe.utils.Configs;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.AbstractBACnetVerticle;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;

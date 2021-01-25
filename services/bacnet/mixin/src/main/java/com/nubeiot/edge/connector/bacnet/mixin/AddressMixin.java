@@ -1,9 +1,9 @@
 package com.nubeiot.edge.connector.bacnet.mixin;
 
+import io.github.zero88.qwe.protocol.network.IpNetwork;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.nubeiot.core.protocol.network.IpNetwork;
 import com.serotonin.bacnet4j.npdu.NetworkUtils;
 import com.serotonin.bacnet4j.type.constructed.Address;
 import com.serotonin.bacnet4j.type.primitive.OctetString;

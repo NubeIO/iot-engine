@@ -3,9 +3,9 @@ package com.nubeiot.edge.connector.bacnet;
 import java.util.Arrays;
 import java.util.List;
 
+import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.reactivex.Single;
 
-import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
 import com.nubeiot.edge.connector.bacnet.discover.RemoteDeviceScanner;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;

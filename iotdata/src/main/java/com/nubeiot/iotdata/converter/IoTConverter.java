@@ -2,9 +2,10 @@ package com.nubeiot.iotdata.converter;
 
 import java.io.Serializable;
 
-import com.nubeiot.iotdata.HasProtocol;
+import io.github.zero88.qwe.protocol.HasProtocol;
+import io.github.zero88.qwe.protocol.Protocol;
+
 import com.nubeiot.iotdata.IoTObject;
-import com.nubeiot.iotdata.Protocol;
 
 import lombok.NonNull;
 

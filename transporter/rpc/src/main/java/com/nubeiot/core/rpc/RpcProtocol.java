@@ -1,8 +1,8 @@
 package com.nubeiot.core.rpc;
 
 import io.github.zero88.qwe.component.HasSharedData;
+import io.github.zero88.qwe.protocol.HasProtocol;
 
-import com.nubeiot.iotdata.HasProtocol;
 import com.nubeiot.iotdata.IoTEntity;
 
 import lombok.NonNull;

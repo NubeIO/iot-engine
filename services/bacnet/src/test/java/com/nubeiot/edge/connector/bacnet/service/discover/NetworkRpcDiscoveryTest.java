@@ -11,14 +11,14 @@ import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventMessage;
 import io.github.zero88.qwe.event.Status;
 import io.github.zero88.qwe.exceptions.NetworkException;
+import io.github.zero88.qwe.protocol.network.IpNetwork;
+import io.github.zero88.qwe.protocol.network.Ipv4Network;
+import io.github.zero88.qwe.protocol.network.UdpProtocol;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 
-import com.nubeiot.core.protocol.network.IpNetwork;
-import com.nubeiot.core.protocol.network.Ipv4Network;
-import com.nubeiot.core.protocol.network.UdpProtocol;
 import com.nubeiot.edge.connector.bacnet.BACnetWithoutGatewayTest;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetIP;
 
@@ -41,9 +41,9 @@ public class NetworkRpcDiscoveryTest extends BACnetWithoutGatewayTest {
                 TestHelper.testComplete(async);
             }
         };
-        busClient.request(NetworkRpcDiscovery.class.getName(),
-                          EventMessage.initial(EventAction.GET_LIST, new JsonObject()),
-                          EventbusHelper.replyAsserter(context, handler));
+        eventbus.request(NetworkRpcDiscovery.class.getName(),
+                         EventMessage.initial(EventAction.GET_LIST, new JsonObject()),
+                         EventbusHelper.replyAsserter(context, handler));
     }
 
     @Test
@@ -54,9 +54,9 @@ public class NetworkRpcDiscoveryTest extends BACnetWithoutGatewayTest {
         final JsonObject expected = new JsonObject(
             "{\"status\":\"FAILED\",\"action\":\"GET_ONE\",\"error\":{\"code\":\"INVALID_ARGUMENT\"," +
             "\"message\":\"Missing BACnet network code\"}}");
-        busClient.request(NetworkRpcDiscovery.class.getName(),
-                          EventMessage.initial(EventAction.GET_ONE, RequestData.builder().body(body).build()),
-                          EventbusHelper.replyAsserter(context, async, expected));
+        eventbus.request(NetworkRpcDiscovery.class.getName(),
+                         EventMessage.initial(EventAction.GET_ONE, RequestData.builder().body(body).build()),
+                         EventbusHelper.replyAsserter(context, async, expected));
     }
 
     @Test
@@ -74,9 +74,9 @@ public class NetworkRpcDiscoveryTest extends BACnetWithoutGatewayTest {
                                                                                .build()
                                                                                .toJson());
         final JsonObject expected = EventMessage.success(EventAction.GET_ONE, response).toJson();
-        busClient.request(NetworkRpcDiscovery.class.getName(),
-                          EventMessage.initial(EventAction.GET_ONE, RequestData.builder().body(request).build()),
-                          EventbusHelper.replyAsserter(context, async, expected));
+        eventbus.request(NetworkRpcDiscovery.class.getName(),
+                         EventMessage.initial(EventAction.GET_ONE, RequestData.builder().body(request).build()),
+                         EventbusHelper.replyAsserter(context, async, expected));
     }
 
 }

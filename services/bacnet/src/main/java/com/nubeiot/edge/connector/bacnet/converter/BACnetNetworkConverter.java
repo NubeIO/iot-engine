@@ -2,7 +2,8 @@ package com.nubeiot.edge.connector.bacnet.converter;
 
 import java.util.Objects;
 
-import com.nubeiot.core.protocol.CommunicationProtocol;
+import io.github.zero88.qwe.protocol.CommunicationProtocol;
+
 import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetProtocol;
 import com.nubeiot.iotdata.converter.IoTEntityConverter;
