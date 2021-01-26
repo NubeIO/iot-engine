@@ -20,13 +20,13 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
 import com.nubeiot.edge.connector.bacnet.service.BACnetApis;
-import com.nubeiot.edge.connector.bacnet.service.BACnetRpcNotifier;
+import com.nubeiot.edge.connector.bacnet.service.BACnetRpcWatcher;
 import com.nubeiot.edge.connector.bacnet.service.BACnetSubscriber;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
 
 import lombok.NonNull;
 
-public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> extends ApplicationVerticle {
+public abstract class AbstractBACnetApplication<C extends AbstractBACnetConfig> extends ApplicationVerticle {
 
     @Override
     public void start() {
@@ -60,7 +60,8 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
                        .flatMap(this::availableNetworks)
                        .doOnSuccess(protocols -> logger.info("Found {} BACnet networks", protocols.size()))
                        .flattenAsObservable(protocols -> protocols)
-                       .map(protocol -> BACnetDeviceInitializer.builder().proxy(this)
+                       .map(protocol -> BACnetDeviceInitializer.builder()
+                                                               .proxy(this)
                                                                .preFunction(this::addListenerOnEachDevice)
                                                                .build()
                                                                .asyncStart(protocol))
@@ -120,7 +121,7 @@ public abstract class AbstractBACnetVerticle<C extends AbstractBACnetConfig> ext
      * @param device BACnet device
      * @see BACnetDevice
      * @see DeviceEventListener
-     * @see BACnetRpcNotifier
+     * @see BACnetRpcWatcher
      */
     protected abstract void addListenerOnEachDevice(@NonNull BACnetDevice device);
 

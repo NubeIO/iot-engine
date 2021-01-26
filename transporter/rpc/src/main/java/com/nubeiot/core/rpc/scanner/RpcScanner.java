@@ -1,6 +1,6 @@
-package com.nubeiot.core.rpc.query;
+package com.nubeiot.core.rpc.scanner;
 
-import com.nubeiot.core.rpc.RpcClient;
+import com.nubeiot.core.rpc.RpcProtocolClient;
 import com.nubeiot.iotdata.IoTEntity;
 
 /**
@@ -10,7 +10,11 @@ import com.nubeiot.iotdata.IoTEntity;
  * @param <X> Type of {@code Protocol object}
  * @since 1.0.0
  */
-public interface RpcScanner<P extends IoTEntity, X> extends RpcClient<P> {
+public interface RpcScanner<P extends IoTEntity, X> extends RpcProtocolClient<P> {
+
+    default ScannerSource source() {
+        return null;
+    }
 
     //    /**
     //     * Query data.

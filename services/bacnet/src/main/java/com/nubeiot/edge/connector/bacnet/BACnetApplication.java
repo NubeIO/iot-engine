@@ -34,7 +34,7 @@ import lombok.NonNull;
 /*
  * Main BACnetInstance verticle
  */
-public final class BACnetVerticle extends AbstractBACnetVerticle<BACnetConfig> {
+public final class BACnetApplication extends AbstractBACnetApplication<BACnetConfig> {
 
     private MicroContext microContext;
     private BACnetRpcSubscription subscription;

@@ -1,4 +1,4 @@
-package com.nubeiot.core.rpc.query;
+package com.nubeiot.core.rpc.scanner;
 
 import io.github.zero88.qwe.protocol.CommunicationProtocol;
 

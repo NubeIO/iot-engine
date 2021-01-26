@@ -16,8 +16,8 @@ import com.nubeiot.iotdata.IoTEntity;
 import lombok.NonNull;
 
 /**
- * Represents {@code subscriber} that listens a {@code external event} from outside then do dispatch to
- * the corresponding to {@code Protocol} service
+ * Represents {@code Protocol subscriber} that listens a {@code external event} from outside then dispatch to
+ * corresponding to itself {@code Protocol} action
  *
  * @param <P> Type of entity object
  * @see EventListener
@@ -26,8 +26,7 @@ import lombok.NonNull;
 public interface RpcSubscriber<P extends IoTEntity> extends EventListener, RpcProtocol<P> {
 
     @Override
-    default @NonNull
-    Collection<EventAction> getAvailableEvents() {
+    default @NonNull Collection<EventAction> getAvailableEvents() {
         return ActionMethodMapping.DML_MAP.get().keySet();
     }
 
@@ -60,8 +59,7 @@ public interface RpcSubscriber<P extends IoTEntity> extends EventListener, RpcPr
      * @see EventAction#CREATE
      */
     @EventContractor(action = "CREATE", returnType = Single.class)
-    @NonNull
-    Single<P> create(@NonNull RequestData requestData);
+    @NonNull Single<P> create(@NonNull RequestData requestData);
 
     /**
      * Defines listener for updating existing resource by primary key
@@ -71,8 +69,7 @@ public interface RpcSubscriber<P extends IoTEntity> extends EventListener, RpcPr
      * @see EventAction#UPDATE
      */
     @EventContractor(action = "UPDATE", returnType = Single.class)
-    @NonNull
-    Single<P> update(@NonNull RequestData requestData);
+    @NonNull Single<P> update(@NonNull RequestData requestData);
 
     /**
      * Defines listener for patching existing resource by primary key
@@ -82,8 +79,7 @@ public interface RpcSubscriber<P extends IoTEntity> extends EventListener, RpcPr
      * @see EventAction#PATCH
      */
     @EventContractor(action = "PATCH", returnType = Single.class)
-    @NonNull
-    Single<P> patch(@NonNull RequestData requestData);
+    @NonNull Single<P> patch(@NonNull RequestData requestData);
 
     /**
      * Defines listener for deleting existing resource by primary key
@@ -93,7 +89,6 @@ public interface RpcSubscriber<P extends IoTEntity> extends EventListener, RpcPr
      * @see EventAction#REMOVE
      */
     @EventContractor(action = "REMOVE", returnType = Single.class)
-    @NonNull
-    Single<P> delete(@NonNull RequestData requestData);
+    @NonNull Single<P> delete(@NonNull RequestData requestData);
 
 }

@@ -60,12 +60,12 @@ public final class NetworkRpcDiscovery extends AbstractBACnetRpcDiscoveryService
     }
 
     @Override
-    public Single<JsonObject> discoverThenDoBatch(RequestData reqData) {
-        return doBatch(reqData.body());
+    public Single<JsonObject> discoverThenRegisterMany(RequestData reqData) {
+        return watchMany(reqData.body());
     }
 
     @Override
-    public Single<JsonObject> discoverThenDoPersist(RequestData reqData) {
+    public Single<JsonObject> discoverThenRegisterOne(RequestData reqData) {
         return Single.just(new JsonObject());
         //        final CommunicationProtocol protocol = parseProtocol(reqData);
         //        final BACnetNetworkCache cache = networkCache();
@@ -75,7 +75,8 @@ public final class NetworkRpcDiscovery extends AbstractBACnetRpcDiscoveryService
         //                "Already persisted network code " + protocol.identifier() + " with id " + networkId.get());
         //        }
         //        final JsonObject network = JsonPojo.from(new BACnetNetworkTranslator().serialize(protocol)).toJson();
-        //        return doPersist(network).doOnSuccess(response -> cache.addDataKey(protocol, parsePersistResponse(response)));
+        //        return doPersist(network).doOnSuccess(response -> cache.addDataKey(protocol, parsePersistResponse
+        //        (response)));
     }
 
     @Override

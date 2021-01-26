@@ -6,7 +6,7 @@ import io.github.zero88.qwe.cache.CacheInitializer;
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.utils.Strings;
 
-import com.nubeiot.core.rpc.RpcClient;
+import com.nubeiot.core.rpc.RpcProtocolClient;
 import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 
 import lombok.Getter;
@@ -25,7 +25,7 @@ public final class BACnetCacheInitializer implements CacheInitializer<BACnetCach
 
     @Override
     public BACnetCacheInitializer init(@NonNull SharedDataLocalProxy context) {
-        context.addData(RpcClient.GATEWAY_ADDRESS,
+        context.addData(RpcProtocolClient.GATEWAY_ADDRESS,
                         Strings.requireNotBlank(config.getGatewayAddress(), "Missing gateway address config"));
         addBlockingCache(context, EDGE_NETWORK_CACHE, BACnetNetworkCache::init);
         addBlockingCache(context, BACNET_DEVICE_CACHE, () -> BACnetDeviceCache.init(context));

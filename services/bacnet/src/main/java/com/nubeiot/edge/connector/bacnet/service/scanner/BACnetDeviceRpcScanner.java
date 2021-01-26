@@ -2,8 +2,8 @@ package com.nubeiot.edge.connector.bacnet.service.scanner;
 
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
 
-import com.nubeiot.core.rpc.query.AbstractRpcScanner;
-import com.nubeiot.core.rpc.query.DeviceRpcScanner;
+import com.nubeiot.core.rpc.scanner.AbstractRpcScanner;
+import com.nubeiot.core.rpc.scanner.DeviceRpcScanner;
 import com.nubeiot.edge.connector.bacnet.converter.BACnetDeviceConverter;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetDeviceEntity;
 import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;

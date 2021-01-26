@@ -59,8 +59,8 @@ abstract class AbstractBACnetRpcDiscoveryService<P extends IoTEntity> extends Ba
         Map<EventAction, HttpMethod> methods = new HashMap<>();
         methods.put(EventAction.GET_LIST, HttpMethod.GET);
         methods.put(EventAction.GET_ONE, HttpMethod.GET);
-        methods.put(EventAction.BATCH_CREATE, HttpMethod.POST);
-        methods.put(EventAction.CREATE, HttpMethod.PUT);
+        methods.put(watchOneAction(), HttpMethod.POST);
+        methods.put(watchManyAction(), HttpMethod.PUT);
         return ActionMethodMapping.create(methods);
     }
 
@@ -71,10 +71,10 @@ abstract class AbstractBACnetRpcDiscoveryService<P extends IoTEntity> extends Ba
     public abstract Single<JsonObject> get(RequestData reqData);
 
     @EventContractor(action = "BATCH_CREATE", returnType = Single.class)
-    public abstract Single<JsonObject> discoverThenDoBatch(RequestData reqData);
+    public abstract Single<JsonObject> discoverThenRegisterMany(RequestData reqData);
 
     @EventContractor(action = "CREATE", returnType = Single.class)
-    public abstract Single<JsonObject> discoverThenDoPersist(RequestData reqData);
+    public abstract Single<JsonObject> discoverThenRegisterOne(RequestData reqData);
 
     final BACnetNetworkCache networkCache() {
         return sharedData().getData(BACnetCacheInitializer.EDGE_NETWORK_CACHE);

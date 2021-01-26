@@ -1,6 +1,7 @@
 package com.nubeiot.core.rpc;
 
 import io.github.zero88.qwe.micro.discovery.GatewayServiceInvoker;
+import io.github.zero88.qwe.protocol.Protocol;
 
 import com.nubeiot.iotdata.IoTEntity;
 
@@ -11,9 +12,11 @@ import lombok.NonNull;
  *
  * @param <P> Type of IoT entity
  * @see GatewayServiceInvoker
+ * @see RpcProtocol
  * @see IoTEntity
+ * @see Protocol
  */
-public interface RpcClient<P extends IoTEntity> extends GatewayServiceInvoker, RpcProtocol<P> {
+public interface RpcProtocolClient<P extends IoTEntity> extends GatewayServiceInvoker, RpcProtocol<P> {
 
     String GATEWAY_ADDRESS = "GATEWAY_ADDRESS";
 
@@ -34,7 +37,7 @@ public interface RpcClient<P extends IoTEntity> extends GatewayServiceInvoker, R
 
     @Override
     default String serviceLabel() {
-        return "RPC client";
+        return "RPC protocol client";
     }
 
 }

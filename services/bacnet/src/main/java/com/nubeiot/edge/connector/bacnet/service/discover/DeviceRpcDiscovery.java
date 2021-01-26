@@ -68,12 +68,12 @@ public final class DeviceRpcDiscovery extends AbstractBACnetRpcDiscoveryService<
     }
 
     @Override
-    public Single<JsonObject> discoverThenDoBatch(RequestData reqData) {
-        return doBatch(reqData.body());
+    public Single<JsonObject> discoverThenRegisterMany(RequestData reqData) {
+        return watchMany(reqData.body());
     }
 
     @Override
-    public Single<JsonObject> discoverThenDoPersist(RequestData requestData) {
+    public Single<JsonObject> discoverThenRegisterOne(RequestData requestData) {
         return Single.just(new JsonObject());
         //        final DiscoveryRequestWrapper req = validateCache(toRequest(requestData, DiscoverLevel.DEVICE));
         //        return doGet(req).map(rd -> new BACnetDeviceConverter().serialize(rd))

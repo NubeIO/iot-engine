@@ -1,4 +1,4 @@
-package com.nubeiot.core.rpc.query;
+package com.nubeiot.core.rpc.scanner;
 
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
 
@@ -15,12 +15,12 @@ import lombok.experimental.Accessors;
 public abstract class AbstractRpcScanner<P extends IoTEntity, X> extends BaseRpcProtocol<P>
     implements RpcScanner<P, X> {
 
-    private final IoTEntityConverter<P, X> translator;
+    private final IoTEntityConverter<P, X> converter;
 
     protected AbstractRpcScanner(@NonNull SharedDataLocalProxy sharedDataProxy,
-                                 @NonNull IoTEntityConverter<P, X> translator) {
+                                 @NonNull IoTEntityConverter<P, X> converter) {
         super(sharedDataProxy);
-        this.translator = translator;
+        this.converter = converter;
     }
 
 }

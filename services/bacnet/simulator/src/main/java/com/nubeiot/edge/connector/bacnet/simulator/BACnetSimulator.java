@@ -9,7 +9,7 @@ import io.github.zero88.qwe.utils.Configs;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.edge.connector.bacnet.AbstractBACnetVerticle;
+import com.nubeiot.edge.connector.bacnet.AbstractBACnetApplication;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
@@ -20,13 +20,9 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public final class BACnetSimulator extends AbstractBACnetVerticle<SimulatorConfig> {
+public final class BACnetSimulator extends AbstractBACnetApplication<SimulatorConfig> {
 
     private final DiscoverCompletionHandler handler;
-
-    public BACnetSimulator() {
-        handler = null;
-    }
 
     @Override
     @NonNull

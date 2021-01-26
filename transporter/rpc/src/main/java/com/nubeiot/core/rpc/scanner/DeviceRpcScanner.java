@@ -1,4 +1,4 @@
-package com.nubeiot.core.rpc.query;
+package com.nubeiot.core.rpc.scanner;
 
 import java.util.HashMap;
 import java.util.Map;

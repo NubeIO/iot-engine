@@ -4,11 +4,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.LoggerFactory;
 
 import io.github.zero88.qwe.CarlConfig;
 import io.github.zero88.qwe.IConfig;
 import io.github.zero88.qwe.TestHelper;
-import io.github.zero88.qwe.TestHelper.VertxHelper;
+import io.github.zero88.qwe.VertxHelper;
 import io.github.zero88.qwe.protocol.network.Ipv4Network;
 import io.github.zero88.qwe.protocol.network.UdpProtocol;
 import io.vertx.core.DeploymentOptions;
@@ -19,6 +20,9 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+
 @RunWith(VertxUnitRunner.class)
 public class BACnetSimulatorTest {
 
@@ -27,7 +31,7 @@ public class BACnetSimulatorTest {
     @BeforeClass
     public static void beforeSuite() {
         TestHelper.setup();
-        //        ((Logger) LoggerFactory.getLogger("com.serotonin.bacnet4j")).setLevel(Level.TRACE);
+        ((Logger) LoggerFactory.getLogger("com.serotonin.bacnet4j")).setLevel(Level.TRACE);
     }
 
     @Before

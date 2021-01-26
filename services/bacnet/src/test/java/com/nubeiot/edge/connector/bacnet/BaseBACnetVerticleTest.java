@@ -4,6 +4,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
+import org.slf4j.LoggerFactory;
 
 import io.github.zero88.qwe.CarlConfig;
 import io.github.zero88.qwe.CarlConfig.AppConfig;
@@ -19,6 +20,8 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import lombok.NonNull;
 
 @RunWith(VertxUnitRunner.class)
@@ -26,12 +29,12 @@ public abstract class BaseBACnetVerticleTest {
 
     protected Vertx vertx;
     protected EventbusClient eventbus;
-    protected String bacnetVerticleDeployId;
+    protected String bacnetApplicationId;
 
     @BeforeClass
     public static void beforeSuite() {
         TestHelper.setup();
-        //        ((Logger) LoggerFactory.getLogger("com.serotonin.bacnet4j")).setLevel(Level.TRACE);
+        ((Logger) LoggerFactory.getLogger("com.serotonin.bacnet4j")).setLevel(Level.TRACE);
     }
 
     @Before
@@ -43,7 +46,7 @@ public abstract class BaseBACnetVerticleTest {
     @After
     public final void after(TestContext context) {
         Async async = context.async();
-        this.vertx.undeploy(bacnetVerticleDeployId, event -> {
+        this.vertx.undeploy(bacnetApplicationId, event -> {
             TestHelper.testComplete(async);
             this.vertx.close(context.asyncAssertSuccess());
         });
@@ -63,12 +66,12 @@ public abstract class BaseBACnetVerticleTest {
         return IConfig.fromClasspath("testConfig.json", BACnetConfig.class);
     }
 
-    protected BACnetVerticle deployBACnetVerticle(TestContext context, Async async) {
+    protected BACnetApplication deployBACnetApplication(TestContext context, Async async) {
         final BACnetConfig bacnetCfg = createBACnetConfig();
         final DeploymentOptions options = createDeploymentOptions(bacnetCfg);
-        final BACnetVerticle verticle = new BACnetVerticle();
+        final BACnetApplication verticle = new BACnetApplication();
         return VertxHelper.deploy(vertx, context, options, verticle, deployId -> {
-            bacnetVerticleDeployId = deployId;
+            bacnetApplicationId = deployId;
             eventbus = verticle.getEventbus()
                                .register(bacnetCfg.getReadinessAddress(), createReadinessHandler(context, async));
         });

@@ -2,7 +2,7 @@ package com.nubeiot.edge.connector.bacnet.service.notifier;
 
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
 
-import com.nubeiot.edge.connector.bacnet.service.BACnetRpcNotifier;
+import com.nubeiot.edge.connector.bacnet.service.BACnetRpcWatcher;
 import com.nubeiot.iotdata.IoTEntity;
 import com.serotonin.bacnet4j.event.DeviceEventAdapter;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
@@ -13,7 +13,7 @@ import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 
 import lombok.NonNull;
 
-public final class CovNotifier extends DeviceEventAdapter implements DeviceEventListener, BACnetRpcNotifier<IoTEntity> {
+public final class CovWatcher extends DeviceEventAdapter implements DeviceEventListener, BACnetRpcWatcher<IoTEntity> {
 
     @Override
     public void covNotificationReceived(UnsignedInteger subscriberProcessIdentifier,

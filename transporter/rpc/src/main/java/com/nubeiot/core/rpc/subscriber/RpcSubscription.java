@@ -1,6 +1,6 @@
 package com.nubeiot.core.rpc.subscriber;
 
-import com.nubeiot.core.rpc.RpcClient;
+import com.nubeiot.core.rpc.RpcProtocolClient;
 import com.nubeiot.iotdata.IoTEntity;
 
 /**
@@ -10,7 +10,7 @@ import com.nubeiot.iotdata.IoTEntity;
  * @see RpcSubscriber
  * @since 1.0.0
  */
-public interface RpcSubscription<P extends IoTEntity, T extends RpcSubscriber> extends RpcClient<P> {
+public interface RpcSubscription<P extends IoTEntity, T extends RpcSubscriber> extends RpcProtocolClient<P> {
 
     //    @Override
     //    default @NonNull ProtocolDispatcherMetadata context() {

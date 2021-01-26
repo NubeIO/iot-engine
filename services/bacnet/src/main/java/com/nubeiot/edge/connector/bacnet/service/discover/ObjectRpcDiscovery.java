@@ -91,13 +91,14 @@ public final class ObjectRpcDiscovery extends AbstractBACnetRpcDiscoveryService<
     }
 
     @Override
-    public Single<JsonObject> discoverThenDoBatch(RequestData requestData) {
-        return doBatch(requestData.body());
+    public Single<JsonObject> discoverThenRegisterMany(RequestData requestData) {
+        return watchMany(requestData.body());
     }
 
     @Override
-    public Single<JsonObject> discoverThenDoPersist(RequestData requestData) {
-        final DiscoveryRequestWrapper request = validateCache(createDiscoveryRequest(requestData, DiscoverLevel.OBJECT));
+    public Single<JsonObject> discoverThenRegisterOne(RequestData requestData) {
+        final DiscoveryRequestWrapper request = validateCache(
+            createDiscoveryRequest(requestData, DiscoverLevel.OBJECT));
         final ObjectType objectType = request.objectCode().getObjectType();
         //        if (ObjectTypeCategory.isPoint(objectType)) {
         //            return doGet(request).map(properties -> new BACnetPointConverter().serialize(properties))
