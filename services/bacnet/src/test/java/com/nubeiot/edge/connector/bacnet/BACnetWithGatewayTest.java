@@ -4,9 +4,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
+
 import io.github.zero88.qwe.IConfig;
 import io.github.zero88.qwe.TestHelper;
-import io.github.zero88.qwe.TestHelper.VertxHelper;
 import io.github.zero88.qwe.component.ApplicationVerticle;
 import io.github.zero88.qwe.component.ComponentSharedDataHelper;
 import io.github.zero88.qwe.component.ReadinessAsserter;

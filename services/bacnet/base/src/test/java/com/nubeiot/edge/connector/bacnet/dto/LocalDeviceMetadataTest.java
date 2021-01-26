@@ -1,10 +1,10 @@
 package com.nubeiot.edge.connector.bacnet.dto;
 
 import org.json.JSONException;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import io.github.zero88.qwe.TestHelper.JsonHelper;
+import io.github.zero88.qwe.JsonHelper;
 import io.github.zero88.qwe.dto.JsonData;
 import io.vertx.core.json.JsonObject;
 
@@ -15,10 +15,10 @@ public class LocalDeviceMetadataTest {
     @Test
     public void test_default() {
         LocalDeviceMetadata metadata = LocalDeviceMetadata.from(new MockBACnetConfig());
-        Assert.assertEquals(6000, metadata.getMaxTimeoutInMS());
-        Assert.assertEquals(1173, metadata.getVendorId());
-        Assert.assertEquals("Nube iO Operations Pty Ltd", metadata.getVendorName());
-        Assert.assertEquals("NubeIO-Edge28", metadata.getModelName());
+        Assertions.assertEquals(6000, metadata.getMaxTimeoutInMS());
+        Assertions.assertEquals(1173, metadata.getVendorId());
+        Assertions.assertEquals("Nube iO Operations Pty Ltd", metadata.getVendorName());
+        Assertions.assertEquals("NubeIO-Edge28", metadata.getModelName());
     }
 
     @Test
@@ -37,12 +37,12 @@ public class LocalDeviceMetadataTest {
             "{\"vendorId\":1173,\"vendorName\":\"Nube iO Operations Pty Ltd\",\"deviceNumber\":85084," +
             "\"modelName\":\"NubeIO-Edge28\",\"objectName\":\"NubeIO-Edge28-85084\",\"slave\":true," +
             "\"maxTimeoutInMS\":10000}", LocalDeviceMetadata.class);
-        Assert.assertEquals(10000, metadata.getMaxTimeoutInMS());
-        Assert.assertEquals(1173, metadata.getVendorId());
-        Assert.assertEquals("Nube iO Operations Pty Ltd", metadata.getVendorName());
-        Assert.assertEquals("NubeIO-Edge28", metadata.getModelName());
-        Assert.assertEquals(85084, metadata.getDeviceNumber());
-        Assert.assertEquals("NubeIO-Edge28-85084", metadata.getObjectName());
+        Assertions.assertEquals(10000, metadata.getMaxTimeoutInMS());
+        Assertions.assertEquals(1173, metadata.getVendorId());
+        Assertions.assertEquals("Nube iO Operations Pty Ltd", metadata.getVendorName());
+        Assertions.assertEquals("NubeIO-Edge28", metadata.getModelName());
+        Assertions.assertEquals(85084, metadata.getDeviceNumber());
+        Assertions.assertEquals("NubeIO-Edge28-85084", metadata.getObjectName());
     }
 
 }

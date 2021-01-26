@@ -5,7 +5,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.github.zero88.qwe.TestHelper.JsonHelper;
+import io.github.zero88.qwe.JsonHelper;
 import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.exceptions.CarlException;
 import io.vertx.core.json.JsonObject;

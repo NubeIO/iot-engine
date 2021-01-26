@@ -8,9 +8,9 @@ import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Test;
 
+import io.github.zero88.qwe.EventbusHelper;
+import io.github.zero88.qwe.JsonHelper;
 import io.github.zero88.qwe.TestHelper;
-import io.github.zero88.qwe.TestHelper.EventbusHelper;
-import io.github.zero88.qwe.TestHelper.JsonHelper;
 import io.github.zero88.qwe.component.ReadinessAsserter;
 import io.github.zero88.qwe.component.SharedLocalDataHelper;
 import io.github.zero88.qwe.dto.msg.RequestData;
@@ -27,7 +27,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 
-import com.nubeiot.edge.connector.bacnet.BACnetVerticle;
+import com.nubeiot.edge.connector.bacnet.BACnetApplication;
 import com.nubeiot.edge.connector.bacnet.BACnetWithGatewayTest;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
@@ -138,7 +138,7 @@ public class NetworkRpcDiscoveryPersistenceTest extends BACnetWithGatewayTest {
     }
 
     private BACnetNetworkCache getCache() {
-        return SharedLocalDataHelper.getLocalDataValue(vertx, BACnetVerticle.class.getName(),
+        return SharedLocalDataHelper.getLocalDataValue(vertx, BACnetApplication.class.getName(),
                                                        BACnetCacheInitializer.EDGE_NETWORK_CACHE);
     }
 

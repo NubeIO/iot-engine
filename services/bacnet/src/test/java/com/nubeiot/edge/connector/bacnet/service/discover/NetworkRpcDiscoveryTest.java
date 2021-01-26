@@ -4,8 +4,8 @@ import java.util.Optional;
 
 import org.junit.Test;
 
+import io.github.zero88.qwe.EventbusHelper;
 import io.github.zero88.qwe.TestHelper;
-import io.github.zero88.qwe.TestHelper.EventbusHelper;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventMessage;

@@ -4,7 +4,7 @@ import org.json.JSONException;
 import org.junit.Test;
 
 import io.github.zero88.qwe.IConfig;
-import io.github.zero88.qwe.TestHelper.JsonHelper;
+import io.github.zero88.qwe.JsonHelper;
 
 public class AbstractBACnetConfigTest {
 
