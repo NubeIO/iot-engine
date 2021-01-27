@@ -6,9 +6,9 @@ import java.util.List;
 import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.reactivex.Single;
 
-import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
-import com.nubeiot.edge.connector.bacnet.discover.RemoteDeviceScanner;
+import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryOptions;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
+import com.nubeiot.edge.connector.bacnet.internal.RemoteDeviceScanner;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
@@ -96,11 +96,11 @@ public interface BACnetDevice {
      *
      * @param options the options
      * @return the remote devices
-     * @see DiscoverOptions
+     * @see DiscoveryOptions
      * @see RemoteDeviceScanner
      * @since 1.0.0
      */
-    @NonNull Single<RemoteDeviceScanner> scanRemoteDevices(@NonNull DiscoverOptions options);
+    @NonNull Single<RemoteDeviceScanner> scanRemoteDevices(@NonNull DiscoveryOptions options);
 
     /**
      * Discover remote device by {@code device code}.
@@ -108,11 +108,11 @@ public interface BACnetDevice {
      * @param deviceCode the device code
      * @param options    the options
      * @return the remote device
-     * @see DiscoverOptions
+     * @see DiscoveryOptions
      * @see RemoteDevice
      * @since 1.0.0
      */
     @NonNull Single<RemoteDevice> discoverRemoteDevice(@NonNull ObjectIdentifier deviceCode,
-                                                       @NonNull DiscoverOptions options);
+                                                       @NonNull DiscoveryOptions options);
 
 }

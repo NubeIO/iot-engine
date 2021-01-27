@@ -16,7 +16,7 @@ import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetObjectCache;
-import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
+import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryResponse;
 import com.nubeiot.edge.connector.bacnet.service.scanner.BACnetPointScanner;
 import com.nubeiot.edge.connector.bacnet.service.scanner.BACnetScannerHelper;
 
@@ -33,7 +33,7 @@ public final class BACnetDiscoverFinisher extends DiscoverCompletionHandler {
     //TODO need scan network to find device/point then caching data
     @Override
     public boolean success(@NonNull RequestData requestData) {
-        final DiscoverResponse info = JsonData.from(requestData.body(), DiscoverResponse.class);
+        final DiscoveryResponse info = JsonData.from(requestData.body(), DiscoveryResponse.class);
         final BACnetNetworkCache networkCache = proxy.getData(BACnetCacheInitializer.EDGE_NETWORK_CACHE);
         final BACnetDeviceCache deviceCache = proxy.getData(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
         final BACnetObjectCache objectCache = proxy.getData(BACnetCacheInitializer.BACNET_OBJECT_CACHE);
@@ -58,7 +58,7 @@ public final class BACnetDiscoverFinisher extends DiscoverCompletionHandler {
     //TODO need disabled network and corresponding device/point, remove cache???
     @Override
     public boolean error(@NonNull ErrorData error) {
-        final DiscoverResponse extraInfo = JsonData.from(error.getExtraInfo(), DiscoverResponse.class);
+        final DiscoveryResponse extraInfo = JsonData.from(error.getExtraInfo(), DiscoveryResponse.class);
         return super.error(error);
     }
 

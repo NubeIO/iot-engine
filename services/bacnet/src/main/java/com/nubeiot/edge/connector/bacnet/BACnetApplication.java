@@ -24,20 +24,20 @@ import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.handler.BACnetDiscoverFinisher;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
-import com.nubeiot.edge.connector.bacnet.listener.WhoIsListener;
-import com.nubeiot.edge.connector.bacnet.service.discover.BACnetRpcDiscoveryService;
+import com.nubeiot.edge.connector.bacnet.internal.listener.WhoIsListener;
+import com.nubeiot.edge.connector.bacnet.service.discovery.BACnetExplorer;
 import com.nubeiot.edge.connector.bacnet.service.subscriber.BACnetRpcClientHelper;
-import com.nubeiot.edge.connector.bacnet.service.subscriber.BACnetRpcSubscription;
+import com.nubeiot.edge.connector.bacnet.service.subscriber.BACnetSubscriptionManager;
 
 import lombok.NonNull;
 
 /*
- * Main BACnetInstance verticle
+ * BACnet Application
  */
 public final class BACnetApplication extends AbstractBACnetApplication<BACnetConfig> {
 
     private MicroContext microContext;
-    private BACnetRpcSubscription subscription;
+    private BACnetSubscriptionManager manager;
 
     @Override
     public String configFile() {
@@ -51,8 +51,8 @@ public final class BACnetApplication extends AbstractBACnetApplication<BACnetCon
     }
 
     @Override
-    protected void successHandler(ContextLookup lookup, @NonNull BACnetConfig config) {
-        this.subscription = new BACnetRpcSubscription(getVertx(), getSharedKey(), config.isAllowSlave());
+    protected void successHandler(@NonNull ContextLookup lookup, @NonNull BACnetConfig config) {
+        this.manager = new BACnetSubscriptionManager(getVertx(), getSharedKey(), config.isAllowSlave());
         this.microContext = lookup.query(MicroContext.class);
         super.successHandler(lookup, new BACnetCacheInitializer(config).init(this).getConfig());
     }
@@ -64,7 +64,7 @@ public final class BACnetApplication extends AbstractBACnetApplication<BACnetCon
 
     @Override
     protected @NonNull Single<JsonObject> registerApis(@NonNull EventbusClient client, @NonNull BACnetConfig config) {
-        return Observable.fromIterable(BACnetRpcDiscoveryService.createServices(this))
+        return Observable.fromIterable(BACnetExplorer.createServices(this))
                          .doOnEach(s -> Optional.ofNullable(s.getValue())
                                                 .ifPresent(service -> client.register(service.address(), service)))
                          .filter(s -> Objects.nonNull(s.definitions()))
@@ -79,7 +79,7 @@ public final class BACnetApplication extends AbstractBACnetApplication<BACnetCon
                                                              @NonNull BACnetConfig config) {
         return Observable.fromIterable(BACnetRpcClientHelper.createSubscribers(getVertx(), getSharedKey()))
                          .doOnNext(subscriber -> client.register(subscriber.address(), subscriber))
-                         .flatMapSingle(subscription::register)
+                         .flatMapSingle(manager::register)
                          .count()
                          .map(total -> new JsonObject().put("message",
                                                             "Registered " + 0/*subscription.subscribers().size()*/ +
@@ -131,7 +131,7 @@ public final class BACnetApplication extends AbstractBACnetApplication<BACnetCon
     }
 
     @SuppressWarnings("unchecked")
-    private Observable<Record> registerEndpoint(ServiceDiscoveryInvoker discovery, BACnetRpcDiscoveryService s) {
+    private Observable<Record> registerEndpoint(ServiceDiscoveryInvoker discovery, BACnetExplorer s) {
         return Observable.fromIterable(s.definitions())
                          .flatMapSingle(e -> e)
                          .flatMapSingle(

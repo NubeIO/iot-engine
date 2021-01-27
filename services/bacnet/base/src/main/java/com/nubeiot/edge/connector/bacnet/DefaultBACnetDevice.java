@@ -18,11 +18,11 @@ import io.github.zero88.utils.Functions;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
-import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
-import com.nubeiot.edge.connector.bacnet.discover.RemoteDeviceScanner;
+import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryOptions;
+import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryResponse;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
 import com.nubeiot.edge.connector.bacnet.dto.TransportProvider;
+import com.nubeiot.edge.connector.bacnet.internal.RemoteDeviceScanner;
 import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
@@ -90,11 +90,11 @@ final class DefaultBACnetDevice implements BACnetDevice {
     }
 
     public BACnetDevice asyncStart() {
-        final DiscoverOptions options = DiscoverOptions.builder()
-                                                       .force(true)
-                                                       .timeout(metadata.getMaxTimeoutInMS())
-                                                       .timeUnit(TimeUnit.MILLISECONDS)
-                                                       .build();
+        final DiscoveryOptions options = DiscoveryOptions.builder()
+                                                         .force(true)
+                                                         .timeout(metadata.getMaxTimeoutInMS())
+                                                         .timeUnit(TimeUnit.MILLISECONDS)
+                                                         .build();
         scanRemoteDevices(options).subscribe(this::handleAfterScan);
         return this;
     }
@@ -106,7 +106,7 @@ final class DefaultBACnetDevice implements BACnetDevice {
         });
     }
 
-    public Single<RemoteDeviceScanner> scanRemoteDevices(@NonNull DiscoverOptions options) {
+    public Single<RemoteDeviceScanner> scanRemoteDevices(@NonNull DiscoveryOptions options) {
         return this.init(options.isForce())
                    .map(ld -> RemoteDeviceScanner.create(ld, options))
                    .map(RemoteDeviceScanner::start)
@@ -115,7 +115,7 @@ final class DefaultBACnetDevice implements BACnetDevice {
     }
 
     public Single<RemoteDevice> discoverRemoteDevice(@NonNull ObjectIdentifier deviceCode,
-                                                     @NonNull DiscoverOptions options) {
+                                                     @NonNull DiscoveryOptions options) {
         long timeout = TimeUnit.MILLISECONDS.convert(options.getTimeout(), options.getTimeUnit());
         log.info("Start discovering device {} with force={} in timeout {}ms ", deviceCode, options.isForce(), timeout);
         return init(options.isForce()).map(
@@ -143,21 +143,21 @@ final class DefaultBACnetDevice implements BACnetDevice {
                                                        .stream()
                                                        .map(RemoteDeviceMixin::create)
                                                        .collect(Collectors.toList());
-        final JsonObject body = DiscoverResponse.builder()
-                                                .network(protocol())
-                                                .localDevice(metadata())
-                                                .remoteDevices(remotes)
-                                                .build()
-                                                .toJson();
+        final JsonObject body = DiscoveryResponse.builder()
+                                                 .network(protocol())
+                                                 .localDevice(metadata())
+                                                 .remoteDevices(remotes)
+                                                 .build()
+                                                 .toJson();
         return EventMessage.initial(EventAction.NOTIFY, RequestData.builder().body(body).build().toJson());
     }
 
     private EventMessage createErrorDiscoverMsg(@NonNull Throwable t) {
-        final JsonObject extraInfo = DiscoverResponse.builder()
-                                                     .network(protocol())
-                                                     .localDevice(metadata())
-                                                     .build()
-                                                     .toJson();
+        final JsonObject extraInfo = DiscoveryResponse.builder()
+                                                      .network(protocol())
+                                                      .localDevice(metadata())
+                                                      .build()
+                                                      .toJson();
         return EventMessage.initial(EventAction.NOTIFY_ERROR,
                                     ErrorData.builder().throwable(t).extraInfo(extraInfo).build());
     }

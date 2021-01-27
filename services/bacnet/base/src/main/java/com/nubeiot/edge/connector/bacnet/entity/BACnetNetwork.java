@@ -5,7 +5,7 @@ import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.github.zero88.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.iotdata.entity.HasType;
+import com.nubeiot.iotdata.entity.HasObjectType;
 import com.nubeiot.iotdata.entity.INetwork;
 
 import lombok.Getter;
@@ -14,7 +14,7 @@ import lombok.experimental.Accessors;
 
 @Getter
 @Accessors(fluent = true)
-public abstract class BACnetNetwork implements HasType<String>, BACnetEntity<String>, INetwork<String> {
+public abstract class BACnetNetwork implements HasObjectType<String>, BACnetEntity<String>, INetwork<String> {
 
     private final String type;
     private final String label;

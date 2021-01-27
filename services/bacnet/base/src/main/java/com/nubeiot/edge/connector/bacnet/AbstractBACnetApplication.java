@@ -20,8 +20,8 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
 import com.nubeiot.edge.connector.bacnet.service.BACnetApis;
-import com.nubeiot.edge.connector.bacnet.service.BACnetRpcWatcher;
-import com.nubeiot.edge.connector.bacnet.service.BACnetSubscriber;
+import com.nubeiot.edge.connector.bacnet.service.InboundBACnetCoordinator;
+import com.nubeiot.edge.connector.bacnet.service.OutboundBACnetCoordinator;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
 
 import lombok.NonNull;
@@ -45,11 +45,11 @@ public abstract class AbstractBACnetApplication<C extends AbstractBACnetConfig> 
     }
 
     @Override
-    public void onInstallCompleted(ContextLookup lookup) {
+    public void onInstallCompleted(@NonNull ContextLookup lookup) {
         successHandler(lookup, IConfig.from(this.config.getAppConfig(), bacnetConfigClass()));
     }
 
-    protected void successHandler(ContextLookup lookup, @NonNull C config) {
+    protected void successHandler(@NonNull ContextLookup lookup, @NonNull C config) {
         ExecutorHelpers.blocking(getVertx(), this::getEventbus)
                        .map(c -> c.register(config.getCompleteDiscoverAddress(), createDiscoverCompletionHandler()))
                        .flatMap(client -> registerApis(client, config).doOnSuccess(o -> logger.info(o.encode()))
@@ -110,7 +110,7 @@ public abstract class AbstractBACnetApplication<C extends AbstractBACnetConfig> 
      * @param client Eventbus client
      * @param config BACnet config
      * @return maybe result or maybe empty
-     * @see BACnetSubscriber
+     * @see OutboundBACnetCoordinator
      */
     @NonNull
     protected abstract Single<JsonObject> registerSubscriber(@NonNull EventbusClient client, @NonNull C config);
@@ -121,7 +121,7 @@ public abstract class AbstractBACnetApplication<C extends AbstractBACnetConfig> 
      * @param device BACnet device
      * @see BACnetDevice
      * @see DeviceEventListener
-     * @see BACnetRpcWatcher
+     * @see InboundBACnetCoordinator
      */
     protected abstract void addListenerOnEachDevice(@NonNull BACnetDevice device);
 

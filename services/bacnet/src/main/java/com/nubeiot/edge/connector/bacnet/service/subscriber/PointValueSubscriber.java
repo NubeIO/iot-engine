@@ -9,9 +9,9 @@ import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryRequestWrapper;
 import com.nubeiot.edge.connector.bacnet.mixin.BACnetExceptionConverter;
 import com.nubeiot.edge.connector.bacnet.mixin.deserializer.EncodableDeserializer;
-import com.nubeiot.edge.connector.bacnet.service.discover.DiscoveryRequestWrapper;
 import com.serotonin.bacnet4j.exception.BACnetException;
 import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;

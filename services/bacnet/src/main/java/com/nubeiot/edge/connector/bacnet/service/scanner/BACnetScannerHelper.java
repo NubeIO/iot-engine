@@ -6,12 +6,12 @@ import lombok.NonNull;
 
 public interface BACnetScannerHelper {
 
-    static BACnetNetworkRpcScanner createNetworkScanner(@NonNull SharedDataLocalProxy sharedDataProxy) {
-        return new BACnetNetworkRpcScanner(sharedDataProxy);
+    static BACnetNetworkScanner createNetworkScanner(@NonNull SharedDataLocalProxy sharedDataProxy) {
+        return new BACnetNetworkScanner(sharedDataProxy);
     }
 
-    static BACnetDeviceRpcScanner createDeviceScanner(@NonNull SharedDataLocalProxy sharedDataProxy) {
-        return new BACnetDeviceRpcScanner(sharedDataProxy);
+    static BACnetDeviceScanner createDeviceScanner(@NonNull SharedDataLocalProxy sharedDataProxy) {
+        return new BACnetDeviceScanner(sharedDataProxy);
     }
 
     static BACnetPointScanner createPointScanner(@NonNull SharedDataLocalProxy sharedDataProxy) {

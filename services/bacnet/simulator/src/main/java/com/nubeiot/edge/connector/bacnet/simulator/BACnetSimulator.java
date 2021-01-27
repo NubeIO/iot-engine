@@ -13,7 +13,7 @@ import com.nubeiot.edge.connector.bacnet.AbstractBACnetApplication;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
-import com.nubeiot.edge.connector.bacnet.listener.WhoIsListener;
+import com.nubeiot.edge.connector.bacnet.internal.listener.WhoIsListener;
 
 import lombok.AccessLevel;
 import lombok.NonNull;
