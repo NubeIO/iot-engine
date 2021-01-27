@@ -2,12 +2,11 @@ package com.nubeiot.iotdata.enums;
 
 import io.github.zero88.qwe.dto.EnumType;
 import io.github.zero88.qwe.dto.EnumType.AbstractEnumType;
-import io.github.zero88.qwe.dto.PlainType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.nubeiot.iotdata.IoTProperty;
+import com.nubeiot.iotdata.IoTEnum;
 
-public final class DeviceType extends AbstractEnumType implements PlainType, IoTProperty {
+public final class DeviceType extends AbstractEnumType implements IoTEnum {
 
     public static final DeviceType MACHINE = new DeviceType("MACHINE");
     public static final DeviceType GATEWAY = new DeviceType("GATEWAY");

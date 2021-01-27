@@ -10,8 +10,6 @@ import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.exceptions.CarlException;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.iotdata.property.PointPriorityValue.PointValue;
-
 public class PointPriorityValueTest {
 
     private PointPriorityValue pv;

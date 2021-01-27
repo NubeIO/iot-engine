@@ -1,3 +1,5 @@
 package com.nubeiot.iotdata;
 
-public interface IoTObject {}
+import java.io.Serializable;
+
+public interface IoTObject extends Serializable {}

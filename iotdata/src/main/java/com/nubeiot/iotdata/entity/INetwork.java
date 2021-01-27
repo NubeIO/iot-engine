@@ -12,7 +12,7 @@ import lombok.NonNull;
  *
  * @param <K> Type of network key
  */
-public interface INetwork<K> extends IoTEntity<K> {
+public interface INetwork<K> extends IoTEntity<K>, HasObjectType<String> {
 
     /**
      * Return list of devices that belongs to network

@@ -1,14 +1,13 @@
 package com.nubeiot.iotdata.enums;
 
-import java.io.Serializable;
-
 import io.github.zero88.qwe.dto.EnumType;
 import io.github.zero88.qwe.dto.EnumType.AbstractEnumType;
 import io.github.zero88.utils.Strings;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.nubeiot.iotdata.IoTEnum;
 
-public final class State extends AbstractEnumType implements EnumType, Serializable {
+public final class State extends AbstractEnumType implements IoTEnum {
 
     public static final State ENABLED = new State("ENABLED");
     public static final State DISABLED = new State("DISABLED");

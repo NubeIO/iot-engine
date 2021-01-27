@@ -2,12 +2,11 @@ package com.nubeiot.iotdata.enums;
 
 import io.github.zero88.qwe.dto.EnumType;
 import io.github.zero88.qwe.dto.EnumType.AbstractEnumType;
-import io.github.zero88.qwe.dto.PlainType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.nubeiot.iotdata.IoTProperty.IoTChunkProperty;
+import com.nubeiot.iotdata.IoTEnum;
 
-public final class TransducerCategory extends AbstractEnumType implements PlainType, IoTChunkProperty {
+public final class TransducerCategory extends AbstractEnumType implements IoTEnum {
 
     public static final TransducerCategory TEMP = new TransducerCategory("TEMP");
     public static final TransducerCategory HUMIDITY = new TransducerCategory("HUMIDITY");

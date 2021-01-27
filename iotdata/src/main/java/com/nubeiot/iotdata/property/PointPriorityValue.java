@@ -11,8 +11,8 @@ import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.nubeiot.iotdata.IoTProperty;
+import com.nubeiot.iotdata.TimeseriesData;
 
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
@@ -24,7 +24,7 @@ import lombok.NonNull;
  * @since 1.0.0
  */
 @NoArgsConstructor
-public final class PointPriorityValue implements JsonData, IoTProperty {
+public final class PointPriorityValue implements JsonData, IoTProperty, TimeseriesData {
 
     /**
      * The constant DEFAULT_PRIORITY.
@@ -62,7 +62,7 @@ public final class PointPriorityValue implements JsonData, IoTProperty {
         return priority <= MAX_PRIORITY && priority >= MIN_PRIORITY;
     }
 
-    private static int validateAndGet(int priority) {
+    static int validateAndGet(int priority) {
         if (isValid(priority)) {
             return priority;
         }
@@ -199,42 +199,6 @@ public final class PointPriorityValue implements JsonData, IoTProperty {
         }
         return Functions.getOrThrow(() -> Functions.toDouble().apply(value.toString()),
                                     () -> new IllegalArgumentException(INVALID_VALUE));
-    }
-
-    /**
-     * Represents for Point value.
-     *
-     * @since 1.0.0
-     */
-    @Getter
-    public static final class PointValue implements JsonData {
-
-        private final int priority;
-        private final Double value;
-
-        /**
-         * Instantiates a new Point value.
-         *
-         * @param priority the priority
-         * @param value    the value
-         * @since 1.0.0
-         */
-        public PointValue(int priority, Double value) {
-            this.priority = validateAndGet(priority);
-            this.value = value;
-        }
-
-        /**
-         * From json point value.
-         *
-         * @param json the json
-         * @return the point value
-         * @since 1.0.0
-         */
-        public PointValue fromJson(JsonObject json) {
-            return new PointValue(json.getInteger("priority", DEFAULT_PRIORITY), json.getDouble("value"));
-        }
-
     }
 
 }

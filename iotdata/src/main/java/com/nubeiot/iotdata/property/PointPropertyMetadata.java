@@ -1,6 +1,6 @@
 package com.nubeiot.iotdata.property;
 
-import com.nubeiot.iotdata.IoTProperty.IoTChunkProperty;
+import com.nubeiot.iotdata.IoTProperty;
 import com.nubeiot.iotdata.enums.PointKind;
 import com.nubeiot.iotdata.enums.PointType;
 import com.nubeiot.iotdata.enums.TransducerCategory;
@@ -15,7 +15,7 @@ import lombok.experimental.Accessors;
 @Getter
 @Accessors(fluent = true)
 @Builder(builderClassName = "Builder")
-public class PointPropertyMetadata implements IoTChunkProperty {
+public class PointPropertyMetadata implements IoTProperty {
 
     private final PointType pointType;
     private final PointKind pointKind;
