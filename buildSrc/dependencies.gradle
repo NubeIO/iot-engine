@@ -99,19 +99,24 @@ ext.deps = [
             micro   : [
                 core    : "io.github.zero88.qwe:micro:$versions.zero88.qwe",
                 metadata: "io.github.zero88.qwe.micro:metadata:$versions.zero88.qwe",
+                rpc     : "io.github.zero88.qwe.micro:rpc:$versions.zero88.qwe",
             ],
             http    : [
                 core  : "io.github.zero88.qwe:http:$versions.zero88.qwe",
                 client: "io.github.zero88.qwe.http:client:$versions.zero88.qwe",
                 server: "io.github.zero88.qwe.http:server:$versions.zero88.qwe",
-            ]
+            ],
+            storage : [
+                json: "io.github.zero88.qwe.storage:json:$versions.zero88.qwe"
+            ],
+            sql     : [
+                core   : "io.github.zero88.qwe.sql:core:$versions.zero88.sql",
+                rxJdbc : "io.github.zero88.qwe.sql:rx-jdbc:$versions.zero88.sql",
+                type   : "io.github.zero88.qwe.sql:type:$versions.zero88.sql",
+                service: "io.github.zero88.qwe.sql:service:$versions.zero88.sql"
+            ],
         ],
-        sql      : [
-            core   : "io.github.zero88.qwe.sql:core:$versions.zero88.sql",
-            rxJdbc : "io.github.zero88.qwe.sql:rx-jdbc:$versions.zero88.sql",
-            type   : "io.github.zero88.qwe.sql:type:$versions.zero88.sql",
-            service: "io.github.zero88.qwe.sql:service:$versions.zero88.sql"
-        ],
+
     ]
 ]
 

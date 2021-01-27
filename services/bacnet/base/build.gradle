@@ -4,7 +4,7 @@ dependencies {
     compile project(':iotdata')
     compile project(':transporter:rpc')
 
-    testImplementation(testFixtures(project.deps.tests.junit5Vintage))
+    testImplementation(project.deps.tests.junit5Vintage)
     testImplementation(testFixtures(project.deps.zero88.qwe.base))
 
 }

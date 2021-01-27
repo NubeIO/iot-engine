@@ -1,7 +1,7 @@
 package com.nubeiot.core.rpc;
 
-import io.github.zero88.qwe.micro.discovery.GatewayServiceInvoker;
 import io.github.zero88.qwe.protocol.Protocol;
+import io.github.zero88.qwe.rpc.GatewayServiceInvoker;
 
 import com.nubeiot.iotdata.IoTEntity;
 
