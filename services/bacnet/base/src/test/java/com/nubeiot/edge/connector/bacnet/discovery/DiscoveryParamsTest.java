@@ -7,57 +7,57 @@ import io.github.zero88.qwe.JsonHelper;
 import io.github.zero88.qwe.protocol.network.Ipv4Network;
 import io.vertx.core.json.JsonObject;
 
-public class DiscoveryRequestTest {
+public class DiscoveryParamsTest {
 
     @Test
     public void test_serialize() throws JSONException {
         final Ipv4Network firstActiveIp = Ipv4Network.getFirstActiveIp();
-        final DiscoveryRequest request = DiscoveryRequest.builder()
-                                                         .networkCode(firstActiveIp.identifier())
-                                                         .deviceInstance(1)
-                                                         .objectCode("analog-value:2")
-                                                         .build();
+        final DiscoveryParams params = DiscoveryParams.builder()
+                                                      .networkCode(firstActiveIp.identifier())
+                                                      .deviceInstance(1)
+                                                      .objectCode("analog-value:2")
+                                                      .build();
         final JsonObject expected = new JsonObject().put("networkCode", firstActiveIp.identifier())
                                                     .put("deviceInstance", 1)
                                                     .put("objectCode", "analog-value:2");
-        System.out.println(request.toJson());
-        JsonHelper.assertJson(expected, request.toJson());
+        System.out.println(params.toJson());
+        JsonHelper.assertJson(expected, params.toJson());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void test_validate_network() {
-        final JsonObject request = new JsonObject().put("networkCode", "");
-        DiscoveryRequest.from(request, DiscoveryLevel.NETWORK);
+        final JsonObject params = new JsonObject().put("networkCode", "");
+        DiscoveryParams.from(params, DiscoveryLevel.NETWORK);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void test_validate_device_missing_network() {
-        final JsonObject request = new JsonObject().put("networkCode", "").put("deviceInstance", 1);
-        DiscoveryRequest.from(request, DiscoveryLevel.DEVICE);
+        final JsonObject params = new JsonObject().put("networkCode", "").put("deviceInstance", 1);
+        DiscoveryParams.from(params, DiscoveryLevel.DEVICE);
     }
 
     @Test(expected = NullPointerException.class)
     public void test_validate_device_missing_device() {
-        final JsonObject request = new JsonObject().put("networkCode", "xyz");
-        DiscoveryRequest.from(request, DiscoveryLevel.DEVICE);
+        final JsonObject params = new JsonObject().put("networkCode", "xyz");
+        DiscoveryParams.from(params, DiscoveryLevel.DEVICE);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void test_validate_object_missing_network() {
-        final JsonObject request = new JsonObject().put("deviceInstance", 1).put("objectCode", "1");
-        DiscoveryRequest.from(request, DiscoveryLevel.OBJECT);
+        final JsonObject params = new JsonObject().put("deviceInstance", 1).put("objectCode", "1");
+        DiscoveryParams.from(params, DiscoveryLevel.OBJECT);
     }
 
     @Test(expected = NullPointerException.class)
     public void test_validate_object_missing_device() {
-        final JsonObject request = new JsonObject().put("networkCode", "xyz").put("objectCode", "1");
-        DiscoveryRequest.from(request, DiscoveryLevel.OBJECT);
+        final JsonObject params = new JsonObject().put("networkCode", "xyz").put("objectCode", "1");
+        DiscoveryParams.from(params, DiscoveryLevel.OBJECT);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void test_validate_object_missing_obj() {
-        final JsonObject request = new JsonObject().put("networkCode", "xyz").put("deviceInstance", 1);
-        DiscoveryRequest.from(request, DiscoveryLevel.OBJECT);
+        final JsonObject params = new JsonObject().put("networkCode", "xyz").put("deviceInstance", 1);
+        DiscoveryParams.from(params, DiscoveryLevel.OBJECT);
     }
 
     @Test
@@ -65,8 +65,8 @@ public class DiscoveryRequestTest {
         final JsonObject body = new JsonObject().put("networkCode", "xx")
                                                 .put("deviceInstance", 1)
                                                 .put("objectCode", "analog-value:2");
-        final DiscoveryRequest request = DiscoveryRequest.from(body, DiscoveryLevel.OBJECT);
-        JsonHelper.assertJson(body, request.toJson());
+        final DiscoveryParams params = DiscoveryParams.from(body, DiscoveryLevel.OBJECT);
+        JsonHelper.assertJson(body, params.toJson());
     }
 
 }

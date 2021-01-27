@@ -5,22 +5,25 @@ import java.util.concurrent.TimeUnit;
 import io.github.zero88.qwe.dto.JsonData;
 import io.vertx.core.shareddata.Shareable;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.nubeiot.edge.connector.bacnet.AbstractBACnetConfig;
 
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.extern.jackson.Jacksonized;
 
 @Getter
-@Builder(builderClassName = "Builder")
-@JsonDeserialize(builder = LocalDeviceMetadata.Builder.class)
+@Builder
+@Jacksonized
 public final class LocalDeviceMetadata implements JsonData, Shareable {
 
     public static final int VENDOR_ID = 1173;
     public static final String VENDOR_NAME = "Nube iO Operations Pty Ltd";
+    /**
+     * The constant METADATA_KEY in cache.
+     */
+    public static final String METADATA_KEY = "LOCAL_BACNET_METADATA";
 
     @Default
     private final int vendorId = VENDOR_ID;
@@ -45,8 +48,5 @@ public final class LocalDeviceMetadata implements JsonData, Shareable {
                                   .discoverCompletionAddress(config.getCompleteDiscoverAddress())
                                   .build();
     }
-
-    @JsonPOJOBuilder(withPrefix = "")
-    public static class Builder {}
 
 }

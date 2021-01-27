@@ -26,8 +26,8 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
-import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryRequest.Fields;
-import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryRequestWrapper;
+import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryParams;
+import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryRequest;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryResponse;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetPointEntity;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
@@ -50,13 +50,19 @@ public final class BACnetObjectExplorer extends AbstractBACnetExplorer<BACnetPoi
     }
 
     @Override
+    public @NonNull Class<BACnetPointEntity> context() {
+        return BACnetPointEntity.class;
+    }
+
+    @Override
     public @NonNull String servicePath() {
-        return "/network/:" + Fields.networkCode + "/device/:" + Fields.deviceInstance + "/object";
+        return "/network/:" + DiscoveryParams.Fields.networkCode + "/device/:" + DiscoveryParams.Fields.deviceInstance +
+               "/object";
     }
 
     @Override
     public String paramPath() {
-        return Fields.objectCode;
+        return DiscoveryParams.Fields.objectCode;
     }
 
     @Override
@@ -73,6 +79,13 @@ public final class BACnetObjectExplorer extends AbstractBACnetExplorer<BACnetPoi
         return ActionMethodMapping.create(map);
     }
 
+    @EventContractor(action = "PATCH", returnType = Single.class)
+    public Single<JsonObject> patchPointValue(RequestData requestData) {
+        final DiscoveryRequest request = createDiscoveryRequest(requestData, DiscoveryLevel.OBJECT);
+        final BACnetDevice device = getBACnetDeviceFromCache(request);
+        return PointValueSubscriber.write(device, request, requestData.body());
+    }
+
     @Override
     public Single<JsonObject> discover(RequestData requestData) {
         return doGet(createDiscoveryRequest(requestData, DiscoveryLevel.OBJECT)).map(PropertyValuesMixin::toJson);
@@ -80,55 +93,20 @@ public final class BACnetObjectExplorer extends AbstractBACnetExplorer<BACnetPoi
 
     @Override
     public Single<JsonObject> discoverMany(RequestData requestData) {
-        final DiscoveryRequestWrapper request = createDiscoveryRequest(requestData, DiscoveryLevel.DEVICE);
+        final DiscoveryRequest request = createDiscoveryRequest(requestData, DiscoveryLevel.DEVICE);
+        final BACnetDevice device = getBACnetDeviceFromCache(request);
         log.info("Discovering objects in device '{}' in network {}...",
-                 ObjectIdentifierMixin.serialize(request.remoteDeviceId()), request.device().protocol().identifier());
-        return request.device()
-                      .discoverRemoteDevice(request.remoteDeviceId(), request.options())
-                      .flatMap(remote -> getRemoteObjects(request.device(), remote, request.options().isDetail()))
-                      .map(opv -> DiscoveryResponse.builder().objects(opv).build())
-                      .map(DiscoveryResponse::toJson)
-                      .doFinally(request.device()::stop);
+                 ObjectIdentifierMixin.serialize(request.remoteDeviceId()), device.protocol().identifier());
+        return device.discoverRemoteDevice(request.remoteDeviceId(), request.options())
+                     .flatMap(remote -> getRemoteObjects(device, remote, request.options().isDetail()))
+                     .map(opv -> DiscoveryResponse.builder().objects(opv).build())
+                     .map(DiscoveryResponse::toJson)
+                     .doFinally(device::stop);
     }
-
-    //    @Override
-    //    public Single<JsonObject> discoverThenRegisterMany(RequestData requestData) {
-    //        return discoverManyThenWatch(requestData.body());
-    //    }
-
-    //    @Override
-    //    public Single<JsonObject> discoverThenRegisterOne(RequestData requestData) {
-    //        final DiscoveryRequestWrapper request = validateCache(
-    //            createDiscoveryRequest(requestData, DiscoveryLevel.OBJECT));
-    //        final ObjectType objectType = request.objectCode().getObjectType();
-    //        if (ObjectTypeCategory.isPoint(objectType)) {
-    //            return doGet(request).map(properties -> new BACnetPointConverter().serialize(properties))
-    //                                 .map(pojo -> JsonPojo.from(pojo).toJson())
-    //                                 .flatMap(this::doPersist)
-    //                                 .doOnSuccess(response -> objectCache().addDataKey(request.device()
-    //                                 .protocol(),
-    //                                                                                   request.remoteDeviceId(),
-    //                                                                                   request.objectCode(),
-    //                                                                                   parsePersistResponse
-    //                                                                                   (response)));
-    //        }
-    //        return Single.error(new IllegalArgumentException("Unsupported persist object type " + objectType));
-    //    }
 
     @Override
     protected String parseResourceId(@NonNull JsonObject resource) {
         return resource.getJsonObject("point", new JsonObject()).getString("id");
-    }
-
-    @Override
-    public @NonNull Class<BACnetPointEntity> context() {
-        return BACnetPointEntity.class;
-    }
-
-    @EventContractor(action = "PATCH", returnType = Single.class)
-    public Single<JsonObject> patchValue(RequestData requestData) {
-        return PointValueSubscriber.write(createDiscoveryRequest(requestData, DiscoveryLevel.OBJECT),
-                                          requestData.body());
     }
 
     private Single<ObjectPropertyValues> getRemoteObjects(@NonNull BACnetDevice device, @NonNull RemoteDevice rd,
@@ -143,30 +121,32 @@ public final class BACnetObjectExplorer extends AbstractBACnetExplorer<BACnetPoi
                          .doFinally(device::stop);
     }
 
-    private Single<PropertyValuesMixin> doGet(@NonNull DiscoveryRequestWrapper request) {
+    private Single<PropertyValuesMixin> doGet(@NonNull DiscoveryRequest request) {
+        final BACnetDevice device = getBACnetDeviceFromCache(request);
         log.info("Discovering object '{}' in device '{}' in network {}...",
                  ObjectIdentifierMixin.serialize(request.objectCode()),
-                 ObjectIdentifierMixin.serialize(request.remoteDeviceId()), request.device().protocol().identifier());
-        return request.device()
-                      .discoverRemoteDevice(request.remoteDeviceId(), request.options())
-                      .flatMap(rd -> parseRemoteObject(request.device(), rd, request.objectCode(), true,
-                                                       request.options().isDetail()));
+                 ObjectIdentifierMixin.serialize(request.remoteDeviceId()), device.protocol().identifier());
+        return device.discoverRemoteDevice(request.remoteDeviceId(), request.options())
+                     .flatMap(
+                         rd -> parseRemoteObject(device, rd, request.objectCode(), true, request.options().isDetail()));
     }
 
-    private DiscoveryRequestWrapper validateCache(@NonNull DiscoveryRequestWrapper request) {
-        networkCache().getDataKey(request.device().protocol().identifier())
-                      .orElseThrow(() -> new NotFoundException("Not found a persistence network by network code " +
-                                                               request.device().protocol().identifier()));
-        deviceCache().getDataKey(request.device().protocol(), request.remoteDeviceId())
+    private DiscoveryRequest validateCache(@NonNull DiscoveryRequest request) {
+        final BACnetDevice device = getBACnetDeviceFromCache(request);
+        networkCache().getDataKey(device.protocol().identifier())
+                      .orElseThrow(() -> new NotFoundException(
+                          "Not found a persistence network by network code " + device.protocol().identifier()));
+        deviceCache().getDataKey(device.protocol(), request.remoteDeviceId())
                      .orElseThrow(() -> new NotFoundException(
                          "Not found a persistence device by remote device " + request.remoteDeviceId()));
-        final Optional<UUID> objectId = objectCache().getDataKey(request.device().protocol(), request.remoteDeviceId(),
+        final Optional<UUID> objectId = objectCache().getDataKey(device.protocol(), request.remoteDeviceId(),
                                                                  request.objectCode());
         if (objectId.isPresent()) {
             throw new AlreadyExistException(
                 "Already existed object " + ObjectIdentifierMixin.serialize(request.objectCode()) + " in device " +
-                request.remoteDeviceId() + " in network " + request.device().protocol().identifier());
+                request.remoteDeviceId() + " in network " + device.protocol().identifier());
         }
         return request;
     }
+
 }

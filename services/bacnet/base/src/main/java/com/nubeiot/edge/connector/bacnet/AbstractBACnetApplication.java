@@ -28,14 +28,16 @@ import lombok.NonNull;
 
 public abstract class AbstractBACnetApplication<C extends AbstractBACnetConfig> extends ApplicationVerticle {
 
+    protected C bacnetConfig;
+
     @Override
     public void start() {
         super.start();
-        C config = IConfig.from(this.config.getAppConfig(), bacnetConfigClass());
+        bacnetConfig = IConfig.from(this.config.getAppConfig(), bacnetConfigClass());
         if (logger.isDebugEnabled()) {
-            logger.debug("BACnet verticle configuration: {}", config.toJson());
+            logger.debug("BACnet application configuration: {}", bacnetConfig.toJson());
         }
-        this.addData(BACnetDevice.EDGE_BACNET_METADATA, LocalDeviceMetadata.from(config));
+        this.addData(LocalDeviceMetadata.METADATA_KEY, LocalDeviceMetadata.from(bacnetConfig));
     }
 
     @Override
@@ -46,17 +48,13 @@ public abstract class AbstractBACnetApplication<C extends AbstractBACnetConfig> 
 
     @Override
     public void onInstallCompleted(@NonNull ContextLookup lookup) {
-        successHandler(lookup, IConfig.from(this.config.getAppConfig(), bacnetConfigClass()));
-    }
-
-    protected void successHandler(@NonNull ContextLookup lookup, @NonNull C config) {
         ExecutorHelpers.blocking(getVertx(), this::getEventbus)
-                       .map(c -> c.register(config.getCompleteDiscoverAddress(), createDiscoverCompletionHandler()))
-                       .flatMap(client -> registerApis(client, config).doOnSuccess(o -> logger.info(o.encode()))
-                                                                      .map(ignore -> client))
-                       .flatMap(client -> this.invokeSubscriberRegistration(client, config)
+                       .map(c -> c.register(bacnetConfig.getCompleteDiscoverAddress(),
+                                            createDiscoverCompletionHandler()))
+                       .flatMap(client -> registerApis(client, bacnetConfig).doOnSuccess(o -> logger.info(o.encode())))
+                       .flatMap(ignore -> this.invokeSubscriberRegistration(this.getEventbus(), bacnetConfig)
                                               .doOnSuccess(o -> logger.info(o.encode())))
-                       .map(r -> config)
+                       .map(ignore -> bacnetConfig)
                        .flatMap(this::availableNetworks)
                        .doOnSuccess(protocols -> logger.info("Found {} BACnet networks", protocols.size()))
                        .flattenAsObservable(protocols -> protocols)
@@ -67,7 +65,7 @@ public abstract class AbstractBACnetApplication<C extends AbstractBACnetConfig> 
                                                                .asyncStart(protocol))
                        .count()
                        .map(total -> new JsonObject().put("total", total))
-                       .subscribe((d, e) -> readinessHandler(config, d, e));
+                       .subscribe((d, e) -> readinessHandler(bacnetConfig, d, e));
     }
 
     private Single<JsonObject> invokeSubscriberRegistration(EventbusClient client, C config) {

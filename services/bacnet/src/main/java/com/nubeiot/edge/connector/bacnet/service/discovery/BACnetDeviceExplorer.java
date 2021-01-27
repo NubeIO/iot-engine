@@ -12,8 +12,8 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
-import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryRequest.Fields;
-import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryRequestWrapper;
+import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryParams;
+import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryRequest;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryResponse;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetDeviceEntity;
 import com.nubeiot.edge.connector.bacnet.internal.RemoteDeviceScanner;
@@ -40,75 +40,59 @@ public final class BACnetDeviceExplorer extends AbstractBACnetExplorer<BACnetDev
 
     @Override
     public @NonNull String servicePath() {
-        return "/network/:" + Fields.networkCode + "/device";
+        return "/network/:" + DiscoveryParams.Fields.networkCode + "/device";
     }
 
     @Override
     public String paramPath() {
-        return Fields.deviceInstance;
+        return DiscoveryParams.Fields.deviceInstance;
     }
 
     @Override
     public Single<JsonObject> discover(RequestData reqData) {
-        final DiscoveryRequestWrapper request = createDiscoveryRequest(reqData, DiscoveryLevel.DEVICE);
-        return doGet(request).map(RemoteDeviceMixin::toJson);
+        return doGet(createDiscoveryRequest(reqData, DiscoveryLevel.DEVICE)).map(RemoteDeviceMixin::toJson);
     }
 
     @Override
     public Single<JsonObject> discoverMany(RequestData reqData) {
-        final DiscoveryRequestWrapper request = createDiscoveryRequest(reqData, DiscoveryLevel.NETWORK);
-        log.info("Discovering devices in network {}...", request.device().protocol().identifier());
-        return request.device()
-                      .scanRemoteDevices(request.options())
-                      .map(RemoteDeviceScanner::getRemoteDevices)
-                      .flattenAsObservable(r -> r)
-                      .flatMapSingle(rd -> parseRemoteDevice(request.device(), rd, request.options().isDetail(), false))
-                      .toList()
-                      .map(results -> DiscoveryResponse.builder().remoteDevices(results).build().toJson())
-                      .doFinally(request.device()::stop);
+        final DiscoveryRequest request = createDiscoveryRequest(reqData, DiscoveryLevel.NETWORK);
+        final BACnetDevice device = getBACnetDeviceFromCache(request);
+        log.info("Discovering devices in network {}...", device.protocol().identifier());
+        return device.scanRemoteDevices(request.options())
+                     .map(RemoteDeviceScanner::getRemoteDevices)
+                     .flattenAsObservable(r -> r)
+                     .flatMapSingle(rd -> parseRemoteDevice(device, rd, request.options().isDetail(), false))
+                     .toList()
+                     .map(results -> DiscoveryResponse.builder().remoteDevices(results).build().toJson())
+                     .doFinally(device::stop);
     }
-
-    //    @Override
-    //    public Single<JsonObject> discoverThenRegisterMany(RequestData reqData) {
-    //        return discoverManyThenWatch(reqData.body());
-    //    }
-
-    //    @Override
-    //    public Single<JsonObject> discoverThenRegisterOne(RequestData requestData) {
-    //        final DiscoveryRequestWrapper req = validateCache(toRequest(requestData, DiscoverLevel.DEVICE));
-    //        return doGet(req).map(rd -> new BACnetDeviceConverter().serialize(rd))
-    //                         .map(pojo -> JsonPojo.from(pojo).toJson())
-    //                         .flatMap(this::doPersist)
-    //                         .doOnSuccess(r -> deviceCache().addDataKey(req.device().protocol(), req
-    //                         .remoteDeviceId(),
-    //                                                                    parsePersistResponse(r)));
-    //    }
 
     @Override
     protected String parseResourceId(JsonObject resource) {
         return resource.getJsonObject("device", new JsonObject()).getString("id");
     }
 
-    private DiscoveryRequestWrapper validateCache(@NonNull DiscoveryRequestWrapper request) {
-        networkCache().getDataKey(request.device().protocol().identifier())
-                      .orElseThrow(() -> new NotFoundException("Not found a persistence network by network code " +
-                                                               request.device().protocol().identifier()));
-        final Optional<UUID> deviceId = deviceCache().getDataKey(request.device().protocol(), request.remoteDeviceId());
+    private DiscoveryRequest validateCache(@NonNull DiscoveryRequest request) {
+        final BACnetDevice device = getBACnetDeviceFromCache(request);
+        networkCache().getDataKey(device.protocol().identifier())
+                      .orElseThrow(() -> new NotFoundException(
+                          "Not found a persistence network by network code " + device.protocol().identifier()));
+        final Optional<UUID> deviceId = deviceCache().getDataKey(device.protocol(), request.remoteDeviceId());
         if (deviceId.isPresent()) {
             throw new AlreadyExistException(
                 "Already existed device " + ObjectIdentifierMixin.serialize(request.remoteDeviceId()) + " in network " +
-                request.device().protocol().identifier());
+                device.protocol().identifier());
         }
         return request;
     }
 
-    private Single<RemoteDeviceMixin> doGet(@NonNull DiscoveryRequestWrapper request) {
+    private Single<RemoteDeviceMixin> doGet(@NonNull DiscoveryRequest request) {
+        final BACnetDevice device = getBACnetDeviceFromCache(request);
         log.info("Discovering remote device {} in network {}...",
-                 ObjectIdentifierMixin.serialize(request.remoteDeviceId()), request.device().protocol().identifier());
-        return request.device()
-                      .discoverRemoteDevice(request.remoteDeviceId(), request.options())
-                      .flatMap(rd -> parseRemoteDevice(request.device(), rd, true, request.options().isDetail()))
-                      .doFinally(request.device()::stop);
+                 ObjectIdentifierMixin.serialize(request.remoteDeviceId()), device.protocol().identifier());
+        return device.discoverRemoteDevice(request.remoteDeviceId(), request.options())
+                     .flatMap(rd -> parseRemoteDevice(device, rd, true, request.options().isDetail()))
+                     .doFinally(device::stop);
     }
 
     private Single<RemoteDeviceMixin> parseRemoteDevice(@NonNull BACnetDevice device, @NonNull RemoteDevice rd,

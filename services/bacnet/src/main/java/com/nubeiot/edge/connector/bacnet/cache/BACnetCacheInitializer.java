@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public final class BACnetCacheInitializer implements CacheInitializer<BACnetCacheInitializer, SharedDataLocalProxy> {
 
-    public static final String EDGE_NETWORK_CACHE = "EDGE_NETWORK_CACHE";
+    public static final String LOCAL_NETWORK_CACHE = "LOCAL_NETWORK_CACHE";
     public static final String BACNET_DEVICE_CACHE = "BACNET_DEVICE_CACHE";
     public static final String BACNET_OBJECT_CACHE = "BACNET_OBJECT_CACHE";
     @NonNull
@@ -27,7 +27,7 @@ public final class BACnetCacheInitializer implements CacheInitializer<BACnetCach
     public BACnetCacheInitializer init(@NonNull SharedDataLocalProxy context) {
         context.addData(RpcProtocolClient.GATEWAY_ADDRESS,
                         Strings.requireNotBlank(config.getGatewayAddress(), "Missing gateway address config"));
-        addBlockingCache(context, EDGE_NETWORK_CACHE, BACnetNetworkCache::init);
+        addBlockingCache(context, LOCAL_NETWORK_CACHE, BACnetNetworkCache::init);
         addBlockingCache(context, BACNET_DEVICE_CACHE, () -> BACnetDeviceCache.init(context));
         addBlockingCache(context, BACNET_OBJECT_CACHE, BACnetObjectCache::new);
         return this;

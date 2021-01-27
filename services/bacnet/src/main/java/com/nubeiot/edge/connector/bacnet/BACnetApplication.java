@@ -51,10 +51,11 @@ public final class BACnetApplication extends AbstractBACnetApplication<BACnetCon
     }
 
     @Override
-    protected void successHandler(@NonNull ContextLookup lookup, @NonNull BACnetConfig config) {
-        this.manager = new BACnetSubscriptionManager(getVertx(), getSharedKey(), config.isAllowSlave());
+    public void onInstallCompleted(@NonNull ContextLookup lookup) {
+        this.manager = new BACnetSubscriptionManager(getVertx(), getSharedKey(), bacnetConfig.isAllowSlave());
         this.microContext = lookup.query(MicroContext.class);
-        super.successHandler(lookup, new BACnetCacheInitializer(config).init(this).getConfig());
+        new BACnetCacheInitializer(bacnetConfig).init(this);
+        super.onInstallCompleted(lookup);
     }
 
     @Override
@@ -93,7 +94,7 @@ public final class BACnetApplication extends AbstractBACnetApplication<BACnetCon
 
     @Override
     protected @NonNull Single<Collection<CommunicationProtocol>> availableNetworks(@NonNull BACnetConfig config) {
-        final BACnetNetworkCache cache = this.sharedData().getData(BACnetCacheInitializer.EDGE_NETWORK_CACHE);
+        final BACnetNetworkCache cache = this.sharedData().getData(BACnetCacheInitializer.LOCAL_NETWORK_CACHE);
         return Single.just(Collections.emptyList());
         //        return BACnetScannerHelper.createNetworkScanner(getVertx(), getSharedKey())
         //                                  .scan()

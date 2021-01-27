@@ -9,7 +9,8 @@ import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryRequestWrapper;
+import com.nubeiot.edge.connector.bacnet.BACnetDevice;
+import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryRequest;
 import com.nubeiot.edge.connector.bacnet.mixin.BACnetExceptionConverter;
 import com.nubeiot.edge.connector.bacnet.mixin.deserializer.EncodableDeserializer;
 import com.serotonin.bacnet4j.exception.BACnetException;
@@ -28,7 +29,8 @@ public final class PointValueSubscriber /*extends AbstractProtocolSubscriber<Poi
     }
 
     //TODO refactor it
-    public static Single<JsonObject> write(@NonNull DiscoveryRequestWrapper request, JsonObject pointValueData) {
+    public static Single<JsonObject> write(@NonNull BACnetDevice device, @NonNull DiscoveryRequest request,
+                                           @NonNull JsonObject pointValueData) {
         final Encodable encodable = EncodableDeserializer.parse(request.objectCode(), PropertyIdentifier.presentValue,
                                                                 pointValueData.remove("value"));
         if (Objects.isNull(encodable)) {
@@ -36,9 +38,9 @@ public final class PointValueSubscriber /*extends AbstractProtocolSubscriber<Poi
         }
         //        final int priority = PointValueMetadata.INSTANCE.parseFromRequest(pointValueData).getPriority();
         final int priority = pointValueData.getInteger("priority");
-        return request.device().discoverRemoteDevice(request.remoteDeviceId(), request.options()).map(rd -> {
-            RequestUtils.writeProperty(request.device().localDevice(), rd, request.objectCode(),
-                                       PropertyIdentifier.presentValue, encodable, priority);
+        return device.discoverRemoteDevice(request.remoteDeviceId(), request.options()).map(rd -> {
+            RequestUtils.writeProperty(device.localDevice(), rd, request.objectCode(), PropertyIdentifier.presentValue,
+                                       encodable, priority);
             return EventMessage.success(EventAction.PATCH).toJson();
         }).onErrorReturn(throwable -> {
             if (throwable instanceof BACnetException) {

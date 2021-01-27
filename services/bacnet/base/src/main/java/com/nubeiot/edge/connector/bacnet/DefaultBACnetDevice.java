@@ -57,7 +57,7 @@ final class DefaultBACnetDevice implements BACnetDevice {
 
     private DefaultBACnetDevice(@NonNull SharedDataLocalProxy proxy, @NonNull TransportProvider provider) {
         this.proxy = proxy;
-        this.metadata = proxy.getData(EDGE_BACNET_METADATA);
+        this.metadata = proxy.getData(LocalDeviceMetadata.METADATA_KEY);
         this.transportProvider = provider;
         this.localDevice = create(metadata, transportProvider);
     }

@@ -24,11 +24,6 @@ import lombok.NonNull;
 public interface BACnetDevice {
 
     /**
-     * The constant EDGE_BACNET_METADATA in cache.
-     */
-    String EDGE_BACNET_METADATA = "EDGE_BACNET_METADATA";
-
-    /**
      * Gets local device metadata.
      *
      * @return the local device metadata

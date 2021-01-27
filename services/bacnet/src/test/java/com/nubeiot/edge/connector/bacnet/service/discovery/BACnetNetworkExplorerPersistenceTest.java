@@ -139,7 +139,7 @@ public class BACnetNetworkExplorerPersistenceTest extends BACnetWithGatewayTest 
 
     private BACnetNetworkCache getCache() {
         return SharedLocalDataHelper.getLocalDataValue(vertx, BACnetApplication.class.getName(),
-                                                       BACnetCacheInitializer.EDGE_NETWORK_CACHE);
+                                                       BACnetCacheInitializer.LOCAL_NETWORK_CACHE);
     }
 
 }

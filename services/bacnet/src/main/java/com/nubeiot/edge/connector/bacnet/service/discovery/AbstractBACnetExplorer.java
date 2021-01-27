@@ -22,8 +22,8 @@ import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetObjectCache;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryOptions;
+import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryParams;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryRequest;
-import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryRequestWrapper;
 import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
@@ -59,7 +59,7 @@ abstract class AbstractBACnetExplorer<P extends IoTEntity> extends BaseRpcProtoc
     }
 
     final BACnetNetworkCache networkCache() {
-        return sharedData().getData(BACnetCacheInitializer.EDGE_NETWORK_CACHE);
+        return sharedData().getData(BACnetCacheInitializer.LOCAL_NETWORK_CACHE);
     }
 
     final BACnetDeviceCache deviceCache() {
@@ -71,15 +71,15 @@ abstract class AbstractBACnetExplorer<P extends IoTEntity> extends BaseRpcProtoc
     }
 
     final DiscoveryOptions parseDiscoverOptions(@NonNull RequestData reqData) {
-        final LocalDeviceMetadata metadata = sharedData().getData(BACnetDevice.EDGE_BACNET_METADATA);
+        final LocalDeviceMetadata metadata = sharedData().getData(LocalDeviceMetadata.METADATA_KEY);
         return DiscoveryOptions.from(metadata.getMaxTimeoutInMS(), reqData);
     }
 
-    final CommunicationProtocol parseNetworkProtocol(@NonNull DiscoveryRequest request) {
-        return Optional.ofNullable(request.getNetwork())
+    final CommunicationProtocol parseNetworkProtocol(@NonNull DiscoveryParams params) {
+        return Optional.ofNullable(params.getNetwork())
                        .map(n -> BACnetNetwork.factory(n).toProtocol())
                        .map(p -> networkCache().add(p.identifier(), p).get(p.identifier()))
-                       .orElseGet(() -> networkCache().get(request.getNetworkCode()));
+                       .orElseGet(() -> networkCache().get(params.getNetworkCode()));
     }
 
     final Single<PropertyValuesMixin> parseRemoteObject(@NonNull BACnetDevice device,
@@ -113,13 +113,13 @@ abstract class AbstractBACnetExplorer<P extends IoTEntity> extends BaseRpcProtoc
 
     protected abstract String parseResourceId(@NonNull JsonObject resource);
 
-    protected final @NonNull DiscoveryRequestWrapper createDiscoveryRequest(@NonNull RequestData reqData,
-                                                                            @NonNull DiscoveryLevel level) {
-        final DiscoveryRequest request = DiscoveryRequest.from(reqData, level);
-        final DiscoveryOptions options = parseDiscoverOptions(reqData);
-        final CommunicationProtocol protocol = parseNetworkProtocol(request);
-        final BACnetDevice device = deviceCache().get(protocol);
-        return new DiscoveryRequestWrapper(request, options, device);
+    protected final @NonNull DiscoveryRequest createDiscoveryRequest(@NonNull RequestData reqData,
+                                                                     @NonNull DiscoveryLevel level) {
+        return new DiscoveryRequest(DiscoveryParams.from(reqData, level), parseDiscoverOptions(reqData));
+    }
+
+    protected final @NonNull BACnetDevice getBACnetDeviceFromCache(@NonNull DiscoveryRequest request) {
+        return deviceCache().get(parseNetworkProtocol(request.params()));
     }
 
 }

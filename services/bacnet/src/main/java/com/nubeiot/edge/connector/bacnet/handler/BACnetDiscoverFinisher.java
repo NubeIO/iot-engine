@@ -34,7 +34,7 @@ public final class BACnetDiscoverFinisher extends DiscoverCompletionHandler {
     @Override
     public boolean success(@NonNull RequestData requestData) {
         final DiscoveryResponse info = JsonData.from(requestData.body(), DiscoveryResponse.class);
-        final BACnetNetworkCache networkCache = proxy.getData(BACnetCacheInitializer.EDGE_NETWORK_CACHE);
+        final BACnetNetworkCache networkCache = proxy.getData(BACnetCacheInitializer.LOCAL_NETWORK_CACHE);
         final BACnetDeviceCache deviceCache = proxy.getData(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
         final BACnetObjectCache objectCache = proxy.getData(BACnetCacheInitializer.BACNET_OBJECT_CACHE);
         final CommunicationProtocol protocol = networkCache.get(info.getNetwork().identifier());
