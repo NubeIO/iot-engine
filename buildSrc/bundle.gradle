@@ -8,7 +8,7 @@ jar {
         def javaVersion = System.getProperty('java.version') + ' (' + System.getProperty('java.vendor') + ')'
         def gradleVersion = gradle.gradleVersion
 
-        println '- Project Name:     ' + archiveBaseName
+        println '- Project Name:     ' + archiveBaseName.get()
         println '- Project Title:    ' + project.title
         println '- Project Group:    ' + project.group
         println '- Project Version:  ' + project.version
@@ -20,7 +20,7 @@ jar {
         
         def manifestMap = [
             (Name.MANIFEST_VERSION.toString())      : '1.0',
-            (Name.IMPLEMENTATION_TITLE.toString())  : "${archiveBaseName}",
+            (Name.IMPLEMENTATION_TITLE.toString())  : "${archiveBaseName.get()}",
             (Name.IMPLEMENTATION_VENDOR.toString()) : "${project.vendor}",
             (Name.IMPLEMENTATION_VERSION.toString()): "${project.buildNumber}",
             (Name.SIGNATURE_VERSION.toString())     : "${project.buildHash}",
