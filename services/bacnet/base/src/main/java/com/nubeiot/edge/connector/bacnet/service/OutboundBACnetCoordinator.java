@@ -1,9 +1,9 @@
 package com.nubeiot.edge.connector.bacnet.service;
 
 import io.github.zero88.qwe.dto.JsonData;
-import io.github.zero88.qwe.protocol.Protocol;
 
 import com.nubeiot.core.rpc.coordinator.OutboundCoordinator;
+import com.nubeiot.edge.connector.bacnet.BACnetProtocol;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetEntity;
 
 /**
@@ -13,11 +13,6 @@ import com.nubeiot.edge.connector.bacnet.entity.BACnetEntity;
  * @see JsonData
  * @see OutboundCoordinator
  */
-public interface OutboundBACnetCoordinator<P extends BACnetEntity> extends OutboundCoordinator<P> {
-
-    @Override
-    default Protocol protocol() {
-        return Protocol.BACnet;
-    }
+public interface OutboundBACnetCoordinator<P extends BACnetEntity> extends OutboundCoordinator<P>, BACnetProtocol {
 
 }

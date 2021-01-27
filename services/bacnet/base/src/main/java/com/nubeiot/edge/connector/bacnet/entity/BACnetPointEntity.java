@@ -14,5 +14,6 @@ public class BACnetPointEntity implements BACnetEntity<String>, IPoint<String> {
 
     private final String key;
     private final PointType type;
+    private final String deviceId;
 
 }

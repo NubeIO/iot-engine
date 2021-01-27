@@ -72,20 +72,6 @@ public final class BACnetDeviceExplorer extends AbstractBACnetExplorer<BACnetDev
         return resource.getJsonObject("device", new JsonObject()).getString("id");
     }
 
-    private DiscoveryRequest validateCache(@NonNull DiscoveryRequest request) {
-        final BACnetDevice device = getBACnetDeviceFromCache(request);
-        networkCache().getDataKey(device.protocol().identifier())
-                      .orElseThrow(() -> new NotFoundException(
-                          "Not found a persistence network by network code " + device.protocol().identifier()));
-        final Optional<UUID> deviceId = deviceCache().getDataKey(device.protocol(), request.remoteDeviceId());
-        if (deviceId.isPresent()) {
-            throw new AlreadyExistException(
-                "Already existed device " + ObjectIdentifierMixin.serialize(request.remoteDeviceId()) + " in network " +
-                device.protocol().identifier());
-        }
-        return request;
-    }
-
     private Single<RemoteDeviceMixin> doGet(@NonNull DiscoveryRequest request) {
         final BACnetDevice device = getBACnetDeviceFromCache(request);
         log.info("Discovering remote device {} in network {}...",
@@ -103,6 +89,20 @@ public final class BACnetDeviceExplorer extends AbstractBACnetExplorer<BACnetDev
         return parseRemoteObject(device, rd, objId, detail, includeError).map(pvm -> RemoteDeviceMixin.create(rd, pvm))
                                                                          .map(rdm -> rdm.setNetworkCode(networkCode)
                                                                                         .setNetworkId(networkId));
+    }
+
+    private DiscoveryRequest validateCache(@NonNull DiscoveryRequest request) {
+        final BACnetDevice device = getBACnetDeviceFromCache(request);
+        networkCache().getDataKey(device.protocol().identifier())
+                      .orElseThrow(() -> new NotFoundException(
+                          "Not found a persistence network by network code " + device.protocol().identifier()));
+        final Optional<UUID> deviceId = deviceCache().getDataKey(device.protocol(), request.remoteDeviceId());
+        if (deviceId.isPresent()) {
+            throw new AlreadyExistException(
+                "Already existed device " + ObjectIdentifierMixin.serialize(request.remoteDeviceId()) + " in network " +
+                device.protocol().identifier());
+        }
+        return request;
     }
 
 }

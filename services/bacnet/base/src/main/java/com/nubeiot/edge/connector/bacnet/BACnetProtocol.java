@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.bacnet.entity;
+package com.nubeiot.edge.connector.bacnet;
 
 import io.github.zero88.qwe.protocol.HasProtocol;
 import io.github.zero88.qwe.protocol.Protocol;

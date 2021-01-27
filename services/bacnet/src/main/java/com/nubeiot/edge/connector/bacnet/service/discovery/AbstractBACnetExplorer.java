@@ -8,6 +8,7 @@ import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.dto.ErrorMessage;
 import io.github.zero88.qwe.dto.converter.ErrorMessageConverter;
 import io.github.zero88.qwe.dto.msg.RequestData;
+import io.github.zero88.qwe.event.EventContractor;
 import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.github.zero88.utils.Functions;
 import io.reactivex.Observable;
@@ -49,11 +50,21 @@ abstract class AbstractBACnetExplorer<P extends IoTEntity> extends BaseRpcProtoc
     }
 
     @Override
+    @EventContractor(action = "GET_ONE", returnType = Single.class)
+    public abstract Single<JsonObject> discover(RequestData reqData);
+
+    @Override
+    @EventContractor(action = "GET_LIST", returnType = Single.class)
+    public abstract Single<JsonObject> discoverMany(RequestData reqData);
+
+    @Override
+    @EventContractor(action = "CREATE", returnType = Single.class)
     public Single<JsonObject> discoverThenWatch(@NonNull RequestData data) {
         return Single.just(new JsonObject());
     }
 
     @Override
+    @EventContractor(action = "BATCH_CREATE", returnType = Single.class)
     public Single<JsonObject> discoverManyThenWatch(@NonNull RequestData data) {
         return Single.just(new JsonObject());
     }

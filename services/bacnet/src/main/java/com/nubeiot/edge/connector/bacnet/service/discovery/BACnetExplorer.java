@@ -10,13 +10,12 @@ import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.utils.Reflections.ReflectionClass;
 
 import com.nubeiot.core.rpc.discovery.RpcExplorerApis;
-import com.nubeiot.edge.connector.bacnet.entity.BACnetProtocol;
 import com.nubeiot.edge.connector.bacnet.service.BACnetApis;
 import com.nubeiot.iotdata.IoTEntity;
 
 import lombok.NonNull;
 
-public interface BACnetExplorer<P extends IoTEntity> extends BACnetApis, BACnetProtocol, RpcExplorerApis<P> {
+public interface BACnetExplorer<P extends IoTEntity> extends BACnetApis, RpcExplorerApis<P> {
 
     static Set<? extends BACnetExplorer> createServices(@NonNull SharedDataLocalProxy sharedDataProxy) {
         final Map<Class, Object> inputs = Collections.singletonMap(SharedDataLocalProxy.class, sharedDataProxy);

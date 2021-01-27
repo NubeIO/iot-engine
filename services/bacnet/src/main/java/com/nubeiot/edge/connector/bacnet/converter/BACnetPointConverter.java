@@ -7,8 +7,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.nubeiot.edge.connector.bacnet.BACnetProtocol;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetPointEntity;
-import com.nubeiot.edge.connector.bacnet.entity.BACnetProtocol;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.nubeiot.iotdata.converter.IoTEntityConverter;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;

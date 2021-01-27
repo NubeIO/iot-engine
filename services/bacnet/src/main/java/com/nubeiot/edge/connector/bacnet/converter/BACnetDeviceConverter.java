@@ -4,8 +4,8 @@ import java.util.Objects;
 
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.edge.connector.bacnet.BACnetProtocol;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetDeviceEntity;
-import com.nubeiot.edge.connector.bacnet.entity.BACnetProtocol;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
 import com.nubeiot.iotdata.converter.IoTEntityConverter;
