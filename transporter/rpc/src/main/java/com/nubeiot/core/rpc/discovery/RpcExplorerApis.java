@@ -1,12 +1,16 @@
 package com.nubeiot.core.rpc.discovery;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
+import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.micro.http.ActionMethodMapping;
 import io.github.zero88.qwe.micro.http.EventHttpService;
 import io.github.zero88.qwe.micro.http.EventMethodDefinition;
 import io.github.zero88.utils.Urls;
+import io.vertx.core.http.HttpMethod;
 
 import com.nubeiot.iotdata.IoTEntity;
 
@@ -16,10 +20,10 @@ import lombok.NonNull;
  * Represents for {@code Discovery APIs} that expose as public endpoints
  *
  * @param <P> Type of IoT entity
- * @see RpcDiscovery
+ * @see RpcExplorer
  * @see EventHttpService
  */
-public interface RpcDiscoveryApis<P extends IoTEntity> extends RpcDiscovery<P>, EventHttpService {
+public interface RpcExplorerApis<P extends IoTEntity> extends RpcExplorer<P>, EventHttpService {
 
     @Override
     default Set<EventMethodDefinition> definitions() {
@@ -51,6 +55,13 @@ public interface RpcDiscoveryApis<P extends IoTEntity> extends RpcDiscovery<P>, 
      * @return event method map
      * @see ActionMethodMapping
      */
-    @NonNull ActionMethodMapping eventMethodMap();
+    default @NonNull ActionMethodMapping eventMethodMap() {
+        Map<EventAction, HttpMethod> methods = new HashMap<>();
+        methods.put(EventAction.GET_LIST, HttpMethod.GET);
+        methods.put(EventAction.GET_ONE, HttpMethod.GET);
+        methods.put(EventAction.CREATE, HttpMethod.POST);
+        methods.put(EventAction.BATCH_CREATE, HttpMethod.PUT);
+        return ActionMethodMapping.create(methods);
+    }
 
 }

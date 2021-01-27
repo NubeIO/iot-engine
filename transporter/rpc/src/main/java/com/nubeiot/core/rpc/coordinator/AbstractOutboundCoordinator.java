@@ -1,4 +1,4 @@
-package com.nubeiot.core.rpc.subscriber;
+package com.nubeiot.core.rpc.coordinator;
 
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.dto.msg.RequestData;
@@ -10,10 +10,10 @@ import com.nubeiot.iotdata.IoTEntity;
 
 import lombok.NonNull;
 
-public abstract class AbstractProtocolSubscriber<P extends IoTEntity> extends BaseRpcProtocol<P>
-    implements RpcSubscriber<P> {
+public abstract class AbstractOutboundCoordinator<P extends IoTEntity> extends BaseRpcProtocol<P>
+    implements OutboundCoordinator<P> {
 
-    protected AbstractProtocolSubscriber(@NonNull SharedDataLocalProxy sharedData) {
+    protected AbstractOutboundCoordinator(@NonNull SharedDataLocalProxy sharedData) {
         super(sharedData);
     }
 

@@ -18,6 +18,7 @@ import lombok.NonNull;
  */
 public interface RpcProtocolClient<P extends IoTEntity> extends GatewayServiceInvoker, RpcProtocol<P> {
 
+    //TODO remove it
     String GATEWAY_ADDRESS = "GATEWAY_ADDRESS";
 
     @Override
@@ -25,9 +26,6 @@ public interface RpcProtocolClient<P extends IoTEntity> extends GatewayServiceIn
     default String gatewayAddress() {
         return sharedData().getData(GATEWAY_ADDRESS);
     }
-
-    @Override
-    default @NonNull String destination() { return ""; }
 
     @Override
     @NonNull

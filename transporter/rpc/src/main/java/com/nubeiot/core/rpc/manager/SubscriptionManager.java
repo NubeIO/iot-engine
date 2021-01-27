@@ -1,16 +1,17 @@
-package com.nubeiot.core.rpc.subscriber;
+package com.nubeiot.core.rpc.manager;
 
 import com.nubeiot.core.rpc.RpcProtocolClient;
+import com.nubeiot.core.rpc.coordinator.OutboundCoordinator;
 import com.nubeiot.iotdata.IoTEntity;
 
 /**
  * Represents a register service that registers {@code Subscriber} into {@code Data Point repository} in startup phase
  * of the particular {@code protocol} application
  *
- * @see RpcSubscriber
+ * @see OutboundCoordinator
  * @since 1.0.0
  */
-public interface RpcSubscription<P extends IoTEntity, T extends RpcSubscriber> extends RpcProtocolClient<P> {
+public interface SubscriptionManager<P extends IoTEntity, T extends OutboundCoordinator> extends RpcProtocolClient<P> {
 
     //    @Override
     //    default @NonNull ProtocolDispatcherMetadata context() {

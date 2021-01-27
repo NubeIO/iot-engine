@@ -3,18 +3,20 @@ package com.nubeiot.core.rpc.scanner;
 import com.nubeiot.core.rpc.RpcProtocolClient;
 import com.nubeiot.iotdata.IoTEntity;
 
+import lombok.NonNull;
+
 /**
- * The interface Data protocol scanner for single protocol object.
+ * Represents for a {@code RpcClient service} that is able to scan from a specific external source to extract an
+ * appropriate {@code protocol} data object then using them to initialize itself service in startup.
  *
- * @param <P> Type of {@code VertxPojo}
+ * @param <P> Type of {@code IoTEntity}
  * @param <X> Type of {@code Protocol object}
+ * @see ScannerSource
  * @since 1.0.0
  */
 public interface RpcScanner<P extends IoTEntity, X> extends RpcProtocolClient<P> {
 
-    default ScannerSource source() {
-        return null;
-    }
+    @NonNull ScannerSource source();
 
     //    /**
     //     * Query data.

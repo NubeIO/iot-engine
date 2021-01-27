@@ -1,8 +1,7 @@
-package com.nubeiot.core.rpc.subscriber;
+package com.nubeiot.core.rpc.coordinator;
 
 import java.util.Collection;
 
-import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventContractor;
@@ -16,14 +15,14 @@ import com.nubeiot.iotdata.IoTEntity;
 import lombok.NonNull;
 
 /**
- * Represents {@code Protocol subscriber} that listens a {@code external event} from outside then dispatch to
- * corresponding to itself {@code Protocol} action
+ * Represents for a {@code RpcClient service} that listens an {@code external event} from outside services then
+ * dispatching event to a corresponding inner service handler
  *
  * @param <P> Type of entity object
  * @see EventListener
- * @see JsonData
+ * @see RpcProtocol
  */
-public interface RpcSubscriber<P extends IoTEntity> extends EventListener, RpcProtocol<P> {
+public interface OutboundCoordinator<P extends IoTEntity> extends EventListener, RpcProtocol<P> {
 
     @Override
     default @NonNull Collection<EventAction> getAvailableEvents() {
