@@ -5,7 +5,7 @@ import lombok.NonNull;
 /**
  * @param <T> Type of IoT object type
  */
-public interface HasType<T> {
+public interface HasObjectType<T> {
 
     @NonNull T type();
 

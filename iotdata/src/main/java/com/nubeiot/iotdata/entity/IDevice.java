@@ -13,7 +13,7 @@ import lombok.NonNull;
  *
  * @param <K> Type of device key
  */
-public interface IDevice<K> extends IoTEntity<K>, HasType<DeviceType> {
+public interface IDevice<K> extends IoTEntity<K>, HasObjectType<DeviceType> {
 
     /**
      * Return list of points that belongs to network

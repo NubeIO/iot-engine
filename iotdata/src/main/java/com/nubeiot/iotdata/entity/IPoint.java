@@ -8,4 +8,4 @@ import com.nubeiot.iotdata.enums.PointType;
  *
  * @param <K> Type of point key
  */
-public interface IPoint<K> extends IoTEntity<K>, HasType<PointType> {}
+public interface IPoint<K> extends IoTEntity<K>, HasObjectType<PointType> {}
