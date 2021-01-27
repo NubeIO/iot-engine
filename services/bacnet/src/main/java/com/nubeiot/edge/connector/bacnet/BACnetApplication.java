@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import io.github.zero88.qwe.component.ContextLookup;
 import io.github.zero88.qwe.event.EventbusClient;
@@ -133,10 +134,8 @@ public final class BACnetApplication extends AbstractBACnetApplication<BACnetCon
 
     @SuppressWarnings("unchecked")
     private Observable<Record> registerEndpoint(ServiceDiscoveryInvoker discovery, BACnetExplorer s) {
-        return Observable.fromIterable(s.definitions())
-                         .flatMapSingle(e -> e)
-                         .flatMapSingle(
-                             e -> discovery.addEventMessageRecord(s.api(), s.address(), (EventMethodDefinition) e));
+        return Observable.fromIterable((Set<EventMethodDefinition>) s.definitions())
+                         .flatMapSingle(e -> discovery.addEventMessageRecord(s.api(), s.address(), e));
     }
 
 }
