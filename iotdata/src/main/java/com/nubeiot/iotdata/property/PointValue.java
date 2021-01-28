@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.utils.Functions;
+import io.reactivex.annotations.Nullable;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.iotdata.TimeseriesData;
@@ -33,15 +34,26 @@ public final class PointValue implements JsonData, TimeseriesData {
         return PointValue.builder().priority(PointPriorityValue.DEFAULT_PRIORITY).build();
     }
 
+    @Nullable
     public static PointValue from(@NonNull JsonObject data) {
-        return PointValue.builder()
-                         .priority(data.getInteger(Fields.priority))
-                         .rawValue(data.getDouble(Fields.rawValue))
-                         .value(data.getString(Fields.value))
-                         .build();
+        if (data.containsKey(Fields.priority) || data.containsKey(Fields.rawValue) || data.containsKey(Fields.value)) {
+            return PointValue.builder()
+                             .priority(data.getInteger(Fields.priority))
+                             .rawValue(data.getDouble(Fields.rawValue))
+                             .value(data.getString(Fields.value))
+                             .build();
+        }
+        return null;
     }
 
     static class PointValueBuilder {
+
+        private Integer priority;
+
+        public PointValueBuilder priority(Integer priority) {
+            this.priority = priority;
+            return this;
+        }
 
         public PointValue build() {
             int p = PointPriorityValue.validateAndGet(priority);

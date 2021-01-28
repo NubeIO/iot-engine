@@ -62,7 +62,10 @@ public final class PointPriorityValue implements JsonData, IoTProperty, Timeseri
         return priority <= MAX_PRIORITY && priority >= MIN_PRIORITY;
     }
 
-    static int validateAndGet(int priority) {
+    static int validateAndGet(Integer priority) {
+        if (Objects.isNull(priority)) {
+            return DEFAULT_PRIORITY;
+        }
         if (isValid(priority)) {
             return priority;
         }
