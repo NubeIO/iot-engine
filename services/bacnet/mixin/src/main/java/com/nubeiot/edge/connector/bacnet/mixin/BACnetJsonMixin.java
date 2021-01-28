@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.NonNull;
 
-public interface BACnetMixin extends JsonData {
+public interface BACnetJsonMixin extends JsonData {
 
     ObjectMapper MAPPER = JsonData.MAPPER.copy().registerModule(BACnetJsonModule.MODULE);
 

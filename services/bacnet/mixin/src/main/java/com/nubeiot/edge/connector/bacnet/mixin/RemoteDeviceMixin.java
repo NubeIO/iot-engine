@@ -25,7 +25,7 @@ import lombok.experimental.Accessors;
 @Builder(builderClassName = "Builder")
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public final class RemoteDeviceMixin implements BACnetMixin {
+public final class RemoteDeviceMixin implements BACnetJsonMixin {
 
     @JsonIgnore
     private final ObjectIdentifier objectId;

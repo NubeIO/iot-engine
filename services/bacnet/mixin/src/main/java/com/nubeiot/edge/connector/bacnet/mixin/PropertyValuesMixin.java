@@ -40,7 +40,7 @@ import lombok.experimental.Accessors;
 @Setter(value = AccessLevel.PRIVATE)
 @Accessors(chain = true)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public final class PropertyValuesMixin implements BACnetMixin {
+public final class PropertyValuesMixin implements BACnetJsonMixin {
 
     private final Map<PropertyIdentifier, Encodable> values;
     private ObjectIdentifier objectId;

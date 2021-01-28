@@ -125,7 +125,7 @@ public class PropertyValuesMixinTest {
         final JsonObject entries = new JsonObject(
             "{\"status-flags\":{\"in-alarm\":true,\"fault\":false,\"overridden\":true,\"out-of-service\":false}," +
             "\"group-id\":345,\"is-utc\":true,\"object-identifier\":\"device:111\",\"average-value\":-100}");
-        final PropertyValuesMixin mixin = JsonData.convert(entries, PropertyValuesMixin.class, BACnetMixin.MAPPER);
+        final PropertyValuesMixin mixin = JsonData.convert(entries, PropertyValuesMixin.class, BACnetJsonMixin.MAPPER);
         JsonHelper.assertJson(entries, mixin.toJson());
     }
 
@@ -140,7 +140,7 @@ public class PropertyValuesMixinTest {
             "{\"hostAddress\":\"192.168.15.222:47808\",\"networkNumber\":1,\"macAddress\":\"C0-A8-0F-DE-BA-C0\"," +
             "\"type\":\"IP\"}},{\"device-object-identifier\":\"device:3321\",\"device-address\":" +
             "{\"hostAddress\":\"7\",\"networkNumber\":3,\"macAddress\":\"07\",\"type\":\"MSTP\"}}]}");
-        final PropertyValuesMixin mixin = JsonData.convert(entries, PropertyValuesMixin.class, BACnetMixin.MAPPER);
+        final PropertyValuesMixin mixin = JsonData.convert(entries, PropertyValuesMixin.class, BACnetJsonMixin.MAPPER);
         JsonHelper.assertJson(entries, mixin.toJson());
     }
 
@@ -148,7 +148,7 @@ public class PropertyValuesMixinTest {
     public void test_deserialize_sample_equip() throws JSONException {
         final JsonObject entries = Configs.loadJsonConfig("sampleEquip.json");
         entries.remove("address");
-        final PropertyValuesMixin mixin = JsonData.convert(entries, PropertyValuesMixin.class, BACnetMixin.MAPPER);
+        final PropertyValuesMixin mixin = JsonData.convert(entries, PropertyValuesMixin.class, BACnetJsonMixin.MAPPER);
         JsonHelper.assertJson(entries, mixin.toJson());
     }
 
@@ -156,7 +156,7 @@ public class PropertyValuesMixinTest {
     public void test_deserialize_sample_niagara() throws JSONException {
         final JsonObject entries = Configs.loadJsonConfig("sampleNiagara.json");
         entries.remove("address");
-        final PropertyValuesMixin mixin = JsonData.convert(entries, PropertyValuesMixin.class, BACnetMixin.MAPPER);
+        final PropertyValuesMixin mixin = JsonData.convert(entries, PropertyValuesMixin.class, BACnetJsonMixin.MAPPER);
         JsonHelper.assertJson(entries, mixin.toJson());
     }
 

@@ -7,7 +7,7 @@ import io.github.zero88.qwe.JsonHelper;
 import io.github.zero88.qwe.dto.JsonData;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.edge.connector.bacnet.mixin.BACnetMixin;
+import com.nubeiot.edge.connector.bacnet.mixin.BACnetJsonMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.serotonin.bacnet4j.enums.DayOfWeek;
 import com.serotonin.bacnet4j.enums.Month;
@@ -39,14 +39,14 @@ public class PriorityArraySerializerTest {
             "{\"1\":\"xxx\",\"2\":10,\"3\":\"other\",\"4\":true,\"5\":\"10:05:10Z\",\"6\":\"2020-01-21Z\"," +
             "\"7\":{\"low-limit-enable\":true,\"high-limit-enable\":false},\"8\":null,\"9\":null,\"10\":null," +
             "\"11\":null,\"12\":null,\"13\":null,\"14\":null,\"15\":null,\"16\":null}");
-        final JsonObject json = BACnetMixin.MAPPER.convertValue(array, JsonObject.class);
+        final JsonObject json = BACnetJsonMixin.MAPPER.convertValue(array, JsonObject.class);
         JsonHelper.assertJson(expected, json);
     }
 
     @Test
     public void test_deserialize_priority_array() throws JSONException {
         final JsonObject query = new JsonObject("{\"priority-array\":{\"1\":\"xxx\"}}");
-        final PropertyValuesMixin mixin = JsonData.convert(query, PropertyValuesMixin.class, BACnetMixin.MAPPER);
+        final PropertyValuesMixin mixin = JsonData.convert(query, PropertyValuesMixin.class, BACnetJsonMixin.MAPPER);
         final JsonObject expected = new JsonObject(
             "{\"priority-array\":{\"1\":\"xxx\",\"2\":null,\"3\":null,\"4\":null,\"5\":null,\"6\":null,\"7\":null," +
             "\"8\":null,\"9\":null,\"10\":null,\"11\":null,\"12\":null,\"13\":null,\"14\":null,\"15\":null," +

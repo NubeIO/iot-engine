@@ -18,7 +18,7 @@ import lombok.NonNull;
  * @see PropertyValues
  * @see PropertyValuesMixin
  */
-public final class ObjectPropertyValues implements BACnetMixin {
+public final class ObjectPropertyValues implements BACnetJsonMixin {
 
     private final Map<ObjectIdentifier, PropertyValuesMixin> values = new HashMap<>();
 

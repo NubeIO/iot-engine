@@ -8,7 +8,7 @@ import com.serotonin.bacnet4j.type.Encodable;
  *
  * @param <T> Type of encodable
  */
-public interface EncodableMixin<T extends Encodable> extends BACnetMixin {
+public interface EncodableMixin<T extends Encodable> extends BACnetJsonMixin {
 
     T unwrap();
 

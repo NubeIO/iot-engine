@@ -12,7 +12,7 @@ import io.github.zero88.utils.Reflections.ReflectionMethod;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import com.nubeiot.edge.connector.bacnet.mixin.BACnetMixin;
+import com.nubeiot.edge.connector.bacnet.mixin.BACnetJsonMixin;
 import com.serotonin.bacnet4j.type.primitive.BitString;
 
 import lombok.NonNull;
@@ -32,10 +32,11 @@ public final class BitStringSerializer extends EncodableSerializer<BitString> {
         final @NonNull Predicate<Method> predicate = m -> m.getReturnType() == boolean.class &&
                                                           m.getParameterCount() == 0 && m.getName().startsWith("is");
         final Map<String, Boolean> kv = ReflectionMethod.find(predicate, value.getClass())
-                                                        .collect(Collectors.toMap(
-                                                            m -> BACnetMixin.standardizeKey(m.getName().substring(2)),
-                                                            m -> Functions.getOrDefault(false, () -> (Boolean) m.invoke(
-                                                                value))));
+                                                        .collect(Collectors.toMap(m -> BACnetJsonMixin.standardizeKey(
+                                                            m.getName().substring(2)),
+                                                                                  m -> Functions.getOrDefault(false,
+                                                                                                              () -> (Boolean) m.invoke(
+                                                                                                                  value))));
         if (kv.isEmpty()) {
             final boolean[] vs = value.getValue();
             gen.writeObject(
