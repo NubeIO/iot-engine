@@ -34,7 +34,7 @@ public final class BACnetNetworkExplorer extends AbstractBACnetExplorer<BACnetNe
 
     @Override
     public String paramPath() {
-        return DiscoveryParams.Fields.networkCode;
+        return DiscoveryParams.Fields.networkId;
     }
 
     @Override

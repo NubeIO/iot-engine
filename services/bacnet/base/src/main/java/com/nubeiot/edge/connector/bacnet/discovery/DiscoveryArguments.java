@@ -1,7 +1,5 @@
 package com.nubeiot.edge.connector.bacnet.discovery;
 
-import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
-
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -16,13 +14,5 @@ public final class DiscoveryArguments {
     private final DiscoveryParams params;
     @NonNull
     private final DiscoveryOptions options;
-
-    public ObjectIdentifier remoteDeviceId() {
-        return params.getDeviceCode();
-    }
-
-    public ObjectIdentifier objectCode() {
-        return params.getObjectId();
-    }
 
 }

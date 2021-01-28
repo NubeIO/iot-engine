@@ -16,7 +16,7 @@ import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventContractor;
 import io.github.zero88.qwe.exceptions.AlreadyExistException;
 import io.github.zero88.qwe.exceptions.CarlException;
-import io.github.zero88.qwe.exceptions.EngineException;
+import io.github.zero88.qwe.exceptions.ErrorCode;
 import io.github.zero88.qwe.exceptions.NotFoundException;
 import io.github.zero88.qwe.micro.http.ActionMethodMapping;
 import io.github.zero88.utils.Functions;
@@ -31,10 +31,9 @@ import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryParams;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryResponse;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetPointEntity;
+import com.nubeiot.edge.connector.bacnet.entity.BACnetPoints;
 import com.nubeiot.edge.connector.bacnet.internal.request.WritePointValueRequestFactory;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
-import com.nubeiot.edge.connector.bacnet.mixin.ObjectPropertyValues;
-import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.util.RequestUtils;
@@ -57,7 +56,7 @@ public final class BACnetObjectExplorer extends AbstractBACnetExplorer<BACnetPoi
 
     @Override
     public @NonNull String servicePath() {
-        return "/network/:" + DiscoveryParams.Fields.networkCode + "/device/:" + DiscoveryParams.Fields.deviceInstance +
+        return "/network/:" + DiscoveryParams.Fields.networkId + "/device/:" + DiscoveryParams.Fields.deviceInstance +
                "/object";
     }
 
@@ -82,7 +81,7 @@ public final class BACnetObjectExplorer extends AbstractBACnetExplorer<BACnetPoi
 
     @Override
     public Single<JsonObject> discover(RequestData requestData) {
-        return doGet(createDiscoveryArgs(requestData, DiscoveryLevel.OBJECT)).map(PropertyValuesMixin::toJson);
+        return doGet(createDiscoveryArgs(requestData, DiscoveryLevel.OBJECT)).map(BACnetPointEntity::toJson);
     }
 
     @Override
@@ -90,8 +89,8 @@ public final class BACnetObjectExplorer extends AbstractBACnetExplorer<BACnetPoi
         final DiscoveryArguments args = createDiscoveryArgs(requestData, DiscoveryLevel.DEVICE);
         final BACnetDevice device = getLocalDeviceFromCache(args);
         log.info("Discovering objects in device '{}' in network {}...",
-                 ObjectIdentifierMixin.serialize(args.remoteDeviceId()), device.protocol().identifier());
-        return device.discoverRemoteDevice(args.remoteDeviceId(), args.options())
+                 ObjectIdentifierMixin.serialize(args.params().remoteDeviceId()), device.protocol().identifier());
+        return device.discoverRemoteDevice(args.params().remoteDeviceId(), args.options())
                      .flatMap(remote -> getRemoteObjects(device, remote, args.options().isDetail()))
                      .map(opv -> DiscoveryResponse.builder().objects(opv).build())
                      .map(DiscoveryResponse::toJson)
@@ -111,25 +110,29 @@ public final class BACnetObjectExplorer extends AbstractBACnetExplorer<BACnetPoi
         return resource.getJsonObject("point", new JsonObject()).getString("id");
     }
 
-    private Single<ObjectPropertyValues> getRemoteObjects(@NonNull BACnetDevice device, @NonNull RemoteDevice rd,
-                                                          boolean detail) {
-        return Observable.fromIterable(Functions.getOrThrow(t -> new CarlException(EngineException.CODE, t),
+    private Single<BACnetPoints> getRemoteObjects(@NonNull BACnetDevice device, @NonNull RemoteDevice rd,
+                                                  boolean detail) {
+        return Observable.fromIterable(Functions.getOrThrow(t -> new CarlException(ErrorCode.SERVICE_ERROR, t),
                                                             () -> RequestUtils.getObjectList(device.localDevice(), rd)))
-                         .filter(objId -> objId.getObjectType() != ObjectType.device)
-                         .flatMapSingle(objId -> this.parseRemoteObject(device, rd, objId, detail, false)
-                                                     .map(props -> new SimpleEntry<>(objId, props)))
-                         .collect(ObjectPropertyValues::new,
-                                  (values, entry) -> values.add(entry.getKey(), entry.getValue()))
+                         .filter(oid -> oid.getObjectType() != ObjectType.device)
+                         .flatMapSingle(oid -> this.parseRemoteObject(device, rd, oid, detail, false)
+                                                   .map(pvm -> BACnetPointEntity.from(device.protocol().identifier(),
+                                                                                      rd.getObjectIdentifier(), pvm))
+                                                   .map(point -> new SimpleEntry<>(oid, point)))
+                         .collect(BACnetPoints::new, (values, entry) -> values.add(entry.getKey(), entry.getValue()))
                          .doFinally(device::stop);
     }
 
-    private Single<PropertyValuesMixin> doGet(@NonNull DiscoveryArguments args) {
+    private Single<BACnetPointEntity> doGet(@NonNull DiscoveryArguments args) {
         final BACnetDevice device = getLocalDeviceFromCache(args);
         log.info("Discovering object '{}' in device '{}' in network {}...",
-                 ObjectIdentifierMixin.serialize(args.objectCode()),
-                 ObjectIdentifierMixin.serialize(args.remoteDeviceId()), device.protocol().identifier());
-        return device.discoverRemoteDevice(args.remoteDeviceId(), args.options())
-                     .flatMap(rd -> parseRemoteObject(device, rd, args.objectCode(), true, args.options().isDetail()));
+                 ObjectIdentifierMixin.serialize(args.params().objectCode()),
+                 ObjectIdentifierMixin.serialize(args.params().remoteDeviceId()), device.protocol().identifier());
+        return device.discoverRemoteDevice(args.params().remoteDeviceId(), args.options())
+                     .flatMap(rd -> parseRemoteObject(device, rd, args.params().objectCode(), true,
+                                                      args.options().isDetail()))
+                     .map(pvm -> BACnetPointEntity.from(args.params().getNetworkId(), args.params().remoteDeviceId(),
+                                                        pvm));
     }
 
     private DiscoveryArguments validateCache(@NonNull DiscoveryArguments args) {
@@ -137,15 +140,15 @@ public final class BACnetObjectExplorer extends AbstractBACnetExplorer<BACnetPoi
         networkCache().getDataKey(device.protocol().identifier())
                       .orElseThrow(() -> new NotFoundException(
                           "Not found a persistence network by network code " + device.protocol().identifier()));
-        deviceCache().getDataKey(device.protocol(), args.remoteDeviceId())
+        deviceCache().getDataKey(device.protocol(), args.params().remoteDeviceId())
                      .orElseThrow(() -> new NotFoundException(
-                         "Not found a persistence device by remote device " + args.remoteDeviceId()));
-        final Optional<UUID> objectId = objectCache().getDataKey(device.protocol(), args.remoteDeviceId(),
-                                                                 args.objectCode());
+                         "Not found a persistence device by remote device " + args.params().remoteDeviceId()));
+        final Optional<UUID> objectId = objectCache().getDataKey(device.protocol(), args.params().remoteDeviceId(),
+                                                                 args.params().objectCode());
         if (objectId.isPresent()) {
             throw new AlreadyExistException(
-                "Already existed object " + ObjectIdentifierMixin.serialize(args.objectCode()) + " in device " +
-                args.remoteDeviceId() + " in network " + device.protocol().identifier());
+                "Already existed object " + ObjectIdentifierMixin.serialize(args.params().objectCode()) +
+                " in device " + args.params().remoteDeviceId() + " in network " + device.protocol().identifier());
         }
         return args;
     }

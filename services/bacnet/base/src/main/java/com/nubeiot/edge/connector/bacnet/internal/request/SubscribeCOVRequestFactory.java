@@ -22,11 +22,11 @@ public class SubscribeCOVRequestFactory implements ConfirmedRequestFactory<Subsc
     public @NonNull SubscribeCOVRequest factory(@NonNull DiscoveryArguments args,
                                                 @NonNull java.lang.Boolean unsubscribe) {
         if (unsubscribe) {
-            return new SubscribeCOVRequest(new UnsignedInteger(1), args.objectCode(), null, null);
+            return new SubscribeCOVRequest(new UnsignedInteger(1), args.params().objectCode(), null, null);
         }
         //Not sure first arg
         //lifetime = 0 means no expiry, in seconds
-        return new SubscribeCOVRequest(new UnsignedInteger(1), args.objectCode(),
+        return new SubscribeCOVRequest(new UnsignedInteger(1), args.params().objectCode(),
                                        com.serotonin.bacnet4j.type.primitive.Boolean.TRUE, new UnsignedInteger(0));
     }
 

@@ -135,11 +135,12 @@ final class DefaultBACnetDevice implements BACnetDevice {
                                                                                      @NonNull ConfirmedRequestFactory<T, D> factory) {
         return Single.just(factory.convertData(args, reqData))
                      .map(data -> factory.factory(args, data))
-                     .flatMap(request -> discoverRemoteDevice(args.remoteDeviceId(), args.options()).flatMap(rd -> {
-                         final Vertx vertx = sharedData().getVertx();
-                         return SingleHelper.toSingle(handler -> vertx.executeBlocking(
-                             p -> localDevice.send(rd, request, new BACnetResponseListener(action, p)), handler));
-                     }));
+                     .flatMap(
+                         request -> discoverRemoteDevice(args.params().remoteDeviceId(), args.options()).flatMap(rd -> {
+                             final Vertx vertx = sharedData().getVertx();
+                             return SingleHelper.toSingle(handler -> vertx.executeBlocking(
+                                 p -> localDevice.send(rd, request, new BACnetResponseListener(action, p)), handler));
+                         }));
     }
 
     private Single<LocalDevice> init(boolean force) {

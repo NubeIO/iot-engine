@@ -13,11 +13,11 @@ public class DiscoveryParamsTest {
     public void test_serialize() throws JSONException {
         final Ipv4Network firstActiveIp = Ipv4Network.getFirstActiveIp();
         final DiscoveryParams params = DiscoveryParams.builder()
-                                                      .networkCode(firstActiveIp.identifier())
+                                                      .networkId(firstActiveIp.identifier())
                                                       .deviceInstance(1)
                                                       .objectCode("analog-value:2")
                                                       .build();
-        final JsonObject expected = new JsonObject().put("networkCode", firstActiveIp.identifier())
+        final JsonObject expected = new JsonObject().put("networkId", firstActiveIp.identifier())
                                                     .put("deviceInstance", 1)
                                                     .put("objectCode", "analog-value:2");
         System.out.println(params.toJson());
@@ -26,19 +26,19 @@ public class DiscoveryParamsTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void test_validate_network() {
-        final JsonObject params = new JsonObject().put("networkCode", "");
+        final JsonObject params = new JsonObject().put("networkId", "");
         DiscoveryParams.from(params, DiscoveryLevel.NETWORK);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void test_validate_device_missing_network() {
-        final JsonObject params = new JsonObject().put("networkCode", "").put("deviceInstance", 1);
+        final JsonObject params = new JsonObject().put("networkId", "").put("deviceInstance", 1);
         DiscoveryParams.from(params, DiscoveryLevel.DEVICE);
     }
 
     @Test(expected = NullPointerException.class)
     public void test_validate_device_missing_device() {
-        final JsonObject params = new JsonObject().put("networkCode", "xyz");
+        final JsonObject params = new JsonObject().put("networkId", "xyz");
         DiscoveryParams.from(params, DiscoveryLevel.DEVICE);
     }
 
@@ -50,19 +50,19 @@ public class DiscoveryParamsTest {
 
     @Test(expected = NullPointerException.class)
     public void test_validate_object_missing_device() {
-        final JsonObject params = new JsonObject().put("networkCode", "xyz").put("objectCode", "1");
+        final JsonObject params = new JsonObject().put("networkId", "xyz").put("objectCode", "1");
         DiscoveryParams.from(params, DiscoveryLevel.OBJECT);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void test_validate_object_missing_obj() {
-        final JsonObject params = new JsonObject().put("networkCode", "xyz").put("deviceInstance", 1);
+        final JsonObject params = new JsonObject().put("networkId", "xyz").put("deviceInstance", 1);
         DiscoveryParams.from(params, DiscoveryLevel.OBJECT);
     }
 
     @Test
     public void test_deserialize_full() throws JSONException {
-        final JsonObject body = new JsonObject().put("networkCode", "xx")
+        final JsonObject body = new JsonObject().put("networkId", "xx")
                                                 .put("deviceInstance", 1)
                                                 .put("objectCode", "analog-value:2");
         final DiscoveryParams params = DiscoveryParams.from(body, DiscoveryLevel.OBJECT);

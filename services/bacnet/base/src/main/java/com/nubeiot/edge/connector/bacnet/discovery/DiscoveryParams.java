@@ -26,7 +26,7 @@ import lombok.extern.jackson.Jacksonized;
 public final class DiscoveryParams implements JsonData {
 
     private final JsonObject network;
-    private final String networkCode;
+    private final String networkId;
     private final Integer deviceInstance;
     private final String objectCode;
 
@@ -43,7 +43,7 @@ public final class DiscoveryParams implements JsonData {
     @NonNull
     public static DiscoveryParams validate(@NonNull DiscoveryParams request, @NonNull DiscoveryLevel level) {
         if (DiscoveryLevel.NETWORK.mustValidate(level)) {
-            Strings.requireNotBlank(request.getNetworkCode(), "Missing BACnet network code");
+            Strings.requireNotBlank(request.getNetworkId(), "Missing BACnet network code");
         }
         if (DiscoveryLevel.DEVICE.mustValidate(level)) {
             Objects.requireNonNull(request.getDeviceInstance(), "Missing BACnet device code");
@@ -55,14 +55,14 @@ public final class DiscoveryParams implements JsonData {
     }
 
     @JsonIgnore
-    public ObjectIdentifier getDeviceCode() {
+    public ObjectIdentifier remoteDeviceId() {
         return Optional.ofNullable(deviceInstance)
                        .map(number -> new ObjectIdentifier(ObjectType.device, number))
                        .orElse(null);
     }
 
     @JsonIgnore
-    public ObjectIdentifier getObjectId() {
+    public ObjectIdentifier objectCode() {
         return Optional.ofNullable(objectCode).map(code -> ObjectIdentifierMixin.deserialize(objectCode)).orElse(null);
     }
 

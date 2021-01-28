@@ -90,7 +90,7 @@ abstract class AbstractBACnetExplorer<P extends IoTEntity> extends BaseRpcProtoc
         return Optional.ofNullable(params.getNetwork())
                        .map(n -> BACnetNetwork.factory(n).toProtocol())
                        .map(p -> networkCache().add(p.identifier(), p).get(p.identifier()))
-                       .orElseGet(() -> networkCache().get(params.getNetworkCode()));
+                       .orElseGet(() -> networkCache().get(params.getNetworkId()));
     }
 
     final Single<PropertyValuesMixin> parseRemoteObject(@NonNull BACnetDevice device,

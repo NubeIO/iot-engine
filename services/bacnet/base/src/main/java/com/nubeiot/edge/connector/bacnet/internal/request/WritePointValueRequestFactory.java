@@ -21,7 +21,7 @@ public class WritePointValueRequestFactory implements ConfirmedRequestFactory<Wr
     public @NonNull PropertyValue convertData(@NonNull DiscoveryArguments args, @NonNull RequestData requestData) {
         final PointValue pv = Objects.requireNonNull(PointValue.from(requestData.body()), "Point Value is null");
         final PropertyIdentifier pi = PropertyIdentifier.presentValue;
-        final Encodable encodable = EncodableDeserializer.parse(args.objectCode(), pi, pv.getValue());
+        final Encodable encodable = EncodableDeserializer.parse(args.params().objectCode(), pi, pv.getValue());
         if (Objects.isNull(encodable)) {
             throw new IllegalArgumentException("Unrecognized value");
         }
@@ -30,8 +30,8 @@ public class WritePointValueRequestFactory implements ConfirmedRequestFactory<Wr
 
     @Override
     public @NonNull WritePropertyRequest factory(@NonNull DiscoveryArguments args, @NonNull PropertyValue pv) {
-        return new WritePropertyRequest(args.objectCode(), pv.getPropertyIdentifier(), pv.getPropertyArrayIndex(),
-                                        pv.getValue(), pv.getPriority());
+        return new WritePropertyRequest(args.params().objectCode(), pv.getPropertyIdentifier(),
+                                        pv.getPropertyArrayIndex(), pv.getValue(), pv.getPriority());
     }
 
 }

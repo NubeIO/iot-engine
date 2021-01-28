@@ -40,7 +40,7 @@ public final class BACnetDeviceExplorer extends AbstractBACnetExplorer<BACnetDev
 
     @Override
     public @NonNull String servicePath() {
-        return "/network/:" + DiscoveryParams.Fields.networkCode + "/device";
+        return "/network/:" + DiscoveryParams.Fields.networkId + "/device";
     }
 
     @Override
@@ -75,8 +75,8 @@ public final class BACnetDeviceExplorer extends AbstractBACnetExplorer<BACnetDev
     private Single<BACnetDeviceEntity> doGet(@NonNull DiscoveryArguments args) {
         final BACnetDevice device = getLocalDeviceFromCache(args);
         log.info("Discovering remote device {} in network {}...",
-                 ObjectIdentifierMixin.serialize(args.remoteDeviceId()), device.protocol().identifier());
-        return device.discoverRemoteDevice(args.remoteDeviceId(), args.options())
+                 ObjectIdentifierMixin.serialize(args.params().remoteDeviceId()), device.protocol().identifier());
+        return device.discoverRemoteDevice(args.params().remoteDeviceId(), args.options())
                      .flatMap(rd -> parseRemoteDevice(device, rd, true, args.options().isDetail()))
                      .doFinally(device::stop);
     }
@@ -96,11 +96,11 @@ public final class BACnetDeviceExplorer extends AbstractBACnetExplorer<BACnetDev
         networkCache().getDataKey(device.protocol().identifier())
                       .orElseThrow(() -> new NotFoundException(
                           "Not found a persistence network by network code " + device.protocol().identifier()));
-        final Optional<UUID> deviceId = deviceCache().getDataKey(device.protocol(), args.remoteDeviceId());
+        final Optional<UUID> deviceId = deviceCache().getDataKey(device.protocol(), args.params().remoteDeviceId());
         if (deviceId.isPresent()) {
             throw new AlreadyExistException(
-                "Already existed device " + ObjectIdentifierMixin.serialize(args.remoteDeviceId()) + " in network " +
-                device.protocol().identifier());
+                "Already existed device " + ObjectIdentifierMixin.serialize(args.params().remoteDeviceId()) +
+                " in network " + device.protocol().identifier());
         }
         return args;
     }
