@@ -16,24 +16,27 @@ import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.github.zero88.qwe.utils.ExecutorHelpers;
 import io.github.zero88.utils.Functions;
 import io.reactivex.Single;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.reactivex.SingleHelper;
 
 import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
+import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryOptions;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryResponse;
+import com.nubeiot.edge.connector.bacnet.entity.BACnetDeviceEntity;
+import com.nubeiot.edge.connector.bacnet.internal.listener.BACnetResponseListener;
+import com.nubeiot.edge.connector.bacnet.internal.request.ConfirmedRequestFactory;
 import com.nubeiot.edge.connector.bacnet.internal.request.RemoteDeviceScanner;
 import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
-import com.serotonin.bacnet4j.ServiceFuture;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
-import com.serotonin.bacnet4j.service.acknowledgement.AcknowledgementService;
-import com.serotonin.bacnet4j.service.confirmed.SubscribeCOVRequest;
+import com.serotonin.bacnet4j.service.confirmed.ConfirmedRequestService;
 import com.serotonin.bacnet4j.transport.Transport;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
-import com.serotonin.bacnet4j.type.primitive.Boolean;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
@@ -125,13 +128,18 @@ final class DefaultBACnetDevice implements BACnetDevice {
                                        () -> ld.getRemoteDevice(deviceCode.getInstanceNumber()).get(timeout)));
     }
 
-    public Single<JsonObject> subscribe(@NonNull RemoteDeviceMixin remoteDevice, @NonNull ObjectIdentifier pointId) {
-        return Single.just(localDevice.send(remoteDevice.getAddress().unwrap(),
-                                            new SubscribeCOVRequest(new UnsignedInteger(4), pointId, Boolean.TRUE,
-                                                                    new UnsignedInteger(0))))
-                     .map(ServiceFuture::get)
-                     .map(o -> ((AcknowledgementService) o))
-                     .map(s -> new JsonObject());
+    @Override
+    public @NonNull <T extends ConfirmedRequestService, D> Single<EventMessage> send(@NonNull EventAction action,
+                                                                                     @NonNull DiscoveryArguments args,
+                                                                                     @NonNull RequestData reqData,
+                                                                                     @NonNull ConfirmedRequestFactory<T, D> factory) {
+        return Single.just(factory.convertData(args, reqData))
+                     .map(data -> factory.factory(args, data))
+                     .flatMap(request -> discoverRemoteDevice(args.remoteDeviceId(), args.options()).flatMap(rd -> {
+                         final Vertx vertx = sharedData().getVertx();
+                         return SingleHelper.toSingle(handler -> vertx.executeBlocking(
+                             p -> localDevice.send(rd, request, new BACnetResponseListener(action, p)), handler));
+                     }));
     }
 
     private Single<LocalDevice> init(boolean force) {
@@ -144,17 +152,20 @@ final class DefaultBACnetDevice implements BACnetDevice {
     }
 
     private void handleAfterScan(RemoteDeviceScanner scanner, Throwable t) {
-        final EventbusClient client = EventbusClient.create(this.sharedData.getVertx(), this.sharedData.getSharedKey());
+        final EventbusClient client = EventbusClient.create(this.sharedData);
         final EventMessage msg = Objects.isNull(t) ? createSuccessDiscoverMsg(scanner) : createErrorDiscoverMsg(t);
         client.publish(config.getCompleteDiscoverAddress(), msg);
     }
 
     private EventMessage createSuccessDiscoverMsg(@NonNull RemoteDeviceScanner scanner) {
-        final List<RemoteDeviceMixin> remotes = scanner.getRemoteDevices()
-                                                       .stream()
-                                                       .map(RemoteDeviceMixin::create)
-                                                       .collect(Collectors.toList());
-        final JsonObject body = DiscoveryResponse.builder().network(protocol()).config(config())
+        final List<BACnetDeviceEntity> remotes = scanner.getRemoteDevices()
+                                                        .stream()
+                                                        .map(RemoteDeviceMixin::create)
+                                                        .map(rdm -> BACnetDeviceEntity.builder().mixin(rdm).build())
+                                                        .collect(Collectors.toList());
+        final JsonObject body = DiscoveryResponse.builder()
+                                                 .network(protocol())
+                                                 .config(config())
                                                  .remoteDevices(remotes)
                                                  .build()
                                                  .toJson();

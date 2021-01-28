@@ -1,22 +1,6 @@
 package com.nubeiot.edge.connector.bacnet.service.subscriber;
 
-import java.util.Objects;
-
-import io.github.zero88.qwe.event.EventAction;
-import io.github.zero88.qwe.event.EventMessage;
-import io.github.zero88.qwe.exceptions.converter.CarlExceptionConverter;
-import io.reactivex.Single;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
-
-import com.nubeiot.edge.connector.bacnet.BACnetDevice;
-import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryRequest;
-import com.nubeiot.edge.connector.bacnet.mixin.BACnetExceptionConverter;
-import com.nubeiot.edge.connector.bacnet.mixin.deserializer.EncodableDeserializer;
-import com.serotonin.bacnet4j.exception.BACnetException;
-import com.serotonin.bacnet4j.type.Encodable;
-import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
-import com.serotonin.bacnet4j.util.RequestUtils;
 
 import lombok.NonNull;
 
@@ -26,28 +10,6 @@ public final class PointValueSubscriber /*extends AbstractProtocolSubscriber<Poi
 
     PointValueSubscriber(@NonNull Vertx vertx, @NonNull String sharedKey) {
         /*super(vertx, sharedKey);*/
-    }
-
-    //TODO refactor it
-    public static Single<JsonObject> write(@NonNull BACnetDevice device, @NonNull DiscoveryRequest request,
-                                           @NonNull JsonObject pointValueData) {
-        final Encodable encodable = EncodableDeserializer.parse(request.objectCode(), PropertyIdentifier.presentValue,
-                                                                pointValueData.remove("value"));
-        if (Objects.isNull(encodable)) {
-            return Single.error(new IllegalArgumentException("Unrecognized value"));
-        }
-        //        final int priority = PointValueMetadata.INSTANCE.parseFromRequest(pointValueData).getPriority();
-        final int priority = pointValueData.getInteger("priority");
-        return device.discoverRemoteDevice(request.remoteDeviceId(), request.options()).map(rd -> {
-            RequestUtils.writeProperty(device.localDevice(), rd, request.objectCode(), PropertyIdentifier.presentValue,
-                                       encodable, priority);
-            return EventMessage.success(EventAction.PATCH).toJson();
-        }).onErrorReturn(throwable -> {
-            if (throwable instanceof BACnetException) {
-                throw BACnetExceptionConverter.convert((BACnetException) throwable);
-            }
-            throw CarlExceptionConverter.friendly(throwable);
-        });
     }
 
     //    @Override

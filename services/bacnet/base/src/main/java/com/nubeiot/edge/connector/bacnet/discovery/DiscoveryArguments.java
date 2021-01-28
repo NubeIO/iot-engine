@@ -10,7 +10,7 @@ import lombok.experimental.Accessors;
 @Getter
 @Accessors(fluent = true)
 @RequiredArgsConstructor
-public final class DiscoveryRequest {
+public final class DiscoveryArguments {
 
     @NonNull
     private final DiscoveryParams params;

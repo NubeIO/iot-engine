@@ -4,14 +4,20 @@ import java.util.Arrays;
 import java.util.List;
 
 import io.github.zero88.qwe.component.HasSharedData;
+import io.github.zero88.qwe.dto.msg.RequestData;
+import io.github.zero88.qwe.event.EventAction;
+import io.github.zero88.qwe.event.EventMessage;
 import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.reactivex.Single;
 
+import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryOptions;
+import com.nubeiot.edge.connector.bacnet.internal.request.ConfirmedRequestFactory;
 import com.nubeiot.edge.connector.bacnet.internal.request.RemoteDeviceScanner;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
+import com.serotonin.bacnet4j.service.confirmed.ConfirmedRequestService;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
 import lombok.NonNull;
@@ -114,5 +120,21 @@ public interface BACnetDevice extends HasSharedData {
      */
     @NonNull Single<RemoteDevice> discoverRemoteDevice(@NonNull ObjectIdentifier deviceCode,
                                                        @NonNull DiscoveryOptions options);
+
+    /**
+     * Send BACnet request
+     *
+     * @param action      Event action
+     * @param args        Discovery request arguments
+     * @param requestData Request data
+     * @param factory     BACnet request
+     * @return json result
+     * @see DiscoveryArguments
+     * @see ConfirmedRequestFactory
+     */
+    @NonNull <T extends ConfirmedRequestService, D> Single<EventMessage> send(@NonNull EventAction action,
+                                                                              @NonNull DiscoveryArguments args,
+                                                                              @NonNull RequestData requestData,
+                                                                              @NonNull ConfirmedRequestFactory<T, D> factory);
 
 }

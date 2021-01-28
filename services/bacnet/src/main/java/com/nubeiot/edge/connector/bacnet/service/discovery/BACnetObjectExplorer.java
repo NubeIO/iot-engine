@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
+import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventContractor;
@@ -25,15 +26,15 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
+import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryParams;
-import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryRequest;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryResponse;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetPointEntity;
+import com.nubeiot.edge.connector.bacnet.internal.request.WritePointValueRequestFactory;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectPropertyValues;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
-import com.nubeiot.edge.connector.bacnet.service.subscriber.PointValueSubscriber;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.util.RequestUtils;
@@ -45,8 +46,8 @@ import lombok.extern.slf4j.Slf4j;
 public final class BACnetObjectExplorer extends AbstractBACnetExplorer<BACnetPointEntity>
     implements BACnetExplorer<BACnetPointEntity> {
 
-    BACnetObjectExplorer(@NonNull SharedDataLocalProxy sharedDataProxy) {
-        super(sharedDataProxy);
+    BACnetObjectExplorer(@NonNull SharedDataLocalProxy sharedData) {
+        super(sharedData);
     }
 
     @Override
@@ -79,29 +80,30 @@ public final class BACnetObjectExplorer extends AbstractBACnetExplorer<BACnetPoi
         return ActionMethodMapping.create(map);
     }
 
-    @EventContractor(action = "PATCH", returnType = Single.class)
-    public Single<JsonObject> patchPointValue(RequestData requestData) {
-        final DiscoveryRequest request = createDiscoveryRequest(requestData, DiscoveryLevel.OBJECT);
-        final BACnetDevice device = getBACnetDeviceFromCache(request);
-        return PointValueSubscriber.write(device, request, requestData.body());
-    }
-
     @Override
     public Single<JsonObject> discover(RequestData requestData) {
-        return doGet(createDiscoveryRequest(requestData, DiscoveryLevel.OBJECT)).map(PropertyValuesMixin::toJson);
+        return doGet(createDiscoveryArgs(requestData, DiscoveryLevel.OBJECT)).map(PropertyValuesMixin::toJson);
     }
 
     @Override
     public Single<JsonObject> discoverMany(RequestData requestData) {
-        final DiscoveryRequest request = createDiscoveryRequest(requestData, DiscoveryLevel.DEVICE);
-        final BACnetDevice device = getBACnetDeviceFromCache(request);
+        final DiscoveryArguments args = createDiscoveryArgs(requestData, DiscoveryLevel.DEVICE);
+        final BACnetDevice device = getLocalDeviceFromCache(args);
         log.info("Discovering objects in device '{}' in network {}...",
-                 ObjectIdentifierMixin.serialize(request.remoteDeviceId()), device.protocol().identifier());
-        return device.discoverRemoteDevice(request.remoteDeviceId(), request.options())
-                     .flatMap(remote -> getRemoteObjects(device, remote, request.options().isDetail()))
+                 ObjectIdentifierMixin.serialize(args.remoteDeviceId()), device.protocol().identifier());
+        return device.discoverRemoteDevice(args.remoteDeviceId(), args.options())
+                     .flatMap(remote -> getRemoteObjects(device, remote, args.options().isDetail()))
                      .map(opv -> DiscoveryResponse.builder().objects(opv).build())
                      .map(DiscoveryResponse::toJson)
                      .doFinally(device::stop);
+    }
+
+    @EventContractor(action = "PATCH", returnType = Single.class)
+    public Single<JsonObject> patchPointValue(RequestData requestData) {
+        final DiscoveryArguments args = createDiscoveryArgs(requestData, DiscoveryLevel.OBJECT);
+        final BACnetDevice device = getLocalDeviceFromCache(args);
+        return device.send(EventAction.PATCH, args, requestData, new WritePointValueRequestFactory())
+                     .map(JsonData::toJson);
     }
 
     @Override
@@ -121,32 +123,31 @@ public final class BACnetObjectExplorer extends AbstractBACnetExplorer<BACnetPoi
                          .doFinally(device::stop);
     }
 
-    private Single<PropertyValuesMixin> doGet(@NonNull DiscoveryRequest request) {
-        final BACnetDevice device = getBACnetDeviceFromCache(request);
+    private Single<PropertyValuesMixin> doGet(@NonNull DiscoveryArguments args) {
+        final BACnetDevice device = getLocalDeviceFromCache(args);
         log.info("Discovering object '{}' in device '{}' in network {}...",
-                 ObjectIdentifierMixin.serialize(request.objectCode()),
-                 ObjectIdentifierMixin.serialize(request.remoteDeviceId()), device.protocol().identifier());
-        return device.discoverRemoteDevice(request.remoteDeviceId(), request.options())
-                     .flatMap(
-                         rd -> parseRemoteObject(device, rd, request.objectCode(), true, request.options().isDetail()));
+                 ObjectIdentifierMixin.serialize(args.objectCode()),
+                 ObjectIdentifierMixin.serialize(args.remoteDeviceId()), device.protocol().identifier());
+        return device.discoverRemoteDevice(args.remoteDeviceId(), args.options())
+                     .flatMap(rd -> parseRemoteObject(device, rd, args.objectCode(), true, args.options().isDetail()));
     }
 
-    private DiscoveryRequest validateCache(@NonNull DiscoveryRequest request) {
-        final BACnetDevice device = getBACnetDeviceFromCache(request);
+    private DiscoveryArguments validateCache(@NonNull DiscoveryArguments args) {
+        final BACnetDevice device = getLocalDeviceFromCache(args);
         networkCache().getDataKey(device.protocol().identifier())
                       .orElseThrow(() -> new NotFoundException(
                           "Not found a persistence network by network code " + device.protocol().identifier()));
-        deviceCache().getDataKey(device.protocol(), request.remoteDeviceId())
+        deviceCache().getDataKey(device.protocol(), args.remoteDeviceId())
                      .orElseThrow(() -> new NotFoundException(
-                         "Not found a persistence device by remote device " + request.remoteDeviceId()));
-        final Optional<UUID> objectId = objectCache().getDataKey(device.protocol(), request.remoteDeviceId(),
-                                                                 request.objectCode());
+                         "Not found a persistence device by remote device " + args.remoteDeviceId()));
+        final Optional<UUID> objectId = objectCache().getDataKey(device.protocol(), args.remoteDeviceId(),
+                                                                 args.objectCode());
         if (objectId.isPresent()) {
             throw new AlreadyExistException(
-                "Already existed object " + ObjectIdentifierMixin.serialize(request.objectCode()) + " in device " +
-                request.remoteDeviceId() + " in network " + device.protocol().identifier());
+                "Already existed object " + ObjectIdentifierMixin.serialize(args.objectCode()) + " in device " +
+                args.remoteDeviceId() + " in network " + device.protocol().identifier());
         }
-        return request;
+        return args;
     }
 
 }

@@ -22,10 +22,10 @@ import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetObjectCache;
+import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryOptions;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryParams;
-import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryRequest;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.nubeiot.iotdata.IoTEntity;
@@ -124,12 +124,12 @@ abstract class AbstractBACnetExplorer<P extends IoTEntity> extends BaseRpcProtoc
 
     protected abstract String parseResourceId(@NonNull JsonObject resource);
 
-    protected final @NonNull DiscoveryRequest createDiscoveryRequest(@NonNull RequestData reqData,
-                                                                     @NonNull DiscoveryLevel level) {
-        return new DiscoveryRequest(DiscoveryParams.from(reqData, level), parseDiscoverOptions(reqData));
+    protected final @NonNull DiscoveryArguments createDiscoveryArgs(@NonNull RequestData reqData,
+                                                                    @NonNull DiscoveryLevel level) {
+        return new DiscoveryArguments(DiscoveryParams.from(reqData, level), parseDiscoverOptions(reqData));
     }
 
-    protected final @NonNull BACnetDevice getBACnetDeviceFromCache(@NonNull DiscoveryRequest request) {
+    protected final @NonNull BACnetDevice getLocalDeviceFromCache(@NonNull DiscoveryArguments request) {
         return deviceCache().get(parseNetworkProtocol(request.params()));
     }
 
