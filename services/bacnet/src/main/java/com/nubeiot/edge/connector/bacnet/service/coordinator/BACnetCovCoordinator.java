@@ -1,8 +1,9 @@
-package com.nubeiot.edge.connector.bacnet.internal.listener;
+package com.nubeiot.edge.connector.bacnet.service.coordinator;
 
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
+import io.reactivex.Single;
+import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.rpc.watcher.WatcherOption;
 import com.nubeiot.edge.connector.bacnet.service.InboundBACnetCoordinator;
 import com.nubeiot.iotdata.IoTEntity;
 
@@ -26,7 +27,12 @@ public final class BACnetCovCoordinator implements InboundBACnetCoordinator<IoTE
     }
 
     @Override
-    public WatcherOption option() {
+    public Single<JsonObject> register() {
+        return null;
+    }
+
+    @Override
+    public String publishAddress() {
         return null;
     }
 
