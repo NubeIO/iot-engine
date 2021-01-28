@@ -50,7 +50,7 @@ public class PointPriorityValueTest {
     public void test_get_highest_value() {
         final PointValue highestValue = pv.findHighestValue();
         Assert.assertEquals(2, highestValue.getPriority());
-        Assert.assertEquals(3.5d, highestValue.getValue(), 0.0);
+        Assert.assertEquals(3.5d, highestValue.getRawValue(), 0.0);
     }
 
     @Test
@@ -66,7 +66,7 @@ public class PointPriorityValueTest {
     public void test_get_next_highest_value_with_highest_is_null() {
         final PointValue highestValue = pv.add(1, null).findHighestValue();
         Assert.assertEquals(2, highestValue.getPriority());
-        Assert.assertEquals(3.5d, highestValue.getValue(), 0.0);
+        Assert.assertEquals(3.5d, highestValue.getRawValue(), 0.0);
     }
 
     @Test(expected = IllegalArgumentException.class)

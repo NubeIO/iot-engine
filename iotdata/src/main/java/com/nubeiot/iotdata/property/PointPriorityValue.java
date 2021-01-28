@@ -148,8 +148,8 @@ public final class PointPriorityValue implements JsonData, IoTProperty, Timeseri
                   .stream()
                   .filter(entry -> Objects.nonNull(entry.getValue()))
                   .findFirst()
-                  .map(entry -> new PointValue(entry.getKey(), entry.getValue()))
-                  .orElse(new PointValue(DEFAULT_PRIORITY, null));
+                  .map(entry -> PointValue.builder().priority(entry.getKey()).rawValue(entry.getValue()).build())
+                  .orElse(PointValue.createDef());
     }
 
     @Override
