@@ -2,7 +2,6 @@ package com.nubeiot.edge.connector.bacnet.mixin;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 import io.vertx.core.json.JsonObject;
 
@@ -12,19 +11,16 @@ import com.serotonin.bacnet4j.type.constructed.Address;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 
 @Getter
 @Accessors(chain = true)
 @Builder(builderClassName = "Builder")
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public final class RemoteDeviceMixin implements BACnetJsonMixin {
 
     @JsonIgnore
@@ -34,10 +30,6 @@ public final class RemoteDeviceMixin implements BACnetJsonMixin {
     private final AddressMixin address;
     @JsonIgnore
     private final PropertyValuesMixin propertyValues;
-    @Setter
-    private String networkCode;
-    @Setter
-    private UUID networkId;
 
     public static RemoteDeviceMixin create(@NonNull RemoteDevice device) {
         return create(device, null);
