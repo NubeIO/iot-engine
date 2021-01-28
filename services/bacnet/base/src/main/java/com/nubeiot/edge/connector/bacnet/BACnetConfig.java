@@ -32,6 +32,8 @@ public class BACnetConfig implements IConfig {
     @Default
     private final String modelName = "QWE-BACnet";
     @Default
+    private String deviceName = "Wanna Fly";
+    @Default
     private final long maxDiscoverTimeout = 6;
     @Default
     private final TimeUnit maxDiscoverTimeoutUnit = TimeUnit.SECONDS;
@@ -41,7 +43,6 @@ public class BACnetConfig implements IConfig {
     private final String readinessAddress = BACnetConfig.class.getPackage().getName() + ".readiness";
     @Default
     private final boolean enableSubscriber = false;
-    private String deviceName = "Wanna Fly";
 
     @Override
     public final String key() {
