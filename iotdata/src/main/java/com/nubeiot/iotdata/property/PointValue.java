@@ -7,6 +7,7 @@ import io.github.zero88.utils.Functions;
 import io.reactivex.annotations.Nullable;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.iotdata.IoTProperty;
 import com.nubeiot.iotdata.TimeseriesData;
 
 import lombok.Builder;
@@ -24,7 +25,7 @@ import lombok.extern.jackson.Jacksonized;
 @Builder
 @Jacksonized
 @FieldNameConstants
-public final class PointValue implements JsonData, TimeseriesData {
+public final class PointValue implements JsonData, IoTProperty, TimeseriesData {
 
     private final int priority;
     private final String value;
@@ -46,7 +47,7 @@ public final class PointValue implements JsonData, TimeseriesData {
         return null;
     }
 
-    static class PointValueBuilder {
+    public static class PointValueBuilder {
 
         private Integer priority;
 

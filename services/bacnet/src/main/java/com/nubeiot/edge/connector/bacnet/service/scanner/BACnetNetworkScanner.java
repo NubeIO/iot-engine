@@ -6,7 +6,7 @@ import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import com.nubeiot.core.rpc.scanner.AbstractRpcScanner;
 import com.nubeiot.core.rpc.scanner.NetworkRpcScanner;
 import com.nubeiot.edge.connector.bacnet.BACnetProtocol;
-import com.nubeiot.edge.connector.bacnet.converter.BACnetNetworkConverter;
+import com.nubeiot.edge.connector.bacnet.converter.entity.BACnetNetworkConverter;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;
 
 import lombok.NonNull;

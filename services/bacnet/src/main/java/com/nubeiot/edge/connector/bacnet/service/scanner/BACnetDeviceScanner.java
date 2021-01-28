@@ -5,7 +5,6 @@ import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import com.nubeiot.core.rpc.scanner.AbstractRpcScanner;
 import com.nubeiot.core.rpc.scanner.DeviceRpcScanner;
 import com.nubeiot.edge.connector.bacnet.BACnetProtocol;
-import com.nubeiot.edge.connector.bacnet.converter.BACnetDeviceConverter;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetDeviceEntity;
 import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
 
@@ -15,7 +14,7 @@ public final class BACnetDeviceScanner extends AbstractRpcScanner<BACnetDeviceEn
     implements DeviceRpcScanner<BACnetDeviceEntity, RemoteDeviceMixin>, BACnetProtocol {
 
     BACnetDeviceScanner(@NonNull SharedDataLocalProxy sharedData) {
-        super(sharedData, new BACnetDeviceConverter());
+        super(sharedData, null);
     }
 
     @Override

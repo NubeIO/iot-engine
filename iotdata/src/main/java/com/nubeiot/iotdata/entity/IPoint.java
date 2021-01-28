@@ -13,6 +13,13 @@ import lombok.NonNull;
 public interface IPoint<K> extends IoTEntity<K>, HasObjectType<PointType> {
 
     /**
+     * Retrieve a network identifier that point belongs to
+     *
+     * @return network identifier
+     */
+    @NonNull String networkId();
+
+    /**
      * Retrieve a device identifier that point belongs to
      *
      * @return network identifier

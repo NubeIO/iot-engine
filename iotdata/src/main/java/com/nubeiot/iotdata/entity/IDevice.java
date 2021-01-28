@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import com.nubeiot.iotdata.IoTEntity;
+import com.nubeiot.iotdata.enums.DeviceStatus;
 import com.nubeiot.iotdata.enums.DeviceType;
 
 import lombok.NonNull;
@@ -21,6 +22,10 @@ public interface IDevice<K> extends IoTEntity<K>, HasObjectType<DeviceType> {
      * @return network identifier
      */
     @NonNull String networkId();
+
+    @NonNull String name();
+
+    @NonNull DeviceStatus status();
 
     /**
      * Return list of points that belongs to network

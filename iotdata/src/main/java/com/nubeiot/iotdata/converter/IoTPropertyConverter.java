@@ -3,14 +3,13 @@ package com.nubeiot.iotdata.converter;
 import com.nubeiot.iotdata.IoTProperty;
 
 /**
- * Represents {@code translator} between {@code Nube IoT enum type} and the equivalent enum type in another {@code
- * protocol}*
+ * Represents a {@code converter} between two equivalent types of {@code IoT entity} with different protocol
  *
- * @param <T> Nube IoT notion type
- * @param <U> Protocol notion type
+ * @param <T> Type of IoT property
+ * @param <U> Type of IoT property or mixin from specific protocol
  * @see IoTProperty
  * @since 1.0.0
  */
-public interface IoTPropertyConverter<T extends IoTProperty, U extends IoTProperty> extends IoTConverter<T, U> {
+public interface IoTPropertyConverter<T extends IoTProperty, U> extends IoTConverter<T, U> {
 
 }

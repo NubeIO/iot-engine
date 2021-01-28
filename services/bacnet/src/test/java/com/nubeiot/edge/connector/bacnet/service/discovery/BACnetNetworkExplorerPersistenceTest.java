@@ -34,7 +34,7 @@ import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.service.mock.MockNetworkPersistService;
 import com.nubeiot.edge.connector.bacnet.service.mock.MockProtocolDispatcherService;
-import com.nubeiot.iotdata.enums.State;
+import com.nubeiot.iotdata.enums.DeviceStatus;
 
 public class BACnetNetworkExplorerPersistenceTest extends BACnetWithGatewayTest {
 
@@ -73,7 +73,7 @@ public class BACnetNetworkExplorerPersistenceTest extends BACnetWithGatewayTest 
                                                     .put("status", Status.SUCCESS)
                                                     .put("resource",
                                                          new JsonObject().put("protocol", Protocol.BACnet.type())
-                                                                         .put("state", State.ENABLED)
+                                                                         .put("state", DeviceStatus.UP)
                                                                          .put("code", protocol.identifier())
                                                                          .put("metadata", protocol.toJson())
                                                                          .put("id", "exclude"));
