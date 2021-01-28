@@ -4,12 +4,11 @@ import java.util.function.Supplier;
 
 import io.github.zero88.qwe.cache.CacheInitializer;
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
-import io.github.zero88.utils.Strings;
 
 import com.nubeiot.core.rpc.RpcProtocolClient;
-import com.nubeiot.edge.connector.bacnet.BACnetConfig;
+import com.nubeiot.edge.connector.bacnet.BACnetDevice;
+import com.nubeiot.edge.connector.bacnet.BACnetServiceConfig;
 
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -19,14 +18,11 @@ public final class BACnetCacheInitializer implements CacheInitializer<BACnetCach
     public static final String LOCAL_NETWORK_CACHE = "LOCAL_NETWORK_CACHE";
     public static final String BACNET_DEVICE_CACHE = "BACNET_DEVICE_CACHE";
     public static final String BACNET_OBJECT_CACHE = "BACNET_OBJECT_CACHE";
-    @NonNull
-    @Getter
-    private final BACnetConfig config;
 
     @Override
     public BACnetCacheInitializer init(@NonNull SharedDataLocalProxy context) {
-        context.addData(RpcProtocolClient.GATEWAY_ADDRESS,
-                        Strings.requireNotBlank(config.getGatewayAddress(), "Missing gateway address config"));
+        BACnetServiceConfig config = context.getData(BACnetDevice.CONFIG_KEY);
+        context.addData(RpcProtocolClient.GATEWAY_ADDRESS, config.getGatewayAddress());
         addBlockingCache(context, LOCAL_NETWORK_CACHE, BACnetNetworkCache::init);
         addBlockingCache(context, BACNET_DEVICE_CACHE, () -> BACnetDeviceCache.init(context));
         addBlockingCache(context, BACNET_OBJECT_CACHE, BACnetObjectCache::new);

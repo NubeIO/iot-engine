@@ -1,6 +1,7 @@
 package com.nubeiot.core.rpc.coordinator;
 
 import com.nubeiot.core.rpc.RpcProtocolClient;
+import com.nubeiot.core.rpc.watcher.WatcherOption;
 import com.nubeiot.iotdata.IoTEntity;
 
 /**
@@ -11,4 +12,8 @@ import com.nubeiot.iotdata.IoTEntity;
  * @see RpcProtocolClient
  * @see IoTEntity
  */
-public interface InboundCoordinator<P extends IoTEntity> extends RpcProtocolClient<P> {}
+public interface InboundCoordinator<P extends IoTEntity> extends RpcProtocolClient<P> {
+
+    WatcherOption option();
+
+}

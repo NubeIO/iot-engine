@@ -16,7 +16,7 @@ import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryParams;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryRequest;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryResponse;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetDeviceEntity;
-import com.nubeiot.edge.connector.bacnet.internal.RemoteDeviceScanner;
+import com.nubeiot.edge.connector.bacnet.internal.request.RemoteDeviceScanner;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
 import com.serotonin.bacnet4j.RemoteDevice;

@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.bacnet.dto;
+package com.nubeiot.edge.connector.bacnet.internal;
 
 import java.util.function.Supplier;
 

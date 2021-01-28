@@ -62,12 +62,12 @@ public abstract class BaseBACnetVerticleTest {
         return new DeploymentOptions().setConfig(nubeConfig.toJson());
     }
 
-    protected BACnetConfig createBACnetConfig() {
-        return IConfig.fromClasspath("testConfig.json", BACnetConfig.class);
+    protected BACnetServiceConfig createBACnetConfig() {
+        return IConfig.fromClasspath("testConfig.json", BACnetServiceConfig.class);
     }
 
     protected BACnetApplication deployBACnetApplication(TestContext context, Async async) {
-        final BACnetConfig bacnetCfg = createBACnetConfig();
+        final BACnetServiceConfig bacnetCfg = createBACnetConfig();
         final DeploymentOptions options = createDeploymentOptions(bacnetCfg);
         final BACnetApplication verticle = new BACnetApplication();
         return VertxHelper.deploy(vertx, context, options, verticle, deployId -> {

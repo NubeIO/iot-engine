@@ -13,11 +13,8 @@ public final class BACnetSubscriptionManager
     /*extends AbstractProtocolRpcSubscription<BACnetRpcSubscription, BACnetSubscriber<BACnetEntity>>
     implements BACnetRpcProtocol<BACnetEntity>*/ {
 
-    private final boolean isMaster;
-
-    public BACnetSubscriptionManager(@NonNull Vertx vertx, @NonNull String sharedKey, boolean isMaster) {
+    public BACnetSubscriptionManager(@NonNull Vertx vertx, @NonNull String sharedKey) {
         //        super(vertx, sharedKey);
-        this.isMaster = isMaster;
     }
 
     public Single<JsonObject> register(@NonNull OutboundBACnetCoordinator<BACnetEntity> subscriber) {

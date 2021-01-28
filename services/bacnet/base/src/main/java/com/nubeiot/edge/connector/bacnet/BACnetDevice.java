@@ -3,12 +3,12 @@ package com.nubeiot.edge.connector.bacnet;
 import java.util.Arrays;
 import java.util.List;
 
+import io.github.zero88.qwe.component.HasSharedData;
 import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.reactivex.Single;
 
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryOptions;
-import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
-import com.nubeiot.edge.connector.bacnet.internal.RemoteDeviceScanner;
+import com.nubeiot.edge.connector.bacnet.internal.request.RemoteDeviceScanner;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
@@ -21,16 +21,21 @@ import lombok.NonNull;
  *
  * @since 1.0.0
  */
-public interface BACnetDevice {
+public interface BACnetDevice extends HasSharedData {
 
     /**
-     * Gets local device metadata.
+     * The constant CONFIG_KEY in cache.
+     */
+    String CONFIG_KEY = "BACNET_CONFIG";
+
+    /**
+     * Gets local device config.
      *
-     * @return the local device metadata
-     * @see LocalDeviceMetadata
+     * @return the local device config
+     * @see BACnetConfig
      * @since 1.0.0
      */
-    @NonNull LocalDeviceMetadata metadata();
+    @NonNull BACnetConfig config();
 
     /**
      * Gets communication protocol.

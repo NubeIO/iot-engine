@@ -17,8 +17,8 @@ import io.reactivex.Single;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
+import com.nubeiot.edge.connector.bacnet.internal.BACnetDeviceInitializer;
 import com.nubeiot.edge.connector.bacnet.service.BACnetApis;
 import com.nubeiot.edge.connector.bacnet.service.InboundBACnetCoordinator;
 import com.nubeiot.edge.connector.bacnet.service.OutboundBACnetCoordinator;
@@ -26,18 +26,16 @@ import com.serotonin.bacnet4j.event.DeviceEventListener;
 
 import lombok.NonNull;
 
-public abstract class AbstractBACnetApplication<C extends AbstractBACnetConfig> extends ApplicationVerticle {
-
-    protected C bacnetConfig;
+public abstract class AbstractBACnetApplication<C extends BACnetConfig> extends ApplicationVerticle {
 
     @Override
     public void start() {
         super.start();
-        bacnetConfig = IConfig.from(this.config.getAppConfig(), bacnetConfigClass());
+        C bacnetConfig = IConfig.from(this.config.getAppConfig(), bacnetConfigClass());
         if (logger.isDebugEnabled()) {
             logger.debug("BACnet application configuration: {}", bacnetConfig.toJson());
         }
-        this.addData(LocalDeviceMetadata.METADATA_KEY, LocalDeviceMetadata.from(bacnetConfig));
+        this.addData(BACnetDevice.CONFIG_KEY, bacnetConfig);
     }
 
     @Override
@@ -48,6 +46,7 @@ public abstract class AbstractBACnetApplication<C extends AbstractBACnetConfig> 
 
     @Override
     public void onInstallCompleted(@NonNull ContextLookup lookup) {
+        C bacnetConfig = sharedData().getData(BACnetDevice.CONFIG_KEY);
         ExecutorHelpers.blocking(getVertx(), this::getEventbus)
                        .map(c -> c.register(bacnetConfig.getCompleteDiscoverAddress(),
                                             createDiscoverCompletionHandler()))

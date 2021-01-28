@@ -16,7 +16,7 @@ import io.github.zero88.utils.Strings;
 import io.github.zero88.utils.UUID64;
 
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
-import com.nubeiot.edge.connector.bacnet.BACnetDeviceInitializer;
+import com.nubeiot.edge.connector.bacnet.internal.BACnetDeviceInitializer;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 

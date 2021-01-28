@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.bacnet.dto;
+package com.nubeiot.edge.connector.bacnet.internal;
 
 import io.github.zero88.qwe.protocol.serial.SerialPortProtocol;
 

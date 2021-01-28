@@ -1,5 +1,6 @@
 package com.nubeiot.edge.connector.bacnet.service.discovery;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import org.junit.Test;
@@ -60,17 +61,19 @@ public class BACnetNetworkExplorerTest extends BACnetWithoutGatewayTest {
     }
 
     @Test
-    public void test_get_available_network(TestContext context) {
+    public void test_get_available_network(TestContext context) throws IOException {
+        final int randomPort = TestHelper.getRandomPort();
         final IpNetwork network = Ipv4Network.getActiveIps()
                                              .stream()
                                              .findFirst()
                                              .orElseThrow(() -> new NetworkException("Failed"));
         final Async async = context.async();
-        final JsonObject request = new JsonObject().put("networkCode", network.identifier());
+        final JsonObject request = new JsonObject().put("networkCode",
+                                                        "udp4-" + network.getIfName() + "-" + randomPort);
         final JsonObject response = new JsonObject().put("network", UdpProtocol.builder()
                                                                                .ip(network)
-                                                                               .port(47808)
-                                                                               .canReusePort(true)
+                                                                               .port(randomPort)
+                                                                               .canReusePort(false)
                                                                                .build()
                                                                                .toJson());
         final JsonObject expected = EventMessage.success(EventAction.GET_ONE, response).toJson();

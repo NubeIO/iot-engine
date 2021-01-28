@@ -16,6 +16,7 @@ import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.rpc.BaseRpcProtocol;
+import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
@@ -25,7 +26,6 @@ import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryOptions;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryParams;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryRequest;
-import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.nubeiot.iotdata.IoTEntity;
@@ -82,8 +82,8 @@ abstract class AbstractBACnetExplorer<P extends IoTEntity> extends BaseRpcProtoc
     }
 
     final DiscoveryOptions parseDiscoverOptions(@NonNull RequestData reqData) {
-        final LocalDeviceMetadata metadata = sharedData().getData(LocalDeviceMetadata.METADATA_KEY);
-        return DiscoveryOptions.from(metadata.getMaxTimeoutInMS(), reqData);
+        final BACnetConfig config = sharedData().getData(BACnetDevice.CONFIG_KEY);
+        return DiscoveryOptions.from(config.getMaxTimeoutInMS(), reqData);
     }
 
     final CommunicationProtocol parseNetworkProtocol(@NonNull DiscoveryParams params) {

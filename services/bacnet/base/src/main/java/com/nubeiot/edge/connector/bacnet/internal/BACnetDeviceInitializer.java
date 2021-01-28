@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.bacnet;
+package com.nubeiot.edge.connector.bacnet.internal;
 
 import java.util.List;
 import java.util.Optional;
@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.protocol.CommunicationProtocol;
 
+import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
 
 import lombok.Builder;

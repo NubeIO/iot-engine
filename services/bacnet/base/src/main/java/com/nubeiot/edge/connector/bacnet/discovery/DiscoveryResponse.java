@@ -8,7 +8,7 @@ import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
+import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectPropertyValues;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
@@ -25,7 +25,7 @@ import lombok.extern.jackson.Jacksonized;
 public final class DiscoveryResponse implements JsonData {
 
     private final CommunicationProtocol network;
-    private final LocalDeviceMetadata localDevice;
+    private final BACnetConfig config;
     private final List<RemoteDeviceMixin> remoteDevices;
     private final RemoteDeviceMixin remoteDevice;
     private final ObjectPropertyValues objects;
@@ -38,7 +38,8 @@ public final class DiscoveryResponse implements JsonData {
         Optional.ofNullable(objects).ifPresent(o -> json.put(Fields.objects, objects.toJson()));
         Optional.ofNullable(remoteDevice).ifPresent(o -> json.put(Fields.remoteDevice, remoteDevice.toJson()));
         Optional.ofNullable(remoteDevices)
-                .ifPresent(o -> json.put(Fields.remoteDevices, remoteDevices.stream().map(RemoteDeviceMixin::toJson)
+                .ifPresent(o -> json.put(Fields.remoteDevices, remoteDevices.stream()
+                                                                            .map(RemoteDeviceMixin::toJson)
                                                                             .collect(Collectors.toList())));
         return json;
     }

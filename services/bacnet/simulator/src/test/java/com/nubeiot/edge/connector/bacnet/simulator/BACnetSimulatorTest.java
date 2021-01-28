@@ -1,5 +1,7 @@
 package com.nubeiot.edge.connector.bacnet.simulator;
 
+import java.io.IOException;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -40,11 +42,11 @@ public class BACnetSimulatorTest {
     }
 
     @Test
-    public void startSuccess(TestContext context) {
+    public void startSuccess(TestContext context) throws IOException {
         Async async = context.async(2);
         final UdpProtocol firstActiveIp = UdpProtocol.builder()
                                                      .ip(Ipv4Network.getFirstActiveIp())
-                                                     .port(47808)
+                                                     .port(TestHelper.getRandomPort())
                                                      .canReusePort(true)
                                                      .build();
         final JsonObject localDevice = new JsonObject(

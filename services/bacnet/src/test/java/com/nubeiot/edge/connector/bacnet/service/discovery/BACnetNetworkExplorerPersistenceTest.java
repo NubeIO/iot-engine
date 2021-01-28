@@ -1,5 +1,6 @@
 package com.nubeiot.edge.connector.bacnet.service.discovery;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -60,11 +61,11 @@ public class BACnetNetworkExplorerPersistenceTest extends BACnetWithGatewayTest 
     }
 
     @Test
-    public void test_persist_network_success(TestContext context) {
+    public void test_persist_network_success(TestContext context) throws IOException {
         final Async async = context.async(2);
         final UdpProtocol protocol = UdpProtocol.builder()
                                                 .ip(Ipv4Network.getFirstActiveIp())
-                                                .port(47808)
+                                                .port(TestHelper.getRandomPort())
                                                 .canReusePort(true)
                                                 .build();
         final JsonObject reqBody = new JsonObject().put("networkCode", protocol.identifier());
@@ -95,10 +96,10 @@ public class BACnetNetworkExplorerPersistenceTest extends BACnetWithGatewayTest 
     }
 
     @Test
-    public void test_persist_network_already_existed(TestContext context) {
+    public void test_persist_network_already_existed(TestContext context) throws IOException {
         final UdpProtocol protocol = UdpProtocol.builder()
                                                 .ip(Ipv4Network.getFirstActiveIp())
-                                                .port(47808)
+                                                .port(TestHelper.getRandomPort())
                                                 .canReusePort(true)
                                                 .build();
         final UUID networkId = UUID.randomUUID();
@@ -114,12 +115,12 @@ public class BACnetNetworkExplorerPersistenceTest extends BACnetWithGatewayTest 
     }
 
     @Test
-    public void test_persist_network_failed(TestContext context) {
+    public void test_persist_network_failed(TestContext context) throws IOException {
         networkService.errorInCreate(true);
         final Async async = context.async(2);
         final UdpProtocol protocol = UdpProtocol.builder()
                                                 .ip(Ipv4Network.getFirstActiveIp())
-                                                .port(47808)
+                                                .port(TestHelper.getRandomPort())
                                                 .canReusePort(true)
                                                 .build();
         final JsonObject reqBody = new JsonObject().put("networkCode", protocol.identifier());

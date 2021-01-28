@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.bacnet;
+package com.nubeiot.edge.connector.bacnet.internal;
 
 import java.util.List;
 import java.util.Objects;
@@ -18,18 +18,22 @@ import io.github.zero88.utils.Functions;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.edge.connector.bacnet.BACnetConfig;
+import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryOptions;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryResponse;
-import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
-import com.nubeiot.edge.connector.bacnet.dto.TransportProvider;
-import com.nubeiot.edge.connector.bacnet.internal.RemoteDeviceScanner;
+import com.nubeiot.edge.connector.bacnet.internal.request.RemoteDeviceScanner;
 import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
+import com.serotonin.bacnet4j.ServiceFuture;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
+import com.serotonin.bacnet4j.service.acknowledgement.AcknowledgementService;
+import com.serotonin.bacnet4j.service.confirmed.SubscribeCOVRequest;
 import com.serotonin.bacnet4j.transport.Transport;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
+import com.serotonin.bacnet4j.type.primitive.Boolean;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
@@ -43,37 +47,35 @@ import lombok.extern.slf4j.Slf4j;
 @Accessors(fluent = true)
 final class DefaultBACnetDevice implements BACnetDevice {
 
-    @NonNull
-    private final SharedDataLocalProxy proxy;
     @Getter
-    private final LocalDeviceMetadata metadata;
+    private final SharedDataLocalProxy sharedData;
+    @Getter
+    private final BACnetConfig config;
     @Getter
     private final LocalDevice localDevice;
     private final TransportProvider transportProvider;
 
-    DefaultBACnetDevice(@NonNull SharedDataLocalProxy proxy, @NonNull CommunicationProtocol protocol) {
-        this(proxy, TransportProvider.byProtocol(protocol));
+    DefaultBACnetDevice(@NonNull SharedDataLocalProxy sharedData, @NonNull CommunicationProtocol protocol) {
+        this(sharedData, TransportProvider.byProtocol(protocol));
     }
 
-    private DefaultBACnetDevice(@NonNull SharedDataLocalProxy proxy, @NonNull TransportProvider provider) {
-        this.proxy = proxy;
-        this.metadata = proxy.getData(LocalDeviceMetadata.METADATA_KEY);
+    private DefaultBACnetDevice(@NonNull SharedDataLocalProxy sharedData, @NonNull TransportProvider provider) {
+        this.sharedData = sharedData;
+        this.config = sharedData.getData(BACnetDevice.CONFIG_KEY);
         this.transportProvider = provider;
-        this.localDevice = create(metadata, transportProvider);
+        this.localDevice = create(config, transportProvider);
     }
 
-    static LocalDevice create(@NonNull LocalDeviceMetadata metadata, @NonNull TransportProvider transportProvider) {
+    static LocalDevice create(@NonNull BACnetConfig config, @NonNull TransportProvider transportProvider) {
         final Transport transport = transportProvider.get();
-        transport.setTimeout((int) metadata.getMaxTimeoutInMS());
-        final LocalDevice device = new LocalDevice(metadata.getDeviceNumber(), transport);
+        transport.setTimeout((int) config.getMaxTimeoutInMS());
+        final LocalDevice device = new LocalDevice(config.getDeviceId(), transport);
         return device.writePropertyInternal(PropertyIdentifier.vendorIdentifier,
-                                            new UnsignedInteger(metadata.getVendorId()))
-                     .writePropertyInternal(PropertyIdentifier.vendorName,
-                                            new CharacterString(metadata.getVendorName()))
-                     .writePropertyInternal(PropertyIdentifier.modelName, new CharacterString(metadata.getModelName()))
+                                            new UnsignedInteger(config.getVendorId()))
+                     .writePropertyInternal(PropertyIdentifier.vendorName, new CharacterString(config.getVendorName()))
+                     .writePropertyInternal(PropertyIdentifier.modelName, new CharacterString(config.getModelName()))
                      .writePropertyInternal(PropertyIdentifier.objectType, ObjectType.device)
-                     .writePropertyInternal(PropertyIdentifier.objectName,
-                                            new CharacterString(metadata.getObjectName()));
+                     .writePropertyInternal(PropertyIdentifier.objectName, new CharacterString(config.getDeviceName()));
     }
 
     @Override
@@ -92,15 +94,15 @@ final class DefaultBACnetDevice implements BACnetDevice {
     public BACnetDevice asyncStart() {
         final DiscoveryOptions options = DiscoveryOptions.builder()
                                                          .force(true)
-                                                         .timeout(metadata.getMaxTimeoutInMS())
-                                                         .timeUnit(TimeUnit.MILLISECONDS)
+                                                         .timeout(config.getMaxDiscoverTimeout())
+                                                         .timeUnit(config.getMaxDiscoverTimeoutUnit())
                                                          .build();
         scanRemoteDevices(options).subscribe(this::handleAfterScan);
         return this;
     }
 
     public Single<BACnetDevice> stop() {
-        return ExecutorHelpers.blocking(this.proxy.getVertx(), () -> {
+        return ExecutorHelpers.blocking(this.sharedData.getVertx(), () -> {
             localDevice.terminate();
             return this;
         });
@@ -123,8 +125,17 @@ final class DefaultBACnetDevice implements BACnetDevice {
                                        () -> ld.getRemoteDevice(deviceCode.getInstanceNumber()).get(timeout)));
     }
 
+    public Single<JsonObject> subscribe(@NonNull RemoteDeviceMixin remoteDevice, @NonNull ObjectIdentifier pointId) {
+        return Single.just(localDevice.send(remoteDevice.getAddress().unwrap(),
+                                            new SubscribeCOVRequest(new UnsignedInteger(4), pointId, Boolean.TRUE,
+                                                                    new UnsignedInteger(0))))
+                     .map(ServiceFuture::get)
+                     .map(o -> ((AcknowledgementService) o))
+                     .map(s -> new JsonObject());
+    }
+
     private Single<LocalDevice> init(boolean force) {
-        return ExecutorHelpers.blocking(this.proxy.getVertx(), () -> {
+        return ExecutorHelpers.blocking(this.sharedData.getVertx(), () -> {
             if (force || !localDevice.isInitialized()) {
                 return localDevice.initialize();
             }
@@ -133,9 +144,9 @@ final class DefaultBACnetDevice implements BACnetDevice {
     }
 
     private void handleAfterScan(RemoteDeviceScanner scanner, Throwable t) {
-        final EventbusClient client = EventbusClient.create(this.proxy.getVertx(), this.proxy.getSharedKey());
+        final EventbusClient client = EventbusClient.create(this.sharedData.getVertx(), this.sharedData.getSharedKey());
         final EventMessage msg = Objects.isNull(t) ? createSuccessDiscoverMsg(scanner) : createErrorDiscoverMsg(t);
-        client.publish(metadata.getDiscoverCompletionAddress(), msg);
+        client.publish(config.getCompleteDiscoverAddress(), msg);
     }
 
     private EventMessage createSuccessDiscoverMsg(@NonNull RemoteDeviceScanner scanner) {
@@ -143,9 +154,7 @@ final class DefaultBACnetDevice implements BACnetDevice {
                                                        .stream()
                                                        .map(RemoteDeviceMixin::create)
                                                        .collect(Collectors.toList());
-        final JsonObject body = DiscoveryResponse.builder()
-                                                 .network(protocol())
-                                                 .localDevice(metadata())
+        final JsonObject body = DiscoveryResponse.builder().network(protocol()).config(config())
                                                  .remoteDevices(remotes)
                                                  .build()
                                                  .toJson();
@@ -153,11 +162,7 @@ final class DefaultBACnetDevice implements BACnetDevice {
     }
 
     private EventMessage createErrorDiscoverMsg(@NonNull Throwable t) {
-        final JsonObject extraInfo = DiscoveryResponse.builder()
-                                                      .network(protocol())
-                                                      .localDevice(metadata())
-                                                      .build()
-                                                      .toJson();
+        final JsonObject extraInfo = DiscoveryResponse.builder().network(protocol()).config(config()).build().toJson();
         return EventMessage.initial(EventAction.NOTIFY_ERROR,
                                     ErrorData.builder().throwable(t).extraInfo(extraInfo).build());
     }

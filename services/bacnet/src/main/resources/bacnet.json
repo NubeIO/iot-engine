@@ -41,10 +41,12 @@
       }
     },
     "__bacnet__": {
-      "modelName": "NubeIO-Edge28",
+      "modelName": "Rubix",
       "maxDiscoverTimeout": 6,
       "maxDiscoverTimeoutUnit": "SECONDS",
-      "allowSlave": true,
+      "completeDiscoverAddress": "com.nubeiot.edge.connector.bacnet.discover.complete",
+      "readinessAddress": "com.nubeiot.edge.connector.bacnet.readiness",
+      "enableSubscriber": false,
       "gatewayAddress": "nubeio.bacnet.gateway.index"
     }
   }

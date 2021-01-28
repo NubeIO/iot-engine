@@ -10,14 +10,14 @@ import io.github.zero88.qwe.IConfig;
 import io.github.zero88.qwe.JsonHelper;
 import io.github.zero88.qwe.utils.Configs;
 
-public class BACnetConfigTest {
+public class BACnetServiceConfigTest {
 
     @Test
     public void test_default() throws JSONException {
-        BACnetConfig config = new BACnetConfig();
+        BACnetServiceConfig config = new BACnetServiceConfig();
         assertFalse(config.isEnableSubscriber());
         System.out.println(config.toJson().encodePrettily());
-        BACnetConfig fromFile = IConfig.from(Configs.loadJsonConfig("config.json"), BACnetConfig.class);
+        BACnetServiceConfig fromFile = IConfig.from(Configs.loadJsonConfig("bacnet.json"), BACnetServiceConfig.class);
         JsonHelper.assertJson(config.toJson(), fromFile.toJson(),
                               Customization.customization("deviceId", (o1, o2) -> true),
                               Customization.customization("deviceName", (o1, o2) -> true));

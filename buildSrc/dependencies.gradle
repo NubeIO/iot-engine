@@ -54,7 +54,8 @@ ext.deps = [
     vertx     : [
         core   : "io.vertx:vertx-core:$versions.vertx",
         codegen: "io.vertx:vertx-codegen:$versions.vertx",
-        junit  : "io.vertx:vertx-unit:$versions.vertx"
+        junit  : "io.vertx:vertx-unit:$versions.vertx",
+        junit5 : "io.vertx:vertx-junit5:$versions.vertx"
     ],
     jackson   : [
         core       : "com.fasterxml.jackson.core:jackson-core:$versions.jackson",

@@ -1,4 +1,4 @@
-package com.nubeiot.edge.connector.bacnet.internal;
+package com.nubeiot.edge.connector.bacnet.internal.request;
 
 import java.util.List;
 import java.util.Optional;

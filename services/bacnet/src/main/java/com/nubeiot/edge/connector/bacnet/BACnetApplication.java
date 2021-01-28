@@ -35,7 +35,7 @@ import lombok.NonNull;
 /*
  * BACnet Application
  */
-public final class BACnetApplication extends AbstractBACnetApplication<BACnetConfig> {
+public final class BACnetApplication extends AbstractBACnetApplication<BACnetServiceConfig> {
 
     private MicroContext microContext;
     private BACnetSubscriptionManager manager;
@@ -53,19 +53,20 @@ public final class BACnetApplication extends AbstractBACnetApplication<BACnetCon
 
     @Override
     public void onInstallCompleted(@NonNull ContextLookup lookup) {
-        this.manager = new BACnetSubscriptionManager(getVertx(), getSharedKey(), bacnetConfig.isAllowSlave());
+        this.manager = new BACnetSubscriptionManager(getVertx(), getSharedKey());
         this.microContext = lookup.query(MicroContext.class);
-        new BACnetCacheInitializer(bacnetConfig).init(this);
+        new BACnetCacheInitializer().init(this);
         super.onInstallCompleted(lookup);
     }
 
     @Override
-    protected @NonNull Class<BACnetConfig> bacnetConfigClass() {
-        return BACnetConfig.class;
+    protected @NonNull Class<BACnetServiceConfig> bacnetConfigClass() {
+        return BACnetServiceConfig.class;
     }
 
     @Override
-    protected @NonNull Single<JsonObject> registerApis(@NonNull EventbusClient client, @NonNull BACnetConfig config) {
+    protected @NonNull Single<JsonObject> registerApis(@NonNull EventbusClient client,
+                                                       @NonNull BACnetServiceConfig config) {
         return Observable.fromIterable(BACnetExplorer.createServices(this))
                          .doOnEach(s -> Optional.ofNullable(s.getValue())
                                                 .ifPresent(service -> client.register(service.address(), service)))
@@ -78,7 +79,7 @@ public final class BACnetApplication extends AbstractBACnetApplication<BACnetCon
 
     @Override
     protected @NonNull Single<JsonObject> registerSubscriber(@NonNull EventbusClient client,
-                                                             @NonNull BACnetConfig config) {
+                                                             @NonNull BACnetServiceConfig config) {
         return Observable.fromIterable(BACnetRpcClientHelper.createSubscribers(getVertx(), getSharedKey()))
                          .doOnNext(subscriber -> client.register(subscriber.address(), subscriber))
                          .flatMapSingle(manager::register)
@@ -94,7 +95,8 @@ public final class BACnetApplication extends AbstractBACnetApplication<BACnetCon
     }
 
     @Override
-    protected @NonNull Single<Collection<CommunicationProtocol>> availableNetworks(@NonNull BACnetConfig config) {
+    protected @NonNull Single<Collection<CommunicationProtocol>> availableNetworks(
+        @NonNull BACnetServiceConfig config) {
         final BACnetNetworkCache cache = this.sharedData().getData(BACnetCacheInitializer.LOCAL_NETWORK_CACHE);
         return Single.just(Collections.emptyList());
         //        return BACnetScannerHelper.createNetworkScanner(getVertx(), getSharedKey())

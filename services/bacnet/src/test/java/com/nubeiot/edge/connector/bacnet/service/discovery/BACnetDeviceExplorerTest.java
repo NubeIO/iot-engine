@@ -1,8 +1,11 @@
 package com.nubeiot.edge.connector.bacnet.service.discovery;
 
+import java.io.IOException;
+
 import org.junit.Test;
 
 import io.github.zero88.qwe.EventbusHelper;
+import io.github.zero88.qwe.TestHelper;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventMessage;
@@ -18,9 +21,12 @@ import com.nubeiot.edge.connector.bacnet.BACnetWithoutGatewayTest;
 public class BACnetDeviceExplorerTest extends BACnetWithoutGatewayTest {
 
     @Test
-    public void test_network_without_device(TestContext context) {
+    public void test_network_without_device(TestContext context) throws IOException {
         final Async async = context.async();
-        final UdpProtocol protocol = UdpProtocol.builder().ip(Ipv4Network.getFirstActiveIp()).port(47808).build();
+        final UdpProtocol protocol = UdpProtocol.builder()
+                                                .ip(Ipv4Network.getFirstActiveIp())
+                                                .port(TestHelper.getRandomPort())
+                                                .build();
         final JsonObject body = new JsonObject().put("networkCode", protocol.identifier());
         final JsonObject expected = EventMessage.success(EventAction.GET_LIST,
                                                          new JsonObject().put("remoteDevices", new JsonArray()))
