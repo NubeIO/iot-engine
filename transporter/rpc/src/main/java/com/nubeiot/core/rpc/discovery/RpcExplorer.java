@@ -31,7 +31,7 @@ import lombok.NonNull;
 public interface RpcExplorer<P extends IoTEntity> extends RpcProtocolClient<P>, EventListener {
 
     @EventContractor(action = "GET_ONE", returnType = Single.class)
-    Single<JsonObject> discover(RequestData reqData);
+    Single<P> discover(RequestData reqData);
 
     @EventContractor(action = "GET_LIST", returnType = Single.class)
     Single<JsonObject> discoverMany(RequestData reqData);

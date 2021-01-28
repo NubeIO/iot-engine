@@ -13,10 +13,7 @@ public final class BACnetNetworkConverter
 
     @Override
     public BACnetNetwork serialize(CommunicationProtocol protocol) {
-        return Optional.ofNullable(protocol)
-                       .map(CommunicationProtocol::toJson)
-                       .map(BACnetNetwork::factory)
-                       .orElse(null);
+        return Optional.ofNullable(protocol).map(BACnetNetwork::fromProtocol).orElse(null);
     }
 
     @Override

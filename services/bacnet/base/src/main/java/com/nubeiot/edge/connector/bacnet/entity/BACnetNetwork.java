@@ -2,21 +2,27 @@ package com.nubeiot.edge.connector.bacnet.entity;
 
 import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.protocol.CommunicationProtocol;
+import io.github.zero88.qwe.protocol.network.Ethernet;
 import io.github.zero88.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nubeiot.iotdata.entity.HasObjectType;
 import com.nubeiot.iotdata.entity.INetwork;
 
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
+import lombok.experimental.FieldNameConstants;
 
 @Getter
+@FieldNameConstants
 @Accessors(fluent = true)
 public abstract class BACnetNetwork implements HasObjectType<String>, BACnetEntity<String>, INetwork<String> {
 
+    @JsonProperty(Fields.type)
     private final String type;
+    @JsonProperty(Fields.label)
     private final String label;
 
     BACnetNetwork(String type, String label) {
@@ -35,6 +41,14 @@ public abstract class BACnetNetwork implements HasObjectType<String>, BACnetEnti
         throw new IllegalArgumentException(
             "Not support BACnet network type " + type + ". Only BACnet " + BACnetIP.TYPE + " or BACnet " +
             BACnetMSTP.TYPE);
+    }
+
+    public static BACnetNetwork fromProtocol(@NonNull CommunicationProtocol protocol) {
+        if (protocol instanceof Ethernet) {
+            return BACnetIP.from((Ethernet) protocol);
+        }
+        throw new IllegalArgumentException(
+            "Unsupported protocol " + protocol.identifier() + " with type" + protocol.type());
     }
 
     public abstract @NonNull CommunicationProtocol toProtocol();

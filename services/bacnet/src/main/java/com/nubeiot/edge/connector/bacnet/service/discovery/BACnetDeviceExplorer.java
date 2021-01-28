@@ -49,8 +49,8 @@ public final class BACnetDeviceExplorer extends AbstractBACnetExplorer<BACnetDev
     }
 
     @Override
-    public Single<JsonObject> discover(RequestData reqData) {
-        return doGet(createDiscoveryArgs(reqData, DiscoveryLevel.DEVICE)).map(BACnetDeviceEntity::toJson);
+    public Single<BACnetDeviceEntity> discover(RequestData reqData) {
+        return doGet(createDiscoveryArgs(reqData, DiscoveryLevel.DEVICE));
     }
 
     @Override
@@ -85,10 +85,10 @@ public final class BACnetDeviceExplorer extends AbstractBACnetExplorer<BACnetDev
                                                          boolean detail, boolean includeError) {
         final ObjectIdentifier objId = rd.getObjectIdentifier();
         final String networkCode = device.protocol().identifier();
-        final String networkId = networkCache().getDataKey(networkCode).map(UUID::toString).orElse(null);
+        final String networkId = networkCache().getDataKey(networkCode).map(UUID::toString).orElse(networkCode);
         return this.parseRemoteObject(device, rd, objId, detail, includeError)
                    .map(pvm -> RemoteDeviceMixin.create(rd, pvm))
-                   .map(rdm -> BACnetDeviceEntity.builder().networkId(networkId).mixin(rdm).build());
+                   .map(rdm -> BACnetDeviceEntity.from(networkId, rdm));
     }
 
     private DiscoveryArguments validateCache(@NonNull DiscoveryArguments args) {

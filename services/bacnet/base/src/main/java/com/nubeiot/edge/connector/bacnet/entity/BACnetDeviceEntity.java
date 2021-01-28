@@ -5,6 +5,7 @@ import java.util.Objects;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.edge.connector.bacnet.converter.property.DeviceStatusConverter;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
@@ -50,8 +51,8 @@ public class BACnetDeviceEntity extends AbstractDevice<String> implements BACnet
     }
 
     @Override
-    public JsonObject toJson() {
-        final JsonObject json = super.toJson();
+    public JsonObject toJson(@NonNull ObjectMapper mapper) {
+        final JsonObject json = super.toJson(mapper);
         return json.mergeIn(mixin.toJson());
     }
 

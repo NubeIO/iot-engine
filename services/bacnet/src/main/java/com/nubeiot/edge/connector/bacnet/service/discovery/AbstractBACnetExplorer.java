@@ -51,7 +51,7 @@ abstract class AbstractBACnetExplorer<P extends IoTEntity> extends BaseRpcProtoc
 
     @Override
     @EventContractor(action = "GET_ONE", returnType = Single.class)
-    public abstract Single<JsonObject> discover(RequestData reqData);
+    public abstract Single<P> discover(RequestData reqData);
 
     @Override
     @EventContractor(action = "GET_LIST", returnType = Single.class)

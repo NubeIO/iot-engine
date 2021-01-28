@@ -80,8 +80,8 @@ public final class BACnetObjectExplorer extends AbstractBACnetExplorer<BACnetPoi
     }
 
     @Override
-    public Single<JsonObject> discover(RequestData requestData) {
-        return doGet(createDiscoveryArgs(requestData, DiscoveryLevel.OBJECT)).map(BACnetPointEntity::toJson);
+    public Single<BACnetPointEntity> discover(RequestData requestData) {
+        return doGet(createDiscoveryArgs(requestData, DiscoveryLevel.OBJECT));
     }
 
     @Override
