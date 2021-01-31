@@ -26,9 +26,10 @@ import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryOptions;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryParams;
+import com.nubeiot.edge.connector.bacnet.entity.BACnetEntity;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
-import com.nubeiot.iotdata.IoTEntity;
+import com.nubeiot.iotdata.IoTEntities;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.obj.ObjectProperties;
 import com.serotonin.bacnet4j.obj.ObjectPropertyTypeDefinition;
@@ -43,7 +44,8 @@ import lombok.NonNull;
 /**
  * Defines public service to expose HTTP API for end-user and/or nube-io service
  */
-abstract class AbstractBACnetExplorer<P extends IoTEntity> extends BaseRpcProtocol<P> implements BACnetExplorer<P> {
+abstract class AbstractBACnetExplorer<K, P extends BACnetEntity<K>, X extends IoTEntities<K, P>>
+    extends BaseRpcProtocol<P> implements BACnetExplorer<K, P, X> {
 
     AbstractBACnetExplorer(@NonNull SharedDataLocalProxy sharedDataProxy) {
         super(sharedDataProxy);
@@ -55,7 +57,7 @@ abstract class AbstractBACnetExplorer<P extends IoTEntity> extends BaseRpcProtoc
 
     @Override
     @EventContractor(action = "GET_LIST", returnType = Single.class)
-    public abstract Single<JsonObject> discoverMany(RequestData reqData);
+    public abstract Single<X> discoverMany(RequestData reqData);
 
     @Override
     @EventContractor(action = "CREATE", returnType = Single.class)

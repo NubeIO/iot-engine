@@ -13,6 +13,7 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.core.rpc.RpcProtocolClient;
 import com.nubeiot.core.rpc.coordinator.InboundCoordinator;
+import com.nubeiot.iotdata.IoTEntities;
 import com.nubeiot.iotdata.IoTEntity;
 
 import lombok.NonNull;
@@ -28,13 +29,14 @@ import lombok.NonNull;
  * @see Protocol
  * @see InboundCoordinator
  */
-public interface RpcExplorer<P extends IoTEntity> extends RpcProtocolClient<P>, EventListener {
+public interface RpcExplorer<K, P extends IoTEntity<K>, X extends IoTEntities<K, P>>
+    extends RpcProtocolClient<P>, EventListener {
 
     @EventContractor(action = "GET_ONE", returnType = Single.class)
     Single<P> discover(RequestData reqData);
 
     @EventContractor(action = "GET_LIST", returnType = Single.class)
-    Single<JsonObject> discoverMany(RequestData reqData);
+    Single<X> discoverMany(RequestData reqData);
 
     /**
      * Register a {@link InboundCoordinator} to one particular {@code protocol} data object

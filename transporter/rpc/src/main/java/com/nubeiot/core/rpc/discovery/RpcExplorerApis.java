@@ -12,6 +12,7 @@ import io.github.zero88.qwe.micro.http.EventMethodDefinition;
 import io.github.zero88.utils.Urls;
 import io.vertx.core.http.HttpMethod;
 
+import com.nubeiot.iotdata.IoTEntities;
 import com.nubeiot.iotdata.IoTEntity;
 
 import lombok.NonNull;
@@ -23,7 +24,8 @@ import lombok.NonNull;
  * @see RpcExplorer
  * @see EventHttpService
  */
-public interface RpcExplorerApis<P extends IoTEntity> extends RpcExplorer<P>, EventHttpService {
+public interface RpcExplorerApis<K, P extends IoTEntity<K>, X extends IoTEntities<K, P>>
+    extends RpcExplorer<K, P, X>, EventHttpService {
 
     @Override
     default Set<EventMethodDefinition> definitions() {

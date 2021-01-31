@@ -28,7 +28,7 @@ import lombok.extern.jackson.Jacksonized;
 @Jacksonized
 @SuperBuilder
 @Accessors(fluent = true)
-public class BACnetPointEntity extends AbstractPoint<String> implements BACnetEntity<String> {
+public class BACnetPointEntity extends AbstractPoint<ObjectIdentifier> implements BACnetEntity<ObjectIdentifier> {
 
     @NonNull
     @JsonIgnore
@@ -41,8 +41,7 @@ public class BACnetPointEntity extends AbstractPoint<String> implements BACnetEn
 
     public static BACnetPointEntity from(@NonNull String networkId, @NonNull String deviceId,
                                          @NonNull PropertyValuesMixin mixin) {
-        return BACnetPointEntity.builder()
-                                .key(ObjectIdentifierMixin.serialize(mixin.getObjectId()))
+        return BACnetPointEntity.builder().key(mixin.getObjectId())
                                 .type(PointType.factory(mixin.encode(PropertyIdentifier.objectType)))
                                 .networkId(networkId)
                                 .deviceId(deviceId)

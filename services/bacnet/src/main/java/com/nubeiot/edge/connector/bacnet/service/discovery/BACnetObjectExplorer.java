@@ -1,6 +1,5 @@
 package com.nubeiot.edge.connector.bacnet.service.discovery;
 
-import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,21 +28,22 @@ import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryParams;
-import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryResponse;
+import com.nubeiot.edge.connector.bacnet.entity.BACnetEntities.BACnetPoints;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetPointEntity;
-import com.nubeiot.edge.connector.bacnet.entity.BACnetPoints;
 import com.nubeiot.edge.connector.bacnet.internal.request.WritePointValueRequestFactory;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
+import com.nubeiot.iotdata.entity.AbstractEntities;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
+import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.util.RequestUtils;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class BACnetObjectExplorer extends AbstractBACnetExplorer<BACnetPointEntity>
-    implements BACnetExplorer<BACnetPointEntity> {
+public final class BACnetObjectExplorer
+    extends AbstractBACnetExplorer<ObjectIdentifier, BACnetPointEntity, BACnetPoints> {
 
     BACnetObjectExplorer(@NonNull SharedDataLocalProxy sharedData) {
         super(sharedData);
@@ -85,15 +85,13 @@ public final class BACnetObjectExplorer extends AbstractBACnetExplorer<BACnetPoi
     }
 
     @Override
-    public Single<JsonObject> discoverMany(RequestData requestData) {
+    public Single<BACnetPoints> discoverMany(RequestData requestData) {
         final DiscoveryArguments args = createDiscoveryArgs(requestData, DiscoveryLevel.DEVICE);
         final BACnetDevice device = getLocalDeviceFromCache(args);
         log.info("Discovering objects in device '{}' in network {}...",
                  ObjectIdentifierMixin.serialize(args.params().remoteDeviceId()), device.protocol().identifier());
         return device.discoverRemoteDevice(args.params().remoteDeviceId(), args.options())
                      .flatMap(remote -> getRemoteObjects(device, remote, args.options().isDetail()))
-                     .map(opv -> DiscoveryResponse.builder().objects(opv).build())
-                     .map(DiscoveryResponse::toJson)
                      .doFinally(device::stop);
     }
 
@@ -117,9 +115,8 @@ public final class BACnetObjectExplorer extends AbstractBACnetExplorer<BACnetPoi
                          .filter(oid -> oid.getObjectType() != ObjectType.device)
                          .flatMapSingle(oid -> this.parseRemoteObject(device, rd, oid, detail, false)
                                                    .map(pvm -> BACnetPointEntity.from(device.protocol().identifier(),
-                                                                                      rd.getObjectIdentifier(), pvm))
-                                                   .map(point -> new SimpleEntry<>(oid, point)))
-                         .collect(BACnetPoints::new, (values, entry) -> values.add(entry.getKey(), entry.getValue()))
+                                                                                      rd.getObjectIdentifier(), pvm)))
+                         .collect(BACnetPoints::new, AbstractEntities::add)
                          .doFinally(device::stop);
     }
 

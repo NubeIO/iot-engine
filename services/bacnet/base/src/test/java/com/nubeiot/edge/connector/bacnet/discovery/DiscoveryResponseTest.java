@@ -13,8 +13,8 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetDeviceEntity;
+import com.nubeiot.edge.connector.bacnet.entity.BACnetEntities.BACnetPoints;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetPointEntity;
-import com.nubeiot.edge.connector.bacnet.entity.BACnetPoints;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
 import com.serotonin.bacnet4j.type.constructed.Address;
@@ -38,10 +38,9 @@ public class DiscoveryResponseTest {
         final PropertyValuesMixin pvm = PropertyValuesMixin.create(oid, pvs, false);
         final Address address = new Address(new byte[] {(byte) 206, (byte) 210, 100, (byte) 134});
         final BACnetDeviceEntity dt = BACnetDeviceEntity.from(firstActiveIp.identifier(),
-                                                              RemoteDeviceMixin.create(oid, "test", address, pvm));
+                                                              RemoteDeviceMixin.create(oid, address, pvm));
         final BACnetPointEntity pt = BACnetPointEntity.from(firstActiveIp.identifier(), oid, pvm);
-        final BACnetPoints opv = new BACnetPoints();
-        opv.add(oid, pt);
+        final BACnetPoints opv = (BACnetPoints) new BACnetPoints().add(pt);
         final DiscoveryResponse response = DiscoveryResponse.builder()
                                                             .network(firstActiveIp)
                                                             .config(config)

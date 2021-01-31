@@ -47,8 +47,7 @@ public final class BACnetDiscoverFinisher extends DiscoverCompletionHandler {
         ExecutorHelpers.blocking(proxy.getVertx(), () -> BACnetScannerHelper.createDeviceScanner(proxy))
                        .flatMap(deviceScanner -> deviceScanner.scan(networkId))
                        .flatMapObservable(map -> Observable.fromIterable(map.entrySet()))
-                       .doOnNext(
-                           entry -> deviceCache.addDataKey(protocol, entry.getValue().getObjectId(), entry.getKey()))
+                       .doOnNext(e -> deviceCache.addDataKey(protocol, e.getValue().getObjectId(), e.getKey()))
                        .flatMapSingle(entry -> pointScanner.scan(networkId, UUID64.uuid64ToUuid(entry.getKey())))
                        .subscribe(s -> log.info("Finished BACnet scan [{}]", s.keySet()),
                                   err -> log.warn("Unable to scan network. Error: {}", err.getMessage(), err));

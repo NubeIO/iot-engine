@@ -7,13 +7,13 @@ import io.vertx.core.json.JsonObject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.edge.connector.bacnet.converter.property.DeviceStatusConverter;
-import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
 import com.nubeiot.iotdata.entity.AbstractDevice;
 import com.nubeiot.iotdata.enums.DeviceStatus;
 import com.nubeiot.iotdata.enums.DeviceType;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
+import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -25,7 +25,7 @@ import lombok.extern.jackson.Jacksonized;
 @Jacksonized
 @SuperBuilder
 @Accessors(fluent = true)
-public class BACnetDeviceEntity extends AbstractDevice<String> implements BACnetEntity<String> {
+public class BACnetDeviceEntity extends AbstractDevice<ObjectIdentifier> implements BACnetEntity<ObjectIdentifier> {
 
     @NonNull
     @JsonIgnore
@@ -40,9 +40,7 @@ public class BACnetDeviceEntity extends AbstractDevice<String> implements BACnet
             (com.serotonin.bacnet4j.type.enumerated.DeviceStatus) values.getAndCast(PropertyIdentifier.systemStatus)
                                                                         .orElse(
                                                                             com.serotonin.bacnet4j.type.enumerated.DeviceStatus.nonOperational));
-        return BACnetDeviceEntity.builder()
-                                 .networkId(networkId)
-                                 .key(ObjectIdentifierMixin.serialize(mixin.getObjectId()))
+        return BACnetDeviceEntity.builder().networkId(networkId).key(mixin.getObjectId())
                                  .type(type)
                                  .name(mixin.getName())
                                  .status(status)

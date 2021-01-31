@@ -20,7 +20,7 @@ public final class DeviceType extends AbstractEnumType implements IoTEnum {
 
     @JsonCreator
     public static DeviceType factory(String type) {
-        return EnumType.factory(type, DeviceType.class);
+        return EnumType.factory(type, DeviceType.class, MACHINE);
     }
 
 }

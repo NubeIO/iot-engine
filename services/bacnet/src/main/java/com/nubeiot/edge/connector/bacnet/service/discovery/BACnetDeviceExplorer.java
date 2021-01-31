@@ -14,11 +14,12 @@ import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryParams;
-import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryResponse;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetDeviceEntity;
+import com.nubeiot.edge.connector.bacnet.entity.BACnetEntities.BACnetDevices;
 import com.nubeiot.edge.connector.bacnet.internal.request.RemoteDeviceScanner;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
+import com.nubeiot.iotdata.entity.AbstractEntities;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
@@ -26,8 +27,8 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class BACnetDeviceExplorer extends AbstractBACnetExplorer<BACnetDeviceEntity>
-    implements BACnetExplorer<BACnetDeviceEntity> {
+public final class BACnetDeviceExplorer
+    extends AbstractBACnetExplorer<ObjectIdentifier, BACnetDeviceEntity, BACnetDevices> {
 
     BACnetDeviceExplorer(@NonNull SharedDataLocalProxy sharedDataProxy) {
         super(sharedDataProxy);
@@ -54,7 +55,7 @@ public final class BACnetDeviceExplorer extends AbstractBACnetExplorer<BACnetDev
     }
 
     @Override
-    public Single<JsonObject> discoverMany(RequestData reqData) {
+    public Single<BACnetDevices> discoverMany(RequestData reqData) {
         final DiscoveryArguments args = createDiscoveryArgs(reqData, DiscoveryLevel.NETWORK);
         final BACnetDevice device = getLocalDeviceFromCache(args);
         log.info("Discovering devices in network {}...", device.protocol().identifier());
@@ -62,8 +63,7 @@ public final class BACnetDeviceExplorer extends AbstractBACnetExplorer<BACnetDev
                      .map(RemoteDeviceScanner::getRemoteDevices)
                      .flattenAsObservable(r -> r)
                      .flatMapSingle(rd -> parseRemoteDevice(device, rd, args.options().isDetail(), false))
-                     .toList()
-                     .map(results -> DiscoveryResponse.builder().remoteDevices(results).build().toJson())
+                     .collect(BACnetDevices::new, AbstractEntities::add)
                      .doFinally(device::stop);
     }
 

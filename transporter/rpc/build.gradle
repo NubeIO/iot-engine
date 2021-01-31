@@ -1,6 +1,6 @@
 dependencies {
     compile project(':iotdata')
     compile project.deps.zero88.qwe.protocol
-    compile project.deps.zero88.qwe.http.core
+    compile project.deps.zero88.qwe.http.metadata
     compile project.deps.zero88.qwe.micro.rpc
 }

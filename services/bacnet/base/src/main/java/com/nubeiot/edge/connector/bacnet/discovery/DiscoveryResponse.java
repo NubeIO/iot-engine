@@ -10,8 +10,8 @@ import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetDeviceEntity;
+import com.nubeiot.edge.connector.bacnet.entity.BACnetEntities.BACnetPoints;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetPointEntity;
-import com.nubeiot.edge.connector.bacnet.entity.BACnetPoints;
 
 import lombok.Builder;
 import lombok.Getter;
