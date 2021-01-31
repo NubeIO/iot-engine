@@ -40,9 +40,20 @@
         "address": "nubeio.bacnet.gateway.index"
       }
     },
+    "__scheduler__": {
+      "schedulerName": "bacnet.scheduler",
+      "registerAddress": "nubeio.bacnet.scheduler.register",
+      "monitorAddress": "nubeio.bacnet.scheduler.monitor",
+      "__schedule_worker__": {
+        "poolName": "worker-pool-scheduler-bacnet",
+        "poolSize": 3,
+        "maxExecuteTime": 20,
+        "maxExecuteTimeUnit": "SECONDS"
+      }
+    },
     "__bacnet__": {
       "modelName": "Rubix",
-      "maxDiscoverTimeout": 6,
+      "maxDiscoverTimeout": 10,
       "maxDiscoverTimeoutUnit": "SECONDS",
       "completeDiscoverAddress": "com.nubeiot.edge.connector.bacnet.discover.complete",
       "readinessAddress": "com.nubeiot.edge.connector.bacnet.readiness",

@@ -15,6 +15,7 @@ import io.github.zero88.qwe.micro.MicroVerticleProvider;
 import io.github.zero88.qwe.micro.ServiceDiscoveryInvoker;
 import io.github.zero88.qwe.micro.http.EventMethodDefinition;
 import io.github.zero88.qwe.protocol.CommunicationProtocol;
+import io.github.zero88.qwe.scheduler.SchedulerProvider;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
@@ -48,7 +49,9 @@ public final class BACnetApplication extends AbstractBACnetApplication<BACnetSer
     @Override
     public void start() {
         super.start();
-        this.addProvider(new HttpServerProvider(new HttpServerRouter())).addProvider(new MicroVerticleProvider());
+        this.addProvider(new HttpServerProvider(new HttpServerRouter()))
+            .addProvider(new MicroVerticleProvider())
+            .addProvider(new SchedulerProvider());
     }
 
     @Override
