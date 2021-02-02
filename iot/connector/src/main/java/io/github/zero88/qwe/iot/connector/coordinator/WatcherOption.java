@@ -1,7 +1,8 @@
 package io.github.zero88.qwe.iot.connector.coordinator;
 
 import io.github.zero88.qwe.dto.JsonData;
-import io.github.zero88.qwe.scheduler.model.trigger.QWETriggerModel;
+import io.github.zero88.qwe.scheduler.model.trigger.TriggerOption;
+import io.github.zero88.qwe.scheduler.model.trigger.TriggerType;
 import io.vertx.core.json.JsonObject;
 
 import lombok.Builder;
@@ -10,6 +11,9 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.extern.jackson.Jacksonized;
 
+/**
+ * Defines watcher option in realtime mechanism or polling mechanism
+ */
 @Data
 @Builder
 @Jacksonized
@@ -18,24 +22,45 @@ public final class WatcherOption implements JsonData {
     /**
      * Enable realtime mode that run when any event is occurred in a watcher object
      */
-    private final boolean realtime;
+    @Default
+    private final boolean realtime = true;
     /**
      * Defines a real-time watcher is maintained in how long
      */
     @Default
     private final int lifetimeInSeconds = -1;
-    /**
-     * Enable trigger mode that run on a schedule or periodical, such as reading a sensor every five milliseconds
-     */
-    private final boolean trigger;
 
     /**
-     * Defines trigger option if enable trigger mode
+     * Fallback to polling mechanism with default trigger option if {@code realtime} mechanism is not supported
+     *
+     * @see #triggerOption
      */
-    private final QWETriggerModel triggerOption;
+    @Default
+    private final boolean fallbackPolling = true;
+
+    /**
+     * Enable polling mode that run on a schedule or periodical, such as reading a sensor every five milliseconds
+     */
+    @Default
+    private final boolean polling = false;
+
+    /**
+     * Defines trigger option if enable trigger mode.
+     *
+     * @apiNote Default option is {@code periodic} with {@code interval = 5}
+     */
+    @Default
+    private final TriggerOption triggerOption = TriggerOption.builder()
+                                                             .type(TriggerType.PERIODIC)
+                                                             .intervalInSeconds(5)
+                                                             .build();
 
     public static WatcherOption parse(@NonNull JsonObject watcher) {
-        return JsonData.from(watcher, WatcherOption.class);
+        final WatcherOption opt = JsonData.from(watcher, WatcherOption.class);
+        if (!opt.isRealtime() && !opt.isPolling()) {
+            throw new IllegalArgumentException("Must enabled one of realtime or polling mechanism");
+        }
+        return opt;
     }
 
 }
