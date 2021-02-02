@@ -4,7 +4,6 @@ import java.util.function.Supplier;
 
 import io.github.zero88.qwe.cache.CacheInitializer;
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
-import io.github.zero88.qwe.iot.connector.RpcProtocolClient;
 
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.BACnetServiceConfig;
@@ -19,11 +18,12 @@ public final class BACnetCacheInitializer implements CacheInitializer<BACnetCach
     public static final String BACNET_DEVICE_CACHE = "BACNET_DEVICE_CACHE";
     public static final String BACNET_OBJECT_CACHE = "BACNET_OBJECT_CACHE";
     public static final String SCHEDULER_SERVICE_NAME = "SCHEDULER_SERVICE_NAME";
+    public static final String GATEWAY_ADDRESS = "GATEWAY_ADDRESS";
 
     @Override
     public BACnetCacheInitializer init(@NonNull SharedDataLocalProxy context) {
         BACnetServiceConfig config = context.getData(BACnetDevice.CONFIG_KEY);
-        context.addData(RpcProtocolClient.GATEWAY_ADDRESS, config.getGatewayAddress());
+        context.addData(GATEWAY_ADDRESS, config.getGatewayAddress());
         context.addData(SCHEDULER_SERVICE_NAME, config.getSchedulerServiceName());
         addBlockingCache(context, LOCAL_NETWORK_CACHE, BACnetNetworkCache::init);
         addBlockingCache(context, BACNET_DEVICE_CACHE, () -> BACnetDeviceCache.init(context));

@@ -38,7 +38,7 @@ public final class BACnetDeviceExplorer
         final BACnetDevice device = getLocalDeviceFromCache(args);
         log.info("Discovering remote device {} in network {}...",
                  ObjectIdentifierMixin.serialize(args.params().remoteDeviceId()), device.protocol().identifier());
-        return device.discoverRemoteDevice(args.params().remoteDeviceId(), args.options())
+        return device.discoverRemoteDevice(args)
                      .flatMap(rd -> parseRemoteDevice(device, rd, true, args.options().isDetail()))
                      .doFinally(device::stop);
     }
@@ -66,9 +66,9 @@ public final class BACnetDeviceExplorer
         final ObjectIdentifier objId = rd.getObjectIdentifier();
         final String networkCode = device.protocol().identifier();
         final String networkId = networkCache().getDataKey(networkCode).map(UUID::toString).orElse(networkCode);
-        return this.parseRemoteObject(device, rd, objId, detail, includeError)
-                   .map(pvm -> RemoteDeviceMixin.create(rd, pvm))
-                   .map(rdm -> BACnetDeviceEntity.from(networkId, rdm));
+        return device.parseRemoteObject(rd, objId, detail, includeError)
+                     .map(pvm -> RemoteDeviceMixin.create(rd, pvm))
+                     .map(rdm -> BACnetDeviceEntity.from(networkId, rdm));
     }
 
     private DiscoveryArguments validateCache(@NonNull DiscoveryArguments args) {

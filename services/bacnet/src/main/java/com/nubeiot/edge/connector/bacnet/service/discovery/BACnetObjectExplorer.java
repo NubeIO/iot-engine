@@ -66,12 +66,7 @@ public final class BACnetObjectExplorer
     public Single<BACnetPointEntity> discover(RequestData requestData) {
         final DiscoveryArguments args = createDiscoveryArgs(requestData, level());
         final BACnetDevice device = getLocalDeviceFromCache(args);
-        log.info("Discovering object '{}' in device '{}' in network {}...",
-                 ObjectIdentifierMixin.serialize(args.params().objectCode()),
-                 ObjectIdentifierMixin.serialize(args.params().remoteDeviceId()), device.protocol().identifier());
-        return device.discoverRemoteDevice(args.params().remoteDeviceId(), args.options())
-                     .flatMap(rd -> parseRemoteObject(device, rd, args.params().objectCode(), true,
-                                                      args.options().isDetail()))
+        return device.discoverRemoteObject(args)
                      .map(pvm -> BACnetPointEntity.from(args.params().getNetworkId(), args.params().remoteDeviceId(),
                                                         pvm));
     }
@@ -82,7 +77,7 @@ public final class BACnetObjectExplorer
         final BACnetDevice device = getLocalDeviceFromCache(args);
         log.info("Discovering objects in device '{}' in network {}...",
                  ObjectIdentifierMixin.serialize(args.params().remoteDeviceId()), device.protocol().identifier());
-        return device.discoverRemoteDevice(args.params().remoteDeviceId(), args.options())
+        return device.discoverRemoteDevice(args)
                      .flatMap(remote -> getRemoteObjects(device, remote, args.options().isDetail()))
                      .doFinally(device::stop);
     }
@@ -105,9 +100,9 @@ public final class BACnetObjectExplorer
         return Observable.fromIterable(Functions.getOrThrow(t -> new CarlException(ErrorCode.SERVICE_ERROR, t),
                                                             () -> RequestUtils.getObjectList(device.localDevice(), rd)))
                          .filter(oid -> oid.getObjectType() != ObjectType.device)
-                         .flatMapSingle(oid -> this.parseRemoteObject(device, rd, oid, detail, false)
-                                                   .map(pvm -> BACnetPointEntity.from(device.protocol().identifier(),
-                                                                                      rd.getObjectIdentifier(), pvm)))
+                         .flatMapSingle(oid -> device.parseRemoteObject(rd, oid, detail, false))
+                         .map(pvm -> BACnetPointEntity.from(device.protocol().identifier(), rd.getObjectIdentifier(),
+                                                            pvm))
                          .collect(BACnetPoints::new, AbstractEntities::add)
                          .doFinally(device::stop);
     }

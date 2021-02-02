@@ -14,6 +14,7 @@ import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryOptions;
 import com.nubeiot.edge.connector.bacnet.internal.request.ConfirmedRequestFactory;
 import com.nubeiot.edge.connector.bacnet.internal.request.RemoteDeviceScanner;
+import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
@@ -109,17 +110,41 @@ public interface BACnetDevice extends HasSharedData {
     @NonNull Single<RemoteDeviceScanner> scanRemoteDevices(@NonNull DiscoveryOptions options);
 
     /**
-     * Discover remote device by {@code device code}.
+     * Discover remote device.
      *
-     * @param deviceCode the device code
-     * @param options    the options
+     * @param arguments the discovery arguments
      * @return the remote device
-     * @see DiscoveryOptions
+     * @see DiscoveryArguments
      * @see RemoteDevice
      * @since 1.0.0
      */
-    @NonNull Single<RemoteDevice> discoverRemoteDevice(@NonNull ObjectIdentifier deviceCode,
-                                                       @NonNull DiscoveryOptions options);
+    @NonNull Single<RemoteDevice> discoverRemoteDevice(@NonNull DiscoveryArguments arguments);
+
+    /**
+     * Discover remote object
+     *
+     * @param arguments the discovery arguments
+     * @return the property values of object
+     * @see DiscoveryArguments
+     * @see PropertyValuesMixin
+     * @since 1.0.0
+     */
+    @NonNull Single<PropertyValuesMixin> discoverRemoteObject(@NonNull DiscoveryArguments arguments);
+
+    /**
+     * Parse remote object
+     *
+     * @param remoteDevice remote device
+     * @param objId        object id
+     * @param detail       should be detail
+     * @param includeError should include error
+     * @return the property values of object
+     * @see PropertyValuesMixin
+     * @since 1.0.0
+     */
+    @NonNull Single<PropertyValuesMixin> parseRemoteObject(@NonNull RemoteDevice remoteDevice,
+                                                           @NonNull ObjectIdentifier objId, boolean detail,
+                                                           boolean includeError);
 
     /**
      * Send BACnet request

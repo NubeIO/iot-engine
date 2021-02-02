@@ -29,17 +29,23 @@ import com.nubeiot.edge.connector.bacnet.entity.BACnetDeviceEntity;
 import com.nubeiot.edge.connector.bacnet.internal.listener.BACnetResponseListener;
 import com.nubeiot.edge.connector.bacnet.internal.request.ConfirmedRequestFactory;
 import com.nubeiot.edge.connector.bacnet.internal.request.RemoteDeviceScanner;
+import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
+import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
+import com.serotonin.bacnet4j.obj.ObjectProperties;
 import com.serotonin.bacnet4j.service.confirmed.ConfirmedRequestService;
 import com.serotonin.bacnet4j.transport.Transport;
+import com.serotonin.bacnet4j.type.constructed.ObjectPropertyReference;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
+import com.serotonin.bacnet4j.util.PropertyReferences;
+import com.serotonin.bacnet4j.util.RequestUtils;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -119,14 +125,39 @@ final class DefaultBACnetDevice implements BACnetDevice {
                    .doAfterSuccess(RemoteDeviceScanner::stop);
     }
 
-    public Single<RemoteDevice> discoverRemoteDevice(@NonNull ObjectIdentifier deviceCode,
-                                                     @NonNull DiscoveryOptions options) {
-        long timeout = TimeUnit.MILLISECONDS.convert(options.getTimeout(), options.getTimeUnit());
-        log.info("Start discovering device {} with force={} in timeout {}ms ", deviceCode, options.isForce(), timeout);
-        return this.init(options.isForce())
-                   .map(ld -> Functions.getOrThrow(t -> new NotFoundException("Not found device id " + deviceCode, t),
-                                                   () -> ld.getRemoteDevice(deviceCode.getInstanceNumber())
-                                                           .get(timeout)));
+    public Single<RemoteDevice> discoverRemoteDevice(@NonNull DiscoveryArguments args) {
+        final long timeout = TimeUnit.MILLISECONDS.convert(args.options().getTimeout(), args.options().getTimeUnit());
+        final Integer id = args.params().getDeviceInstance();
+        log.info("Start discovering device {} with force={} in timeout {}ms ", id, args.options().isForce(), timeout);
+        return this.init(args.options().isForce())
+                   .map(ld -> Functions.getOrThrow(t -> new NotFoundException("Not found device id " + id, t),
+                                                   () -> ld.getRemoteDevice(id).get(timeout)));
+    }
+
+    @Override
+    public @NonNull Single<PropertyValuesMixin> discoverRemoteObject(@NonNull DiscoveryArguments args) {
+        log.info("Discovering object '{}' in device '{}' in network {}...",
+                 ObjectIdentifierMixin.serialize(args.params().objectCode()),
+                 ObjectIdentifierMixin.serialize(args.params().remoteDeviceId()), protocol().identifier());
+        return this.discoverRemoteDevice(args)
+                   .flatMap(rd -> parseRemoteObject(rd, args.params().objectCode(), true, args.options().isDetail()));
+    }
+
+    public Single<PropertyValuesMixin> parseRemoteObject(@NonNull RemoteDevice remoteDevice,
+                                                         @NonNull ObjectIdentifier objId, boolean detail,
+                                                         boolean includeError) {
+        final ObjectType objType = objId.getObjectType();
+        return Observable.fromIterable(detail
+                                       ? ObjectProperties.getObjectPropertyTypeDefinitions(objType)
+                                       : ObjectProperties.getRequiredObjectPropertyTypeDefinitions(objType))
+                         .map(definition -> new ObjectPropertyReference(objId, definition.getPropertyTypeDefinition()
+                                                                                         .getPropertyIdentifier()))
+                         .collect(PropertyReferences::new,
+                                  (refs, opr) -> refs.addIndex(objId, opr.getPropertyIdentifier(),
+                                                               opr.getPropertyArrayIndex()))
+                         .map(propertyRefs -> RequestUtils.readProperties(localDevice, remoteDevice, propertyRefs, true,
+                                                                          null))
+                         .map(pvs -> PropertyValuesMixin.create(objId, pvs, includeError));
     }
 
     @Override
@@ -168,7 +199,7 @@ final class DefaultBACnetDevice implements BACnetDevice {
                                                         .collect(Collectors.toList());
         final JsonObject body = DiscoveryResponse.builder()
                                                  .network(protocol())
-                                                 .config(config())
+                                                 .localDevice(LocalDeviceMetadata.from(config()))
                                                  .remoteDevices(remotes)
                                                  .build()
                                                  .toJson();
@@ -176,7 +207,11 @@ final class DefaultBACnetDevice implements BACnetDevice {
     }
 
     private EventMessage createErrorDiscoverMsg(@NonNull Throwable t) {
-        final JsonObject extraInfo = DiscoveryResponse.builder().network(protocol()).config(config()).build().toJson();
+        final JsonObject extraInfo = DiscoveryResponse.builder()
+                                                      .network(protocol())
+                                                      .localDevice(LocalDeviceMetadata.from(config()))
+                                                      .build()
+                                                      .toJson();
         return EventMessage.initial(EventAction.NOTIFY_ERROR,
                                     ErrorData.builder().throwable(t).extraInfo(extraInfo).build());
     }

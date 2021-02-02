@@ -5,6 +5,7 @@ import io.github.zero88.qwe.iot.connector.scanner.AbstractRpcScanner;
 import io.github.zero88.qwe.iot.connector.scanner.PointRpcScanner;
 
 import com.nubeiot.edge.connector.bacnet.BACnetProtocol;
+import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetPointEntity;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 
@@ -20,6 +21,11 @@ public final class BACnetPointScanner extends AbstractRpcScanner<BACnetPointEnti
     @Override
     public @NonNull Class<BACnetPointEntity> context() {
         return BACnetPointEntity.class;
+    }
+
+    @Override
+    public @NonNull String gatewayAddress() {
+        return sharedData().getData(BACnetCacheInitializer.GATEWAY_ADDRESS);
     }
 
 }
