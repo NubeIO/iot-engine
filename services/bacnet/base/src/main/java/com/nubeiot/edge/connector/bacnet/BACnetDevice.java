@@ -2,6 +2,7 @@ package com.nubeiot.edge.connector.bacnet;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 
 import io.github.zero88.qwe.component.HasSharedData;
 import io.github.zero88.qwe.dto.msg.RequestData;
@@ -9,6 +10,7 @@ import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventMessage;
 import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.reactivex.Single;
+import io.reactivex.annotations.Nullable;
 
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryOptions;
@@ -81,6 +83,13 @@ public interface BACnetDevice extends HasSharedData {
     default @NonNull BACnetDevice addListeners(DeviceEventListener... listeners) {
         return addListeners(Arrays.asList(listeners));
     }
+
+    @Nullable
+    default <T extends DeviceEventListener> T lookupListener(@NonNull Class<T> listenerClass) {
+        return lookupListener(listenerClass, () -> null);
+    }
+
+    <T extends DeviceEventListener> T lookupListener(@NonNull Class<T> listenerClass, Supplier<T> supplier);
 
     /**
      * Async start BACnet device.

@@ -2,7 +2,10 @@ package com.nubeiot.edge.connector.bacnet.internal;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
@@ -15,6 +18,7 @@ import io.github.zero88.qwe.exceptions.NotFoundException;
 import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.github.zero88.qwe.utils.ExecutorHelpers;
 import io.github.zero88.utils.Functions;
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -63,6 +67,8 @@ final class DefaultBACnetDevice implements BACnetDevice {
     @Getter
     private final LocalDevice localDevice;
     private final TransportProvider transportProvider;
+    private final ConcurrentMap<Class<? extends DeviceEventListener>, DeviceEventListener> listeners
+        = new ConcurrentHashMap<>();
 
     DefaultBACnetDevice(@NonNull SharedDataLocalProxy sharedData, @NonNull CommunicationProtocol protocol) {
         this(sharedData, TransportProvider.byProtocol(protocol));
@@ -94,10 +100,23 @@ final class DefaultBACnetDevice implements BACnetDevice {
 
     @Override
     public BACnetDevice addListeners(@NonNull List<DeviceEventListener> listeners) {
-        listeners.stream()
-                 .filter(Objects::nonNull)
-                 .forEachOrdered(listener -> this.localDevice.getEventHandler().addListener(listener));
+        listeners.stream().filter(Objects::nonNull).forEachOrdered(listener -> {
+            this.listeners.put(listener.getClass(), listener);
+            this.localDevice.getEventHandler().addListener(listener);
+        });
         return this;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends DeviceEventListener> T lookupListener(Class<T> listenerClass, Supplier<T> supplier) {
+        return (T) listeners.computeIfAbsent(listenerClass, aClass -> {
+            T l = supplier.get();
+            if (Objects.nonNull(l)) {
+                this.localDevice.getEventHandler().addListener(l);
+            }
+            return l;
+        });
     }
 
     public BACnetDevice asyncStart() {
@@ -166,14 +185,8 @@ final class DefaultBACnetDevice implements BACnetDevice {
                                                                                      @NonNull RequestData reqData,
                                                                                      @NonNull ConfirmedRequestFactory<T, D> factory) {
         return Single.just(factory.convertData(args, reqData))
-                     .map(data -> factory.factory(args, data))
-                     .flatMap(req -> this.discoverRemoteDevice(args.params().remoteDeviceId(), args.options())
-                                         .flatMap(rd -> {
-                                             final Vertx vertx = sharedData().getVertx();
-                                             return SingleHelper.toSingle(handler -> vertx.executeBlocking(
-                                                 p -> localDevice.send(rd, req, new BACnetResponseListener(action, p)),
-                                                 handler));
-                                         }));
+                     .flatMap(data -> this.discoverThenSendRequest(action, args, factory.factory(args, data))
+                                          .doOnSuccess(msg -> factory.then(this, msg, data, args, reqData)));
     }
 
     private Single<LocalDevice> init(boolean force) {
@@ -185,6 +198,15 @@ final class DefaultBACnetDevice implements BACnetDevice {
         });
     }
 
+    private <T extends ConfirmedRequestService> Single<EventMessage> discoverThenSendRequest(EventAction action,
+                                                                                             DiscoveryArguments args,
+                                                                                             T request) {
+        final Vertx vertx = sharedData().getVertx();
+        return this.discoverRemoteDevice(args)
+                   .flatMap(rd -> SingleHelper.toSingle(handler -> vertx.executeBlocking(
+                       p -> localDevice.send(rd, request, new BACnetResponseListener(action, p)), handler)));
+    }
+
     private void handleAfterScan(RemoteDeviceScanner scanner, Throwable t) {
         final EventbusClient client = EventbusClient.create(this.sharedData);
         final EventMessage msg = Objects.isNull(t) ? createSuccessDiscoverMsg(scanner) : createErrorDiscoverMsg(t);
@@ -192,8 +214,7 @@ final class DefaultBACnetDevice implements BACnetDevice {
     }
 
     private EventMessage createSuccessDiscoverMsg(@NonNull RemoteDeviceScanner scanner) {
-        final List<BACnetDeviceEntity> remotes = scanner.getRemoteDevices()
-                                                        .stream()
+        final List<BACnetDeviceEntity> remotes = scanner.getRemoteDevices().stream()
                                                         .map(RemoteDeviceMixin::create)
                                                         .map(rdm -> BACnetDeviceEntity.builder().mixin(rdm).build())
                                                         .collect(Collectors.toList());

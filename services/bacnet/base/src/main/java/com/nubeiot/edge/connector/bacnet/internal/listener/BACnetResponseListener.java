@@ -23,7 +23,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class BACnetResponseListener implements ResponseConsumer {
+public final class BACnetResponseListener implements ResponseConsumer {
 
     @NonNull
     private final EventAction action;
