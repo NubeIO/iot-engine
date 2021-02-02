@@ -3,6 +3,7 @@ package com.nubeiot.edge.connector.bacnet.mixin;
 import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.utils.Strings;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.NonNull;
@@ -10,6 +11,8 @@ import lombok.NonNull;
 public interface BACnetJsonMixin extends JsonData {
 
     ObjectMapper MAPPER = JsonData.MAPPER.copy().registerModule(BACnetJsonModule.MODULE);
+
+    ObjectMapper LENIENT_MAPPER = MAPPER.copy().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     /**
      * Standardize BACnet key property with lower-case and separate by {@code -}

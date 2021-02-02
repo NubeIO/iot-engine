@@ -1,6 +1,5 @@
 dependencies {
-    compile project(':iot:data')
-    compile project.deps.zero88.qwe.base
+    compile project.deps.zero88.qwe.protocol
 
     compile "com.infiniteautomation:bacnet4j:5.0.2"
     compile "lohbihler:sero-warp:1.0.0"
