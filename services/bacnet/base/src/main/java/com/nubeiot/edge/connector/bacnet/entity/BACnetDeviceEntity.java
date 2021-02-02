@@ -40,9 +40,12 @@ public class BACnetDeviceEntity extends AbstractDevice<ObjectIdentifier> impleme
             (com.serotonin.bacnet4j.type.enumerated.DeviceStatus) values.getAndCast(PropertyIdentifier.systemStatus)
                                                                         .orElse(
                                                                             com.serotonin.bacnet4j.type.enumerated.DeviceStatus.nonOperational));
-        return BACnetDeviceEntity.builder().networkId(networkId).key(mixin.getObjectId())
-                                 .type(type)
+        return BACnetDeviceEntity.builder()
+                                 .networkId(networkId)
+                                 .key(mixin.getObjectId())
                                  .name(mixin.getName())
+                                 .address(mixin.getAddress().toJson())
+                                 .type(type)
                                  .status(status)
                                  .mixin(mixin)
                                  .build();

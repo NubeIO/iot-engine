@@ -1,11 +1,11 @@
-package com.nubeiot.iotdata;
+package com.nubeiot.iotdata.unified;
 
 import java.util.UUID;
 
 import io.github.zero88.qwe.protocol.Protocol;
 import io.github.zero88.utils.UUID64;
 
-import com.nubeiot.iotdata.entity.ParticularData;
+import com.nubeiot.iotdata.IoTEntity;
 
 import lombok.NonNull;
 

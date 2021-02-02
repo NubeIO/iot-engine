@@ -22,7 +22,7 @@ public interface IPoint<K> extends IoTEntity<K>, HasObjectType<PointType> {
     /**
      * Retrieve a device identifier that point belongs to
      *
-     * @return network identifier
+     * @return device identifier
      */
     @NonNull String deviceId();
 

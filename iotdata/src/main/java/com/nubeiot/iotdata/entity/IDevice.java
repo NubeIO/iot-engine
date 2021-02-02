@@ -3,6 +3,8 @@ package com.nubeiot.iotdata.entity;
 import java.util.Collection;
 import java.util.Collections;
 
+import io.vertx.core.json.JsonObject;
+
 import com.nubeiot.iotdata.IoTEntity;
 import com.nubeiot.iotdata.enums.DeviceStatus;
 import com.nubeiot.iotdata.enums.DeviceType;
@@ -23,8 +25,25 @@ public interface IDevice<K> extends IoTEntity<K>, HasObjectType<DeviceType> {
      */
     @NonNull String networkId();
 
+    /**
+     * Device address
+     *
+     * @return device address
+     */
+    @NonNull JsonObject address();
+
+    /**
+     * Device name
+     *
+     * @return device name
+     */
     @NonNull String name();
 
+    /**
+     * Device status
+     *
+     * @return device status
+     */
     @NonNull DeviceStatus status();
 
     /**

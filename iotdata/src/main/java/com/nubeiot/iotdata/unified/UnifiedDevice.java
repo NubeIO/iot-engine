@@ -1,8 +1,9 @@
-package com.nubeiot.iotdata.entity;
+package com.nubeiot.iotdata.unified;
 
 import java.util.UUID;
 
-import com.nubeiot.iotdata.UnifiedIoTEntity;
+import com.nubeiot.iotdata.entity.AbstractDevice;
+import com.nubeiot.iotdata.entity.IDevice;
 
 import lombok.Builder.Default;
 import lombok.Getter;

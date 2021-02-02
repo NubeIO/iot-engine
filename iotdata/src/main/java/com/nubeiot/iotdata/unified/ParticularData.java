@@ -1,4 +1,4 @@
-package com.nubeiot.iotdata.entity;
+package com.nubeiot.iotdata.unified;
 
 import java.util.HashMap;
 

@@ -13,19 +13,16 @@ import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 
 import lombok.NonNull;
 
-public final class PointValueConverter
-    implements IoTPropertyConverter<PointValue, PropertyValuesMixin>, BACnetProtocol {
+//TODO implement it
+public final class PointValueConverter implements IoTPropertyConverter<PointValue, PropertyValuesMixin>, BACnetProtocol {
 
     static final List<PropertyIdentifier> DATA_PROPS = Arrays.asList(PropertyIdentifier.presentValue,
-                                                                     PropertyIdentifier.priority,
                                                                      PropertyIdentifier.priorityArray);
 
     @Override
     public PointValue serialize(PropertyValuesMixin mixin) {
-        final Integer priority = mixin.encode(PropertyIdentifier.priority);
         final Optional<Encodable> ov = mixin.getAndCast(PropertyIdentifier.presentValue);
         return PointValue.builder()
-                         .priority(priority)
                          .value(ov.map(Encodable::toString).orElse(null))
                          .rawValue(ov.map(this::getDoubleValue).orElse(null))
                          .build();
