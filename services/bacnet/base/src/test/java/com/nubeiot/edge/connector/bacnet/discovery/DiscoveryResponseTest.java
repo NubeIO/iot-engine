@@ -15,6 +15,7 @@ import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetDeviceEntity;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetEntities.BACnetPoints;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetPointEntity;
+import com.nubeiot.edge.connector.bacnet.internal.LocalDeviceMetadata;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
 import com.serotonin.bacnet4j.type.constructed.Address;
@@ -41,16 +42,17 @@ public class DiscoveryResponseTest {
                                                               RemoteDeviceMixin.create(oid, address, pvm));
         final BACnetPointEntity pt = BACnetPointEntity.from(firstActiveIp.identifier(), oid, pvm);
         final BACnetPoints opv = (BACnetPoints) new BACnetPoints().add(pt);
+        final LocalDeviceMetadata localDevice = LocalDeviceMetadata.from(config);
         final DiscoveryResponse response = DiscoveryResponse.builder()
                                                             .network(firstActiveIp)
-                                                            .config(config)
+                                                            .localDevice(localDevice)
                                                             .remoteDevice(dt)
                                                             .remoteDevices(Collections.singletonList(dt))
                                                             .objects(opv)
                                                             .object(pt)
                                                             .build();
         final JsonObject expected = new JsonObject().put("network", firstActiveIp.toJson())
-                                                    .put("config", config.toJson())
+                                                    .put("localDevice", localDevice.toJson())
                                                     .put("objects", opv.toJson())
                                                     .put("object", pt.toJson())
                                                     .put("remoteDevices", new JsonArray().add(dt.toJson()))
@@ -62,9 +64,9 @@ public class DiscoveryResponseTest {
     @Test
     public void test_deserialize() throws JSONException {
         final Ipv4Network firstActiveIp = Ipv4Network.getFirstActiveIp();
-        final BACnetConfig config = BACnetConfig.builder().deviceId(222).modelName("abc").build();
+        final LocalDeviceMetadata config = LocalDeviceMetadata.builder().deviceNumber(222).modelName("abc").build();
         final JsonObject expected = new JsonObject().put("network", firstActiveIp.toJson())
-                                                    .put("config", config.toJson());
+                                                    .put("localDevice", config.toJson());
         final DiscoveryResponse xyz = JsonData.from(expected, DiscoveryResponse.class);
         System.out.println(xyz.toJson());
         JsonHelper.assertJson(expected, xyz.toJson());

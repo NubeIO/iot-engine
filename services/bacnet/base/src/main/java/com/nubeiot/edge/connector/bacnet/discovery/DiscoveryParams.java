@@ -8,7 +8,6 @@ import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
@@ -29,6 +28,27 @@ public final class DiscoveryParams implements JsonData {
     private final String networkId;
     private final Integer deviceInstance;
     private final String objectCode;
+
+    public ObjectIdentifier remoteDeviceId() {
+        return Optional.ofNullable(deviceInstance)
+                       .map(number -> new ObjectIdentifier(ObjectType.device, number))
+                       .orElse(null);
+    }
+
+    public ObjectIdentifier objectCode() {
+        return Optional.ofNullable(objectCode).map(code -> ObjectIdentifierMixin.deserialize(objectCode)).orElse(null);
+    }
+
+    public String buildKey(DiscoveryLevel level) {
+        String key = networkId;
+        if (DiscoveryLevel.DEVICE.mustValidate(level)) {
+            key += "_" + deviceInstance;
+        }
+        if (DiscoveryLevel.OBJECT.mustValidate(level)) {
+            key += "_" + objectCode;
+        }
+        return key;
+    }
 
     @NonNull
     public static DiscoveryParams from(@NonNull RequestData requestData, @NonNull DiscoveryLevel level) {
@@ -52,18 +72,6 @@ public final class DiscoveryParams implements JsonData {
             Strings.requireNotBlank(request.getObjectCode(), "Missing BACnet object code");
         }
         return request;
-    }
-
-    @JsonIgnore
-    public ObjectIdentifier remoteDeviceId() {
-        return Optional.ofNullable(deviceInstance)
-                       .map(number -> new ObjectIdentifier(ObjectType.device, number))
-                       .orElse(null);
-    }
-
-    @JsonIgnore
-    public ObjectIdentifier objectCode() {
-        return Optional.ofNullable(objectCode).map(code -> ObjectIdentifierMixin.deserialize(objectCode)).orElse(null);
     }
 
     public static String genServicePath(@NonNull DiscoveryLevel level) {

@@ -14,5 +14,7 @@ public final class DiscoveryArguments {
     private final DiscoveryParams params;
     @NonNull
     private final DiscoveryOptions options;
+    @NonNull
+    private final DiscoveryLevel level;
 
 }

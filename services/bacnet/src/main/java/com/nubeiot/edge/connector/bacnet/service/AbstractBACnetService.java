@@ -53,7 +53,7 @@ public abstract class AbstractBACnetService extends BaseService {
 
     protected final @NonNull DiscoveryArguments createDiscoveryArgs(@NonNull RequestData reqData,
                                                                     @NonNull DiscoveryLevel level) {
-        return new DiscoveryArguments(DiscoveryParams.from(reqData, level), parseDiscoverOptions(reqData));
+        return new DiscoveryArguments(DiscoveryParams.from(reqData, level), parseDiscoverOptions(reqData), level);
     }
 
     protected final @NonNull BACnetDevice getLocalDeviceFromCache(@NonNull DiscoveryArguments request) {

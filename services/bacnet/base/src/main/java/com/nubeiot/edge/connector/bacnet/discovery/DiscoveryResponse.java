@@ -8,10 +8,10 @@ import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetDeviceEntity;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetEntities.BACnetPoints;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetPointEntity;
+import com.nubeiot.edge.connector.bacnet.internal.LocalDeviceMetadata;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -26,7 +26,7 @@ import lombok.extern.jackson.Jacksonized;
 public final class DiscoveryResponse implements JsonData {
 
     private final CommunicationProtocol network;
-    private final BACnetConfig config;
+    private final LocalDeviceMetadata localDevice;
     private final List<BACnetDeviceEntity> remoteDevices;
     private final BACnetDeviceEntity remoteDevice;
     private final BACnetPoints objects;
