@@ -1,10 +1,10 @@
 package com.nubeiot.edge.connector.bacnet.service.scanner;
 
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
+import io.github.zero88.qwe.iot.connector.scanner.AbstractRpcScanner;
+import io.github.zero88.qwe.iot.connector.scanner.NetworkRpcScanner;
 import io.github.zero88.qwe.protocol.CommunicationProtocol;
 
-import com.nubeiot.core.rpc.scanner.AbstractRpcScanner;
-import com.nubeiot.core.rpc.scanner.NetworkRpcScanner;
 import com.nubeiot.edge.connector.bacnet.BACnetProtocol;
 import com.nubeiot.edge.connector.bacnet.converter.entity.BACnetNetworkConverter;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;

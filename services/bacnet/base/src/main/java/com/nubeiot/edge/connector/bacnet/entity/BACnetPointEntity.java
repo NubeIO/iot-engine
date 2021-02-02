@@ -1,13 +1,13 @@
 package com.nubeiot.edge.connector.bacnet.entity;
 
+import io.github.zero88.qwe.iot.data.entity.AbstractPoint;
+import io.github.zero88.qwe.iot.data.enums.PointType;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
-import com.nubeiot.iotdata.entity.AbstractPoint;
-import com.nubeiot.iotdata.enums.PointType;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 

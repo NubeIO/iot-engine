@@ -7,6 +7,7 @@ import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.exceptions.AlreadyExistException;
 import io.github.zero88.qwe.exceptions.NotFoundException;
+import io.github.zero88.qwe.iot.data.entity.AbstractEntities;
 import io.reactivex.Single;
 
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
@@ -17,7 +18,6 @@ import com.nubeiot.edge.connector.bacnet.entity.BACnetEntities.BACnetDevices;
 import com.nubeiot.edge.connector.bacnet.internal.request.RemoteDeviceScanner;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
-import com.nubeiot.iotdata.entity.AbstractEntities;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 

@@ -3,10 +3,10 @@ package com.nubeiot.edge.connector.bacnet.internal.request;
 import java.util.Objects;
 
 import io.github.zero88.qwe.dto.msg.RequestData;
+import io.github.zero88.qwe.iot.data.property.PointValue;
 
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.mixin.deserializer.EncodableDeserializer;
-import com.nubeiot.iotdata.property.PointValue;
 import com.serotonin.bacnet4j.service.confirmed.WritePropertyRequest;
 import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.constructed.PropertyValue;

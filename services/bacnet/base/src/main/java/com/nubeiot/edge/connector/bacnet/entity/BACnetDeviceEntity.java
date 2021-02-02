@@ -2,6 +2,9 @@ package com.nubeiot.edge.connector.bacnet.entity;
 
 import java.util.Objects;
 
+import io.github.zero88.qwe.iot.data.entity.AbstractDevice;
+import io.github.zero88.qwe.iot.data.enums.DeviceStatus;
+import io.github.zero88.qwe.iot.data.enums.DeviceType;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -9,9 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.edge.connector.bacnet.converter.property.DeviceStatusConverter;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.RemoteDeviceMixin;
-import com.nubeiot.iotdata.entity.AbstractDevice;
-import com.nubeiot.iotdata.enums.DeviceStatus;
-import com.nubeiot.iotdata.enums.DeviceType;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 

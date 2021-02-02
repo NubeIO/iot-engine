@@ -1,8 +1,8 @@
 dependencies {
     compile project.deps.zero88.qwe.micro.main
     compile project(':services:bacnet:mixin')
-    compile project(':iotdata')
-    compile project(':transporter:rpc')
+    compile project(':iot:data')
+    compile project(':iot:connector')
 
     testImplementation(project.deps.tests.junit)
     testImplementation(project.deps.tests.junit5Api)

@@ -2,9 +2,10 @@ package com.nubeiot.edge.connector.bacnet.converter.property;
 
 import java.util.Objects;
 
+import io.github.zero88.qwe.iot.data.converter.IoTPropertyConverter;
+import io.github.zero88.qwe.iot.data.enums.DeviceStatus;
+
 import com.nubeiot.edge.connector.bacnet.BACnetProtocol;
-import com.nubeiot.iotdata.converter.IoTPropertyConverter;
-import com.nubeiot.iotdata.enums.DeviceStatus;
 
 import lombok.NonNull;
 

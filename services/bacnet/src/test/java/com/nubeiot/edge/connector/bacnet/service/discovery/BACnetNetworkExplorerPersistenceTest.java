@@ -19,6 +19,7 @@ import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventMessage;
 import io.github.zero88.qwe.event.Status;
 import io.github.zero88.qwe.exceptions.ErrorCode;
+import io.github.zero88.qwe.iot.data.enums.DeviceStatus;
 import io.github.zero88.qwe.micro.http.EventHttpService;
 import io.github.zero88.qwe.protocol.Protocol;
 import io.github.zero88.qwe.protocol.network.Ipv4Network;
@@ -34,7 +35,6 @@ import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.service.mock.MockNetworkPersistService;
 import com.nubeiot.edge.connector.bacnet.service.mock.MockProtocolDispatcherService;
-import com.nubeiot.iotdata.enums.DeviceStatus;
 
 public class BACnetNetworkExplorerPersistenceTest extends BACnetWithGatewayTest {
 

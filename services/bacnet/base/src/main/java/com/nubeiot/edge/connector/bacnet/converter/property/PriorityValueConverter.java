@@ -4,9 +4,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import io.github.zero88.qwe.iot.data.converter.IoTPropertyConverter;
+import io.github.zero88.qwe.iot.data.property.PointPriorityValue;
+
 import com.nubeiot.edge.connector.bacnet.BACnetProtocol;
-import com.nubeiot.iotdata.converter.IoTPropertyConverter;
-import com.nubeiot.iotdata.property.PointPriorityValue;
 import com.serotonin.bacnet4j.type.constructed.PriorityArray;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 

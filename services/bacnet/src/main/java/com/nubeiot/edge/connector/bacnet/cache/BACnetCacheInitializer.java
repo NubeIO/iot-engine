@@ -4,8 +4,8 @@ import java.util.function.Supplier;
 
 import io.github.zero88.qwe.cache.CacheInitializer;
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
+import io.github.zero88.qwe.iot.connector.RpcProtocolClient;
 
-import com.nubeiot.core.rpc.RpcProtocolClient;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.BACnetServiceConfig;
 

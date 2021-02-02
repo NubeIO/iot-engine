@@ -4,10 +4,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import io.github.zero88.qwe.iot.data.converter.IoTPropertyConverter;
+import io.github.zero88.qwe.iot.data.property.PointValue;
+
 import com.nubeiot.edge.connector.bacnet.BACnetProtocol;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
-import com.nubeiot.iotdata.converter.IoTPropertyConverter;
-import com.nubeiot.iotdata.property.PointValue;
 import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 

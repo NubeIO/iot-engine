@@ -1,8 +1,9 @@
 package com.nubeiot.edge.connector.bacnet.service;
 
-import com.nubeiot.core.rpc.coordinator.InboundCoordinator;
+import io.github.zero88.qwe.iot.connector.coordinator.InboundCoordinator;
+import io.github.zero88.qwe.iot.data.IoTEntity;
+
 import com.nubeiot.edge.connector.bacnet.BACnetProtocol;
-import com.nubeiot.iotdata.IoTEntity;
 
 /**
  * Represents {@code BACnet notifier} that watches the {@code BACnet event} then do notify to {@code external services}

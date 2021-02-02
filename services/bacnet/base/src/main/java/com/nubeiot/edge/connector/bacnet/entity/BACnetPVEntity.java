@@ -1,11 +1,12 @@
 package com.nubeiot.edge.connector.bacnet.entity;
 
+import io.github.zero88.qwe.iot.data.entity.AbstractPointData;
+import io.github.zero88.qwe.iot.data.property.PointPriorityValue;
+import io.github.zero88.qwe.iot.data.property.PointValue;
+
 import com.nubeiot.edge.connector.bacnet.converter.property.PointValueConverter;
 import com.nubeiot.edge.connector.bacnet.converter.property.PriorityValueConverter;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
-import com.nubeiot.iotdata.entity.AbstractPointData;
-import com.nubeiot.iotdata.property.PointPriorityValue;
-import com.nubeiot.iotdata.property.PointValue;
 import com.serotonin.bacnet4j.type.constructed.PriorityArray;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;

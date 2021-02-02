@@ -7,12 +7,12 @@ import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventContractor;
 import io.github.zero88.qwe.event.EventMessage;
+import io.github.zero88.qwe.iot.connector.coordinator.Channel;
+import io.github.zero88.qwe.iot.connector.coordinator.WatcherOption;
 import io.github.zero88.qwe.micro.http.ActionMethodMapping;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.rpc.coordinator.Channel;
-import com.nubeiot.core.rpc.coordinator.WatcherOption;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;

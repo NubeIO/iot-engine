@@ -1,7 +1,8 @@
 package com.nubeiot.edge.connector.bacnet.entity;
 
+import io.github.zero88.qwe.iot.data.entity.AbstractEntities;
+
 import com.nubeiot.edge.connector.bacnet.mixin.BACnetJsonMixin;
-import com.nubeiot.iotdata.entity.AbstractEntities;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
 public interface BACnetEntities {

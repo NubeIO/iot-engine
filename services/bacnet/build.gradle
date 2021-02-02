@@ -1,5 +1,4 @@
 dependencies {
-    compile project(':transporter:rpc')
     compile project(':services:bacnet:base')
     compile project.deps.zero88.qwe.cache
     compile project.deps.zero88.qwe.micro.main

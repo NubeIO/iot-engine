@@ -1,8 +1,8 @@
 package com.nubeiot.edge.connector.bacnet.service;
 
 import io.github.zero88.qwe.dto.JsonData;
+import io.github.zero88.qwe.iot.connector.coordinator.OutboundCoordinator;
 
-import com.nubeiot.core.rpc.coordinator.OutboundCoordinator;
 import com.nubeiot.edge.connector.bacnet.BACnetProtocol;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetEntity;
 

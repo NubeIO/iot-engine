@@ -4,9 +4,9 @@ import java.util.Optional;
 
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.dto.msg.RequestData;
+import io.github.zero88.qwe.iot.connector.BaseService;
 import io.github.zero88.qwe.protocol.CommunicationProtocol;
 
-import com.nubeiot.core.rpc.BaseService;
 import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;

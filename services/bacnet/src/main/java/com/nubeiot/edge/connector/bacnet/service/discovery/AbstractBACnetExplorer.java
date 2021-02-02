@@ -5,6 +5,7 @@ import java.util.List;
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventContractor;
+import io.github.zero88.qwe.iot.data.IoTEntities;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 
@@ -12,7 +13,6 @@ import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetEntity;
 import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.nubeiot.edge.connector.bacnet.service.AbstractBACnetService;
-import com.nubeiot.iotdata.IoTEntities;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.obj.ObjectProperties;
 import com.serotonin.bacnet4j.obj.ObjectPropertyTypeDefinition;

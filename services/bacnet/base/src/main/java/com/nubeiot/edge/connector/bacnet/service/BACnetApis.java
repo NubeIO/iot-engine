@@ -1,7 +1,8 @@
 package com.nubeiot.edge.connector.bacnet.service;
 
+import io.github.zero88.qwe.iot.connector.ConnectorServiceApis;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nubeiot.core.rpc.ConnectorServiceApis;
 import com.nubeiot.edge.connector.bacnet.BACnetProtocol;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryParams;
