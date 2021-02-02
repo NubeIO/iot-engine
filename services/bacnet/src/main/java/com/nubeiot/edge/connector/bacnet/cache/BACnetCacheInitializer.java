@@ -18,11 +18,13 @@ public final class BACnetCacheInitializer implements CacheInitializer<BACnetCach
     public static final String LOCAL_NETWORK_CACHE = "LOCAL_NETWORK_CACHE";
     public static final String BACNET_DEVICE_CACHE = "BACNET_DEVICE_CACHE";
     public static final String BACNET_OBJECT_CACHE = "BACNET_OBJECT_CACHE";
+    public static final String SCHEDULER_SERVICE_NAME = "SCHEDULER_SERVICE_NAME";
 
     @Override
     public BACnetCacheInitializer init(@NonNull SharedDataLocalProxy context) {
         BACnetServiceConfig config = context.getData(BACnetDevice.CONFIG_KEY);
         context.addData(RpcProtocolClient.GATEWAY_ADDRESS, config.getGatewayAddress());
+        context.addData(SCHEDULER_SERVICE_NAME, config.getSchedulerServiceName());
         addBlockingCache(context, LOCAL_NETWORK_CACHE, BACnetNetworkCache::init);
         addBlockingCache(context, BACNET_DEVICE_CACHE, () -> BACnetDeviceCache.init(context));
         addBlockingCache(context, BACNET_OBJECT_CACHE, BACnetObjectCache::new);

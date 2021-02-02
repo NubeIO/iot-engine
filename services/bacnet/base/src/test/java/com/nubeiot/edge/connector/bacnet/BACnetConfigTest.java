@@ -18,7 +18,7 @@ public class BACnetConfigTest {
         BACnetConfig config = new BACnetConfig();
         JsonHelper.assertJson(new JsonObject("{\"vendorId\":161214,\"vendorName\":\"zero88\",\"deviceId\":89727," +
                                              "\"deviceName\":\"Wanna Fly\",\"modelName\":\"QWE-BACnet\"," +
-                                             "\"maxDiscoverTimeout\":6,\"maxDiscoverTimeoutUnit\":\"SECONDS\"," +
+                                             "\"maxDiscoverTimeout\":10,\"maxDiscoverTimeoutUnit\":\"SECONDS\"," +
                                              "\"completeDiscoverAddress\":\"com.nubeiot.edge.connector.bacnet" +
                                              ".discover.complete\",\"readinessAddress\":\"com.nubeiot.edge.connector" +
                                              ".bacnet.readiness\",\"enableSubscriber\":false}"), config.toJson(),

@@ -41,13 +41,12 @@
       }
     },
     "__scheduler__": {
-      "schedulerName": "bacnet.scheduler",
-      "registerAddress": "nubeio.bacnet.scheduler.register",
-      "monitorAddress": "nubeio.bacnet.scheduler.monitor",
+      "schedulerName": "bacnet",
+      "registerAddress": "bacnet.scheduler.register",
+      "registerServiceClass": "com.nubeiot.edge.connector.bacnet.service.scheduler.BACnetSchedulerApis",
       "__schedule_worker__": {
-        "poolName": "worker-pool-scheduler-bacnet",
-        "poolSize": 3,
-        "maxExecuteTime": 20,
+        "poolSize": 2,
+        "maxExecuteTime": 15,
         "maxExecuteTimeUnit": "SECONDS"
       }
     },
@@ -58,7 +57,8 @@
       "completeDiscoverAddress": "com.nubeiot.edge.connector.bacnet.discover.complete",
       "readinessAddress": "com.nubeiot.edge.connector.bacnet.readiness",
       "enableSubscriber": false,
-      "gatewayAddress": "nubeio.bacnet.gateway.index"
+      "gatewayAddress": "nubeio.bacnet.gateway.index",
+      "schedulerServiceName": "bacnet-scheduler"
     }
   }
 }

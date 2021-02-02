@@ -14,6 +14,9 @@ public final class BACnetServiceConfig extends BACnetConfig {
     @NonNull
     @Default
     private final String gatewayAddress = "nubeio.bacnet.gateway.index";
+    @NonNull
+    @Default
+    private final String schedulerServiceName = "bacnet-scheduler";
 
     @Override
     public int getVendorId() {

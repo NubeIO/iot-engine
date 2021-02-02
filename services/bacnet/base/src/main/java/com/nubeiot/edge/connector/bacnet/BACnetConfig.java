@@ -34,7 +34,7 @@ public class BACnetConfig implements IConfig {
     @Default
     private String deviceName = "Wanna Fly";
     @Default
-    private final long maxDiscoverTimeout = 6;
+    private final long maxDiscoverTimeout = 10;
     @Default
     private final TimeUnit maxDiscoverTimeoutUnit = TimeUnit.SECONDS;
     @Default
