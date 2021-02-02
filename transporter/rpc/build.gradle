@@ -3,4 +3,5 @@ dependencies {
     compile project.deps.zero88.qwe.protocol
     compile project.deps.zero88.qwe.http.metadata
     compile project.deps.zero88.qwe.micro.rpc
+    compile project.deps.zero88.qwe.scheduler.metadata
 }

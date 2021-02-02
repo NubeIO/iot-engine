@@ -1,8 +1,5 @@
 package com.nubeiot.core.rpc.coordinator;
 
-import io.reactivex.Single;
-import io.vertx.core.json.JsonObject;
-
 import com.nubeiot.core.rpc.RpcProtocolClient;
 import com.nubeiot.iotdata.IoTEntity;
 
@@ -14,10 +11,8 @@ import com.nubeiot.iotdata.IoTEntity;
  * @see RpcProtocolClient
  * @see IoTEntity
  */
-public interface InboundCoordinator<P extends IoTEntity> extends RpcProtocolClient<P> {
+public interface InboundCoordinator<P extends IoTEntity> extends RpcProtocolClient<P>, Coordinator {
 
-    Single<JsonObject> register();
-
-    String publishAddress();
+    Channel channel();
 
 }
