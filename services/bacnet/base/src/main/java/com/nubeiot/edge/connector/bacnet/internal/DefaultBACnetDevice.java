@@ -123,9 +123,10 @@ final class DefaultBACnetDevice implements BACnetDevice {
                                                      @NonNull DiscoveryOptions options) {
         long timeout = TimeUnit.MILLISECONDS.convert(options.getTimeout(), options.getTimeUnit());
         log.info("Start discovering device {} with force={} in timeout {}ms ", deviceCode, options.isForce(), timeout);
-        return init(options.isForce()).map(
-            ld -> Functions.getOrThrow(t -> new NotFoundException("Not found device id " + deviceCode, t),
-                                       () -> ld.getRemoteDevice(deviceCode.getInstanceNumber()).get(timeout)));
+        return this.init(options.isForce())
+                   .map(ld -> Functions.getOrThrow(t -> new NotFoundException("Not found device id " + deviceCode, t),
+                                                   () -> ld.getRemoteDevice(deviceCode.getInstanceNumber())
+                                                           .get(timeout)));
     }
 
     @Override
@@ -135,12 +136,13 @@ final class DefaultBACnetDevice implements BACnetDevice {
                                                                                      @NonNull ConfirmedRequestFactory<T, D> factory) {
         return Single.just(factory.convertData(args, reqData))
                      .map(data -> factory.factory(args, data))
-                     .flatMap(
-                         request -> discoverRemoteDevice(args.params().remoteDeviceId(), args.options()).flatMap(rd -> {
-                             final Vertx vertx = sharedData().getVertx();
-                             return SingleHelper.toSingle(handler -> vertx.executeBlocking(
-                                 p -> localDevice.send(rd, request, new BACnetResponseListener(action, p)), handler));
-                         }));
+                     .flatMap(req -> this.discoverRemoteDevice(args.params().remoteDeviceId(), args.options())
+                                         .flatMap(rd -> {
+                                             final Vertx vertx = sharedData().getVertx();
+                                             return SingleHelper.toSingle(handler -> vertx.executeBlocking(
+                                                 p -> localDevice.send(rd, req, new BACnetResponseListener(action, p)),
+                                                 handler));
+                                         }));
     }
 
     private Single<LocalDevice> init(boolean force) {
