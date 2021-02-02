@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public enum DiscoveryLevel {
 
-    NETWORK(1), DEVICE(2), OBJECT(3);
+    NETWORK(10), DEVICE(20), OBJECT(30);
 
     private final int level;
 

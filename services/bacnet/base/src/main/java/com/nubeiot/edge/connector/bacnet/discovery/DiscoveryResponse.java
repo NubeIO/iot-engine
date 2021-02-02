@@ -22,6 +22,7 @@ import lombok.extern.jackson.Jacksonized;
 @Jacksonized
 @FieldNameConstants
 @Builder(builderClassName = "Builder")
+@Deprecated
 public final class DiscoveryResponse implements JsonData {
 
     private final CommunicationProtocol network;

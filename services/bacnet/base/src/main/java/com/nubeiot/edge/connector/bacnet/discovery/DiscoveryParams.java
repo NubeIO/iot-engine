@@ -66,4 +66,24 @@ public final class DiscoveryParams implements JsonData {
         return Optional.ofNullable(objectCode).map(code -> ObjectIdentifierMixin.deserialize(objectCode)).orElse(null);
     }
 
+    public static String genServicePath(@NonNull DiscoveryLevel level) {
+        if (level == DiscoveryLevel.NETWORK) {
+            return "/network";
+        }
+        if (level == DiscoveryLevel.DEVICE) {
+            return "/network/:" + Fields.networkId + "/device";
+        }
+        return "/network/:" + Fields.networkId + "/device/:" + Fields.deviceInstance + "/object";
+    }
+
+    public static String genParamPath(DiscoveryLevel level) {
+        if (level == DiscoveryLevel.NETWORK) {
+            return Fields.networkId;
+        }
+        if (level == DiscoveryLevel.DEVICE) {
+            return Fields.deviceInstance;
+        }
+        return Fields.objectCode;
+    }
+
 }
