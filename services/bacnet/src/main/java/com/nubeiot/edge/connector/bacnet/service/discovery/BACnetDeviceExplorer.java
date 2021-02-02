@@ -8,12 +8,10 @@ import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.exceptions.AlreadyExistException;
 import io.github.zero88.qwe.exceptions.NotFoundException;
 import io.reactivex.Single;
-import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
-import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryParams;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetDeviceEntity;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetEntities.BACnetDevices;
 import com.nubeiot.edge.connector.bacnet.internal.request.RemoteDeviceScanner;
@@ -35,23 +33,14 @@ public final class BACnetDeviceExplorer
     }
 
     @Override
-    public @NonNull Class<BACnetDeviceEntity> context() {
-        return BACnetDeviceEntity.class;
-    }
-
-    @Override
-    public @NonNull String servicePath() {
-        return "/network/:" + DiscoveryParams.Fields.networkId + "/device";
-    }
-
-    @Override
-    public String paramPath() {
-        return DiscoveryParams.Fields.deviceInstance;
-    }
-
-    @Override
     public Single<BACnetDeviceEntity> discover(RequestData reqData) {
-        return doGet(createDiscoveryArgs(reqData, DiscoveryLevel.DEVICE));
+        final DiscoveryArguments args = createDiscoveryArgs(reqData, level());
+        final BACnetDevice device = getLocalDeviceFromCache(args);
+        log.info("Discovering remote device {} in network {}...",
+                 ObjectIdentifierMixin.serialize(args.params().remoteDeviceId()), device.protocol().identifier());
+        return device.discoverRemoteDevice(args.params().remoteDeviceId(), args.options())
+                     .flatMap(rd -> parseRemoteDevice(device, rd, true, args.options().isDetail()))
+                     .doFinally(device::stop);
     }
 
     @Override
@@ -68,17 +57,8 @@ public final class BACnetDeviceExplorer
     }
 
     @Override
-    protected String parseResourceId(JsonObject resource) {
-        return resource.getJsonObject("device", new JsonObject()).getString("id");
-    }
-
-    private Single<BACnetDeviceEntity> doGet(@NonNull DiscoveryArguments args) {
-        final BACnetDevice device = getLocalDeviceFromCache(args);
-        log.info("Discovering remote device {} in network {}...",
-                 ObjectIdentifierMixin.serialize(args.params().remoteDeviceId()), device.protocol().identifier());
-        return device.discoverRemoteDevice(args.params().remoteDeviceId(), args.options())
-                     .flatMap(rd -> parseRemoteDevice(device, rd, true, args.options().isDetail()))
-                     .doFinally(device::stop);
+    public DiscoveryLevel level() {
+        return DiscoveryLevel.DEVICE;
     }
 
     private Single<BACnetDeviceEntity> parseRemoteDevice(@NonNull BACnetDevice device, @NonNull RemoteDevice rd,

@@ -6,7 +6,6 @@ import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
@@ -24,23 +23,8 @@ public final class BACnetNetworkExplorer extends AbstractBACnetExplorer<String, 
     }
 
     @Override
-    public @NonNull Class<BACnetNetwork> context() {
-        return BACnetNetwork.class;
-    }
-
-    @Override
-    public @NonNull String servicePath() {
-        return "/network";
-    }
-
-    @Override
-    public String paramPath() {
-        return DiscoveryParams.Fields.networkId;
-    }
-
-    @Override
     public Single<BACnetNetwork> discover(@NonNull RequestData reqData) {
-        return Single.just(DiscoveryParams.from(reqData, DiscoveryLevel.NETWORK))
+        return Single.just(DiscoveryParams.from(reqData, level()))
                      .map(this::parseNetworkProtocol)
                      .map(BACnetNetwork::fromProtocol);
     }
@@ -59,8 +43,8 @@ public final class BACnetNetworkExplorer extends AbstractBACnetExplorer<String, 
     }
 
     @Override
-    protected String parseResourceId(@NonNull JsonObject resource) {
-        return resource.getString("id");
+    public DiscoveryLevel level() {
+        return DiscoveryLevel.NETWORK;
     }
 
 }

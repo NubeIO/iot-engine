@@ -27,7 +27,6 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
-import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryParams;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetEntities.BACnetPoints;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetPointEntity;
 import com.nubeiot.edge.connector.bacnet.internal.request.WritePointValueRequestFactory;
@@ -50,22 +49,6 @@ public final class BACnetObjectExplorer
     }
 
     @Override
-    public @NonNull Class<BACnetPointEntity> context() {
-        return BACnetPointEntity.class;
-    }
-
-    @Override
-    public @NonNull String servicePath() {
-        return "/network/:" + DiscoveryParams.Fields.networkId + "/device/:" + DiscoveryParams.Fields.deviceInstance +
-               "/object";
-    }
-
-    @Override
-    public String paramPath() {
-        return DiscoveryParams.Fields.objectCode;
-    }
-
-    @Override
     public @NonNull Collection<EventAction> getAvailableEvents() {
         //TODO PATCH is temporary
         return Stream.concat(super.getAvailableEvents().stream(), Stream.of(EventAction.PATCH))
@@ -81,7 +64,16 @@ public final class BACnetObjectExplorer
 
     @Override
     public Single<BACnetPointEntity> discover(RequestData requestData) {
-        return doGet(createDiscoveryArgs(requestData, DiscoveryLevel.OBJECT));
+        final DiscoveryArguments args = createDiscoveryArgs(requestData, level());
+        final BACnetDevice device = getLocalDeviceFromCache(args);
+        log.info("Discovering object '{}' in device '{}' in network {}...",
+                 ObjectIdentifierMixin.serialize(args.params().objectCode()),
+                 ObjectIdentifierMixin.serialize(args.params().remoteDeviceId()), device.protocol().identifier());
+        return device.discoverRemoteDevice(args.params().remoteDeviceId(), args.options())
+                     .flatMap(rd -> parseRemoteObject(device, rd, args.params().objectCode(), true,
+                                                      args.options().isDetail()))
+                     .map(pvm -> BACnetPointEntity.from(args.params().getNetworkId(), args.params().remoteDeviceId(),
+                                                        pvm));
     }
 
     @Override
@@ -97,15 +89,15 @@ public final class BACnetObjectExplorer
 
     @EventContractor(action = "PATCH", returnType = Single.class)
     public Single<JsonObject> patchPointValue(RequestData requestData) {
-        final DiscoveryArguments args = createDiscoveryArgs(requestData, DiscoveryLevel.OBJECT);
+        final DiscoveryArguments args = createDiscoveryArgs(requestData, level());
         final BACnetDevice device = getLocalDeviceFromCache(args);
         return device.send(EventAction.PATCH, args, requestData, new WritePointValueRequestFactory())
                      .map(JsonData::toJson);
     }
 
     @Override
-    protected String parseResourceId(@NonNull JsonObject resource) {
-        return resource.getJsonObject("point", new JsonObject()).getString("id");
+    public DiscoveryLevel level() {
+        return DiscoveryLevel.OBJECT;
     }
 
     private Single<BACnetPoints> getRemoteObjects(@NonNull BACnetDevice device, @NonNull RemoteDevice rd,
@@ -118,18 +110,6 @@ public final class BACnetObjectExplorer
                                                                                       rd.getObjectIdentifier(), pvm)))
                          .collect(BACnetPoints::new, AbstractEntities::add)
                          .doFinally(device::stop);
-    }
-
-    private Single<BACnetPointEntity> doGet(@NonNull DiscoveryArguments args) {
-        final BACnetDevice device = getLocalDeviceFromCache(args);
-        log.info("Discovering object '{}' in device '{}' in network {}...",
-                 ObjectIdentifierMixin.serialize(args.params().objectCode()),
-                 ObjectIdentifierMixin.serialize(args.params().remoteDeviceId()), device.protocol().identifier());
-        return device.discoverRemoteDevice(args.params().remoteDeviceId(), args.options())
-                     .flatMap(rd -> parseRemoteObject(device, rd, args.params().objectCode(), true,
-                                                      args.options().isDetail()))
-                     .map(pvm -> BACnetPointEntity.from(args.params().getNetworkId(), args.params().remoteDeviceId(),
-                                                        pvm));
     }
 
     private DiscoveryArguments validateCache(@NonNull DiscoveryArguments args) {

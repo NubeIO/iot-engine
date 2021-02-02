@@ -1,6 +1,10 @@
 package com.nubeiot.core.rpc.scanner;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
+import io.github.zero88.qwe.event.EventAction;
 
 import com.nubeiot.core.rpc.BaseRpcProtocol;
 import com.nubeiot.iotdata.IoTEntity;
@@ -32,6 +36,16 @@ public abstract class AbstractRpcScanner<P extends IoTEntity, X> extends BaseRpc
     @Override
     public @NonNull String destination() {
         return sharedData().getData(SCANNER_DESTINATION);
+    }
+
+    @Override
+    public String function() {
+        return "scanner";
+    }
+
+    @Override
+    public @NonNull Collection<EventAction> getAvailableEvents() {
+        return Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE);
     }
 
 }

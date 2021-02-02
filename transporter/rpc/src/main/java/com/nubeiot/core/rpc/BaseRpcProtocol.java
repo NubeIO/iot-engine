@@ -6,15 +6,14 @@ import com.nubeiot.iotdata.IoTEntity;
 
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 
 @Getter
 @Accessors(fluent = true)
-@RequiredArgsConstructor
-public abstract class BaseRpcProtocol<P extends IoTEntity> implements RpcProtocol<P> {
+public abstract class BaseRpcProtocol<P extends IoTEntity> extends BaseService implements RpcProtocol<P> {
 
-    @NonNull
-    private final SharedDataLocalProxy sharedData;
+    protected BaseRpcProtocol(@NonNull SharedDataLocalProxy sharedData) {
+        super(sharedData);
+    }
 
 }
