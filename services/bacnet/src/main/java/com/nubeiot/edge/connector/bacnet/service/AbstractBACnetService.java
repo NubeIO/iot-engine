@@ -9,6 +9,7 @@ import io.github.zero88.qwe.protocol.CommunicationProtocol;
 
 import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
+import com.nubeiot.edge.connector.bacnet.BACnetProtocol;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
@@ -21,7 +22,7 @@ import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;
 
 import lombok.NonNull;
 
-public abstract class AbstractBACnetService extends BaseService {
+public abstract class AbstractBACnetService extends BaseService implements BACnetProtocol {
 
     protected AbstractBACnetService(@NonNull SharedDataLocalProxy sharedData) {
         super(sharedData);

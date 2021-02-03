@@ -64,7 +64,7 @@ public final class CovNotifier extends DeviceEventAdapter implements DeviceEvent
         if (subscribeCOVResult.isError()) {
             return;
         }
-        dispatchers.put(args.params().buildKey(DiscoveryLevel.OBJECT), Waybill.from(requestData.body()));
+        dispatchers.put(args.key(), Waybill.from(requestData.body()));
     }
 
     public void removeDispatcher(@NonNull EventMessage subscribeCOVResult, @NonNull DiscoveryArguments args,
@@ -72,7 +72,7 @@ public final class CovNotifier extends DeviceEventAdapter implements DeviceEvent
         if (subscribeCOVResult.isError()) {
             return;
         }
-        dispatchers.remove(args.params().buildKey(DiscoveryLevel.OBJECT));
+        dispatchers.remove(args.key());
     }
 
 }

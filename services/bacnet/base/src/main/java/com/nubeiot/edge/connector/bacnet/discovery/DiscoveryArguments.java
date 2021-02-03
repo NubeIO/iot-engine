@@ -1,5 +1,7 @@
 package com.nubeiot.edge.connector.bacnet.discovery;
 
+import io.github.zero88.qwe.iot.connector.Subject;
+
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -8,7 +10,7 @@ import lombok.experimental.Accessors;
 @Getter
 @Accessors(fluent = true)
 @RequiredArgsConstructor
-public final class DiscoveryArguments {
+public final class DiscoveryArguments implements Subject {
 
     @NonNull
     private final DiscoveryParams params;
@@ -16,5 +18,10 @@ public final class DiscoveryArguments {
     private final DiscoveryOptions options;
     @NonNull
     private final DiscoveryLevel level;
+
+    @Override
+    public String key() {
+        return params().buildKey(level);
+    }
 
 }

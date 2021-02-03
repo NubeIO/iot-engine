@@ -10,7 +10,7 @@ import io.github.zero88.qwe.event.EventContractor;
 import io.github.zero88.qwe.event.EventContractor.Param;
 import io.github.zero88.qwe.event.Waybill;
 import io.github.zero88.qwe.iot.connector.ConnectorService;
-import io.reactivex.Observable;
+import io.github.zero88.qwe.iot.connector.Subject;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
@@ -20,34 +20,29 @@ import lombok.NonNull;
  * Represents for an {@code coordinator service} that watches a particular {@code event} then notifying it to {@code
  * subscribers}
  */
-public interface Coordinator extends ConnectorService {
-
-    default String function() {
-        return "coordinator";
-    }
+public interface Coordinator<S extends Subject> extends ConnectorService {
 
     @EventContractor(action = "CREATE", returnType = Single.class)
-    Single<JsonObject> register(@NonNull RequestData requestData);
+    Single<CoordinatorRegisterResult> register(@NonNull RequestData requestData);
 
     @EventContractor(action = "REMOVE", returnType = Single.class)
     Single<JsonObject> unregister(@NonNull RequestData requestData);
 
+    @EventContractor(action = "GET_ONE", returnType = Single.class)
+    Single<JsonObject> get(@NonNull RequestData requestData);
+
+    @EventContractor(action = "UPDATE", returnType = Single.class)
+    Single<JsonObject> update(@NonNull RequestData requestData);
+
     @EventContractor(action = "MONITOR", returnType = boolean.class)
     boolean monitorThenNotify(@Param("data") JsonObject data, @Param("error") ErrorMessage error);
 
-    Observable<Subscriber> subscribers();
-
-    default WatcherOption parseWatcher(@NonNull RequestData requestData) {
-        return WatcherOption.parse(requestData.body().getJsonObject("watcher"));
-    }
-
-    default Subscriber parseSubscriber(@NonNull RequestData requestData) {
-        return Subscriber.parse(requestData.body().getJsonObject("subscriber"));
-    }
+    @NonNull CoordinatorInput<S> parseInput(@NonNull RequestData requestData);
 
     @Override
     default @NonNull Collection<EventAction> getAvailableEvents() {
-        return Arrays.asList(EventAction.CREATE, EventAction.REMOVE, EventAction.MONITOR);
+        return Arrays.asList(EventAction.CREATE, EventAction.REMOVE, EventAction.GET_ONE, EventAction.UPDATE,
+                             EventAction.MONITOR);
     }
 
     /**
