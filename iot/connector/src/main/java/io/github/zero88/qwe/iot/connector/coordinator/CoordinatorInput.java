@@ -4,6 +4,8 @@ import java.util.List;
 
 import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.iot.connector.Subject;
+import io.github.zero88.qwe.iot.connector.subscriber.Subscriber;
+import io.github.zero88.qwe.iot.connector.watcher.WatcherOption;
 
 import lombok.Builder;
 import lombok.Builder.Default;

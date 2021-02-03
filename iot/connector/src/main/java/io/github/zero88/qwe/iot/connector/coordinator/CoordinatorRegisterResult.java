@@ -3,6 +3,9 @@ package io.github.zero88.qwe.iot.connector.coordinator;
 import java.util.List;
 
 import io.github.zero88.qwe.dto.JsonData;
+import io.github.zero88.qwe.iot.connector.subscriber.Subscriber;
+import io.github.zero88.qwe.iot.connector.watcher.WatcherOption;
+import io.github.zero88.qwe.iot.connector.watcher.WatcherType;
 import io.vertx.core.json.JsonObject;
 
 import lombok.Builder;

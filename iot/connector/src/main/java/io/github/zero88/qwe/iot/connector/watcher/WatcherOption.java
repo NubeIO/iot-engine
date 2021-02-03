@@ -1,4 +1,4 @@
-package io.github.zero88.qwe.iot.connector.coordinator;
+package io.github.zero88.qwe.iot.connector.watcher;
 
 import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.scheduler.model.trigger.TriggerOption;

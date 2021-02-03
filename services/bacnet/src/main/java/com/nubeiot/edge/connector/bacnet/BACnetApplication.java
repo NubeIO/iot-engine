@@ -28,11 +28,12 @@ import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.handler.BACnetDiscoverFinisher;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
 import com.nubeiot.edge.connector.bacnet.internal.listener.WhoIsListener;
+import com.nubeiot.edge.connector.bacnet.service.BACnetApis;
 import com.nubeiot.edge.connector.bacnet.service.discovery.BACnetExplorer;
 import com.nubeiot.edge.connector.bacnet.service.scheduler.BACnetSchedulerApis;
 import com.nubeiot.edge.connector.bacnet.service.subscriber.BACnetRpcClientHelper;
 import com.nubeiot.edge.connector.bacnet.service.subscriber.BACnetSubscriptionManager;
-import com.nubeiot.edge.connector.bacnet.websocket.WebSocketCOVMetadata;
+import com.nubeiot.edge.connector.bacnet.websocket.WebSocketCOVSubscriber;
 
 import lombok.NonNull;
 
@@ -61,7 +62,8 @@ public final class BACnetApplication extends AbstractBACnetApplication<BACnetSer
     protected void readinessHandler(@NonNull BACnetServiceConfig config, JsonObject d, Throwable e) {
         super.readinessHandler(config, d, e);
         final EventbusClient eb = EventbusClient.create(sharedData());
-        vertx.setPeriodic(3000, id -> eb.publish(WebSocketCOVMetadata.COV_PUBLISHER.getAddress(),
+        final WebSocketCOVSubscriber subscriber = WebSocketCOVSubscriber.builder().build();
+        vertx.setPeriodic(3000, id -> eb.publish(subscriber.getPublishAddress(),
                                                  EventMessage.success(EventAction.MONITOR,
                                                                       new JsonObject().put("msg", "sth"))));
     }
@@ -151,14 +153,15 @@ public final class BACnetApplication extends AbstractBACnetApplication<BACnetSer
         return new BACnetDiscoverFinisher(this);
     }
 
-    private Observable<Record> registerEndpoint(ServiceDiscoveryInvoker discovery, BACnetExplorer s) {
+    private Observable<Record> registerEndpoint(ServiceDiscoveryInvoker discovery, BACnetApis s) {
         return Observable.fromIterable(s.definitions())
                          .flatMapSingle(e -> discovery.addEventMessageRecord(s.api(), s.address(), e));
     }
 
     private HttpServerRouter initRouter() {
+        final WebSocketCOVSubscriber subscriber = WebSocketCOVSubscriber.builder().build();
         return new HttpServerRouter().registerEventBusSocket(
-            WebSocketServerEventMetadata.create("cov", WebSocketCOVMetadata.COV_PUBLISHER));
+            WebSocketServerEventMetadata.create(subscriber.getWsPath(), subscriber.toEventModel()));
     }
 
 }

@@ -18,8 +18,8 @@ import io.github.zero88.qwe.iot.connector.coordinator.CoordinatorInput;
 import io.github.zero88.qwe.iot.connector.coordinator.CoordinatorInput.Fields;
 import io.github.zero88.qwe.iot.connector.coordinator.CoordinatorRegisterResult;
 import io.github.zero88.qwe.iot.connector.coordinator.InboundCoordinator;
-import io.github.zero88.qwe.iot.connector.coordinator.WatcherOption;
-import io.github.zero88.qwe.iot.connector.coordinator.WatcherType;
+import io.github.zero88.qwe.iot.connector.watcher.WatcherOption;
+import io.github.zero88.qwe.iot.connector.watcher.WatcherType;
 import io.github.zero88.qwe.micro.ServiceNotFoundException;
 import io.github.zero88.qwe.micro.http.ActionMethodMapping;
 import io.reactivex.Single;
@@ -35,7 +35,7 @@ import com.nubeiot.edge.connector.bacnet.internal.request.SubscribeCOVRequestFac
 import com.nubeiot.edge.connector.bacnet.service.AbstractBACnetService;
 import com.nubeiot.edge.connector.bacnet.service.BACnetApis;
 import com.nubeiot.edge.connector.bacnet.service.discovery.BACnetObjectExplorer;
-import com.nubeiot.edge.connector.bacnet.websocket.WebSocketCOVMetadata;
+import com.nubeiot.edge.connector.bacnet.websocket.WebSocketCOVSubscriber;
 
 import lombok.NonNull;
 
@@ -131,14 +131,28 @@ public final class BACnetCOVCoordinator extends AbstractBACnetService
     }
 
     @Override
+    @EventContractor(action = "UPDATE", returnType = Single.class)
+    public Single<JsonObject> update(@NonNull RequestData requestData) {
+        return Single.error(new ServiceNotFoundException("Not yet implemented"));
+    }
+
+    @Override
     @EventContractor(action = "MONITOR", returnType = Single.class)
     public boolean monitorThenNotify(@Param("data") JsonObject data, @Param("error") ErrorMessage error) {
         final EventbusClient eb = EventbusClient.create(sharedData());
         final EventMessage msg = Objects.nonNull(error)
                                  ? EventMessage.error(EventAction.MONITOR, error)
                                  : EventMessage.success(EventAction.MONITOR, data);
-        eb.publish(WebSocketCOVMetadata.COV_PUBLISHER.getAddress(), msg);
+        eb.publish(WebSocketCOVSubscriber.builder().build().getPublishAddress(), msg);
         return true;
+    }
+
+    @Override
+    public @NonNull CoordinatorInput<DiscoveryArguments> parseInput(@NonNull RequestData requestData) {
+        final DiscoveryArguments args = createDiscoveryArgs(requestData, level());
+        final JsonObject body = requestData.body();
+        final WatcherOption option = WatcherOption.parse(body.getJsonObject(Fields.watcherOption));
+        return CoordinatorInput.<DiscoveryArguments>builder().subject(args).watcherOption(option).build();
     }
 
     @Override
@@ -148,20 +162,6 @@ public final class BACnetCOVCoordinator extends AbstractBACnetService
                       .action(EventAction.GET_ONE)
                       .payload(payload)
                       .build();
-    }
-
-    @Override
-    @EventContractor(action = "UPDATE", returnType = Single.class)
-    public Single<JsonObject> update(@NonNull RequestData requestData) {
-        return Single.error(new ServiceNotFoundException("Not yet implemented"));
-    }
-
-    @Override
-    public @NonNull CoordinatorInput<DiscoveryArguments> parseInput(@NonNull RequestData requestData) {
-        final DiscoveryArguments args = createDiscoveryArgs(requestData, level());
-        final JsonObject body = requestData.body();
-        final WatcherOption option = WatcherOption.parse(body.getJsonObject(Fields.watcherOption));
-        return CoordinatorInput.<DiscoveryArguments>builder().subject(args).watcherOption(option).build();
     }
 
     private Single<CoordinatorRegisterResult> fallbackIfFailure(CoordinatorInput<DiscoveryArguments> input,

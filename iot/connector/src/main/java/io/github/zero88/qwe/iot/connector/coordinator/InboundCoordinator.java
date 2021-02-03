@@ -5,6 +5,7 @@ import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventContractor;
 import io.github.zero88.qwe.iot.connector.Subject;
+import io.github.zero88.qwe.iot.connector.watcher.WatcherOption;
 import io.github.zero88.qwe.protocol.HasProtocol;
 import io.github.zero88.qwe.rpc.GatewayServiceInvoker;
 import io.github.zero88.qwe.scheduler.model.job.EventbusJobModel;
