@@ -1,5 +1,6 @@
 package com.nubeiot.edge.connector.bacnet.service.coordinator;
 
+import java.util.Objects;
 import java.util.Random;
 
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
@@ -8,6 +9,8 @@ import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventContractor;
 import io.github.zero88.qwe.event.EventContractor.Param;
+import io.github.zero88.qwe.event.EventMessage;
+import io.github.zero88.qwe.event.EventbusClient;
 import io.github.zero88.qwe.event.Waybill;
 import io.github.zero88.qwe.exceptions.CarlException;
 import io.github.zero88.qwe.iot.connector.RpcProtocolClient;
@@ -33,6 +36,7 @@ import com.nubeiot.edge.connector.bacnet.service.AbstractBACnetService;
 import com.nubeiot.edge.connector.bacnet.service.BACnetApis;
 import com.nubeiot.edge.connector.bacnet.service.InboundBACnetCoordinator;
 import com.nubeiot.edge.connector.bacnet.service.discovery.BACnetObjectExplorer;
+import com.nubeiot.edge.connector.bacnet.websocket.WebSocketCOVMetadata;
 
 import lombok.NonNull;
 
@@ -89,7 +93,12 @@ public final class BACnetCovCoordinator extends AbstractBACnetService
     @Override
     @EventContractor(action = "MONITOR", returnType = Single.class)
     public boolean monitorThenNotify(@Param("data") JsonObject data, @Param("error") ErrorMessage error) {
-        return false;
+        final EventbusClient eb = EventbusClient.create(sharedData());
+        final EventMessage msg = Objects.nonNull(error)
+                                 ? EventMessage.error(EventAction.MONITOR, error)
+                                 : EventMessage.success(EventAction.MONITOR, data);
+        eb.publish(WebSocketCOVMetadata.COV_PUBLISHER.getAddress(), msg);
+        return true;
     }
 
     @Override

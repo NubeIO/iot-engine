@@ -6,7 +6,10 @@ import java.util.Objects;
 import java.util.Optional;
 
 import io.github.zero88.qwe.component.ContextLookup;
+import io.github.zero88.qwe.event.EventAction;
+import io.github.zero88.qwe.event.EventMessage;
 import io.github.zero88.qwe.event.EventbusClient;
+import io.github.zero88.qwe.http.event.WebSocketServerEventMetadata;
 import io.github.zero88.qwe.http.server.HttpServerProvider;
 import io.github.zero88.qwe.http.server.HttpServerRouter;
 import io.github.zero88.qwe.micro.MicroContext;
@@ -29,6 +32,7 @@ import com.nubeiot.edge.connector.bacnet.service.discovery.BACnetExplorer;
 import com.nubeiot.edge.connector.bacnet.service.scheduler.BACnetSchedulerApis;
 import com.nubeiot.edge.connector.bacnet.service.subscriber.BACnetRpcClientHelper;
 import com.nubeiot.edge.connector.bacnet.service.subscriber.BACnetSubscriptionManager;
+import com.nubeiot.edge.connector.bacnet.websocket.WebSocketCOVMetadata;
 
 import lombok.NonNull;
 
@@ -48,9 +52,18 @@ public final class BACnetApplication extends AbstractBACnetApplication<BACnetSer
     @Override
     public void start() {
         super.start();
-        this.addProvider(new HttpServerProvider(new HttpServerRouter()))
+        this.addProvider(new HttpServerProvider(initRouter()))
             .addProvider(new MicroVerticleProvider())
             .addProvider(new SchedulerProvider());
+    }
+
+    @Override
+    protected void readinessHandler(@NonNull BACnetServiceConfig config, JsonObject d, Throwable e) {
+        super.readinessHandler(config, d, e);
+        final EventbusClient eb = EventbusClient.create(sharedData());
+        vertx.setPeriodic(3000, id -> eb.publish(WebSocketCOVMetadata.COV_PUBLISHER.getAddress(),
+                                                 EventMessage.success(EventAction.MONITOR,
+                                                                      new JsonObject().put("msg", "sth"))));
     }
 
     @Override
@@ -141,6 +154,11 @@ public final class BACnetApplication extends AbstractBACnetApplication<BACnetSer
     private Observable<Record> registerEndpoint(ServiceDiscoveryInvoker discovery, BACnetExplorer s) {
         return Observable.fromIterable(s.definitions())
                          .flatMapSingle(e -> discovery.addEventMessageRecord(s.api(), s.address(), e));
+    }
+
+    private HttpServerRouter initRouter() {
+        return new HttpServerRouter().registerEventBusSocket(
+            WebSocketServerEventMetadata.create("cov", WebSocketCOVMetadata.COV_PUBLISHER));
     }
 
 }

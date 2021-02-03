@@ -28,6 +28,17 @@
     },
     "__http__": {
       "port": 8888,
+      "__cors__": {
+        "allowedOriginPattern": "https?://localhost\\:\\d+",
+        "allowedHeaders": [
+          "Access-Control-Request-Method",
+          "Access-Control-Allow-Credentials",
+          "Access-Control-Allow-Origin",
+          "Access-Control-Allow-Headers",
+          "Content-Type"
+        ],
+        "allowCredentials": true
+      },
       "__rest__": {
         "__dynamic__": {
           "enabled": true,
@@ -38,6 +49,10 @@
         "enabled": true,
         "path": "/gw",
         "address": "nubeio.bacnet.gateway.index"
+      },
+      "__websocket__": {
+        "enabled": true,
+        "rootWs": "/ws"
       }
     },
     "__scheduler__": {

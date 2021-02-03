@@ -74,7 +74,7 @@ public abstract class AbstractBACnetApplication<C extends BACnetConfig> extends 
         return Single.just(new JsonObject().put("message", "BACnet subscriber feature is disabled"));
     }
 
-    private void readinessHandler(@NonNull C config, JsonObject d, Throwable e) {
+    protected void readinessHandler(@NonNull C config, JsonObject d, Throwable e) {
         final EventMessage msg = Objects.nonNull(e)
                                  ? EventMessage.initial(EventAction.NOTIFY_ERROR,
                                                         ErrorData.builder().throwable(e).build())
