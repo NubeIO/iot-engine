@@ -38,10 +38,10 @@ public interface ExplorerService<K, P extends IoTEntity<K>, X extends IoTEntitie
     }
 
     @EventContractor(action = "GET_ONE", returnType = Single.class)
-    Single<P> discover(RequestData reqData);
+    Single<P> discover(@NonNull RequestData reqData);
 
     @EventContractor(action = "GET_LIST", returnType = Single.class)
-    Single<X> discoverMany(RequestData reqData);
+    Single<X> discoverMany(@NonNull RequestData reqData);
 
     @Override
     default @NonNull Collection<EventAction> getAvailableEvents() {

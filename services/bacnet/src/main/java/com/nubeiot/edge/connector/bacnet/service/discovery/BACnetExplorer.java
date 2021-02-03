@@ -19,7 +19,7 @@ import lombok.NonNull;
 public interface BACnetExplorer<K, P extends BACnetEntity<K>, X extends IoTEntities<K, P>>
     extends BACnetApis, ExplorerServiceApis<K, P, X> {
 
-    static Set<? extends BACnetExplorer> createServices(@NonNull SharedDataLocalProxy sharedDataProxy) {
+    static Set<? extends BACnetApis> createServices(@NonNull SharedDataLocalProxy sharedDataProxy) {
         final Map<Class, Object> inputs = Collections.singletonMap(SharedDataLocalProxy.class, sharedDataProxy);
         return ReflectionClass.stream(BACnetExplorer.class.getPackage().getName(), BACnetExplorer.class,
                                       ReflectionClass.publicClass())
