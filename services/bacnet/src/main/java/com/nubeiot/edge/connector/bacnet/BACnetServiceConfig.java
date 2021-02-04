@@ -1,5 +1,7 @@
 package com.nubeiot.edge.connector.bacnet;
 
+import com.nubeiot.edge.connector.bacnet.service.coordinator.CovCoordinatorPersistenceConfig;
+
 import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +19,9 @@ public class BACnetServiceConfig extends BACnetConfig {
     @NonNull
     @Default
     private final String schedulerServiceName = "bacnet-scheduler";
+
+    @Default
+    private final CovCoordinatorPersistenceConfig covCoordinatorPersistence = CovCoordinatorPersistenceConfig.def();
 
     @Override
     public int getVendorId() {

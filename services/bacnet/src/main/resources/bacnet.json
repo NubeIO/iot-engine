@@ -1,4 +1,5 @@
 {
+  "dataDir": "/tmp/bacnet",
   "__system__": {
     "__eventBus__": {
       "clientAuth": "NONE",
@@ -66,7 +67,7 @@
       }
     },
     "__json__": {
-      "subDir": "bacnet",
+      "subDir": "",
       "maxSizeInMB": 10,
       "serviceAddress": "bacnet.storage.json",
       "serviceHandlerClass": "io.github.zero88.qwe.storage.json.service.JsonStorageService",
@@ -86,7 +87,12 @@
       "readinessAddress": "com.nubeiot.edge.connector.bacnet.readiness",
       "enableSubscriber": false,
       "gatewayAddress": "gateway.index",
-      "schedulerServiceName": "bacnet-scheduler"
+      "schedulerServiceName": "bacnet-scheduler",
+      "covCoordinatorPersistence": {
+        "type": "json",
+        "file": "bacnet-cov-coordinator.json",
+        "serviceName": "bacnet.storage.json"
+      }
     }
   }
 }

@@ -24,6 +24,8 @@ import lombok.NonNull;
  * <p>
  * The end-to-end process is named as a {@code coordinator channel}
  *
+ * @param <S> Type of subject
+ * @see Subject
  * @see ConnectorService
  */
 public interface Coordinator<S extends Subject> extends FunctionService {
