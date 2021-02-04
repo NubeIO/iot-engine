@@ -2,8 +2,8 @@ package io.github.zero88.qwe.iot.data.entity;
 
 import io.github.zero88.qwe.iot.data.IoTEntity;
 import io.github.zero88.qwe.iot.data.TimeseriesData;
-import io.github.zero88.qwe.iot.data.property.PointPriorityValue;
-import io.github.zero88.qwe.iot.data.property.PointValue;
+import io.github.zero88.qwe.iot.data.property.PointPresentValue;
+import io.github.zero88.qwe.iot.data.property.PointPriorityArray;
 
 import lombok.NonNull;
 
@@ -20,16 +20,16 @@ public interface IPointData<K> extends IoTEntity<K>, TimeseriesData {
      * Define present value
      *
      * @return present value
-     * @see PointValue
+     * @see PointPresentValue
      */
-    PointValue presentValue();
+    PointPresentValue presentValue();
 
     /**
      * Define point priority value
      *
      * @return point priority value
-     * @see PointPriorityValue
+     * @see PointPriorityArray
      */
-    PointPriorityValue priorityValue();
+    PointPriorityArray priorityValue();
 
 }

@@ -3,7 +3,7 @@ package com.nubeiot.edge.connector.bacnet.internal.request;
 import java.util.Objects;
 
 import io.github.zero88.qwe.dto.msg.RequestData;
-import io.github.zero88.qwe.iot.data.property.PointValue;
+import io.github.zero88.qwe.iot.data.property.PointPresentValue;
 
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.mixin.deserializer.EncodableDeserializer;
@@ -19,13 +19,15 @@ public class WritePointValueRequestFactory implements ConfirmedRequestFactory<Wr
 
     @Override
     public @NonNull PropertyValue convertData(@NonNull DiscoveryArguments args, @NonNull RequestData requestData) {
-        final PointValue pv = Objects.requireNonNull(PointValue.from(requestData.body()), "Point Value is null");
+        final PointPresentValue ppv = Objects.requireNonNull(PointPresentValue.from(requestData.body()),
+                                                             "Point Value is null");
         final PropertyIdentifier pi = PropertyIdentifier.presentValue;
-        final Encodable encodable = EncodableDeserializer.parse(args.params().objectCode(), pi, pv.getValue());
+        final Encodable encodable = EncodableDeserializer.parse(args.params().objectCode(), pi,
+                                                                ppv.getPointValue().getValue());
         if (Objects.isNull(encodable)) {
             throw new IllegalArgumentException("Unrecognized value");
         }
-        return new PropertyValue(pi, null, encodable, new UnsignedInteger(pv.getPriority()));
+        return new PropertyValue(pi, null, encodable, new UnsignedInteger(ppv.getPriority()));
     }
 
     @Override

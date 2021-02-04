@@ -1,8 +1,8 @@
 package com.nubeiot.edge.connector.bacnet.entity;
 
 import io.github.zero88.qwe.iot.data.entity.AbstractPointData;
-import io.github.zero88.qwe.iot.data.property.PointPriorityValue;
-import io.github.zero88.qwe.iot.data.property.PointValue;
+import io.github.zero88.qwe.iot.data.property.PointPresentValue;
+import io.github.zero88.qwe.iot.data.property.PointPriorityArray;
 
 import com.nubeiot.edge.connector.bacnet.converter.property.PointValueConverter;
 import com.nubeiot.edge.connector.bacnet.converter.property.PriorityValueConverter;
@@ -25,19 +25,19 @@ public class BACnetPVEntity extends AbstractPointData<ObjectIdentifier> implemen
 
     public static BACnetPVEntity from(@NonNull BACnetPointEntity point) {
         final PriorityArray pa = point.mixin().<PriorityArray>getAndCast(PropertyIdentifier.priorityArray).orElse(null);
-        final PointPriorityValue ppv = new PriorityValueConverter().serialize(pa);
-        final PointValue pv = new PointValueConverter().serialize(point.mixin());
-        final PointValue highestValue = ppv.findHighestValue();
-        final PointValue finalPV = PointValue.builder()
-                                             .priority(highestValue.getPriority())
-                                             .value(pv.getValue())
-                                             .rawValue(pv.getRawValue())
-                                             .build();
+        final PointPriorityArray ppa = new PriorityValueConverter().serialize(pa);
+        final PointPresentValue ppv = new PointValueConverter().serialize(point.mixin());
+        final PointPresentValue highestValue = ppa.findHighestValue();
+        final PointPresentValue finalPV = PointPresentValue.builder()
+                                                           .priority(highestValue.getPriority())
+                                                           .value(ppv.getPointValue().getValue())
+                                                           .rawValue(ppv.getPointValue().getRawValue())
+                                                           .build();
         return BACnetPVEntity.builder()
                              .key(point.key())
                              .pointId(ObjectIdentifierMixin.serialize(point.key()))
                              .presentValue(finalPV)
-                             .priorityValue(ppv)
+                             .priorityValue(ppa)
                              .build();
     }
 

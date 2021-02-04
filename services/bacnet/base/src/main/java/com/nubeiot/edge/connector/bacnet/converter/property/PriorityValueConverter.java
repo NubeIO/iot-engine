@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 import io.github.zero88.qwe.iot.data.converter.IoTPropertyConverter;
-import io.github.zero88.qwe.iot.data.property.PointPriorityValue;
+import io.github.zero88.qwe.iot.data.property.PointPriorityArray;
 
 import com.nubeiot.edge.connector.bacnet.BACnetProtocol;
 import com.serotonin.bacnet4j.type.constructed.PriorityArray;
@@ -14,21 +14,21 @@ import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import lombok.NonNull;
 
 //TODO implement it
-public class PriorityValueConverter implements IoTPropertyConverter<PointPriorityValue, PriorityArray>, BACnetProtocol {
+public class PriorityValueConverter implements IoTPropertyConverter<PointPriorityArray, PriorityArray>, BACnetProtocol {
 
     static final List<PropertyIdentifier> DATA_PROPS = Arrays.asList(PropertyIdentifier.presentValue,
                                                                      PropertyIdentifier.priorityArray);
 
     @Override
-    public PointPriorityValue serialize(PriorityArray object) {
+    public PointPriorityArray serialize(PriorityArray object) {
         if (Objects.isNull(object)) {
-            return new PointPriorityValue();
+            return new PointPriorityArray();
         }
-        return new PointPriorityValue();
+        return new PointPriorityArray();
     }
 
     @Override
-    public PriorityArray deserialize(PointPriorityValue concept) {
+    public PriorityArray deserialize(PointPriorityArray concept) {
         if (Objects.isNull(concept)) {
             return new PriorityArray();
         }
@@ -36,8 +36,8 @@ public class PriorityValueConverter implements IoTPropertyConverter<PointPriorit
     }
 
     @Override
-    public @NonNull Class<PointPriorityValue> fromType() {
-        return PointPriorityValue.class;
+    public @NonNull Class<PointPriorityArray> fromType() {
+        return PointPriorityArray.class;
     }
 
     @Override

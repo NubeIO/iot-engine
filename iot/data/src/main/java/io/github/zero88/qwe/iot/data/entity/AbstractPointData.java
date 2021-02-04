@@ -1,7 +1,7 @@
 package io.github.zero88.qwe.iot.data.entity;
 
-import io.github.zero88.qwe.iot.data.property.PointPriorityValue;
-import io.github.zero88.qwe.iot.data.property.PointValue;
+import io.github.zero88.qwe.iot.data.property.PointPresentValue;
+import io.github.zero88.qwe.iot.data.property.PointPriorityArray;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -24,9 +24,9 @@ public abstract class AbstractPointData<K> implements IPointData<K> {
     private final String pointId;
     @NonNull
     @JsonProperty(Fields.presentValue)
-    private final PointValue presentValue;
+    private final PointPresentValue presentValue;
     @NonNull
     @JsonProperty(Fields.priorityValue)
-    private final PointPriorityValue priorityValue;
+    private final PointPriorityArray priorityValue;
 
 }

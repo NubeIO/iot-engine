@@ -24,7 +24,7 @@ import lombok.NonNull;
  * @since 1.0.0
  */
 @NoArgsConstructor
-public final class PointPriorityValue implements JsonData, IoTProperty, TimeseriesData {
+public final class PointPriorityArray implements JsonData, IoTProperty, TimeseriesData {
 
     /**
      * The constant DEFAULT_PRIORITY.
@@ -43,7 +43,7 @@ public final class PointPriorityValue implements JsonData, IoTProperty, Timeseri
     private final SortedMap<Integer, Double> val = init();
 
     @JsonCreator
-    PointPriorityValue(Map<Object, Object> map) {
+    PointPriorityArray(Map<Object, Object> map) {
         val.putAll(map.entrySet()
                       .stream()
                       .collect(TreeMap::new, (m, entry) -> m.put(validateAndGetKey(entry.getKey()),
@@ -52,7 +52,7 @@ public final class PointPriorityValue implements JsonData, IoTProperty, Timeseri
 
     private static SortedMap<Integer, Double> init() {
         final SortedMap<Integer, Double> val = new TreeMap<>();
-        for (int i = PointPriorityValue.MIN_PRIORITY; i <= PointPriorityValue.MAX_PRIORITY; i++) {
+        for (int i = PointPriorityArray.MIN_PRIORITY; i <= PointPriorityArray.MAX_PRIORITY; i++) {
             val.put(i, null);
         }
         return val;
@@ -79,7 +79,7 @@ public final class PointPriorityValue implements JsonData, IoTProperty, Timeseri
      * @return a reference to this, so the API can be used fluently
      * @since 1.0.0
      */
-    public PointPriorityValue add(int value) {
+    public PointPriorityArray add(int value) {
         return add((double) value);
     }
 
@@ -90,7 +90,7 @@ public final class PointPriorityValue implements JsonData, IoTProperty, Timeseri
      * @return a reference to this, so the API can be used fluently
      * @since 1.0.0
      */
-    public PointPriorityValue add(Double value) {
+    public PointPriorityArray add(Double value) {
         return add(DEFAULT_PRIORITY, value);
     }
 
@@ -102,7 +102,7 @@ public final class PointPriorityValue implements JsonData, IoTProperty, Timeseri
      * @return a reference to this, so the API can be used fluently
      * @since 1.0.0
      */
-    public PointPriorityValue add(int priority, int value) {
+    public PointPriorityArray add(int priority, int value) {
         return add(priority, (double) value);
     }
 
@@ -114,7 +114,7 @@ public final class PointPriorityValue implements JsonData, IoTProperty, Timeseri
      * @return a reference to this, so the API can be used fluently
      * @since 1.0.0
      */
-    public PointPriorityValue add(int priority, Double value) {
+    public PointPriorityArray add(int priority, Double value) {
         this.val.put(validateAndGet(priority), value);
         return this;
     }
@@ -146,13 +146,13 @@ public final class PointPriorityValue implements JsonData, IoTProperty, Timeseri
      * @return the highest point value
      * @since 1.0.0
      */
-    public PointValue findHighestValue() {
+    public PointPresentValue findHighestValue() {
         return val.entrySet()
                   .stream()
                   .filter(entry -> Objects.nonNull(entry.getValue()))
                   .findFirst()
-                  .map(entry -> PointValue.builder().priority(entry.getKey()).rawValue(entry.getValue()).build())
-                  .orElse(PointValue.createDef());
+                  .map(entry -> PointPresentValue.builder().priority(entry.getKey()).rawValue(entry.getValue()).build())
+                  .orElse(PointPresentValue.def());
     }
 
     @Override
@@ -175,10 +175,10 @@ public final class PointPriorityValue implements JsonData, IoTProperty, Timeseri
         if (o == this) {
             return true;
         }
-        if (!(o instanceof PointPriorityValue)) {
+        if (!(o instanceof PointPriorityArray)) {
             return false;
         }
-        final PointPriorityValue other = (PointPriorityValue) o;
+        final PointPriorityArray other = (PointPriorityArray) o;
         return val.entrySet().stream().allMatch(entry -> {
             final Double v1 = val.get(entry.getKey());
             final Double v2 = other.val.get(entry.getKey());
