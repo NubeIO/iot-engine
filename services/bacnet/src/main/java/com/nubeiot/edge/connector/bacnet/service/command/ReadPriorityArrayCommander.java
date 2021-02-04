@@ -1,12 +1,16 @@
 package com.nubeiot.edge.connector.bacnet.service.command;
 
+import java.util.Collections;
+
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventContractor;
 import io.github.zero88.qwe.iot.connector.command.CommanderApis;
+import io.github.zero88.qwe.micro.http.ActionMethodMapping;
 import io.reactivex.Single;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
@@ -42,6 +46,11 @@ public final class ReadPriorityArrayCommander extends AbstractBACnetService
     @Override
     public @NonNull DiscoveryLevel level() {
         return DiscoveryLevel.OBJECT;
+    }
+
+    @Override
+    public @NonNull ActionMethodMapping eventMethodMap() {
+        return ActionMethodMapping.create(Collections.singletonMap(EventAction.SEND, HttpMethod.GET));
     }
 
 }

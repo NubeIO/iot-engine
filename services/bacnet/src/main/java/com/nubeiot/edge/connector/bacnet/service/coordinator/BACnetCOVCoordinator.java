@@ -31,7 +31,7 @@ import com.nubeiot.edge.connector.bacnet.internal.request.SubscribeCOVRequestFac
 import com.nubeiot.edge.connector.bacnet.internal.request.SubscribeCOVRequestFactory.SubscribeCOVOptions;
 import com.nubeiot.edge.connector.bacnet.service.AbstractBACnetService;
 import com.nubeiot.edge.connector.bacnet.service.BACnetFunctionApis;
-import com.nubeiot.edge.connector.bacnet.service.discovery.BACnetObjectExplorer;
+import com.nubeiot.edge.connector.bacnet.service.command.ReadPriorityArrayCommander;
 import com.nubeiot.edge.connector.bacnet.service.scheduler.BACnetSchedulerClient;
 import com.nubeiot.edge.connector.bacnet.websocket.WebSocketCOVSubscriber;
 
@@ -158,17 +158,13 @@ public final class BACnetCOVCoordinator extends AbstractBACnetService
         final JsonObject body = requestData.body();
         final WatcherOption option = WatcherOption.parse(body.getJsonObject(Fields.watcherOption, new JsonObject()));
         final Subscriber subscriber = WebSocketCOVSubscriber.builder().build();
-        return CoordinatorInput.<DiscoveryArguments>builder().subject(args)
-                                                             .watcherOption(option)
-                                                             .subscriber(subscriber)
+        return CoordinatorInput.<DiscoveryArguments>builder().subject(args).watcherOption(option).subscriber(subscriber)
                                                              .build();
     }
 
     @Override
     public Waybill subjectInfo(JsonObject payload) {
-        return Waybill.builder()
-                      .address(BACnetObjectExplorer.class.getName())
-                      .action(EventAction.GET_ONE)
+        return Waybill.builder().address(ReadPriorityArrayCommander.class.getName()).action(EventAction.SEND)
                       .payload(payload)
                       .build();
     }
