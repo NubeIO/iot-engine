@@ -1,7 +1,6 @@
 package com.nubeiot.edge.connector.bacnet.service.coordinator;
 
 import java.util.Objects;
-import java.util.Random;
 
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.dto.ErrorMessage;
@@ -18,6 +17,7 @@ import io.github.zero88.qwe.iot.connector.coordinator.CoordinatorInput;
 import io.github.zero88.qwe.iot.connector.coordinator.CoordinatorInput.Fields;
 import io.github.zero88.qwe.iot.connector.coordinator.CoordinatorRegisterResult;
 import io.github.zero88.qwe.iot.connector.coordinator.InboundCoordinator;
+import io.github.zero88.qwe.iot.connector.subscriber.Subscriber;
 import io.github.zero88.qwe.iot.connector.watcher.WatcherOption;
 import io.github.zero88.qwe.iot.connector.watcher.WatcherType;
 import io.github.zero88.qwe.micro.ServiceNotFoundException;
@@ -73,11 +73,11 @@ public final class BACnetCOVCoordinator extends AbstractBACnetService
 
     @Override
     public @NonNull ActionMethodMapping eventMethodMap() {
-        return ActionMethodMapping.by(ActionMethodMapping.CRUD_MAP, getAvailableEvents());
+        return ActionMethodMapping.CRD_MAP;
     }
 
     @Override
-    @EventContractor(action = "CREATE", returnType = Single.class)
+    @EventContractor(action = "CREATE_OR_UPDATE", returnType = Single.class)
     public Single<CoordinatorRegisterResult> register(@NonNull RequestData requestData) {
         return InboundCoordinator.super.register(requestData);
     }
@@ -94,10 +94,11 @@ public final class BACnetCOVCoordinator extends AbstractBACnetService
     public Single<CoordinatorRegisterResult> addRealtimeWatcher(@NonNull CoordinatorInput<DiscoveryArguments> input) {
         final DiscoveryArguments args = input.getSubject();
         final BACnetDevice device = getLocalDeviceFromCache(args);
+        final int lifetime = input.getWatcherOption().getLifetimeInSeconds();
         final SubscribeCOVOptions opt = SubscribeCOVOptions.builder()
                                                            .subscribe(true)
-                                                           .processId(new Random().nextInt())
-                                                           .lifetime(input.getWatcherOption().getLifetimeInSeconds())
+                                                           .processId(device.localDevice().getNextProcessId())
+                                                           .lifetime(Math.max(lifetime, 0))
                                                            .build();
         return device.send(EventAction.CREATE, args,
                            RequestData.builder().filter(opt.toJson()).body(listenAddress().toJson()).build(),
@@ -116,28 +117,17 @@ public final class BACnetCOVCoordinator extends AbstractBACnetService
                                                                                     .filter(args.options().toJson())
                                                                                     .build()
                                                                                     .toJson()))
-                     .map(res -> CoordinatorRegisterResult.builder()
-                                                          .key(key)
-                                                          .watcherType(WatcherType.POLLING)
-                                                          .watcherOption(option)
-                                                          .watcherResult(res.toJson())
-                                                          .build());
+                     .map(res -> CoordinatorRegisterResult.from(input, WatcherType.POLLING, res.toJson()));
     }
 
     @Override
-    @EventContractor(action = "GET", returnType = Single.class)
+    @EventContractor(action = "GET_ONE", returnType = Single.class)
     public Single<JsonObject> get(@NonNull RequestData requestData) {
         return Single.error(new ServiceNotFoundException("Not yet implemented"));
     }
 
     @Override
-    @EventContractor(action = "UPDATE", returnType = Single.class)
-    public Single<JsonObject> update(@NonNull RequestData requestData) {
-        return Single.error(new ServiceNotFoundException("Not yet implemented"));
-    }
-
-    @Override
-    @EventContractor(action = "MONITOR", returnType = Single.class)
+    @EventContractor(action = "MONITOR", returnType = boolean.class)
     public boolean monitorThenNotify(@Param("data") JsonObject data, @Param("error") ErrorMessage error) {
         final EventbusClient eb = EventbusClient.create(sharedData());
         final EventMessage msg = Objects.nonNull(error)
@@ -151,8 +141,12 @@ public final class BACnetCOVCoordinator extends AbstractBACnetService
     public @NonNull CoordinatorInput<DiscoveryArguments> parseInput(@NonNull RequestData requestData) {
         final DiscoveryArguments args = createDiscoveryArgs(requestData, level());
         final JsonObject body = requestData.body();
-        final WatcherOption option = WatcherOption.parse(body.getJsonObject(Fields.watcherOption));
-        return CoordinatorInput.<DiscoveryArguments>builder().subject(args).watcherOption(option).build();
+        final WatcherOption option = WatcherOption.parse(body.getJsonObject(Fields.watcherOption, new JsonObject()));
+        final Subscriber subscriber = WebSocketCOVSubscriber.builder().build();
+        return CoordinatorInput.<DiscoveryArguments>builder().subject(args)
+                                                             .watcherOption(option)
+                                                             .subscriber(subscriber)
+                                                             .build();
     }
 
     @Override
@@ -167,14 +161,11 @@ public final class BACnetCOVCoordinator extends AbstractBACnetService
     private Single<CoordinatorRegisterResult> fallbackIfFailure(CoordinatorInput<DiscoveryArguments> input,
                                                                 EventMessage msg) {
         if (!msg.isError()) {
-            return Single.just(CoordinatorRegisterResult.builder()
-                                                        .key(input.getSubject().key())
-                                                        .watcherType(WatcherType.REALTIME)
-                                                        .watcherOption(input.getWatcherOption())
-                                                        .watcherResult(msg.data())
-                                                        .build());
+            return Single.just(CoordinatorRegisterResult.from(input, WatcherType.REALTIME, msg.toJson()));
         }
         if (input.getWatcherOption().isFallbackPolling()) {
+            logger().warn("Fallback to create polling watcher due to unable to create realtime watcher. Error: {}",
+                          msg.getError().toJson());
             return addPollingWatcher(input);
         }
         return Single.error(new CarlException(msg.getError().getCode(), msg.getError().getMessage()));

@@ -4,6 +4,7 @@ import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventContractor;
+import io.github.zero88.qwe.exceptions.ServiceException;
 import io.github.zero88.qwe.iot.connector.Subject;
 import io.github.zero88.qwe.iot.connector.watcher.WatcherOption;
 import io.github.zero88.qwe.protocol.HasProtocol;
@@ -36,7 +37,7 @@ public interface InboundCoordinator<S extends Subject> extends Coordinator<S>, H
     @Override
     @NonNull String destination();
 
-    @EventContractor(action = "CREATE", returnType = Single.class)
+    @EventContractor(action = "CREATE_OR_UPDATE", returnType = Single.class)
     default Single<CoordinatorRegisterResult> register(@NonNull RequestData requestData) {
         return this.validateInCreation(parseInput(requestData))
                    .flatMap(input -> Single.just(input.getWatcherOption())
@@ -75,8 +76,9 @@ public interface InboundCoordinator<S extends Subject> extends Coordinator<S>, H
                                                 .build();
         final QWETriggerModel trigger = QWETriggerModel.from(protocol().type(), jobName, option.getTriggerOption());
         final SchedulerRegisterArgs schArgs = SchedulerRegisterArgs.builder().job(job).trigger(trigger).build();
-        return this.execute(EventAction.CREATE, RequestData.builder().body(schArgs.toJson()).build().toJson())
-                   .map(resp -> JsonData.from(resp, SchedulerRegisterResp.class));
+        return this.execute(EventAction.CREATE, schArgs.toJson())
+                   .map(resp -> JsonData.from(resp, SchedulerRegisterResp.class))
+                   .onErrorResumeNext(t -> Single.error(new ServiceException("Unable to create polling watcher", t)));
     }
 
 }
