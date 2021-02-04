@@ -12,26 +12,22 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
-import com.nubeiot.edge.connector.bacnet.internal.request.WritePointValueRequestFactory;
+import com.nubeiot.edge.connector.bacnet.internal.request.ReadPriorityArrayRequestFactory;
 import com.nubeiot.edge.connector.bacnet.service.AbstractBACnetService;
 import com.nubeiot.edge.connector.bacnet.service.BACnetFunctionApis;
 
 import lombok.NonNull;
 
-public final class WritePointValueCommander extends AbstractBACnetService implements BACnetFunctionApis, CommanderApis {
+public final class ReadPriorityArrayCommander extends AbstractBACnetService
+    implements BACnetFunctionApis, CommanderApis {
 
-    WritePointValueCommander(@NonNull SharedDataLocalProxy sharedData) {
+    protected ReadPriorityArrayCommander(@NonNull SharedDataLocalProxy sharedData) {
         super(sharedData);
     }
 
     @Override
-    public @NonNull DiscoveryLevel level() {
-        return DiscoveryLevel.OBJECT;
-    }
-
-    @Override
-    public String function() {
-        return "write/point-value";
+    public @NonNull String function() {
+        return "read/priority-array";
     }
 
     @Override
@@ -39,8 +35,13 @@ public final class WritePointValueCommander extends AbstractBACnetService implem
     public Single<JsonObject> send(@NonNull RequestData requestData) {
         final DiscoveryArguments args = createDiscoveryArgs(requestData, level());
         final BACnetDevice device = getLocalDeviceFromCache(args);
-        return device.send(EventAction.SEND, args, requestData, new WritePointValueRequestFactory())
+        return device.send(EventAction.SEND, args, requestData, new ReadPriorityArrayRequestFactory())
                      .map(JsonData::toJson);
+    }
+
+    @Override
+    public @NonNull DiscoveryLevel level() {
+        return DiscoveryLevel.OBJECT;
     }
 
 }
