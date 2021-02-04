@@ -3,6 +3,7 @@ package com.nubeiot.edge.connector.bacnet.internal.listener;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventMessage;
@@ -49,14 +50,17 @@ public final class CovNotifier extends DeviceEventAdapter implements DeviceEvent
                                           .objectCode(ObjectIdentifierMixin.serialize(monitoredObjectIdentifier))
                                           .build()
                                           .buildKey(DiscoveryLevel.OBJECT);
-        log.info("COV of '{}' notification received, time remaining: '{}s'", key, timeRemaining.longValue());
+        final long time = Optional.ofNullable(timeRemaining).map(UnsignedInteger::longValue).orElse(-1L);
+        log.info("COV of '{}' notification received, time remaining: '{}s'", key, time);
         final Waybill dispatcher = dispatchers.get(key);
         if (Objects.isNull(dispatcher)) {
             return;
         }
         final JsonObject convertValue = BACnetJsonMixin.MAPPER.convertValue(listOfValues, JsonObject.class);
+        final JsonObject output = new JsonObject().put(key, new JsonObject().put("timeRemaining", time)
+                                                                            .put("cov", convertValue));
         EventbusClient.create(device.sharedData())
-                      .publish(dispatcher.getAddress(), EventMessage.initial(dispatcher.getAction(), convertValue));
+                      .publish(dispatcher.getAddress(), EventMessage.initial(dispatcher.getAction(), output));
     }
 
     public void addDispatcher(@NonNull EventMessage subscribeCOVResult, @NonNull DiscoveryArguments args,
