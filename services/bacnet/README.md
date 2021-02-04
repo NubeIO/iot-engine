@@ -1,21 +1,91 @@
-# BACnet
+# BACnet service
 
-BACnet is a communication protocol for Building Automation and Control (BAC) networks that leverage the ASHRAE, ANSI,
-and ISO 16484-5 standard protocol.
+`BACnet service` is `RESTful API service` that provides an interface to the `BACnet System` and can be used for
+communicating with other `BACnet devices`.
 
-## BACnet router and BACnet Gateway
+## Features
 
-### BACnet Router
+### Unified data
 
-- `BACnet Router` is simply devices that connect multiple networks together, it transmits messages between **BACnet
-  networks**. For example: It might connect a `BACnet/IP` system to an `MS/TP` system.
-- In BACnet, a router is a device that passes a message from one network to another without changing the form or content
-  of the message. However, if the **BACnet networks** are of different types, the addresses, error checking, in short,
-  the **packaging** of the message may get changed
+`BACnet` data is in `JSON` format both `HTTP request` and `HTTP response` and able to merge with many
+fragmented `protocol data sources` into one, single central view then able to persist in any storage.
 
-### BACnet Gateway
+### Explorer service
 
-- `Bacnet Gateway` is **translator** between other network protocol with `BACnet network`, it must translate between
-  BACnet concepts and the equivalent ideas in the non-BACnet system
+Discovers flexible `remote BACnet device` or `remote BACnet object` in any `BACnet IP network` that you want.
 
-References: [Specifying Gateway and Routers](https://polarsoft.com/Specifying%20Gateways%20and%20Routers.pdf)
+### BACnet command
+
+Executes any BACnet request to any `BACnet device` remotely.
+
+### Supervisor service
+
+Subscribes for the registered BACnet objects for changes and events on its properties by one of `mechanism`: `realtime`
+or `polling-cron` or `polling-periodical`.
+
+**Note** `Realtime` mechanism requires
+the [BACnet COV system](https://store.chipkin.com/articles/bacnet-what-is-the-bacnet-change-of-value-cov) is enabled in
+remote `BACnet device `
+
+### Streaming COV
+
+Simple yet flexible distributes a BACnet change of value in `realtime` to any output that you
+want: `internal websocket server`, `external websocket server`, `REST API`, `MQTT`, `Kafka` etc...
+
+### BACnet Server
+
+Able start in role `BACnet Server` to allow another `BACnet device` in network can `read/write` any point in its
+persistence and from other `protocol` (thanks to [Unified data](#unified-data))
+
+## REST API
+
+Default parameter:
+
+- `_pretty=true`: Pretty `JSON` output
+
+### Explore API
+
+Prefix: `/api/discover/bacnet`
+
+#### Discover Network
+
+- `GET::/discover/bacnet/network`
+- `GET::/discover/bacnet/network/:networkId`
+
+#### Discover Device
+
+- `GET::/discover/bacnet/network/:networkId/device`
+- `GET::/discover/bacnet/network/:networkId/device/:deviceInstance`
+
+#### Discover Object
+
+- `GET::/discover/bacnet/network/:networkId/device/:deviceInstance/object`
+- `GET::/discover/bacnet/network/:networkId/device/:deviceInstance/object/:objectCode`
+
+### Command API
+
+Prefix: `/api/command/bacnet`
+Default HTTP method: `POST`
+
+#### Write Point Value
+
+- `POST::/command/bacnet/network/:networkId/device/:deviceInstance/object/:objectCode/write-pv`
+
+### Supervisor API
+
+#### Supervisor BACnet COV - Point Value
+
+- `GET::/coordinator/bacnet/network/:networkId/device/:deviceInstance/object/:objectCode/cov`
+- `PUT::/coordinator/bacnet/network/:networkId/device/:deviceInstance/object/:objectCode/cov`
+- `DELETE::/coordinator/bacnet/network/:networkId/device/:deviceInstance/object/:objectCode/cov`
+
+### Scheduler API
+
+- `POST::/scheduler/:jobKey/`
+- `GET::/scheduler/:jobKey/`
+- `GET::/scheduler/:jobKey/:triggerKey`
+- `DELETE::/scheduler/:jobKey/:triggerKey`
+
+## Configuration
+
+TBD

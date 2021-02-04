@@ -34,7 +34,7 @@ Build docker images:
     ./start.sh nexus
   ```
 
-- Refer [create nexus secret](../HOWTO.md#Prerequisites) with [nexus information](#edge-server-information)
+- Refer [create nexus secret](../DEV.md#Prerequisites) with [nexus information](#edge-server-information)
 - Publish artifact to `Nexus`
 
   ```bash
