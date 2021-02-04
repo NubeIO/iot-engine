@@ -15,6 +15,7 @@ import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryParams;
+import com.nubeiot.edge.connector.bacnet.dto.CovOutput;
 import com.nubeiot.edge.connector.bacnet.mixin.BACnetJsonMixin;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
 import com.serotonin.bacnet4j.event.DeviceEventAdapter;
@@ -57,10 +58,13 @@ public final class CovNotifier extends DeviceEventAdapter implements DeviceEvent
             return;
         }
         final JsonObject convertValue = BACnetJsonMixin.MAPPER.convertValue(listOfValues, JsonObject.class);
-        final JsonObject output = new JsonObject().put(key, new JsonObject().put("timeRemaining", time)
-                                                                            .put("cov", convertValue));
+        final CovOutput cov = CovOutput.builder()
+                                       .key(key)
+                                       .cov(convertValue)
+                                       .any(new JsonObject().put("timeRemaining", time))
+                                       .build();
         EventbusClient.create(device.sharedData())
-                      .publish(dispatcher.getAddress(), EventMessage.initial(dispatcher.getAction(), output));
+                      .publish(dispatcher.getAddress(), EventMessage.initial(dispatcher.getAction(), cov.toJson()));
     }
 
     public void addDispatcher(@NonNull EventMessage subscribeCOVResult, @NonNull DiscoveryArguments args,

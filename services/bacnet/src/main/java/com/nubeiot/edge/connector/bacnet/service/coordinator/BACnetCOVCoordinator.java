@@ -137,10 +137,8 @@ public final class BACnetCOVCoordinator extends AbstractBACnetService
         final WatcherOption option = input.getWatcherOption();
         final BACnetDevice device = getLocalDeviceFromCache(args);
         final String key = args.key();
-        final RequestData requestData = RequestData.builder()
-                                                   .body(args.params().toJson())
-                                                   .filter(args.options().toJson())
-                                                   .build();
+        final JsonObject filter = args.options().toJson().put(ReadPriorityArrayCommander.AS_COV, true);
+        final RequestData requestData = RequestData.builder().body(args.params().toJson()).filter(filter).build();
         return device.discoverRemoteObject(args)
                      .flatMap(pvm -> addScheduler(option, key, key, requestData.toJson()))
                      .map(res -> CoordinatorChannel.from(input, WatcherType.POLLING, res.getJobKey(), res.toJson()));
@@ -158,13 +156,17 @@ public final class BACnetCOVCoordinator extends AbstractBACnetService
         final JsonObject body = requestData.body();
         final WatcherOption option = WatcherOption.parse(body.getJsonObject(Fields.watcherOption, new JsonObject()));
         final Subscriber subscriber = WebSocketCOVSubscriber.builder().build();
-        return CoordinatorInput.<DiscoveryArguments>builder().subject(args).watcherOption(option).subscriber(subscriber)
+        return CoordinatorInput.<DiscoveryArguments>builder().subject(args)
+                                                             .watcherOption(option)
+                                                             .subscriber(subscriber)
                                                              .build();
     }
 
     @Override
     public Waybill subjectInfo(JsonObject payload) {
-        return Waybill.builder().address(ReadPriorityArrayCommander.class.getName()).action(EventAction.SEND)
+        return Waybill.builder()
+                      .address(ReadPriorityArrayCommander.class.getName())
+                      .action(EventAction.SEND)
                       .payload(payload)
                       .build();
     }

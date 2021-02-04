@@ -17,13 +17,18 @@ import lombok.NonNull;
  */
 public interface ConfirmedRequestFactory<S extends ConfirmedRequestService, D> {
 
+    /**
+     * Strict mode to determined raise exception if {@code AckConfirmedRequest} is error
+     */
+    String STRICT = "strict";
+
     @NonNull D convertData(@NonNull DiscoveryArguments args, @NonNull RequestData requestData);
 
     @NonNull S factory(@NonNull DiscoveryArguments args, @NonNull D data);
 
     default void then(@NonNull BACnetDevice device, @NonNull EventMessage result, @NonNull D data,
                       @NonNull DiscoveryArguments args, @NonNull RequestData requestData) {
-        if (result.isError()) {
+        if (result.isError() && requestData.filter().getBoolean(STRICT, true)) {
             throw new CarlException(result.getError().getCode(), result.getError().getMessage());
         }
     }
