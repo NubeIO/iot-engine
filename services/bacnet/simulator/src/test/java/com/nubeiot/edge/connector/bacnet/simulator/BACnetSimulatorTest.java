@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 
+@Ignore
 @RunWith(VertxUnitRunner.class)
 public class BACnetSimulatorTest {
 

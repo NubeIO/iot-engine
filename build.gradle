@@ -51,11 +51,15 @@ subprojects {
         compileOnly project.deps.lombok
         annotationProcessor project.deps.lombok
 
-        testCompile project.deps.tests.junit
-        testCompile project.deps.tests.jsonAssert
-        testCompile project.deps.vertx.junit
+        testImplementation project.deps.tests.junit5Api
+        testImplementation project.deps.tests.junit5Engine
+        testImplementation project.deps.tests.junit5Vintage
         testCompileOnly project.deps.lombok
         testAnnotationProcessor project.deps.lombok
+    }
+
+    test {
+        useJUnitPlatform()
     }
 
     //TODO docker
