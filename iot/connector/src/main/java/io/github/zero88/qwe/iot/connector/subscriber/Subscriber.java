@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 /**
  * Represents for subscriber
+ *
+ * @see SubscriberType
  */
 public interface Subscriber extends JsonData {
 

@@ -13,6 +13,8 @@ import lombok.extern.jackson.Jacksonized;
 
 /**
  * Defines watcher mechanism in realtime or polling
+ *
+ * @see WatcherType
  */
 @Data
 @Builder
