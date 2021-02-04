@@ -17,7 +17,7 @@ public class BACnetApisHelperTest {
     public void test() {
         final Set<? extends BACnetApis> services = BACnetApisHelper.createServices(
             SharedDataLocalProxy.create(Vertx.vertx(), BACnetApisHelper.class.getName()));
-        Assert.assertEquals(4, services.size());
+        Assert.assertEquals(5, services.size());
     }
 
 }

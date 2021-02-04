@@ -1,36 +1,24 @@
 package com.nubeiot.edge.connector.bacnet.service.discovery;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
-import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.dto.msg.RequestData;
-import io.github.zero88.qwe.event.EventAction;
-import io.github.zero88.qwe.event.EventContractor;
 import io.github.zero88.qwe.exceptions.AlreadyExistException;
 import io.github.zero88.qwe.exceptions.CarlException;
 import io.github.zero88.qwe.exceptions.ErrorCode;
 import io.github.zero88.qwe.exceptions.NotFoundException;
 import io.github.zero88.qwe.iot.data.entity.AbstractEntities;
-import io.github.zero88.qwe.micro.http.ActionMethodMapping;
 import io.github.zero88.utils.Functions;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetEntities.BACnetPoints;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetPointEntity;
-import com.nubeiot.edge.connector.bacnet.internal.request.WritePointValueRequestFactory;
 import com.nubeiot.edge.connector.bacnet.mixin.ObjectIdentifierMixin;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
@@ -45,20 +33,6 @@ public final class BACnetObjectExplorer extends BACnetExplorer<ObjectIdentifier,
 
     BACnetObjectExplorer(@NonNull SharedDataLocalProxy sharedData) {
         super(sharedData);
-    }
-
-    @Override
-    public @NonNull Collection<EventAction> getAvailableEvents() {
-        //TODO PATCH is temporary
-        return Stream.concat(super.getAvailableEvents().stream(), Stream.of(EventAction.PATCH))
-                     .collect(Collectors.toSet());
-    }
-
-    @Override
-    public @NonNull ActionMethodMapping eventMethodMap() {
-        final Map<EventAction, HttpMethod> map = new HashMap<>(super.eventMethodMap().get());
-        map.put(EventAction.PATCH, HttpMethod.PATCH);
-        return ActionMethodMapping.create(map);
     }
 
     @Override
@@ -79,14 +53,6 @@ public final class BACnetObjectExplorer extends BACnetExplorer<ObjectIdentifier,
         return device.discoverRemoteDevice(args)
                      .flatMap(remote -> getRemoteObjects(device, remote, args.options().isDetail()))
                      .doFinally(device::stop);
-    }
-
-    @EventContractor(action = "PATCH", returnType = Single.class)
-    public Single<JsonObject> patchPointValue(RequestData requestData) {
-        final DiscoveryArguments args = createDiscoveryArgs(requestData, level());
-        final BACnetDevice device = getLocalDeviceFromCache(args);
-        return device.send(EventAction.PATCH, args, requestData, new WritePointValueRequestFactory())
-                     .map(JsonData::toJson);
     }
 
     @Override

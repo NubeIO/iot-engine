@@ -1,6 +1,7 @@
 package com.nubeiot.edge.connector.bacnet.service;
 
 import io.github.zero88.qwe.iot.connector.ConnectorServiceApis;
+import io.github.zero88.utils.Urls;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nubeiot.edge.connector.bacnet.BACnetProtocol;
@@ -27,7 +28,7 @@ public interface BACnetApis extends BACnetProtocol, ConnectorServiceApis {
 
     @Override
     default String paramPath() {
-        return DiscoveryParams.genParamPath(level());
+        return Urls.toCapture(DiscoveryParams.genParamPath(level()));
     }
 
     @NonNull DiscoveryLevel level();

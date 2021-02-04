@@ -1,4 +1,5 @@
 package io.github.zero88.qwe.iot.connector;
+
 import java.util.Collections;
 import java.util.Set;
 
@@ -11,15 +12,6 @@ import lombok.NonNull;
 
 public interface ConnectorServiceApis extends ConnectorService, EventHttpService {
 
-    /**
-     * Base HTTP service path
-     *
-     * @return base HTTP service path
-     */
-    default String basePath() {
-        return Urls.combinePath(function(), protocol().type().toLowerCase(), servicePath());
-    }
-
     @Override
     default String api() {
         return String.join(".", function(), protocol().type().toLowerCase(), getClass().getSimpleName());
@@ -27,7 +19,16 @@ public interface ConnectorServiceApis extends ConnectorService, EventHttpService
 
     @Override
     default Set<EventMethodDefinition> definitions() {
-        return Collections.singleton(EventMethodDefinition.create(basePath(), paramPath(), eventMethodMap()));
+        return Collections.singleton(EventMethodDefinition.create(fullServicePath(), paramPath(), eventMethodMap()));
+    }
+
+    /**
+     * Full HTTP service path
+     *
+     * @return full HTTP service path
+     */
+    default String fullServicePath() {
+        return Urls.combinePath(function(), protocol().type().toLowerCase(), servicePath());
     }
 
     /**
