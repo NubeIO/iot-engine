@@ -65,17 +65,11 @@ public final class CovNotifier extends DeviceEventAdapter implements DeviceEvent
 
     public void addDispatcher(@NonNull EventMessage subscribeCOVResult, @NonNull DiscoveryArguments args,
                               @NonNull RequestData requestData) {
-        if (subscribeCOVResult.isError()) {
-            return;
-        }
         dispatchers.put(args.key(), Waybill.from(requestData.body()));
     }
 
     public void removeDispatcher(@NonNull EventMessage subscribeCOVResult, @NonNull DiscoveryArguments args,
                                  @NonNull RequestData requestData) {
-        if (subscribeCOVResult.isError()) {
-            return;
-        }
         dispatchers.remove(args.key());
     }
 

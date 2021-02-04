@@ -2,6 +2,7 @@ package com.nubeiot.edge.connector.bacnet.internal.request;
 
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventMessage;
+import io.github.zero88.qwe.exceptions.CarlException;
 
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
@@ -21,6 +22,10 @@ public interface ConfirmedRequestFactory<S extends ConfirmedRequestService, D> {
     @NonNull S factory(@NonNull DiscoveryArguments args, @NonNull D data);
 
     default void then(@NonNull BACnetDevice device, @NonNull EventMessage result, @NonNull D data,
-                      @NonNull DiscoveryArguments args, @NonNull RequestData requestData) { }
+                      @NonNull DiscoveryArguments args, @NonNull RequestData requestData) {
+        if (result.isError()) {
+            throw new CarlException(result.getError().getCode(), result.getError().getMessage());
+        }
+    }
 
 }

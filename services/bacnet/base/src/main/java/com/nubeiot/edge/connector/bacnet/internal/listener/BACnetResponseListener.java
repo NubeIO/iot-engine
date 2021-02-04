@@ -37,7 +37,7 @@ public final class BACnetResponseListener implements ResponseConsumer {
 
     @Override
     public void fail(AckAPDU ack) {
-        msg.tryComplete(EventMessage.error(action, convert(ack)));
+        msg.tryComplete(EventMessage.error(action, convert(convert(ack))));
     }
 
     @Override

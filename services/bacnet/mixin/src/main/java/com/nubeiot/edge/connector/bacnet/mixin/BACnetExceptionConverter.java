@@ -3,7 +3,7 @@ package com.nubeiot.edge.connector.bacnet.mixin;
 import java.util.Objects;
 
 import io.github.zero88.qwe.exceptions.CarlException;
-import io.github.zero88.qwe.exceptions.ServiceException;
+import io.github.zero88.qwe.exceptions.ErrorCode;
 import io.github.zero88.qwe.exceptions.TimeoutException;
 import io.github.zero88.qwe.exceptions.converter.CarlExceptionConverter;
 
@@ -21,6 +21,8 @@ import com.serotonin.bacnet4j.type.Encodable;
 import lombok.NonNull;
 
 public final class BACnetExceptionConverter {
+
+    public static final ErrorCode BACNET_ERROR = ErrorCode.parse("BACNET_ERROR");
 
     public static CarlException convert(@NonNull BACnetException throwable) {
         if (throwable instanceof BACnetTimeoutException) {
@@ -57,7 +59,7 @@ public final class BACnetExceptionConverter {
         if (Objects.isNull(reason)) {
             return CarlExceptionConverter.friendly(throwable);
         }
-        return new ServiceException(reason.toString(), throwable);
+        return new CarlException(BACNET_ERROR, reason.toString(), throwable);
     }
 
 }

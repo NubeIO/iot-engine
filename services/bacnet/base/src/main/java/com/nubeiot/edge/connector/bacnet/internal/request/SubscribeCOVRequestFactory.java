@@ -45,6 +45,9 @@ public class SubscribeCOVRequestFactory implements ConfirmedRequestFactory<Subsc
     @Override
     public void then(@NonNull BACnetDevice device, @NonNull EventMessage result, @NonNull SubscribeCOVOptions options,
                      @NonNull DiscoveryArguments args, @NonNull RequestData requestData) {
+        if (result.isError()) {
+            return;
+        }
         final CovNotifier notifier = device.lookupListener(CovNotifier.class, () -> new CovNotifier(device));
         if (options.isSubscribe()) {
             notifier.addDispatcher(result, args, requestData);
