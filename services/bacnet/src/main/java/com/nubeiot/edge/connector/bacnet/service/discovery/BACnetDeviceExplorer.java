@@ -25,8 +25,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class BACnetDeviceExplorer
-    extends AbstractBACnetExplorer<ObjectIdentifier, BACnetDeviceEntity, BACnetDevices> {
+public final class BACnetDeviceExplorer extends BACnetExplorer<ObjectIdentifier, BACnetDeviceEntity, BACnetDevices> {
 
     BACnetDeviceExplorer(@NonNull SharedDataLocalProxy sharedDataProxy) {
         super(sharedDataProxy);

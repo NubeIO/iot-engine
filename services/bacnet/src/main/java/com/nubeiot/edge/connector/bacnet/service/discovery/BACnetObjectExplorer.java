@@ -41,8 +41,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class BACnetObjectExplorer
-    extends AbstractBACnetExplorer<ObjectIdentifier, BACnetPointEntity, BACnetPoints> {
+public final class BACnetObjectExplorer extends BACnetExplorer<ObjectIdentifier, BACnetPointEntity, BACnetPoints> {
 
     BACnetObjectExplorer(@NonNull SharedDataLocalProxy sharedData) {
         super(sharedData);

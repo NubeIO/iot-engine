@@ -16,7 +16,7 @@ import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;
 
 import lombok.NonNull;
 
-public final class BACnetNetworkExplorer extends AbstractBACnetExplorer<String, BACnetNetwork, BACnetNetworks> {
+public final class BACnetNetworkExplorer extends BACnetExplorer<String, BACnetNetwork, BACnetNetworks> {
 
     BACnetNetworkExplorer(@NonNull SharedDataLocalProxy sharedDataProxy) {
         super(sharedDataProxy);
