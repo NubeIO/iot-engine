@@ -8,6 +8,7 @@ import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.internal.listener.CovNotifier;
 import com.nubeiot.edge.connector.bacnet.internal.request.SubscribeCOVRequestFactory.SubscribeCOVOptions;
+import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.service.confirmed.SubscribeCOVRequest;
 import com.serotonin.bacnet4j.type.primitive.Boolean;
 import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
@@ -58,8 +59,18 @@ public class SubscribeCOVRequestFactory implements ConfirmedRequestFactory<Subsc
     public static class SubscribeCOVOptions implements JsonData {
 
         private final boolean subscribe;
+
+        /**
+         * Subscriber process id
+         *
+         * @apiNote Use {@link LocalDevice#getInstanceNumber()}
+         */
         @Default
         private final int processId = 1;
+
+        /**
+         * Lifetime is {@code 0} mean no expire
+         */
         @Default
         private final int lifetime = 0;
 

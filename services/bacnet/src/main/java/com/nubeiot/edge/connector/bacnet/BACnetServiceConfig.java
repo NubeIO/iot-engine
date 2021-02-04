@@ -9,7 +9,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @SuperBuilder
 @NoArgsConstructor
-public final class BACnetServiceConfig extends BACnetConfig {
+public class BACnetServiceConfig extends BACnetConfig {
 
     @NonNull
     @Default

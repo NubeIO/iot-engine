@@ -1,6 +1,7 @@
 package com.nubeiot.edge.connector.bacnet.discovery;
 
 import io.github.zero88.qwe.iot.connector.Subject;
+import io.vertx.core.json.JsonObject;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -22,6 +23,11 @@ public final class DiscoveryArguments implements Subject {
     @Override
     public String key() {
         return params().buildKey(level);
+    }
+
+    @Override
+    public JsonObject toDetail() {
+        return params().toJson().put("key", key());
     }
 
 }

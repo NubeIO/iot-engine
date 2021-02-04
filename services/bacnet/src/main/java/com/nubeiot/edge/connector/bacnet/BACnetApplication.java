@@ -6,8 +6,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 import io.github.zero88.qwe.component.ContextLookup;
-import io.github.zero88.qwe.event.EventAction;
-import io.github.zero88.qwe.event.EventMessage;
 import io.github.zero88.qwe.event.EventbusClient;
 import io.github.zero88.qwe.http.event.WebSocketServerEventMetadata;
 import io.github.zero88.qwe.http.server.HttpServerProvider;
@@ -41,7 +39,7 @@ import lombok.NonNull;
 /*
  * BACnet Application
  */
-public final class BACnetApplication extends AbstractBACnetApplication<BACnetServiceConfig> {
+public class BACnetApplication extends AbstractBACnetApplication<BACnetServiceConfig> {
 
     private MicroContext microContext;
     private BACnetSubscriptionManager manager;
@@ -58,16 +56,6 @@ public final class BACnetApplication extends AbstractBACnetApplication<BACnetSer
             .addProvider(new MicroVerticleProvider())
             .addProvider(new SchedulerProvider())
             .addProvider(new JsonStorageProvider());
-    }
-
-    @Override
-    protected void readinessHandler(@NonNull BACnetServiceConfig config, JsonObject d, Throwable e) {
-        super.readinessHandler(config, d, e);
-        final EventbusClient eb = EventbusClient.create(sharedData());
-        final WebSocketCOVSubscriber subscriber = WebSocketCOVSubscriber.builder().build();
-        vertx.setPeriodic(3000, id -> eb.publish(subscriber.getPublishAddress(),
-                                                 EventMessage.success(EventAction.MONITOR,
-                                                                      new JsonObject().put("msg", "sth"))));
     }
 
     @Override

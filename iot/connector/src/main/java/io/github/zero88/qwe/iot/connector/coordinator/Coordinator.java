@@ -18,24 +18,63 @@ import io.vertx.core.json.JsonObject;
 import lombok.NonNull;
 
 /**
- * Represents for an {@code coordinator service} that watches a particular {@code event} then notifying it to {@code
- * subscribers}
+ * Represents for an {@code coordinator service} that supervises a particular {@code subject} then notifying it to the
+ * registered {@code subscribers}.
+ * <p>
+ * The end-to-end process is named as a {@code coordinator channel}
+ *
+ * @see ConnectorService
  */
 public interface Coordinator<S extends Subject> extends ConnectorService {
 
+    /**
+     * Register a {@code coordinator channel}
+     *
+     * @param requestData request data
+     * @return coordinator channel
+     * @see #parseCoordinatorInput(RequestData)
+     * @see CoordinatorChannel
+     */
     @EventContractor(action = "CREATE_OR_UPDATE", returnType = Single.class)
-    Single<CoordinatorRegisterResult> register(@NonNull RequestData requestData);
+    Single<CoordinatorChannel> register(@NonNull RequestData requestData);
 
+    /**
+     * Unregister a {@code coordinator channel}
+     *
+     * @param requestData request data
+     * @return coordinator output
+     * @see CoordinatorChannel
+     */
     @EventContractor(action = "REMOVE", returnType = Single.class)
-    Single<JsonObject> unregister(@NonNull RequestData requestData);
+    Single<CoordinatorChannel> unregister(@NonNull RequestData requestData);
 
+    /**
+     * Query a {@code coordinator channel} by {@code subject}
+     *
+     * @param requestData request data
+     * @return coordinator output
+     * @see CoordinatorChannel
+     */
     @EventContractor(action = "GET_ONE", returnType = Single.class)
-    Single<JsonObject> get(@NonNull RequestData requestData);
+    Single<CoordinatorChannel> get(@NonNull RequestData requestData);
 
+    /**
+     * Defines a handler that listens an event of {@code subject} then notifies to list of {@code subscribers}
+     *
+     * @param data  subject event data
+     * @param error error message if any error
+     * @return true as ack
+     */
     @EventContractor(action = "MONITOR", returnType = boolean.class)
-    boolean monitorThenNotify(@Param("data") JsonObject data, @Param("error") ErrorMessage error);
+    boolean superviseThenNotify(@Param("data") JsonObject data, @Param("error") ErrorMessage error);
 
-    @NonNull CoordinatorInput<S> parseInput(@NonNull RequestData requestData);
+    /**
+     * Parse a coordinator input from request to prepare {@code coordinator channel}
+     *
+     * @param requestData request data
+     * @return coordinator input
+     */
+    @NonNull CoordinatorInput<S> parseCoordinatorInput(@NonNull RequestData requestData);
 
     @Override
     default @NonNull Collection<EventAction> getAvailableEvents() {
@@ -44,12 +83,13 @@ public interface Coordinator<S extends Subject> extends ConnectorService {
     }
 
     /**
-     * Defines listen address then event will be
+     * Declares a coordinator address to register a callback address when a {@code subject} notifies an event or change
      *
      * @return waybill
-     * @see #monitorThenNotify(JsonObject, ErrorMessage)
+     * @see #superviseThenNotify(JsonObject, ErrorMessage)
+     * @see Waybill
      */
-    default Waybill listenAddress() {
+    default Waybill coordinatorInfo() {
         return Waybill.builder()
                       .address(this.getClass().getName())
                       .action(EventAction.MONITOR)
@@ -57,6 +97,13 @@ public interface Coordinator<S extends Subject> extends ConnectorService {
                       .build();
     }
 
-    Waybill monitorAddress(JsonObject payload);
+    /**
+     * Defines an {@code subject} address that want to supervise is where a {@code coordinator} can ask
+     *
+     * @param payload request data that send to {@code subject} address
+     * @return waybill
+     * @see Waybill
+     */
+    Waybill subjectInfo(JsonObject payload);
 
 }

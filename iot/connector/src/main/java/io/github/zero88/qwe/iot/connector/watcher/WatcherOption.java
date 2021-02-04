@@ -12,7 +12,7 @@ import lombok.NonNull;
 import lombok.extern.jackson.Jacksonized;
 
 /**
- * Defines watcher option in realtime mechanism or polling mechanism
+ * Defines watcher mechanism in realtime or polling
  */
 @Data
 @Builder
@@ -26,6 +26,8 @@ public final class WatcherOption implements JsonData {
     private final boolean realtime = true;
     /**
      * Defines a real-time watcher is maintained in how long
+     *
+     * @apiNote Default is {@code -1} mean no expired
      */
     @Default
     private final int lifetimeInSeconds = -1;

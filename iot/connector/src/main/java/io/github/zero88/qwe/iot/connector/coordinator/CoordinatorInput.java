@@ -15,6 +15,14 @@ import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.jackson.Jacksonized;
 
+/**
+ * Coordinator input to prepare a {@code coordinator channel}
+ *
+ * @param <S> Type of Subject
+ * @see Subject
+ * @see Subscriber
+ * @see WatcherOption
+ */
 @Data
 @Builder
 @Jacksonized

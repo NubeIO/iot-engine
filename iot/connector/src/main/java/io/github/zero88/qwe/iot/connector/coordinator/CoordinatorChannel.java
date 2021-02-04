@@ -16,29 +16,31 @@ import lombok.NonNull;
 import lombok.Singular;
 import lombok.extern.jackson.Jacksonized;
 
+/**
+ * Represents for a coordinator channel
+ */
 @Data
 @Builder
 @Jacksonized
-public final class CoordinatorRegisterResult implements JsonData {
+public final class CoordinatorChannel implements JsonData {
 
-    private final String key;
+    private final JsonObject subject;
     private final WatcherType watcherType;
     private final WatcherOption watcherOption;
     private final JsonObject watcherOutput;
     @Singular
     private final List<Subscriber> subscribers;
 
-    public static @NonNull CoordinatorRegisterResult from(@NonNull CoordinatorInput input,
-                                                          @NonNull WatcherType watcherType,
-                                                          @NonNull JsonObject watcherOutput) {
+    public static @NonNull CoordinatorChannel from(@NonNull CoordinatorInput input, @NonNull WatcherType watcherType,
+                                                   @NonNull JsonObject watcherOutput) {
         //noinspection unchecked
-        return CoordinatorRegisterResult.builder()
-                                        .watcherType(watcherType)
-                                        .watcherOutput(watcherOutput)
-                                        .watcherOption(input.getWatcherOption())
-                                        .key(input.getSubject().key())
-                                        .subscribers(input.getSubscribers())
-                                        .build();
+        return CoordinatorChannel.builder()
+                                 .watcherType(watcherType)
+                                 .watcherOutput(watcherOutput)
+                                 .watcherOption(input.getWatcherOption())
+                                 .subject(input.getSubject().toDetail())
+                                 .subscribers(input.getSubscribers())
+                                 .build();
     }
 
     @JsonProperty("watcherType")
