@@ -6,6 +6,7 @@ import com.serotonin.bacnet4j.type.constructed.PriorityValue;
 
 import lombok.NonNull;
 
+//TODO implement it
 public class PropertyValueDeserializer implements EncodableDeserializer<PriorityValue, JsonObject> {
 
     @Override
@@ -20,7 +21,6 @@ public class PropertyValueDeserializer implements EncodableDeserializer<Priority
 
     @Override
     public PriorityValue parse(@NonNull JsonObject value) {
-        //TODO implement it
         return null;
     }
 
