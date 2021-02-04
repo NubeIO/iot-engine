@@ -34,7 +34,7 @@ public interface ExplorerService<K, P extends IoTEntity<K>, X extends IoTEntitie
      * @apiNote It is used to generated HTTP path and Event address then it must be unique
      */
     default String function() {
-        return "discovery";
+        return "discover";
     }
 
     @EventContractor(action = "GET_ONE", returnType = Single.class)

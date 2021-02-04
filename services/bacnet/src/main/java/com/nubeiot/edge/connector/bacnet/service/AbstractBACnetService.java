@@ -40,7 +40,8 @@ public abstract class AbstractBACnetService extends BaseService implements BACne
         return sharedData().getData(BACnetCacheInitializer.BACNET_OBJECT_CACHE);
     }
 
-    protected final DiscoveryOptions parseDiscoverOptions(@NonNull RequestData reqData) {
+    //TODO it must be override in each BACnet service to manage cache time
+    protected DiscoveryOptions parseDiscoverOptions(@NonNull RequestData reqData) {
         final BACnetConfig config = sharedData().getData(BACnetDevice.CONFIG_KEY);
         return DiscoveryOptions.from(config.getMaxTimeoutInMS(), reqData);
     }
