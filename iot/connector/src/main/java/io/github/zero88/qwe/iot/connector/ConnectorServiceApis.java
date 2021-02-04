@@ -14,7 +14,7 @@ public interface ConnectorServiceApis extends ConnectorService, EventHttpService
 
     @Override
     default String api() {
-        return String.join(".", function(), protocol().type().toLowerCase(), getClass().getSimpleName());
+        return String.join(".", domain(), protocol().type().toLowerCase(), getClass().getSimpleName());
     }
 
     @Override
@@ -28,7 +28,7 @@ public interface ConnectorServiceApis extends ConnectorService, EventHttpService
      * @return full HTTP service path
      */
     default String fullServicePath() {
-        return Urls.combinePath(function(), protocol().type().toLowerCase(), servicePath());
+        return Urls.combinePath(domain(), protocol().type().toLowerCase(), servicePath());
     }
 
     /**

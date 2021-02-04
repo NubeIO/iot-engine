@@ -38,7 +38,7 @@ public abstract class AbstractRpcScanner<P extends IoTEntity, X> extends BaseRpc
     }
 
     @Override
-    public String function() {
+    public String domain() {
         return "scanner";
     }
 

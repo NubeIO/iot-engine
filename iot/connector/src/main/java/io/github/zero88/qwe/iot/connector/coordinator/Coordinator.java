@@ -11,6 +11,7 @@ import io.github.zero88.qwe.event.EventContractor.Param;
 import io.github.zero88.qwe.event.EventPattern;
 import io.github.zero88.qwe.event.Waybill;
 import io.github.zero88.qwe.iot.connector.ConnectorService;
+import io.github.zero88.qwe.iot.connector.FunctionService;
 import io.github.zero88.qwe.iot.connector.Subject;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
@@ -25,7 +26,12 @@ import lombok.NonNull;
  *
  * @see ConnectorService
  */
-public interface Coordinator<S extends Subject> extends ConnectorService {
+public interface Coordinator<S extends Subject> extends FunctionService {
+
+    @Override
+    default String domain() {
+        return "coordinator";
+    }
 
     /**
      * Register a {@code coordinator channel}

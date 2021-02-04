@@ -13,6 +13,7 @@ import io.github.zero88.qwe.event.EventbusClient;
 import io.github.zero88.qwe.event.Waybill;
 import io.github.zero88.qwe.exceptions.CarlException;
 import io.github.zero88.qwe.iot.connector.RpcProtocolClient;
+import io.github.zero88.qwe.iot.connector.coordinator.CoordinatorApis;
 import io.github.zero88.qwe.iot.connector.coordinator.CoordinatorChannel;
 import io.github.zero88.qwe.iot.connector.coordinator.CoordinatorInput;
 import io.github.zero88.qwe.iot.connector.coordinator.CoordinatorInput.Fields;
@@ -21,7 +22,6 @@ import io.github.zero88.qwe.iot.connector.subscriber.Subscriber;
 import io.github.zero88.qwe.iot.connector.watcher.WatcherOption;
 import io.github.zero88.qwe.iot.connector.watcher.WatcherType;
 import io.github.zero88.qwe.micro.ServiceNotFoundException;
-import io.github.zero88.qwe.micro.http.ActionMethodMapping;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
@@ -33,21 +33,22 @@ import com.nubeiot.edge.connector.bacnet.entity.BACnetPVEntity;
 import com.nubeiot.edge.connector.bacnet.internal.request.SubscribeCOVRequestFactory;
 import com.nubeiot.edge.connector.bacnet.internal.request.SubscribeCOVRequestFactory.SubscribeCOVOptions;
 import com.nubeiot.edge.connector.bacnet.service.AbstractBACnetService;
-import com.nubeiot.edge.connector.bacnet.service.BACnetApis;
+import com.nubeiot.edge.connector.bacnet.service.BACnetFunctionApis;
 import com.nubeiot.edge.connector.bacnet.service.discovery.BACnetObjectExplorer;
 import com.nubeiot.edge.connector.bacnet.websocket.WebSocketCOVSubscriber;
 
 import lombok.NonNull;
 
 public final class BACnetCOVCoordinator extends AbstractBACnetService
-    implements InboundCoordinator<DiscoveryArguments>, RpcProtocolClient<BACnetPVEntity>, BACnetApis {
+    implements InboundCoordinator<DiscoveryArguments>, CoordinatorApis<DiscoveryArguments>,
+               RpcProtocolClient<BACnetPVEntity>, BACnetFunctionApis {
 
     public BACnetCOVCoordinator(@NonNull SharedDataLocalProxy sharedData) {
         super(sharedData);
     }
 
     @Override
-    public String function() {
+    public @NonNull String function() {
         return "cov";
     }
 
@@ -72,14 +73,32 @@ public final class BACnetCOVCoordinator extends AbstractBACnetService
     }
 
     @Override
-    public @NonNull ActionMethodMapping eventMethodMap() {
-        return ActionMethodMapping.by(ActionMethodMapping.CRD_MAP, getAvailableEvents());
-    }
-
-    @Override
     @EventContractor(action = "CREATE_OR_UPDATE", returnType = Single.class)
     public Single<CoordinatorChannel> register(@NonNull RequestData requestData) {
         return InboundCoordinator.super.register(requestData);
+    }
+
+    @Override
+    @EventContractor(action = "REMOVE", returnType = Single.class)
+    public Single<CoordinatorChannel> unregister(@NonNull RequestData requestData) {
+        return Single.error(new ServiceNotFoundException("Not yet implemented"));
+    }
+
+    @Override
+    @EventContractor(action = "GET_ONE", returnType = Single.class)
+    public Single<CoordinatorChannel> get(@NonNull RequestData requestData) {
+        return Single.error(new ServiceNotFoundException("Not yet implemented"));
+    }
+
+    @Override
+    @EventContractor(action = "MONITOR", returnType = boolean.class)
+    public boolean superviseThenNotify(@Param("data") JsonObject data, @Param("error") ErrorMessage error) {
+        final EventbusClient eb = EventbusClient.create(sharedData());
+        final EventMessage msg = Objects.nonNull(error)
+                                 ? EventMessage.error(EventAction.MONITOR, error)
+                                 : EventMessage.success(EventAction.MONITOR, data);
+        eb.publish(WebSocketCOVSubscriber.builder().build().getPublishAddress(), msg);
+        return true;
     }
 
     @Override
@@ -110,29 +129,6 @@ public final class BACnetCOVCoordinator extends AbstractBACnetService
                                                                                     .build()
                                                                                     .toJson()))
                      .map(res -> CoordinatorChannel.from(input, WatcherType.POLLING, res.toJson()));
-    }
-
-    @Override
-    @EventContractor(action = "REMOVE", returnType = Single.class)
-    public Single<CoordinatorChannel> unregister(@NonNull RequestData requestData) {
-        return Single.error(new ServiceNotFoundException("Not yet implemented"));
-    }
-
-    @Override
-    @EventContractor(action = "GET_ONE", returnType = Single.class)
-    public Single<CoordinatorChannel> get(@NonNull RequestData requestData) {
-        return Single.error(new ServiceNotFoundException("Not yet implemented"));
-    }
-
-    @Override
-    @EventContractor(action = "MONITOR", returnType = boolean.class)
-    public boolean superviseThenNotify(@Param("data") JsonObject data, @Param("error") ErrorMessage error) {
-        final EventbusClient eb = EventbusClient.create(sharedData());
-        final EventMessage msg = Objects.nonNull(error)
-                                 ? EventMessage.error(EventAction.MONITOR, error)
-                                 : EventMessage.success(EventAction.MONITOR, data);
-        eb.publish(WebSocketCOVSubscriber.builder().build().getPublishAddress(), msg);
-        return true;
     }
 
     @Override

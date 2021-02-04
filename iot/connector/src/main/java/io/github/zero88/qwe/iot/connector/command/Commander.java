@@ -7,6 +7,7 @@ import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventContractor;
 import io.github.zero88.qwe.iot.connector.ConnectorService;
+import io.github.zero88.qwe.iot.connector.FunctionService;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
@@ -17,14 +18,12 @@ import lombok.NonNull;
  *
  * @see ConnectorService
  */
-public interface Commander extends ConnectorService {
+public interface Commander extends FunctionService {
 
     @Override
-    default String function() {
+    default String domain() {
         return "command";
     }
-
-    @NonNull String commandType();
 
     @EventContractor(action = "SEND", returnType = Single.class)
     Single<JsonObject> send(@NonNull RequestData requestData);

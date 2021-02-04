@@ -5,6 +5,7 @@ import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventContractor;
+import io.github.zero88.qwe.iot.connector.command.CommanderApis;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
@@ -12,10 +13,12 @@ import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
 import com.nubeiot.edge.connector.bacnet.internal.request.WritePointValueRequestFactory;
+import com.nubeiot.edge.connector.bacnet.service.AbstractBACnetService;
+import com.nubeiot.edge.connector.bacnet.service.BACnetFunctionApis;
 
 import lombok.NonNull;
 
-public final class WritePointValueCommander extends BACnetCommander {
+public final class WritePointValueCommander extends AbstractBACnetService implements BACnetFunctionApis, CommanderApis {
 
     WritePointValueCommander(@NonNull SharedDataLocalProxy sharedData) {
         super(sharedData);
@@ -27,7 +30,7 @@ public final class WritePointValueCommander extends BACnetCommander {
     }
 
     @Override
-    public String commandType() {
+    public String function() {
         return "write-pv";
     }
 

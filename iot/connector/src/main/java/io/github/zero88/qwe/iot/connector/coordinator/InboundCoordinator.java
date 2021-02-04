@@ -1,9 +1,11 @@
 package io.github.zero88.qwe.iot.connector.coordinator;
 
+import io.github.zero88.qwe.dto.ErrorMessage;
 import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventContractor;
+import io.github.zero88.qwe.event.EventContractor.Param;
 import io.github.zero88.qwe.exceptions.ServiceException;
 import io.github.zero88.qwe.iot.connector.Subject;
 import io.github.zero88.qwe.iot.connector.watcher.WatcherOption;
@@ -27,10 +29,6 @@ import lombok.NonNull;
  */
 public interface InboundCoordinator<S extends Subject> extends Coordinator<S>, HasProtocol, GatewayServiceInvoker {
 
-    default String function() {
-        return "inbound-coordinator";
-    }
-
     /**
      * Scheduler service name
      *
@@ -47,6 +45,15 @@ public interface InboundCoordinator<S extends Subject> extends Coordinator<S>, H
                                            .flatMapSingleElement(ignore -> addRealtimeWatcher(input))
                                            .switchIfEmpty(addPollingWatcher(input)));
     }
+
+    @EventContractor(action = "REMOVE", returnType = Single.class)
+    Single<CoordinatorChannel> unregister(@NonNull RequestData requestData);
+
+    @EventContractor(action = "GET_ONE", returnType = Single.class)
+    Single<CoordinatorChannel> get(@NonNull RequestData requestData);
+
+    @EventContractor(action = "MONITOR", returnType = boolean.class)
+    boolean superviseThenNotify(@Param("data") JsonObject data, @Param("error") ErrorMessage error);
 
     default Single<CoordinatorInput<S>> validateInCreation(@NonNull CoordinatorInput<S> input) {
         return Single.just(input.validate());

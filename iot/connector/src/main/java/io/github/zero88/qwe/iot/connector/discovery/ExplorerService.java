@@ -33,7 +33,7 @@ public interface ExplorerService<K, P extends IoTEntity<K>, X extends IoTEntitie
      * @return function name
      * @apiNote It is used to generated HTTP path and Event address then it must be unique
      */
-    default String function() {
+    default String domain() {
         return "discover";
     }
 
