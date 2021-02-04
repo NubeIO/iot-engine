@@ -17,13 +17,15 @@ public class CoordinatorChannelTest {
     void test_serialize() throws JSONException {
         final CoordinatorInput<MockSubject> input = CoordinatorInput.<MockSubject>builder().subject(
             new MockSubject("m1")).subscriber(new MockSubscriber("s1")).build();
-        final CoordinatorChannel channel = CoordinatorChannel.from(input, WatcherType.REALTIME, new JsonObject());
-        JsonHelper.assertJson(new JsonObject("{\"subject\":{\"key\":\"m1\"},\"watcherOption\":{\"realtime\":true," +
-                                             "\"lifetimeInSeconds\":-1,\"fallbackPolling\":true,\"polling\":false," +
-                                             "\"triggerOption\":{\"type\":\"PERIODIC\",\"intervalInSeconds\":5," +
-                                             "\"repeat\":-1}},\"watcherOutput\":{},\"subscribers\":[{\"code\":\"s1\"," +
-                                             "\"type\":\"MOCK\",\"key\":\"MOCK::s1\"}],\"key\":\"m1\"," +
-                                             "\"watcherType\":\"REALTIME\"}"), channel.toJson());
+        final CoordinatorChannel channel = CoordinatorChannel.from(input, WatcherType.REALTIME, "watcherKey",
+                                                                   new JsonObject().put("a", "b"));
+        final JsonObject expected = new JsonObject(
+            "{\"subject\":{\"key\":\"m1\"},\"watcherKey\":\"watcherKey\",\"watcherType\":\"REALTIME\"," +
+            "\"watcherOption\":{\"realtime\":true,\"lifetimeInSeconds\":-1,\"fallbackPolling\":true," +
+            "\"polling\":false,\"triggerOption\":{\"type\":\"PERIODIC\",\"intervalInSeconds\":5,\"repeat\":-1}}," +
+            "\"subscribers\":[{\"code\":\"s1\",\"type\":\"MOCK\",\"key\":\"MOCK::s1\"}],\"key\":\"m1\", " +
+            "\"watcherOutput\":{\"a\":\"b\"}}");
+        JsonHelper.assertJson(expected, channel.toJson());
     }
 
     @Test
