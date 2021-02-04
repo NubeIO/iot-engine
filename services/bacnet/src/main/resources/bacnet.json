@@ -13,7 +13,7 @@
     "__micro__": {
       "__gateway__": {
         "enabled": true,
-        "indexAddress": "nubeio.bacnet.gateway.index",
+        "indexAddress": "gateway.index",
         "localAnnounceMonitorClass": "io.github.zero88.qwe.http.server.gateway.RouterAnnounceListener"
       },
       "__serviceDiscovery__": {
@@ -48,7 +48,7 @@
       "__api_gateway__": {
         "enabled": true,
         "path": "/gw",
-        "address": "nubeio.bacnet.gateway.index"
+        "address": "gateway.index"
       },
       "__websocket__": {
         "enabled": true,
@@ -65,6 +65,19 @@
         "maxExecuteTimeUnit": "SECONDS"
       }
     },
+    "__json__": {
+      "subDir": "bacnet",
+      "maxSizeInMB": 10,
+      "serviceAddress": "bacnet.storage.json",
+      "serviceHandlerClass": "io.github.zero88.qwe.storage.json.service.JsonStorageService",
+      "chunk": false,
+      "option": {
+        "autoCreate": true,
+        "overwrite": true,
+        "filePerms": "rw-r--r--",
+        "folderPerms": "rwxr-xr-x"
+      }
+    },
     "__bacnet__": {
       "modelName": "Rubix",
       "maxDiscoverTimeout": 10,
@@ -72,7 +85,7 @@
       "completeDiscoverAddress": "com.nubeiot.edge.connector.bacnet.discover.complete",
       "readinessAddress": "com.nubeiot.edge.connector.bacnet.readiness",
       "enableSubscriber": false,
-      "gatewayAddress": "nubeio.bacnet.gateway.index",
+      "gatewayAddress": "gateway.index",
       "schedulerServiceName": "bacnet-scheduler"
     }
   }

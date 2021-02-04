@@ -13,7 +13,7 @@ public final class BACnetServiceConfig extends BACnetConfig {
 
     @NonNull
     @Default
-    private final String gatewayAddress = "nubeio.bacnet.gateway.index";
+    private final String gatewayAddress = "gateway.index";
     @NonNull
     @Default
     private final String schedulerServiceName = "bacnet-scheduler";

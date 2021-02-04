@@ -1,11 +1,13 @@
 dependencies {
     compile project(':services:bacnet:base')
+    compile project.deps.logs.logback
     compile project.deps.zero88.qwe.cache
     compile project.deps.zero88.qwe.micro.main
-    compile project.deps.zero88.qwe.http.server
+
     //Remove it if deploy under gateway
+    compile project.deps.zero88.qwe.storage.json
+    compile project.deps.zero88.qwe.http.server
     compile project.deps.zero88.qwe.scheduler.main
-    compile project.deps.logs.logback
 
     testCompile(project.deps.zero88.qwe.http.client)
     testImplementation(testFixtures(project.deps.zero88.qwe.base))

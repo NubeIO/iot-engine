@@ -17,6 +17,7 @@ import io.github.zero88.qwe.micro.MicroVerticleProvider;
 import io.github.zero88.qwe.micro.ServiceDiscoveryInvoker;
 import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.github.zero88.qwe.scheduler.SchedulerProvider;
+import io.github.zero88.qwe.storage.json.JsonStorageProvider;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
@@ -29,7 +30,7 @@ import com.nubeiot.edge.connector.bacnet.handler.BACnetDiscoverFinisher;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
 import com.nubeiot.edge.connector.bacnet.internal.listener.WhoIsListener;
 import com.nubeiot.edge.connector.bacnet.service.BACnetApis;
-import com.nubeiot.edge.connector.bacnet.service.discovery.BACnetExplorer;
+import com.nubeiot.edge.connector.bacnet.service.BACnetApisHelper;
 import com.nubeiot.edge.connector.bacnet.service.scheduler.BACnetSchedulerApis;
 import com.nubeiot.edge.connector.bacnet.service.subscriber.BACnetRpcClientHelper;
 import com.nubeiot.edge.connector.bacnet.service.subscriber.BACnetSubscriptionManager;
@@ -55,7 +56,8 @@ public final class BACnetApplication extends AbstractBACnetApplication<BACnetSer
         super.start();
         this.addProvider(new HttpServerProvider(initRouter()))
             .addProvider(new MicroVerticleProvider())
-            .addProvider(new SchedulerProvider());
+            .addProvider(new SchedulerProvider())
+            .addProvider(new JsonStorageProvider());
     }
 
     @Override
@@ -85,7 +87,7 @@ public final class BACnetApplication extends AbstractBACnetApplication<BACnetSer
     protected @NonNull Single<JsonObject> registerApis(@NonNull EventbusClient client,
                                                        @NonNull BACnetServiceConfig config) {
         final ServiceDiscoveryInvoker invoker = microContext.getLocalInvoker();
-        return Observable.fromIterable(BACnetExplorer.createServices(this))
+        return Observable.fromIterable(BACnetApisHelper.createServices(this))
                          .doOnEach(s -> Optional.ofNullable(s.getValue())
                                                 .ifPresent(service -> client.register(service.address(), service)))
                          .filter(s -> Objects.nonNull(s.definitions()))
