@@ -20,7 +20,6 @@ import io.vertx.core.json.JsonObject;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
 import com.nubeiot.edge.connector.bacnet.internal.BACnetDeviceInitializer;
 import com.nubeiot.edge.connector.bacnet.service.BACnetApis;
-import com.nubeiot.edge.connector.bacnet.service.InboundBACnetCoordinator;
 import com.nubeiot.edge.connector.bacnet.service.OutboundBACnetCoordinator;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
 
@@ -118,7 +117,6 @@ public abstract class AbstractBACnetApplication<C extends BACnetConfig> extends 
      * @param device BACnet device
      * @see BACnetDevice
      * @see DeviceEventListener
-     * @see InboundBACnetCoordinator
      */
     protected abstract void addListenerOnEachDevice(@NonNull BACnetDevice device);
 

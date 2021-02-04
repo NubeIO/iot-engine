@@ -21,7 +21,7 @@ import lombok.NonNull;
  * @see EventListener
  * @see RpcProtocol
  */
-public interface OutboundCoordinator<P extends IoTEntity> extends EventListener, RpcProtocol<P>, Coordinator {
+public interface OutboundCoordinator<P extends IoTEntity> extends EventListener, RpcProtocol<P> {
 
     @Override
     default @NonNull Collection<EventAction> getAvailableEvents() {
