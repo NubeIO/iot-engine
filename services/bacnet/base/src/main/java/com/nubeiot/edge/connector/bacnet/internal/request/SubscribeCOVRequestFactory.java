@@ -58,7 +58,11 @@ public class SubscribeCOVRequestFactory implements ConfirmedRequestFactory<Subsc
     @Jacksonized
     public static class SubscribeCOVOptions implements JsonData {
 
-        private final boolean subscribe;
+        /**
+         * Defines subscribe or unsubscribe
+         */
+        @Default
+        private final boolean subscribe = true;
 
         /**
          * Subscriber process id

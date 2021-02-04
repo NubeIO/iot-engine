@@ -1,5 +1,5 @@
 dependencies {
-    compile project.deps.zero88.qwe.micro.main
+    compile project.deps.zero88.qwe.micro.rpc
     compile project(':services:bacnet:mixin')
     compile project(':iot:data')
     compile project(':iot:connector')
