@@ -11,7 +11,9 @@ import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
 import com.nubeiot.edge.connector.bacnet.internal.request.ReadPresentValueRequestFactory;
+import com.nubeiot.edge.connector.bacnet.mixin.BACnetJsonMixin;
 import com.nubeiot.edge.connector.bacnet.service.AbstractBACnetService;
+import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 
 import lombok.NonNull;
 
@@ -36,7 +38,7 @@ public final class ReadPresentValueCommander extends AbstractBACnetService imple
 
     @Override
     public @NonNull String subFunction() {
-        return "priority-array";
+        return BACnetJsonMixin.standardizeKey(PropertyIdentifier.presentValue.toString());
     }
 
 }

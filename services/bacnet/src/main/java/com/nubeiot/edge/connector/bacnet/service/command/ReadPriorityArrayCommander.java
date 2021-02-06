@@ -16,7 +16,9 @@ import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryLevel;
 import com.nubeiot.edge.connector.bacnet.dto.CovOutput;
 import com.nubeiot.edge.connector.bacnet.internal.request.ConfirmedRequestFactory;
 import com.nubeiot.edge.connector.bacnet.internal.request.ReadPriorityArrayRequestFactory;
+import com.nubeiot.edge.connector.bacnet.mixin.BACnetJsonMixin;
 import com.nubeiot.edge.connector.bacnet.service.AbstractBACnetService;
+import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 
 import lombok.NonNull;
 
@@ -26,11 +28,6 @@ public final class ReadPriorityArrayCommander extends AbstractBACnetService impl
 
     protected ReadPriorityArrayCommander(@NonNull SharedDataLocalProxy sharedData) {
         super(sharedData);
-    }
-
-    @Override
-    public @NonNull String subFunction() {
-        return "priority-array";
     }
 
     @Override
@@ -44,6 +41,16 @@ public final class ReadPriorityArrayCommander extends AbstractBACnetService impl
                      .map(msg -> convert(msg, args, asCov));
     }
 
+    @Override
+    public @NonNull DiscoveryLevel level() {
+        return DiscoveryLevel.OBJECT;
+    }
+
+    @Override
+    public @NonNull String subFunction() {
+        return BACnetJsonMixin.standardizeKey(PropertyIdentifier.priorityArray.toString());
+    }
+
     private JsonObject convert(@NonNull EventMessage msg, @NonNull DiscoveryArguments args, boolean asCov) {
         if (!asCov) {
             return Optional.ofNullable(msg.getData()).orElseGet(JsonObject::new);
@@ -54,11 +61,6 @@ public final class ReadPriorityArrayCommander extends AbstractBACnetService impl
                         .any(msg.isError() ? msg.getError().toJson() : null)
                         .build()
                         .toJson();
-    }
-
-    @Override
-    public @NonNull DiscoveryLevel level() {
-        return DiscoveryLevel.OBJECT;
     }
 
 }
