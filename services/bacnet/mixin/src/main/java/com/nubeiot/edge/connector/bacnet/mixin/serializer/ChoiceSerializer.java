@@ -1,7 +1,6 @@
 package com.nubeiot.edge.connector.bacnet.mixin.serializer;
 
 import java.io.IOException;
-import java.util.Objects;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -19,16 +18,7 @@ public final class ChoiceSerializer extends EncodableSerializer<Choice> {
     }
 
     private void serialize(Choice value, JsonGenerator gen) throws IOException {
-        final Object datum = value.getChoiceOptions()
-                                  .getPrimitives()
-                                  .stream()
-                                  .filter(value::isa)
-                                  .findFirst()
-                                  .map(clazz -> value.getDatum())
-                                  .orElse(null);
-        if (Objects.nonNull(datum)) {
-            gen.writeObject(datum);
-        }
+        gen.writeObject(value.getDatum());
     }
 
 }
