@@ -50,15 +50,18 @@ public final class CovNotifier extends DeviceEventAdapter implements DeviceEvent
                                           .networkId(device.protocol().identifier())
                                           .deviceInstance(initiatingDevice.getInstanceNumber())
                                           .objectCode(ObjectIdentifierMixin.serialize(monitoredObjectIdentifier))
-                                          .build()
-                                          .buildKey(DiscoveryLevel.OBJECT);
+                                          .build().buildKey(DiscoveryLevel.OBJECT);
         final long time = Optional.ofNullable(timeRemaining).map(UnsignedInteger::longValue).orElse(-1L);
-        log.info("COV of '{}' notification received, time remaining: '{}s'", key, time);
         final Waybill dispatcher = dispatchers.get(key);
         if (Objects.isNull(dispatcher)) {
+            if (log.isDebugEnabled()) {
+                log.debug("COV of '{}' notification received, time remaining: '{}s'", key, time);
+                convertValue(listOfValues);
+            }
             return;
         }
-        final JsonArray convertValue = BACnetJsonMixin.MAPPER.convertValue(listOfValues, JsonArray.class);
+        log.info("COV of '{}' notification received, time remaining: '{}s'", key, time);
+        final JsonArray convertValue = convertValue(listOfValues);
         final CovOutput cov = CovOutput.builder()
                                        .key(key)
                                        .cov(convertValue)
@@ -66,6 +69,12 @@ public final class CovNotifier extends DeviceEventAdapter implements DeviceEvent
                                        .build();
         EventbusClient.create(device.sharedData())
                       .publish(dispatcher.getAddress(), EventMessage.initial(dispatcher.getAction(), cov.toJson()));
+    }
+
+    private JsonArray convertValue(SequenceOf<PropertyValue> listOfValues) {
+        final JsonArray convertValue = BACnetJsonMixin.MAPPER.convertValue(listOfValues, JsonArray.class);
+        log.debug("Value: {}", convertValue);
+        return convertValue;
     }
 
     public void addDispatcher(@NonNull EventMessage subscribeCOVResult, @NonNull DiscoveryArguments args,

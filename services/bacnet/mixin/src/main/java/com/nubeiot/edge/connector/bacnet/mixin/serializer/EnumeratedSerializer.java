@@ -7,6 +7,7 @@ import java.util.Map;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
+import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 import com.serotonin.bacnet4j.type.primitive.Enumerated;
 
 public final class EnumeratedSerializer extends EncodableSerializer<Enumerated> {
@@ -21,7 +22,7 @@ public final class EnumeratedSerializer extends EncodableSerializer<Enumerated> 
     }
 
     private void serialize(Enumerated value, JsonGenerator gen) throws IOException {
-        if (value instanceof ObjectType) {
+        if (value instanceof ObjectType || value instanceof PropertyIdentifier) {
             gen.writeString(value.toString());
             return;
         }
