@@ -4,6 +4,7 @@ import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
+import io.github.zero88.qwe.event.EventContractor;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
@@ -24,6 +25,7 @@ public final class ReadPresentValueCommander extends AbstractBACnetService imple
     }
 
     @Override
+    @EventContractor(action = "SEND", returnType = Single.class)
     public Single<JsonObject> send(@NonNull RequestData requestData) {
         final DiscoveryArguments args = createDiscoveryArgs(requestData, level());
         final BACnetDevice device = getLocalDeviceFromCache(args);
