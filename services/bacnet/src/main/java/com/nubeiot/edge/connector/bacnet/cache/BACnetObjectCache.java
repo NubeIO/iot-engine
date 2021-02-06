@@ -6,10 +6,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import io.github.zero88.qwe.cache.AbstractLocalCache;
 import io.github.zero88.qwe.cache.LocalDataCache;
+import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.github.zero88.utils.Strings;
 import io.github.zero88.utils.UUID64;
 
-import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetObjectCache.BACnetObjectCacheKey;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetObjectCache.BACnetObjectCacheValue;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;

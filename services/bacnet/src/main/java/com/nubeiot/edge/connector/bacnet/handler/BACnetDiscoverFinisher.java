@@ -7,16 +7,16 @@ import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.dto.ErrorData;
 import io.github.zero88.qwe.dto.JsonData;
 import io.github.zero88.qwe.dto.msg.RequestData;
+import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.github.zero88.qwe.utils.ExecutorHelpers;
 import io.github.zero88.utils.UUID64;
 import io.reactivex.Observable;
 
-import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetObjectCache;
-import com.nubeiot.edge.connector.bacnet.discover.DiscoverResponse;
+import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryResponse;
 import com.nubeiot.edge.connector.bacnet.service.scanner.BACnetPointScanner;
 import com.nubeiot.edge.connector.bacnet.service.scanner.BACnetScannerHelper;
 
@@ -33,8 +33,8 @@ public final class BACnetDiscoverFinisher extends DiscoverCompletionHandler {
     //TODO need scan network to find device/point then caching data
     @Override
     public boolean success(@NonNull RequestData requestData) {
-        final DiscoverResponse info = JsonData.from(requestData.body(), DiscoverResponse.class);
-        final BACnetNetworkCache networkCache = proxy.getData(BACnetCacheInitializer.EDGE_NETWORK_CACHE);
+        final DiscoveryResponse info = JsonData.from(requestData.body(), DiscoveryResponse.class);
+        final BACnetNetworkCache networkCache = proxy.getData(BACnetCacheInitializer.LOCAL_NETWORK_CACHE);
         final BACnetDeviceCache deviceCache = proxy.getData(BACnetCacheInitializer.BACNET_DEVICE_CACHE);
         final BACnetObjectCache objectCache = proxy.getData(BACnetCacheInitializer.BACNET_OBJECT_CACHE);
         final CommunicationProtocol protocol = networkCache.get(info.getNetwork().identifier());
@@ -47,8 +47,7 @@ public final class BACnetDiscoverFinisher extends DiscoverCompletionHandler {
         ExecutorHelpers.blocking(proxy.getVertx(), () -> BACnetScannerHelper.createDeviceScanner(proxy))
                        .flatMap(deviceScanner -> deviceScanner.scan(networkId))
                        .flatMapObservable(map -> Observable.fromIterable(map.entrySet()))
-                       .doOnNext(
-                           entry -> deviceCache.addDataKey(protocol, entry.getValue().getObjectId(), entry.getKey()))
+                       .doOnNext(e -> deviceCache.addDataKey(protocol, e.getValue().getObjectId(), e.getKey()))
                        .flatMapSingle(entry -> pointScanner.scan(networkId, UUID64.uuid64ToUuid(entry.getKey())))
                        .subscribe(s -> log.info("Finished BACnet scan [{}]", s.keySet()),
                                   err -> log.warn("Unable to scan network. Error: {}", err.getMessage(), err));
@@ -58,7 +57,7 @@ public final class BACnetDiscoverFinisher extends DiscoverCompletionHandler {
     //TODO need disabled network and corresponding device/point, remove cache???
     @Override
     public boolean error(@NonNull ErrorData error) {
-        final DiscoverResponse extraInfo = JsonData.from(error.getExtraInfo(), DiscoverResponse.class);
+        final DiscoveryResponse extraInfo = JsonData.from(error.getExtraInfo(), DiscoveryResponse.class);
         return super.error(error);
     }
 

@@ -12,6 +12,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import io.github.zero88.utils.Functions;
+import io.reactivex.annotations.Nullable;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -40,7 +41,7 @@ import lombok.experimental.Accessors;
 @Setter(value = AccessLevel.PRIVATE)
 @Accessors(chain = true)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public final class PropertyValuesMixin implements BACnetMixin {
+public final class PropertyValuesMixin implements BACnetJsonMixin {
 
     private final Map<PropertyIdentifier, Encodable> values;
     private ObjectIdentifier objectId;
@@ -82,6 +83,7 @@ public final class PropertyValuesMixin implements BACnetMixin {
      * @param propertyIdentifier given property identifier
      * @return encodable value
      */
+    @Nullable
     public Encodable get(@NonNull PropertyIdentifier propertyIdentifier) {
         return values.get(propertyIdentifier);
     }
@@ -105,8 +107,9 @@ public final class PropertyValuesMixin implements BACnetMixin {
      * @param <T>                Type of expected value
      * @return value
      */
+    @Nullable
     public <T> T encode(@NonNull PropertyIdentifier propertyIdentifier) {
-        return EncodableSerializer.encode(get(propertyIdentifier));
+        return EncodableSerializer.encode(getAndCast(propertyIdentifier).orElse(null));
     }
 
     public PropertyValuesMixin viewByProperties(@NonNull Collection<PropertyIdentifier> properties) {

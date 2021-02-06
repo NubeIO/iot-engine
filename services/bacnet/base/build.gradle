@@ -1,9 +1,8 @@
 dependencies {
-    compile project.deps.zero88.qwe.micro.core
+    compile project.deps.zero88.qwe.micro.rpc
     compile project(':services:bacnet:mixin')
-    compile project(':iotdata')
-    compile project(':transporter:rpc')
+    compile project(':iot:data')
+    compile project(':iot:connector')
 
     testImplementation(testFixtures(project.deps.zero88.qwe.base))
-
 }

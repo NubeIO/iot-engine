@@ -16,7 +16,7 @@ import io.github.zero88.utils.Reflections.ReflectionField;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import com.nubeiot.edge.connector.bacnet.mixin.BACnetMixin;
+import com.nubeiot.edge.connector.bacnet.mixin.BACnetJsonMixin;
 import com.serotonin.bacnet4j.type.Encodable;
 import com.serotonin.bacnet4j.type.constructed.BaseType;
 
@@ -37,7 +37,7 @@ public final class BaseTypeSerializer extends EncodableSerializer<BaseType> {
 
     private Map<String, Encodable> toObject(BaseType value) {
         return ReflectionField.stream(value.getClass(), check())
-                              .map(f -> new SimpleEntry<>(BACnetMixin.standardizeKey(f.getName()),
+                              .map(f -> new SimpleEntry<>(BACnetJsonMixin.standardizeKey(f.getName()),
                                                           ReflectionField.getFieldValue(value, f, Encodable.class)))
                               .filter(entry -> Objects.nonNull(entry.getValue()))
                               .collect(HashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), Map::putAll);

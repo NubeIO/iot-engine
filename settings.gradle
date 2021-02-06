@@ -49,13 +49,12 @@ rootProject.name = 'iot-engine'
 
 //include ':ext:rx-jdbc'
 
-include ':iotdata'
+include ':iot:data'
+include ':iot:connector'
 
 include ':services:bacnet'
 include ':services:bacnet:mixin'
 include ':services:bacnet:base'
 include ':services:bacnet:simulator'
 
-include ':transporter:protocol'
-include ':transporter:rpc'
-include ':transporter:mqtt'
+include ':services:mqtt'

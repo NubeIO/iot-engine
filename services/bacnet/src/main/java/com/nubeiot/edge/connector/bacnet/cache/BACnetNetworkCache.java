@@ -8,13 +8,12 @@ import java.util.concurrent.ConcurrentMap;
 
 import io.github.zero88.qwe.cache.AbstractLocalCache;
 import io.github.zero88.qwe.cache.LocalDataCache;
+import io.github.zero88.qwe.protocol.CommunicationProtocol;
+import io.github.zero88.qwe.protocol.network.Ipv4Network;
+import io.github.zero88.qwe.protocol.network.Ipv6Network;
+import io.github.zero88.qwe.protocol.serial.SerialPortProtocol;
 import io.github.zero88.utils.Strings;
 import io.github.zero88.utils.UUID64;
-
-import com.nubeiot.core.protocol.CommunicationProtocol;
-import com.nubeiot.core.protocol.network.Ipv4Network;
-import com.nubeiot.core.protocol.network.Ipv6Network;
-import com.nubeiot.core.protocol.serial.SerialPortProtocol;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

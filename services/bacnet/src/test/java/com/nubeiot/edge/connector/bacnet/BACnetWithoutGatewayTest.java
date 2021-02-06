@@ -13,7 +13,7 @@ public abstract class BACnetWithoutGatewayTest extends BaseBACnetVerticleTest {
 
     @Override
     protected void deployServices(TestContext context) {
-        deployBACnetVerticle(context, context.async());
+        deployBACnetApplication(context, context.async());
     }
 
 }

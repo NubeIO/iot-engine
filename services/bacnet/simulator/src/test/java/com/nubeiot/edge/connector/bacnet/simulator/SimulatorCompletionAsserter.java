@@ -1,6 +1,6 @@
 package com.nubeiot.edge.connector.bacnet.simulator;
 
-import io.github.zero88.qwe.TestHelper.JsonHelper;
+import io.github.zero88.qwe.JsonHelper;
 import io.github.zero88.qwe.dto.ErrorData;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.vertx.core.json.JsonObject;

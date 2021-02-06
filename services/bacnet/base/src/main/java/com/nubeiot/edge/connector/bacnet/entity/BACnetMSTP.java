@@ -1,8 +1,9 @@
 package com.nubeiot.edge.connector.bacnet.entity;
 
+import io.github.zero88.qwe.protocol.serial.SerialPortProtocol;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import com.nubeiot.core.protocol.serial.SerialPortProtocol;
 
 import lombok.Builder;
 import lombok.Getter;

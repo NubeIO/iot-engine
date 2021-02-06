@@ -1,12 +1,14 @@
 dependencies {
-    compile project.deps.zero88.qwe.cache
-    compile project.deps.zero88.qwe.micro.core
-    compile project.deps.zero88.qwe.http.server
     compile project(':services:bacnet:base')
-    compile project(':transporter:rpc')
     compile project.deps.logs.logback
+    compile project.deps.zero88.qwe.cache
+    compile project.deps.zero88.qwe.micro.main
 
-    testCompile(project.deps.zero88.qwe.micro.core)
+    //Remove it if deploy under gateway
+    compile project.deps.zero88.qwe.storage.json
+    compile project.deps.zero88.qwe.http.server
+    compile project.deps.zero88.qwe.scheduler.main
+
     testCompile(project.deps.zero88.qwe.http.client)
     testImplementation(testFixtures(project.deps.zero88.qwe.base))
 

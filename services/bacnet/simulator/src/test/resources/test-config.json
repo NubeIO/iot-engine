@@ -27,7 +27,6 @@
     "__bacnet__": {
       "deviceName": "NubeIOSimulator",
       "deviceId": 222,
-      "allowSlave": false,
       "maxDiscoverTimeout": 1,
       "__networks__": {
         "ip1": {

@@ -1,4 +1,5 @@
 {
+  "dataDir": "/tmp/bacnet",
   "__system__": {
     "__eventBus__": {
       "clientAuth": "NONE",
@@ -13,7 +14,7 @@
     "__micro__": {
       "__gateway__": {
         "enabled": true,
-        "indexAddress": "nubeio.bacnet.gateway.index",
+        "indexAddress": "gateway.index",
         "localAnnounceMonitorClass": "io.github.zero88.qwe.http.server.gateway.RouterAnnounceListener"
       },
       "__serviceDiscovery__": {
@@ -28,6 +29,17 @@
     },
     "__http__": {
       "port": 8888,
+      "__cors__": {
+        "allowedOriginPattern": "https?://localhost\\:\\d+",
+        "allowedHeaders": [
+          "Access-Control-Request-Method",
+          "Access-Control-Allow-Credentials",
+          "Access-Control-Allow-Origin",
+          "Access-Control-Allow-Headers",
+          "Content-Type"
+        ],
+        "allowCredentials": true
+      },
       "__rest__": {
         "__dynamic__": {
           "enabled": true,
@@ -37,15 +49,50 @@
       "__api_gateway__": {
         "enabled": true,
         "path": "/gw",
-        "address": "nubeio.bacnet.gateway.index"
+        "address": "gateway.index"
+      },
+      "__websocket__": {
+        "enabled": true,
+        "rootWs": "/ws"
+      }
+    },
+    "__scheduler__": {
+      "schedulerName": "bacnet",
+      "registerAddress": "bacnet.scheduler.register",
+      "registerServiceClass": "com.nubeiot.edge.connector.bacnet.service.scheduler.BACnetSchedulerApis",
+      "__schedule_worker__": {
+        "poolSize": 2,
+        "maxExecuteTime": 15,
+        "maxExecuteTimeUnit": "SECONDS"
+      }
+    },
+    "__json__": {
+      "subDir": "",
+      "maxSizeInMB": 10,
+      "serviceAddress": "bacnet.storage.json",
+      "serviceHandlerClass": "io.github.zero88.qwe.storage.json.service.JsonStorageService",
+      "chunk": false,
+      "option": {
+        "autoCreate": true,
+        "overwrite": true,
+        "filePerms": "rw-r--r--",
+        "folderPerms": "rwxr-xr-x"
       }
     },
     "__bacnet__": {
-      "modelName": "NubeIO-Edge28",
-      "maxDiscoverTimeout": 6,
+      "modelName": "Rubix",
+      "maxDiscoverTimeout": 10,
       "maxDiscoverTimeoutUnit": "SECONDS",
-      "allowSlave": true,
-      "gatewayAddress": "nubeio.bacnet.gateway.index"
+      "completeDiscoverAddress": "com.nubeiot.edge.connector.bacnet.discover.complete",
+      "readinessAddress": "com.nubeiot.edge.connector.bacnet.readiness",
+      "enableSubscriber": false,
+      "gatewayAddress": "gateway.index",
+      "schedulerServiceName": "bacnet-scheduler",
+      "covCoordinatorPersistence": {
+        "type": "json",
+        "file": "bacnet-cov-coordinator.json",
+        "serviceName": "bacnet.storage.json"
+      }
     }
   }
 }

@@ -4,18 +4,20 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
+
 import io.github.zero88.qwe.IConfig;
 import io.github.zero88.qwe.TestHelper;
-import io.github.zero88.qwe.TestHelper.VertxHelper;
 import io.github.zero88.qwe.component.ApplicationVerticle;
-import io.github.zero88.qwe.component.ComponentSharedDataHelper;
+import io.github.zero88.qwe.component.ComponentTestHelper;
 import io.github.zero88.qwe.component.ReadinessAsserter;
-import io.github.zero88.qwe.event.EventClientProxy;
+import io.github.zero88.qwe.event.EventbusClient;
 import io.github.zero88.qwe.micro.MicroConfig;
 import io.github.zero88.qwe.micro.MicroContext;
-import io.github.zero88.qwe.micro.Microservice;
-import io.github.zero88.qwe.micro.MicroserviceProvider;
-import io.github.zero88.qwe.micro.metadata.EventHttpService;
+import io.github.zero88.qwe.micro.MicroVerticle;
+import io.github.zero88.qwe.micro.MicroVerticleProvider;
+import io.github.zero88.qwe.micro.http.EventHttpService;
 import io.github.zero88.qwe.micro.register.EventHttpServiceRegister;
 import io.reactivex.Single;
 import io.vertx.core.Vertx;
@@ -28,14 +30,17 @@ import lombok.NonNull;
 
 public abstract class BACnetWithGatewayTest extends BaseBACnetVerticleTest {
 
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
+
     protected ReadinessAsserter createReadinessHandler(TestContext context, Async async) {
         return new ReadinessAsserter(context, async, new JsonObject("{\"total\":1}"));
     }
 
     protected void deployServices(TestContext context) {
-        busClient = EventClientProxy.create(vertx, null).transporter();
+        eventbus = EventbusClient.create(vertx);
         final Async async = context.async(2);
-        deployVerticle(vertx, context, async, () -> deployBACnetVerticle(context, async));
+        deployVerticle(vertx, context, async, () -> deployBACnetApplication(context, async));
     }
 
     protected MicroConfig getMicroConfig() {
@@ -44,12 +49,10 @@ public abstract class BACnetWithGatewayTest extends BaseBACnetVerticleTest {
 
     protected void deployVerticle(Vertx vertx, TestContext context, Async async,
                                   Supplier<ApplicationVerticle> supplier) {
-        final Microservice v = new MicroserviceProvider().provide(
-            ComponentSharedDataHelper.create(vertx, Microservice.class));
-        VertxHelper.deploy(vertx, context, createDeploymentOptions(getMicroConfig()), v, id -> {
-            registerMockService(v.getContext()).map(i -> supplier.get())
-                                               .subscribe(i -> TestHelper.testComplete(async), context::fail);
-        });
+        final MicroVerticle v = ComponentTestHelper.deploy(vertx, context, getMicroConfig().toJson(),
+                                                           new MicroVerticleProvider(), folder.getRoot().toPath());
+        registerMockService(v.getContext()).map(i -> supplier.get())
+                                           .subscribe(i -> TestHelper.testComplete(async), context::fail);
     }
 
     protected abstract Set<EventHttpService> serviceDefinitions();
@@ -57,10 +60,10 @@ public abstract class BACnetWithGatewayTest extends BaseBACnetVerticleTest {
     private Single<List<Record>> registerMockService(@NonNull MicroContext microContext) {
         return EventHttpServiceRegister.builder()
                                        .vertx(vertx)
-                                       .sharedKey(BACnetVerticle.class.getName())
+                                       .sharedKey(BACnetApplication.class.getName())
                                        .eventServices(this::serviceDefinitions)
                                        .build()
-                                       .publish(microContext.getLocalController());
+                                       .publish(microContext.getLocalInvoker());
     }
 
 }

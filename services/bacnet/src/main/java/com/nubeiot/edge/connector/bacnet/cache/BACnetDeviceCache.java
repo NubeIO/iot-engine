@@ -11,12 +11,12 @@ import io.github.zero88.qwe.cache.AbstractLocalCache;
 import io.github.zero88.qwe.cache.LocalDataCache;
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.exceptions.NotFoundException;
+import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.github.zero88.utils.Strings;
 import io.github.zero88.utils.UUID64;
 
-import com.nubeiot.core.protocol.CommunicationProtocol;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
-import com.nubeiot.edge.connector.bacnet.BACnetDeviceInitializer;
+import com.nubeiot.edge.connector.bacnet.internal.BACnetDeviceInitializer;
 import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 

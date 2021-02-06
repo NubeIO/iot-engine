@@ -3,7 +3,7 @@
     <option name="INCLUDE_PROVIDED_SCOPE" value="true" />
     <option name="MAIN_CLASS_NAME" value="io.github.zero88.qwe.CarlLauncher" />
     <module name="iot-engine.services.bacnet.main" />
-    <option name="PROGRAM_PARAMETERS" value="run com.nubeiot.edge.connector.bacnet.BACnetVerticle" />
+    <option name="PROGRAM_PARAMETERS" value="run com.nubeiot.edge.connector.bacnet.BACnetApplication" />
     <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
     <extension name="coverage">
       <pattern>

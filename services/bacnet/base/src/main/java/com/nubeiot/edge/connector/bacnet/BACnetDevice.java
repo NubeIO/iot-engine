@@ -2,16 +2,25 @@ package com.nubeiot.edge.connector.bacnet;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 
+import io.github.zero88.qwe.component.HasSharedData;
+import io.github.zero88.qwe.dto.msg.RequestData;
+import io.github.zero88.qwe.event.EventAction;
+import io.github.zero88.qwe.event.EventMessage;
+import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.reactivex.Single;
+import io.reactivex.annotations.Nullable;
 
-import com.nubeiot.core.protocol.CommunicationProtocol;
-import com.nubeiot.edge.connector.bacnet.discover.DiscoverOptions;
-import com.nubeiot.edge.connector.bacnet.discover.RemoteDeviceScanner;
-import com.nubeiot.edge.connector.bacnet.dto.LocalDeviceMetadata;
+import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
+import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryOptions;
+import com.nubeiot.edge.connector.bacnet.internal.request.ConfirmedRequestFactory;
+import com.nubeiot.edge.connector.bacnet.internal.request.RemoteDeviceScanner;
+import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
+import com.serotonin.bacnet4j.service.confirmed.ConfirmedRequestService;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
 import lombok.NonNull;
@@ -21,21 +30,21 @@ import lombok.NonNull;
  *
  * @since 1.0.0
  */
-public interface BACnetDevice {
+public interface BACnetDevice extends HasSharedData {
 
     /**
-     * The constant EDGE_BACNET_METADATA in cache.
+     * The constant CONFIG_KEY in cache.
      */
-    String EDGE_BACNET_METADATA = "EDGE_BACNET_METADATA";
+    String CONFIG_KEY = "BACNET_CONFIG";
 
     /**
-     * Gets local device metadata.
+     * Gets local device config.
      *
-     * @return the local device metadata
-     * @see LocalDeviceMetadata
+     * @return the local device config
+     * @see BACnetConfig
      * @since 1.0.0
      */
-    @NonNull LocalDeviceMetadata metadata();
+    @NonNull BACnetConfig config();
 
     /**
      * Gets communication protocol.
@@ -75,6 +84,13 @@ public interface BACnetDevice {
         return addListeners(Arrays.asList(listeners));
     }
 
+    @Nullable
+    default <T extends DeviceEventListener> T lookupListener(@NonNull Class<T> listenerClass) {
+        return lookupListener(listenerClass, () -> null);
+    }
+
+    <T extends DeviceEventListener> T lookupListener(@NonNull Class<T> listenerClass, Supplier<T> supplier);
+
     /**
      * Async start BACnet device.
      *
@@ -96,23 +112,63 @@ public interface BACnetDevice {
      *
      * @param options the options
      * @return the remote devices
-     * @see DiscoverOptions
+     * @see DiscoveryOptions
      * @see RemoteDeviceScanner
      * @since 1.0.0
      */
-    @NonNull Single<RemoteDeviceScanner> scanRemoteDevices(@NonNull DiscoverOptions options);
+    @NonNull Single<RemoteDeviceScanner> scanRemoteDevices(@NonNull DiscoveryOptions options);
 
     /**
-     * Discover remote device by {@code device code}.
+     * Discover remote device.
      *
-     * @param deviceCode the device code
-     * @param options    the options
+     * @param arguments the discovery arguments
      * @return the remote device
-     * @see DiscoverOptions
+     * @see DiscoveryArguments
      * @see RemoteDevice
      * @since 1.0.0
      */
-    @NonNull Single<RemoteDevice> discoverRemoteDevice(@NonNull ObjectIdentifier deviceCode,
-                                                       @NonNull DiscoverOptions options);
+    @NonNull Single<RemoteDevice> discoverRemoteDevice(@NonNull DiscoveryArguments arguments);
+
+    /**
+     * Discover remote object
+     *
+     * @param arguments the discovery arguments
+     * @return the property values of object
+     * @see DiscoveryArguments
+     * @see PropertyValuesMixin
+     * @since 1.0.0
+     */
+    @NonNull Single<PropertyValuesMixin> discoverRemoteObject(@NonNull DiscoveryArguments arguments);
+
+    /**
+     * Parse remote object
+     *
+     * @param remoteDevice remote device
+     * @param objId        object id
+     * @param detail       should be detail
+     * @param includeError should include error
+     * @return the property values of object
+     * @see PropertyValuesMixin
+     * @since 1.0.0
+     */
+    @NonNull Single<PropertyValuesMixin> parseRemoteObject(@NonNull RemoteDevice remoteDevice,
+                                                           @NonNull ObjectIdentifier objId, boolean detail,
+                                                           boolean includeError);
+
+    /**
+     * Send BACnet request
+     *
+     * @param action      Event action
+     * @param args        Discovery request arguments
+     * @param requestData Request data
+     * @param factory     BACnet request
+     * @return json result
+     * @see DiscoveryArguments
+     * @see ConfirmedRequestFactory
+     */
+    @NonNull <T extends ConfirmedRequestService, D> Single<EventMessage> send(@NonNull EventAction action,
+                                                                              @NonNull DiscoveryArguments args,
+                                                                              @NonNull RequestData requestData,
+                                                                              @NonNull ConfirmedRequestFactory<T, D> factory);
 
 }

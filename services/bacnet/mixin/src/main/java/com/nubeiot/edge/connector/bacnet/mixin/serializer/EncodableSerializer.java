@@ -11,7 +11,7 @@ import io.vertx.core.json.JsonObject;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.nubeiot.edge.connector.bacnet.mixin.BACnetMixin;
+import com.nubeiot.edge.connector.bacnet.mixin.BACnetJsonMixin;
 import com.serotonin.bacnet4j.type.Encodable;
 
 import lombok.NonNull;
@@ -31,11 +31,11 @@ public abstract class EncodableSerializer<T extends Encodable> extends StdSerial
         if (Objects.isNull(encodable)) {
             return null;
         }
-        return (T) BACnetMixin.MAPPER.convertValue(Collections.singletonMap("encode", encodable), JsonObject.class)
-                                     .stream()
-                                     .map(Entry::getValue)
-                                     .findFirst()
-                                     .orElse(null);
+        return (T) BACnetJsonMixin.MAPPER.convertValue(Collections.singletonMap("encode", encodable), JsonObject.class)
+                                         .stream()
+                                         .map(Entry::getValue)
+                                         .findFirst()
+                                         .orElse(null);
     }
 
     @Override

@@ -1,5 +1,10 @@
 package com.nubeiot.edge.connector.bacnet.entity;
 
-import com.nubeiot.iotdata.IoTEntity;
+import io.github.zero88.qwe.iot.data.IoTEntity;
 
-public interface BACnetEntity<K> extends BACnetProtocol, IoTEntity<K> {}
+import com.nubeiot.edge.connector.bacnet.BACnetProtocol;
+import com.nubeiot.edge.connector.bacnet.mixin.BACnetJsonMixin;
+
+public interface BACnetEntity<K> extends BACnetProtocol, IoTEntity<K>, BACnetJsonMixin {
+
+}

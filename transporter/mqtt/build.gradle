@@ -1,6 +1,0 @@
-dependencies {
-    compile project.deps.zero88.qwe.base
-
-    testImplementation(testFixtures(project.deps.zero88.qwe.base))
-
-}

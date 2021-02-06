@@ -4,29 +4,25 @@ import java.util.List;
 import java.util.Optional;
 
 import io.github.zero88.qwe.event.EventbusClient;
+import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.github.zero88.qwe.utils.Configs;
 import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.core.protocol.CommunicationProtocol;
-import com.nubeiot.edge.connector.bacnet.AbstractBACnetVerticle;
+import com.nubeiot.edge.connector.bacnet.AbstractBACnetApplication;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
-import com.nubeiot.edge.connector.bacnet.listener.WhoIsListener;
+import com.nubeiot.edge.connector.bacnet.internal.listener.WhoIsListener;
 
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public final class BACnetSimulator extends AbstractBACnetVerticle<SimulatorConfig> {
+public final class BACnetSimulator extends AbstractBACnetApplication<SimulatorConfig> {
 
     private final DiscoverCompletionHandler handler;
-
-    public BACnetSimulator() {
-        handler = null;
-    }
 
     @Override
     @NonNull

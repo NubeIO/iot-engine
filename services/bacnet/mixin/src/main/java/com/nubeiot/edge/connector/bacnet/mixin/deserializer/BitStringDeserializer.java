@@ -17,7 +17,7 @@ import io.github.zero88.utils.Reflections.ReflectionMethod;
 import io.github.zero88.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.edge.connector.bacnet.mixin.BACnetMixin;
+import com.nubeiot.edge.connector.bacnet.mixin.BACnetJsonMixin;
 import com.serotonin.bacnet4j.type.primitive.BitString;
 
 import lombok.NonNull;
@@ -83,7 +83,7 @@ public abstract class BitStringDeserializer<T extends BitString> implements Enco
         }
 
         private String toJsonProp(String name) {
-            return BACnetMixin.standardizeKey(name.startsWith("set") ? name.substring(3) : name);
+            return BACnetJsonMixin.standardizeKey(name.startsWith("set") ? name.substring(3) : name);
         }
 
         private boolean isSetter(MethodInfo m) {

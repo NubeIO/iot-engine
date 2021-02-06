@@ -12,18 +12,18 @@ import io.github.zero88.utils.Strings;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.nubeiot.edge.connector.bacnet.AbstractBACnetConfig;
+import com.nubeiot.edge.connector.bacnet.BACnetConfig;
 import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;
 
-final class SimulatorConfig extends AbstractBACnetConfig {
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
+@SuperBuilder
+@NoArgsConstructor
+final class SimulatorConfig extends BACnetConfig {
 
     @JsonProperty(value = PredefinedNetwork.KEY)
-    private PredefinedNetwork networks = new PredefinedNetwork();
-
-    @Override
-    public boolean isAllowSlave() {
-        return false;
-    }
+    private final PredefinedNetwork networks = new PredefinedNetwork();
 
     @Override
     protected int maxDeviceId() {
@@ -50,7 +50,7 @@ final class SimulatorConfig extends AbstractBACnetConfig {
 
         @Override
         public Class<? extends IConfig> parent() {
-            return AbstractBACnetConfig.class;
+            return BACnetConfig.class;
         }
 
         List<BACnetNetwork> toNetworks() {

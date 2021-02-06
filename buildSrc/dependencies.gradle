@@ -23,15 +23,15 @@ def versions = [
         "sonar" : "2.7",
     ],
     tests     : [
-        junit : "4.12",
-        junit5: "5.6.1",
-        jacoco: "0.8.4"
+        junit : "4.13.1",
+        junit5: "5.7.0",
+        jacoco: "0.8.6"
     ],
     zero88    : [
         "javaUtils": "1.0.1",
         "jpaExt"   : "0.0.9",
         "rqlJooq"  : "0.0.9",
-        "qwe"      : "0.6.1-SNAPSHOT",
+        "qwe"      : "0.6.0",
         "sql"      : "0.1.0-SNAPSHOT",
     ]
 ]
@@ -54,7 +54,8 @@ ext.deps = [
     vertx     : [
         core   : "io.vertx:vertx-core:$versions.vertx",
         codegen: "io.vertx:vertx-codegen:$versions.vertx",
-        junit  : "io.vertx:vertx-unit:$versions.vertx"
+        junit  : "io.vertx:vertx-unit:$versions.vertx",
+        junit5 : "io.vertx:vertx-junit5:$versions.vertx"
     ],
     jackson   : [
         core       : "com.fasterxml.jackson.core:jackson-core:$versions.jackson",
@@ -78,37 +79,49 @@ ext.deps = [
         jooqVertxCodegen: "io.github.jklingsporn:vertx-jooq-generate:$versions.database.jooqVertx"
     ],
     tests     : [
-        junit      : "junit:junit:$versions.tests.junit",
-        junit5     : "org.junit.jupiter:junit-jupiter-engine:$versions.tests.junit5",
-        jsonAssert : "org.skyscreamer:jsonassert:1.5.0",
-        assertj    : "org.assertj:assertj-core:3.5.2",
-        awaitility : "com.jayway.awaitility:awaitility:1.7.0",
-        restAssured: "com.jayway.restassured:rest-assured:2.9.0",
-        hamcrest   : 'org.hamcrest:hamcrest-library:2.1'
+        junit        : "junit:junit:$versions.tests.junit",
+        junit5Api    : "org.junit.jupiter:junit-jupiter-api:${versions.tests.junit5}",
+        junit5Engine : "org.junit.jupiter:junit-jupiter-engine:${versions.tests.junit5}",
+        junit5Vintage: "org.junit.vintage:junit-vintage-engine:${versions.tests.junit5}",
+        jsonAssert   : "org.skyscreamer:jsonassert:1.5.0",
+        assertj      : "org.assertj:assertj-core:3.5.2",
+        awaitility   : "com.jayway.awaitility:awaitility:1.7.0",
+        restAssured  : "com.jayway.restassured:rest-assured:2.9.0",
+        hamcrest     : 'org.hamcrest:hamcrest-library:2.1'
     ],
     zero88    : [
         javaUtils: "io.github.zero88:java-utils:$versions.zero88.javaUtils",
         jpaExt   : "io.github.zero88:jpa-ext:$versions.zero88.jpaExt",
         rqlJooq  : "io.github.zero88:rql-jooq:$versions.zero88.rqlJooq",
-        qwe       : [
-            base : "io.github.zero88.qwe:base:$versions.zero88.qwe",
-            cache: "io.github.zero88.qwe:cache:$versions.zero88.qwe",
-            micro: [
-                core    : "io.github.zero88.qwe:micro:$versions.zero88.qwe",
-                metadata: "io.github.zero88.qwe.micro:metadata:$versions.zero88.qwe",
+        qwe      : [
+            base     : "io.github.zero88.qwe:qwe-base:$versions.zero88.qwe",
+            cache    : "io.github.zero88.qwe:qwe-cache:$versions.zero88.qwe",
+            protocol : "io.github.zero88.qwe:qwe-protocol:$versions.zero88.qwe",
+            micro    : [
+                main    : "io.github.zero88.qwe:qwe-micro:$versions.zero88.qwe",
+                metadata: "io.github.zero88.qwe:qwe-micro-metadata:$versions.zero88.qwe",
+                rpc     : "io.github.zero88.qwe:qwe-micro-rpc:$versions.zero88.qwe",
             ],
-            http : [
-                core  : "io.github.zero88.qwe:http:$versions.zero88.qwe",
-                client: "io.github.zero88.qwe.http:client:$versions.zero88.qwe",
-                server: "io.github.zero88.qwe.http:server:$versions.zero88.qwe",
-            ]
+            http     : [
+                metadata: "io.github.zero88.qwe:qwe-http-metadata:$versions.zero88.qwe",
+                client  : "io.github.zero88.qwe:qwe-http-client:$versions.zero88.qwe",
+                server  : "io.github.zero88.qwe:qwe-http-server:$versions.zero88.qwe",
+            ],
+            scheduler: [
+                main    : "io.github.zero88.qwe:qwe-scheduler:$versions.zero88.qwe",
+                metadata: "io.github.zero88.qwe:qwe-scheduler-metadata:$versions.zero88.qwe",
+            ],
+            storage  : [
+                json: "io.github.zero88.qwe:qwe-storage-json:$versions.zero88.qwe"
+            ],
+            sql      : [
+                core   : "io.github.zero88.qwe.sql:core:$versions.zero88.sql",
+                rxJdbc : "io.github.zero88.qwe.sql:rx-jdbc:$versions.zero88.sql",
+                type   : "io.github.zero88.qwe.sql:type:$versions.zero88.sql",
+                service: "io.github.zero88.qwe.sql:service:$versions.zero88.sql"
+            ],
         ],
-        sql      : [
-            core   : "io.github.zero88.qwe.sql:core:$versions.zero88.sql",
-            rxJdbc : "io.github.zero88.qwe.sql:rx-jdbc:$versions.zero88.sql",
-            type   : "io.github.zero88.qwe.sql:type:$versions.zero88.sql",
-            service: "io.github.zero88.qwe.sql:service:$versions.zero88.sql"
-        ],
+
     ]
 ]
 
