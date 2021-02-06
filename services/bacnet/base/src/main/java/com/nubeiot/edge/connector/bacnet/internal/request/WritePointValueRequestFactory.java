@@ -6,6 +6,7 @@ import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.iot.data.property.PointPresentValue;
 
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
+import com.nubeiot.edge.connector.bacnet.internal.ack.NoAck;
 import com.nubeiot.edge.connector.bacnet.mixin.deserializer.EncodableDeserializer;
 import com.serotonin.bacnet4j.service.confirmed.WritePropertyRequest;
 import com.serotonin.bacnet4j.type.Encodable;
@@ -15,7 +16,8 @@ import com.serotonin.bacnet4j.type.primitive.UnsignedInteger;
 
 import lombok.NonNull;
 
-public class WritePointValueRequestFactory implements ConfirmedRequestFactory<WritePropertyRequest, PropertyValue> {
+public final class WritePointValueRequestFactory
+    implements ConfirmedRequestFactory<WritePropertyRequest, NoAck, PropertyValue> {
 
     @Override
     public @NonNull PropertyValue convertData(@NonNull DiscoveryArguments args, @NonNull RequestData requestData) {

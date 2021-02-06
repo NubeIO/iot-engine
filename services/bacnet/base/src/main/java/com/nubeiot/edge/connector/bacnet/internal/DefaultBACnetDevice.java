@@ -40,6 +40,7 @@ import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
 import com.serotonin.bacnet4j.obj.ObjectProperties;
+import com.serotonin.bacnet4j.service.acknowledgement.AcknowledgementService;
 import com.serotonin.bacnet4j.service.confirmed.ConfirmedRequestService;
 import com.serotonin.bacnet4j.transport.Transport;
 import com.serotonin.bacnet4j.type.constructed.ObjectPropertyReference;
@@ -180,12 +181,11 @@ final class DefaultBACnetDevice implements BACnetDevice {
     }
 
     @Override
-    public @NonNull <T extends ConfirmedRequestService, D> Single<EventMessage> send(@NonNull EventAction action,
-                                                                                     @NonNull DiscoveryArguments args,
-                                                                                     @NonNull RequestData reqData,
-                                                                                     @NonNull ConfirmedRequestFactory<T, D> factory) {
+    public @NonNull <T extends ConfirmedRequestService, A extends AcknowledgementService, D> Single<EventMessage> send(
+        @NonNull EventAction action, @NonNull DiscoveryArguments args, @NonNull RequestData reqData,
+        @NonNull ConfirmedRequestFactory<T, A, D> factory) {
         return Single.just(factory.convertData(args, reqData))
-                     .flatMap(data -> this.discoverThenSendRequest(action, args, factory.factory(args, data))
+                     .flatMap(data -> this.discoverThenSendRequest(action, args, factory, data)
                                           .doOnSuccess(msg -> factory.then(this, msg, data, args, reqData)));
     }
 
@@ -198,13 +198,13 @@ final class DefaultBACnetDevice implements BACnetDevice {
         });
     }
 
-    private <T extends ConfirmedRequestService> Single<EventMessage> discoverThenSendRequest(EventAction action,
-                                                                                             DiscoveryArguments args,
-                                                                                             T request) {
+    private <T extends ConfirmedRequestService, A extends AcknowledgementService, D> Single<EventMessage> discoverThenSendRequest(
+        EventAction action, DiscoveryArguments args, ConfirmedRequestFactory<T, A, D> factory, D data) {
         final Vertx vertx = sharedData().getVertx();
         return this.discoverRemoteDevice(args)
                    .flatMap(rd -> SingleHelper.toSingle(handler -> vertx.executeBlocking(
-                       p -> localDevice.send(rd, request, new BACnetResponseListener(action, p)), handler)));
+                       p -> localDevice.send(rd, factory.factory(args, data),
+                                             new BACnetResponseListener(action, p, factory.handler())), handler)));
     }
 
     private void handleAfterScan(RemoteDeviceScanner scanner, Throwable t) {
@@ -214,7 +214,8 @@ final class DefaultBACnetDevice implements BACnetDevice {
     }
 
     private EventMessage createSuccessDiscoverMsg(@NonNull RemoteDeviceScanner scanner) {
-        final List<BACnetDeviceEntity> remotes = scanner.getRemoteDevices().stream()
+        final List<BACnetDeviceEntity> remotes = scanner.getRemoteDevices()
+                                                        .stream()
                                                         .map(RemoteDeviceMixin::create)
                                                         .map(rdm -> BACnetDeviceEntity.builder().mixin(rdm).build())
                                                         .collect(Collectors.toList());

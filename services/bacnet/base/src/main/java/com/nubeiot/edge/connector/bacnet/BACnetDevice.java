@@ -20,6 +20,7 @@ import com.nubeiot.edge.connector.bacnet.mixin.PropertyValuesMixin;
 import com.serotonin.bacnet4j.LocalDevice;
 import com.serotonin.bacnet4j.RemoteDevice;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
+import com.serotonin.bacnet4j.service.acknowledgement.AcknowledgementService;
 import com.serotonin.bacnet4j.service.confirmed.ConfirmedRequestService;
 import com.serotonin.bacnet4j.type.primitive.ObjectIdentifier;
 
@@ -166,9 +167,8 @@ public interface BACnetDevice extends HasSharedData {
      * @see DiscoveryArguments
      * @see ConfirmedRequestFactory
      */
-    @NonNull <T extends ConfirmedRequestService, D> Single<EventMessage> send(@NonNull EventAction action,
-                                                                              @NonNull DiscoveryArguments args,
-                                                                              @NonNull RequestData requestData,
-                                                                              @NonNull ConfirmedRequestFactory<T, D> factory);
+    @NonNull <C extends ConfirmedRequestService, A extends AcknowledgementService, D> Single<EventMessage> send(
+        @NonNull EventAction action, @NonNull DiscoveryArguments args, @NonNull RequestData requestData,
+        @NonNull ConfirmedRequestFactory<C, A, D> factory);
 
 }

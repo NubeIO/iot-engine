@@ -6,7 +6,9 @@ import io.github.zero88.qwe.dto.ErrorMessage;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventMessage;
 import io.vertx.core.Promise;
+import io.vertx.core.json.JsonObject;
 
+import com.nubeiot.edge.connector.bacnet.internal.ack.AckServiceHandler;
 import com.nubeiot.edge.connector.bacnet.mixin.BACnetExceptionConverter;
 import com.serotonin.bacnet4j.ResponseConsumer;
 import com.serotonin.bacnet4j.apdu.Abort;
@@ -29,10 +31,14 @@ public final class BACnetResponseListener implements ResponseConsumer {
     private final EventAction action;
     @NonNull
     private final Promise<EventMessage> msg;
+    private final AckServiceHandler handler;
 
     @Override
+    @SuppressWarnings("unchecked")
     public void success(AcknowledgementService ack) {
-        msg.tryComplete(EventMessage.success(action));
+        msg.tryComplete(EventMessage.success(action, Optional.ofNullable(handler)
+                                                             .map(h -> (JsonObject) h.apply(ack))
+                                                             .orElseGet(JsonObject::new)));
     }
 
     @Override

@@ -6,6 +6,7 @@ import io.github.zero88.qwe.event.EventMessage;
 
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
+import com.nubeiot.edge.connector.bacnet.internal.ack.NoAck;
 import com.nubeiot.edge.connector.bacnet.internal.listener.CovNotifier;
 import com.nubeiot.edge.connector.bacnet.internal.request.SubscribeCOVRequestFactory.SubscribeCOVOptions;
 import com.serotonin.bacnet4j.LocalDevice;
@@ -22,7 +23,8 @@ import lombok.extern.jackson.Jacksonized;
 /**
  * @see <a href="https://store.chipkin.com/articles/bacnet-what-is-the-bacnet-change-of-value-cov">COV</a>
  */
-public class SubscribeCOVRequestFactory implements ConfirmedRequestFactory<SubscribeCOVRequest, SubscribeCOVOptions> {
+public final class SubscribeCOVRequestFactory
+    implements ConfirmedRequestFactory<SubscribeCOVRequest, NoAck, SubscribeCOVOptions> {
 
     @Override
     public SubscribeCOVOptions convertData(@NonNull DiscoveryArguments args, @NonNull RequestData requestData) {

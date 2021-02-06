@@ -1,16 +1,19 @@
 package com.nubeiot.edge.connector.bacnet.internal.request;
 
 import io.github.zero88.qwe.dto.msg.RequestData;
-import io.github.zero88.qwe.event.EventMessage;
+import io.vertx.core.json.JsonObject;
 
-import com.nubeiot.edge.connector.bacnet.BACnetDevice;
 import com.nubeiot.edge.connector.bacnet.discovery.DiscoveryArguments;
+import com.nubeiot.edge.connector.bacnet.internal.ack.AckServiceHandler;
+import com.nubeiot.edge.connector.bacnet.mixin.BACnetJsonMixin;
+import com.serotonin.bacnet4j.service.acknowledgement.ReadPropertyAck;
 import com.serotonin.bacnet4j.service.confirmed.ReadPropertyRequest;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 
 import lombok.NonNull;
 
-public class ReadPriorityArrayRequestFactory implements ConfirmedRequestFactory<ReadPropertyRequest, RequestData> {
+public final class ReadPriorityArrayRequestFactory
+    implements ConfirmedRequestFactory<ReadPropertyRequest, ReadPropertyAck, RequestData> {
 
     @Override
     public @NonNull RequestData convertData(@NonNull DiscoveryArguments args, @NonNull RequestData requestData) {
@@ -23,9 +26,8 @@ public class ReadPriorityArrayRequestFactory implements ConfirmedRequestFactory<
     }
 
     @Override
-    public void then(@NonNull BACnetDevice device, @NonNull EventMessage result, @NonNull RequestData data,
-                     @NonNull DiscoveryArguments args, @NonNull RequestData requestData) {
-
+    public AckServiceHandler<ReadPropertyAck> handler() {
+        return readPropertyAck -> BACnetJsonMixin.MAPPER.convertValue(readPropertyAck.getValue(), JsonObject.class);
     }
 
 }
