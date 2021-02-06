@@ -15,6 +15,7 @@ on:
 
 env:
   ENABLED_TEST: false
+  ENABLED_GH_MAVEN: false
 
 jobs:
   context:
@@ -25,8 +26,8 @@ jobs:
       shouldPublish: ${{ steps.context.outputs.decision_publish }}
       isRelease: ${{ steps.context.outputs.isTag }}
       afterRelease: ${{ steps.context.outputs.isAfterMergedReleasePR }}
-      version: ${{ steps.context.outputs.ver_current }}
-      semanticVersion: ${{ steps.semantic.outputs.semanticVersion }}
+      version: ${{ steps.version.outputs.version }}
+      semanticVersion: ${{ steps.version.outputs.semanticVersion }}
 
     steps:
       - uses: actions/checkout@v2
@@ -51,10 +52,12 @@ jobs:
           defaultBranch: master
 
       - name: Find semantic version
-        id: semantic
+        id: version
         shell: bash
         run: |
           [[ "${{ steps.context.outputs.isTag }}" == "true" ]] && sv="" || sv=$(grep semanticVersion gradle.properties | cut -d'=' -f2)
+          [[ "${{ steps.context.outputs.isTag }}" == "true" ]] && v="${{ steps.context.outputs.version }}" || v="${{ steps.context.outputs.ver_current }}"
+          echo ::set-output name=version::$v
           echo ::set-output name=semanticVersion::$sv
 
   build:
@@ -106,7 +109,7 @@ jobs:
         run: ./gradlew -PexcludeTests=**/Postgres*Test* test jacocoTestReport --stacktrace
 
       - name: Publish GitHub Package
-        if: needs.context.outputs.isRelease == 'true'
+        if: needs.context.outputs.isRelease == 'true' && env.ENABLED_GH_MAVEN == 'true'
         run: |
           args=( -Psigning.gnupg.homeDir=/home/runner/.gnupg \
                  -Psigning.gnupg.keyName=${{ steps.import_gpg.outputs.keyid }} \
