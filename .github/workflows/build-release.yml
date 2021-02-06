@@ -129,8 +129,6 @@ jobs:
         with:
           name: iot
           path: /tmp/artifacts
-      - run: |
-          unzip /tmp/artifacts/*.zip
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         env:
