@@ -16,16 +16,16 @@ import lombok.experimental.SuperBuilder;
 @Accessors(fluent = true)
 public abstract class AbstractPoint<K> implements IPoint<K> {
 
-    @JsonProperty(Fields.key)
+    @JsonProperty("_" + Fields.key)
     private final K key;
     @NonNull
-    @JsonProperty(Fields.networkId)
+    @JsonProperty("_" + Fields.networkId)
     private final String networkId;
     @NonNull
-    @JsonProperty(Fields.deviceId)
+    @JsonProperty("_" + Fields.deviceId)
     private final String deviceId;
     @NonNull
-    @JsonProperty(Fields.type)
+    @JsonProperty("_" + Fields.type)
     private final PointType type;
 
 }

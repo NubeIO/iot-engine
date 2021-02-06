@@ -18,22 +18,22 @@ import lombok.experimental.SuperBuilder;
 @Accessors(fluent = true)
 public abstract class AbstractDevice<K> implements IDevice<K> {
 
-    @JsonProperty(Fields.key)
+    @JsonProperty("_" + Fields.key)
     private final K key;
     @NonNull
-    @JsonProperty(Fields.networkId)
+    @JsonProperty("_" + Fields.networkId)
     private final String networkId;
     @NonNull
-    @JsonProperty(Fields.address)
+    @JsonProperty("_" + Fields.address)
     private final JsonObject address;
     @NonNull
-    @JsonProperty(Fields.type)
+    @JsonProperty("_" + Fields.type)
     private final DeviceType type;
     @NonNull
-    @JsonProperty(Fields.name)
+    @JsonProperty("_" + Fields.name)
     private final String name;
     @NonNull
-    @JsonProperty(Fields.status)
+    @JsonProperty("_" + Fields.status)
     private final DeviceStatus status;
 
 }
