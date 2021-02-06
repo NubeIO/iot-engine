@@ -1,6 +1,5 @@
 package com.nubeiot.edge.connector.bacnet.service.command;
 
-import java.util.Collections;
 import java.util.Optional;
 
 import io.github.zero88.qwe.component.SharedDataLocalProxy;
@@ -8,10 +7,7 @@ import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventContractor;
 import io.github.zero88.qwe.event.EventMessage;
-import io.github.zero88.qwe.iot.connector.command.CommanderApis;
-import io.github.zero88.qwe.micro.http.ActionMethodMapping;
 import io.reactivex.Single;
-import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
@@ -21,12 +17,10 @@ import com.nubeiot.edge.connector.bacnet.dto.CovOutput;
 import com.nubeiot.edge.connector.bacnet.internal.request.ConfirmedRequestFactory;
 import com.nubeiot.edge.connector.bacnet.internal.request.ReadPriorityArrayRequestFactory;
 import com.nubeiot.edge.connector.bacnet.service.AbstractBACnetService;
-import com.nubeiot.edge.connector.bacnet.service.BACnetFunctionApis;
 
 import lombok.NonNull;
 
-public final class ReadPriorityArrayCommander extends AbstractBACnetService
-    implements BACnetFunctionApis, CommanderApis {
+public final class ReadPriorityArrayCommander extends AbstractBACnetService implements BACnetReadCommander {
 
     public static final String AS_COV = "asCOV";
 
@@ -35,8 +29,8 @@ public final class ReadPriorityArrayCommander extends AbstractBACnetService
     }
 
     @Override
-    public @NonNull String function() {
-        return "read/priority-array";
+    public @NonNull String subFunction() {
+        return "priority-array";
     }
 
     @Override
@@ -65,11 +59,6 @@ public final class ReadPriorityArrayCommander extends AbstractBACnetService
     @Override
     public @NonNull DiscoveryLevel level() {
         return DiscoveryLevel.OBJECT;
-    }
-
-    @Override
-    public @NonNull ActionMethodMapping eventMethodMap() {
-        return ActionMethodMapping.create(Collections.singletonMap(EventAction.SEND, HttpMethod.GET));
     }
 
 }
