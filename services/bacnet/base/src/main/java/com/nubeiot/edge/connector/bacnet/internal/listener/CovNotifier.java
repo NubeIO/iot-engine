@@ -9,6 +9,7 @@ import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventMessage;
 import io.github.zero88.qwe.event.EventbusClient;
 import io.github.zero88.qwe.event.Waybill;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
@@ -57,7 +58,7 @@ public final class CovNotifier extends DeviceEventAdapter implements DeviceEvent
         if (Objects.isNull(dispatcher)) {
             return;
         }
-        final JsonObject convertValue = BACnetJsonMixin.MAPPER.convertValue(listOfValues, JsonObject.class);
+        final JsonArray convertValue = BACnetJsonMixin.MAPPER.convertValue(listOfValues, JsonArray.class);
         final CovOutput cov = CovOutput.builder()
                                        .key(key)
                                        .cov(convertValue)

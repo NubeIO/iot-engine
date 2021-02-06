@@ -1,6 +1,7 @@
 package com.nubeiot.edge.connector.bacnet.dto;
 
 import io.github.zero88.qwe.dto.JsonData;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,12 +19,7 @@ import lombok.extern.jackson.Jacksonized;
 public class CovOutput implements JsonData {
 
     private final String key;
-    private final JsonObject cov;
-
-    CovOutput(String key, JsonObject cov) {
-        this.key = key;
-        this.cov = cov;
-    }
+    private final Object cov;
 
     @Override
     public JsonObject toJson(@NonNull ObjectMapper mapper) {
@@ -33,6 +29,16 @@ public class CovOutput implements JsonData {
     public static class CovOutputBuilder {
 
         JsonObject any;
+
+        public CovOutputBuilder cov(JsonObject cov) {
+            this.cov = cov;
+            return this;
+        }
+
+        public CovOutputBuilder cov(JsonArray cov) {
+            this.cov = cov;
+            return this;
+        }
 
         public CovOutputBuilder any(JsonObject any) {
             this.any = any;
