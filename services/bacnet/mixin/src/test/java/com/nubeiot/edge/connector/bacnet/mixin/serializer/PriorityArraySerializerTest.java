@@ -15,6 +15,8 @@ import com.serotonin.bacnet4j.type.constructed.LimitEnable;
 import com.serotonin.bacnet4j.type.constructed.PriorityArray;
 import com.serotonin.bacnet4j.type.constructed.PriorityValue;
 import com.serotonin.bacnet4j.type.enumerated.AbortReason;
+import com.serotonin.bacnet4j.type.enumerated.BinaryPV;
+import com.serotonin.bacnet4j.type.enumerated.ObjectType;
 import com.serotonin.bacnet4j.type.primitive.Boolean;
 import com.serotonin.bacnet4j.type.primitive.CharacterString;
 import com.serotonin.bacnet4j.type.primitive.Date;
@@ -35,10 +37,14 @@ public class PriorityArraySerializerTest {
         array.put(6, new PriorityValue(new Date(2020, Month.JANUARY, 21, DayOfWeek.TUESDAY)));
         array.put(7, new PriorityValue(new LimitEnable(true, false)));
         array.put(8, new PriorityValue(Null.instance));
+        array.put(9, new PriorityValue(BinaryPV.active));
+        array.put(10, new PriorityValue(ObjectType.device));
         final JsonObject expected = new JsonObject(
-            "{\"1\":\"xxx\",\"2\":10,\"3\":\"other\",\"4\":true,\"5\":\"10:05:10Z\",\"6\":\"2020-01-21Z\"," +
-            "\"7\":{\"low-limit-enable\":true,\"high-limit-enable\":false},\"8\":null,\"9\":null,\"10\":null," +
-            "\"11\":null,\"12\":null,\"13\":null,\"14\":null,\"15\":null,\"16\":null}");
+            "{\"1\":\"xxx\",\"2\":10,\"3\":{\"rawValue\":0,\"value\":\"other\"},\"4\":true,\"5\":\"10:05:10Z\"," +
+            "\"6\":\"2020-01-21Z\",\"7\":{\"low-limit-enable\":true,\"high-limit-enable\":false},\"8\":null," +
+            "\"9\":{\"rawValue\":1,\"value\":\"active\"},\"10\":\"device\",\"11\":null,\"12\":null,\"13\":null," +
+            "\"14\":null," +
+            "\"15\":null,\"16\":null}");
         final JsonObject json = BACnetJsonMixin.MAPPER.convertValue(array, JsonObject.class);
         JsonHelper.assertJson(expected, json);
     }

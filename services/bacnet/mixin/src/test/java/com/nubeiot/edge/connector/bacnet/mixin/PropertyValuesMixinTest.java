@@ -95,8 +95,9 @@ public class PropertyValuesMixinTest {
         pvs.add(oid, PropertyIdentifier.errorLimit, null,
                 new ErrorClassAndCode(ErrorClass.device, ErrorCode.abortSecurityError));
         PropertyValuesMixin pvJson = PropertyValuesMixin.create(oid, pvs, true);
-        final JsonObject expected = new JsonObject("{\"action\":\"direct\",\"error-limit\":{\"errorClass\":\"device" +
-                                                   "\",\"errorCode\":\"abort-security-error\"}}");
+        final JsonObject expected = new JsonObject(
+            "{\"action\":{\"rawValue\":0,\"value\":\"direct\"}," + "\"error-limit\":{\"errorClass\":{\"rawValue\":0," +
+            "\"value\":\"device\"},\"errorCode\":{\"rawValue\":136," + "\"value\":\"abort-security-error\"}}}");
         System.out.println(pvJson.toJson().encode());
         JsonHelper.assertJson(expected, pvJson.toJson());
     }
@@ -111,11 +112,10 @@ public class PropertyValuesMixinTest {
         pvs.add(oid, PropertyIdentifier.restartNotificationRecipients, null,
                 new Recipient(new ObjectIdentifier(ObjectType.device, 222)));
         PropertyValuesMixin pvJson = PropertyValuesMixin.create(oid, pvs, true);
-        final JsonObject expected = new JsonObject("{\"active-text\":{\"name\":\"abc\",\"value\":\"xxx\"}," +
-                                                   "\"landing-calls\":{\"floor-number\":12,\"direction\":\"up\"}," +
-                                                   "\"priority-for-writing\":16," +
-                                                   "\"restart-notification-recipients\":\"device:222\"," +
-                                                   "\"timer-state\":{\"choice\":true}}");
+        final JsonObject expected = new JsonObject(
+            "{\"active-text\":{\"name\":\"abc\",\"value\":\"xxx\"}," + "\"landing-calls\":{\"floor-number\":12," +
+            "\"direction\":{\"rawValue\":3,\"value\":\"up\"}}," + "\"priority-for-writing\":16," +
+            "\"restart-notification-recipients\":\"device:222\"," + "\"timer-state\":{\"choice\":true}}");
         System.out.println(pvJson.toJson().encode());
         JsonHelper.assertJson(expected, pvJson.toJson());
     }

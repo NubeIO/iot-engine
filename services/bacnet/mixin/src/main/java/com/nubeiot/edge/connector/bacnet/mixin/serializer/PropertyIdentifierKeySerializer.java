@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.nubeiot.edge.connector.bacnet.mixin.BACnetJsonMixin;
 import com.serotonin.bacnet4j.type.enumerated.PropertyIdentifier;
 
 public final class PropertyIdentifierKeySerializer extends JsonSerializer<PropertyIdentifier> {
@@ -12,7 +13,7 @@ public final class PropertyIdentifierKeySerializer extends JsonSerializer<Proper
     @Override
     public void serialize(PropertyIdentifier value, JsonGenerator gen, SerializerProvider serializers)
         throws IOException {
-        gen.writeFieldName(value.toString());
+        gen.writeFieldName(BACnetJsonMixin.standardizeKey(value.toString()));
     }
 
 }
