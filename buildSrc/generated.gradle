@@ -76,7 +76,16 @@ task generateConfigs(group: 'build') {
                 into confDir
                 from("${projectDir}/src/service") {
                     include "*.service"
+                    filter {
+                        it.replaceAll("\\{\\{project\\}\\}", "$projectName-$project.version")
+                    }
                 }
+            }
+        }
+        if (project.hasProperty("sample") && project.sample == "true") {
+            copy {
+                into confDir
+                from("${projectDir}/src/sample")
             }
         }
         if (configurations.runtimeClasspath.any { it.name.contains("cluster-hazelcast") }) {

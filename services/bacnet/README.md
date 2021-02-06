@@ -65,11 +65,14 @@ Prefix: `/api/discover/bacnet`
 ### Command API
 
 Prefix: `/api/command/bacnet`
-Default HTTP method: `POST`
 
-#### Write Point Value
+#### Read
 
-- `POST::/command/bacnet/network/:networkId/device/:deviceInstance/object/:objectCode/write-pv`
+- `GET::/command/bacnet/network/:networkId/device/:deviceInstance/object/:objectCode/read/priority-array`
+
+#### Write
+
+- `POST::/command/bacnet/network/:networkId/device/:deviceInstance/object/:objectCode/write/point-value`
 
 ### Supervisor API
 
@@ -82,7 +85,6 @@ Default HTTP method: `POST`
 ### Scheduler API
 
 - `POST::/scheduler/:jobKey/`
-- `GET::/scheduler/:jobKey/`
 - `GET::/scheduler/:jobKey/:triggerKey`
 - `DELETE::/scheduler/:jobKey/:triggerKey`
 
