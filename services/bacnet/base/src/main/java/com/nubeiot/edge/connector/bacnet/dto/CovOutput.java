@@ -1,5 +1,7 @@
 package com.nubeiot.edge.connector.bacnet.dto;
 
+import java.util.Objects;
+
 import io.github.zero88.qwe.dto.JsonData;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -46,7 +48,8 @@ public class CovOutput implements JsonData {
         }
 
         public CovOutput build() {
-            return new CovOutput(key, new JsonObject().put(Fields.cov, cov).mergeIn(any));
+            final JsonObject cov = new JsonObject().put(Fields.cov, this.cov);
+            return new CovOutput(key, Objects.isNull(any) ? cov : cov.mergeIn(any));
         }
 
     }
