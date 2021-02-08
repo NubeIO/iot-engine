@@ -96,8 +96,8 @@ public class PropertyValuesMixinTest {
                 new ErrorClassAndCode(ErrorClass.device, ErrorCode.abortSecurityError));
         PropertyValuesMixin pvJson = PropertyValuesMixin.create(oid, pvs, true);
         final JsonObject expected = new JsonObject(
-            "{\"action\":{\"rawValue\":0,\"value\":\"direct\"}," + "\"error-limit\":{\"errorClass\":{\"rawValue\":0," +
-            "\"value\":\"device\"},\"errorCode\":{\"rawValue\":136," + "\"value\":\"abort-security-error\"}}}");
+            "{\"action\":{\"rawValue\":0,\"value\":\"direct\"},\"error-limit\":{\"errorClass\":\"device\"," +
+            "\"errorCode\":\"abort-security-error\"}}");
         System.out.println(pvJson.toJson().encode());
         JsonHelper.assertJson(expected, pvJson.toJson());
     }

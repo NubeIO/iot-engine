@@ -7,7 +7,6 @@ import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventContractor;
 import io.github.zero88.qwe.iot.connector.ConnectorService;
-import io.github.zero88.qwe.iot.connector.RpcProtocolClient;
 import io.github.zero88.qwe.iot.data.IoTEntities;
 import io.github.zero88.qwe.iot.data.IoTEntity;
 import io.github.zero88.qwe.protocol.Protocol;
@@ -22,7 +21,6 @@ import lombok.NonNull;
  * @param <P> Type of IoT entity
  * @param <K> Type of IoT entity key
  * @param <X> Type of IoT entities that wraps IoT entity
- * @see RpcProtocolClient
  * @see Protocol
  */
 public interface ExplorerService<K, P extends IoTEntity<K>, X extends IoTEntities<K, P>> extends ConnectorService {

@@ -1,17 +1,9 @@
 package com.nubeiot.edge.connector.bacnet.simulator;
 
-import java.util.List;
 import java.util.Optional;
-
-import io.github.zero88.qwe.event.EventbusClient;
-import io.github.zero88.qwe.protocol.CommunicationProtocol;
-import io.github.zero88.qwe.utils.Configs;
-import io.reactivex.Single;
-import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.connector.bacnet.AbstractBACnetApplication;
 import com.nubeiot.edge.connector.bacnet.BACnetDevice;
-import com.nubeiot.edge.connector.bacnet.entity.BACnetNetwork;
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
 import com.nubeiot.edge.connector.bacnet.internal.listener.WhoIsListener;
 
@@ -20,7 +12,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public final class BACnetSimulator extends AbstractBACnetApplication<SimulatorConfig> {
+public class BACnetSimulator extends AbstractBACnetApplication<SimulatorConfig> {
 
     private final DiscoverCompletionHandler handler;
 
@@ -31,34 +23,8 @@ public final class BACnetSimulator extends AbstractBACnetApplication<SimulatorCo
     }
 
     @Override
-    @NonNull
-    protected Single<JsonObject> registerApis(@NonNull EventbusClient client, @NonNull SimulatorConfig config) {
-        return Single.just(new JsonObject().put("message", "No BACnet services"));
-    }
-
-    @Override
-    @NonNull
-    protected Single<JsonObject> registerSubscriber(@NonNull EventbusClient client, @NonNull SimulatorConfig config) {
-        return Single.just(new JsonObject().put("message", "No BACnet Subscriber"));
-    }
-
-    @Override
     protected void addListenerOnEachDevice(@NonNull BACnetDevice device) {
         device.addListeners(new WhoIsListener());
-    }
-
-    @Override
-    protected @NonNull Single<List<CommunicationProtocol>> availableNetworks(@NonNull SimulatorConfig config) {
-        JsonObject points = Configs.loadJsonConfig("points.json");
-        return Single.just(config.getNetworks().toNetworks())
-                     .flattenAsObservable(networks -> networks)
-                     .map(BACnetNetwork::toProtocol)
-                     .toList();
-    }
-
-    @Override
-    protected Single<JsonObject> stopBACnet() {
-        return Single.just(new JsonObject());
     }
 
     @Override
