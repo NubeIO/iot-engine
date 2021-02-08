@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import io.github.zero88.qwe.component.ContextLookup;
-import io.github.zero88.qwe.event.EventbusClient;
+import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.http.event.WebSocketServerEventMetadata;
 import io.github.zero88.qwe.http.server.HttpServerProvider;
 import io.github.zero88.qwe.http.server.HttpServerRouter;
@@ -24,8 +24,6 @@ import io.vertx.servicediscovery.Record;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetDeviceCache;
 import com.nubeiot.edge.connector.bacnet.cache.BACnetNetworkCache;
-import com.nubeiot.edge.connector.bacnet.handler.BACnetDiscoverFinisher;
-import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
 import com.nubeiot.edge.connector.bacnet.internal.listener.WhoIsListener;
 import com.nubeiot.edge.connector.bacnet.service.BACnetApis;
 import com.nubeiot.edge.connector.bacnet.service.BACnetApisHelper;
@@ -72,12 +70,12 @@ public class BACnetApplication extends AbstractBACnetApplication<BACnetServiceCo
     }
 
     @Override
-    protected @NonNull Single<JsonObject> registerApis(@NonNull EventbusClient client,
+    protected @NonNull Single<JsonObject> registerApis(@NonNull SharedDataLocalProxy sharedData,
                                                        @NonNull BACnetServiceConfig config) {
         final ServiceDiscoveryInvoker invoker = microContext.getLocalInvoker();
-        return Observable.fromIterable(BACnetApisHelper.createServices(this))
-                         .doOnEach(s -> Optional.ofNullable(s.getValue())
-                                                .ifPresent(service -> client.register(service.address(), service)))
+        return Observable.fromIterable(BACnetApisHelper.createServices(sharedData))
+                         .doOnEach(so -> Optional.ofNullable(so.getValue())
+                                                 .ifPresent(s -> getEventbus().register(s.address(), s)))
                          .filter(s -> Objects.nonNull(s.definitions()))
                          .flatMap(s -> registerEndpoint(invoker, s))
                          .map(Record::toJson)
@@ -87,10 +85,10 @@ public class BACnetApplication extends AbstractBACnetApplication<BACnetServiceCo
     }
 
     @Override
-    protected @NonNull Single<JsonObject> registerSubscriber(@NonNull EventbusClient client,
+    protected @NonNull Single<JsonObject> registerSubscriber(@NonNull SharedDataLocalProxy sharedData,
                                                              @NonNull BACnetServiceConfig config) {
         return Observable.fromIterable(BACnetRpcClientHelper.createSubscribers(getVertx(), getSharedKey()))
-                         .doOnNext(subscriber -> client.register(subscriber.address(), subscriber))
+                         .doOnNext(subscriber -> getEventbus().register(subscriber.address(), subscriber))
                          .flatMapSingle(manager::register)
                          .count()
                          .map(total -> new JsonObject().put("message",
@@ -136,11 +134,6 @@ public class BACnetApplication extends AbstractBACnetApplication<BACnetServiceCo
         //                                                                              "Unregistered " + output.size
         //                                                                              () +
         //                                                                              " BACnet Subscribers")));
-    }
-
-    @Override
-    protected DiscoverCompletionHandler createDiscoverCompletionHandler() {
-        return new BACnetDiscoverFinisher(this);
     }
 
     private Observable<Record> registerEndpoint(ServiceDiscoveryInvoker discovery, BACnetApis s) {

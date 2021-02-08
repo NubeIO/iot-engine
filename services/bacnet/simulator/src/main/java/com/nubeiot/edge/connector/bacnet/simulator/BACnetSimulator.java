@@ -3,7 +3,7 @@ package com.nubeiot.edge.connector.bacnet.simulator;
 import java.util.List;
 import java.util.Optional;
 
-import io.github.zero88.qwe.event.EventbusClient;
+import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.github.zero88.qwe.utils.Configs;
 import io.reactivex.Single;
@@ -32,13 +32,15 @@ public final class BACnetSimulator extends AbstractBACnetApplication<SimulatorCo
 
     @Override
     @NonNull
-    protected Single<JsonObject> registerApis(@NonNull EventbusClient client, @NonNull SimulatorConfig config) {
+    protected Single<JsonObject> registerApis(@NonNull SharedDataLocalProxy sharedData,
+                                              @NonNull SimulatorConfig config) {
         return Single.just(new JsonObject().put("message", "No BACnet services"));
     }
 
     @Override
     @NonNull
-    protected Single<JsonObject> registerSubscriber(@NonNull EventbusClient client, @NonNull SimulatorConfig config) {
+    protected Single<JsonObject> registerSubscriber(@NonNull SharedDataLocalProxy sharedData,
+                                                    @NonNull SimulatorConfig config) {
         return Single.just(new JsonObject().put("message", "No BACnet Subscriber"));
     }
 

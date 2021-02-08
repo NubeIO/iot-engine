@@ -6,11 +6,11 @@ import java.util.Objects;
 import io.github.zero88.qwe.IConfig;
 import io.github.zero88.qwe.component.ApplicationVerticle;
 import io.github.zero88.qwe.component.ContextLookup;
+import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.dto.ErrorData;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventMessage;
-import io.github.zero88.qwe.event.EventbusClient;
 import io.github.zero88.qwe.protocol.CommunicationProtocol;
 import io.github.zero88.qwe.utils.ExecutorHelpers;
 import io.reactivex.Single;
@@ -49,8 +49,8 @@ public abstract class AbstractBACnetApplication<C extends BACnetConfig> extends 
         ExecutorHelpers.blocking(getVertx(), this::getEventbus)
                        .map(c -> c.register(bacnetConfig.getCompleteDiscoverAddress(),
                                             createDiscoverCompletionHandler()))
-                       .flatMap(client -> registerApis(client, bacnetConfig).doOnSuccess(o -> logger.info(o.encode())))
-                       .flatMap(ignore -> this.invokeSubscriberRegistration(this.getEventbus(), bacnetConfig)
+                       .flatMap(c -> registerApis(sharedData(), bacnetConfig).doOnSuccess(o -> logger.info(o.encode())))
+                       .flatMap(ignore -> this.invokeSubscriberRegistration(bacnetConfig)
                                               .doOnSuccess(o -> logger.info(o.encode())))
                        .map(ignore -> bacnetConfig)
                        .flatMap(this::availableNetworks)
@@ -64,13 +64,6 @@ public abstract class AbstractBACnetApplication<C extends BACnetConfig> extends 
                        .count()
                        .map(total -> new JsonObject().put("total", total))
                        .subscribe((d, e) -> readinessHandler(bacnetConfig, d, e));
-    }
-
-    private Single<JsonObject> invokeSubscriberRegistration(EventbusClient client, C config) {
-        if (config.isEnableSubscriber()) {
-            return registerSubscriber(client, config);
-        }
-        return Single.just(new JsonObject().put("message", "BACnet subscriber feature is disabled"));
     }
 
     protected void readinessHandler(@NonNull C config, JsonObject d, Throwable e) {
@@ -90,26 +83,27 @@ public abstract class AbstractBACnetApplication<C extends BACnetConfig> extends 
     protected abstract Class<C> bacnetConfigClass();
 
     /**
-     * Register {@code BACnet API services} to {@code edge gateway}
+     * Register {@code BACnet API services} to {@code IoT gateway}
      *
-     * @param client Eventbus client
-     * @param config BACnet config
+     * @param sharedData Shared data proxy
+     * @param config     BACnet config
      * @return maybe result or maybe empty
      * @see BACnetApis
      */
     @NonNull
-    protected abstract Single<JsonObject> registerApis(@NonNull EventbusClient client, @NonNull C config);
+    protected abstract Single<JsonObject> registerApis(@NonNull SharedDataLocalProxy sharedData, @NonNull C config);
 
     /**
      * Register {@code BACnet Subscriber} services
      *
-     * @param client Eventbus client
-     * @param config BACnet config
+     * @param sharedData Eventbus client
+     * @param config     BACnet config
      * @return maybe result or maybe empty
      * @see OutboundBACnetCoordinator
      */
     @NonNull
-    protected abstract Single<JsonObject> registerSubscriber(@NonNull EventbusClient client, @NonNull C config);
+    protected abstract Single<JsonObject> registerSubscriber(@NonNull SharedDataLocalProxy sharedData,
+                                                             @NonNull C config);
 
     /**
      * Add one or more {@code BACnet listeners} after each {@code BACnet device} on each network starts
@@ -135,6 +129,13 @@ public abstract class AbstractBACnetApplication<C extends BACnetConfig> extends 
     @NonNull
     protected DiscoverCompletionHandler createDiscoverCompletionHandler() {
         return new DiscoverCompletionHandler();
+    }
+
+    private Single<JsonObject> invokeSubscriberRegistration(C config) {
+        if (config.isEnableSubscriber()) {
+            return registerSubscriber(sharedData(), config);
+        }
+        return Single.just(new JsonObject().put("message", "BACnet subscriber feature is disabled"));
     }
 
 }

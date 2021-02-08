@@ -6,7 +6,6 @@ import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventContractor;
 import io.github.zero88.qwe.event.EventListener;
-import io.github.zero88.qwe.iot.connector.RpcProtocol;
 import io.github.zero88.qwe.iot.data.IoTEntity;
 import io.github.zero88.qwe.micro.http.ActionMethodMapping;
 import io.reactivex.Single;
@@ -19,9 +18,8 @@ import lombok.NonNull;
  *
  * @param <P> Type of entity object
  * @see EventListener
- * @see RpcProtocol
  */
-public interface OutboundCoordinator<P extends IoTEntity> extends EventListener, RpcProtocol<P> {
+public interface OutboundCoordinator<P extends IoTEntity> extends EventListener {
 
     @Override
     default @NonNull Collection<EventAction> getAvailableEvents() {
@@ -42,8 +40,6 @@ public interface OutboundCoordinator<P extends IoTEntity> extends EventListener,
      * with declared protocol
      *
      * @return {@code true} if global
-     * @see #protocol()
-     * @see #context()
      */
     default boolean isGlobal() {
         return false;
