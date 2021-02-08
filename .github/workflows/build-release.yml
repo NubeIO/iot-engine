@@ -26,7 +26,7 @@ jobs:
       shouldPublish: ${{ steps.context.outputs.decision_publish }}
       isRelease: ${{ steps.context.outputs.isTag }}
       afterRelease: ${{ steps.context.outputs.isAfterMergedReleasePR }}
-      version: ${{ steps.version.outputs.version }}
+      version: ${{ steps.context.outputs.version }}
       semanticVersion: ${{ steps.version.outputs.semanticVersion }}
 
     steps:
@@ -50,14 +50,13 @@ jobs:
         with:
           dry: false
           defaultBranch: master
+          mustSign: true
 
       - name: Find semantic version
         id: version
         shell: bash
         run: |
           [[ "${{ steps.context.outputs.isTag }}" == "true" ]] && sv="" || sv=$(grep semanticVersion gradle.properties | cut -d'=' -f2)
-          [[ "${{ steps.context.outputs.isTag }}" == "true" ]] && v="${{ steps.context.outputs.version }}" || v="${{ steps.context.outputs.ver_current }}"
-          echo ::set-output name=version::$v
           echo ::set-output name=semanticVersion::$sv
 
   build:
