@@ -5,7 +5,6 @@ import java.util.Objects;
 import io.github.zero88.qwe.IConfig;
 import io.github.zero88.qwe.component.ApplicationVerticle;
 import io.github.zero88.qwe.component.ContextLookup;
-import io.github.zero88.qwe.component.SharedDataLocalProxy;
 import io.github.zero88.qwe.dto.msg.RequestData;
 import io.github.zero88.qwe.event.EventAction;
 import io.github.zero88.qwe.event.EventMessage;
@@ -15,7 +14,6 @@ import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 
 import com.nubeiot.edge.connector.bacnet.handler.DiscoverCompletionHandler;
-import com.nubeiot.edge.connector.bacnet.service.BACnetApis;
 import com.serotonin.bacnet4j.event.DeviceEventListener;
 
 import lombok.NonNull;
@@ -41,19 +39,10 @@ public abstract class AbstractBACnetApplication<C extends BACnetConfig> extends 
     @Override
     public void onInstallCompleted(@NonNull ContextLookup lookup) {
         C bacnetConfig = sharedData().getData(BACnetDevice.CONFIG_KEY);
-        ExecutorHelpers.blocking(getVertx(), this::getEventbus)
-                       .map(c -> c.register(bacnetConfig.getCompleteDiscoverAddress(),
-                                            createDiscoverCompletionHandler()))
-                       .flatMap(c -> registerApis(sharedData(), bacnetConfig).doOnSuccess(o -> logger.info(o.encode())))
-                       .flatMap(ignore -> initialize(bacnetConfig).doOnSuccess(o -> logger.info(o.encode())))
+        this.getEventbus().register(bacnetConfig.getCompleteDiscoverAddress(), createDiscoverCompletionHandler());
+        ExecutorHelpers.blocking(getVertx(), initialize(lookup, bacnetConfig))
+                       .doOnSuccess(o -> logger.info("Initialize BACnet successfully. Result: {}", o))
                        .subscribe((d, e) -> readinessHandler(bacnetConfig, d, e));
-    }
-
-    protected void readinessHandler(@NonNull C config, JsonObject d, Throwable e) {
-        final EventMessage msg = Objects.nonNull(e)
-                                 ? EventMessage.error(EventAction.NOTIFY_ERROR, e)
-                                 : EventMessage.initial(EventAction.NOTIFY, RequestData.builder().body(d).build());
-        getEventbus().publish(config.getReadinessAddress(), msg);
     }
 
     /**
@@ -63,17 +52,6 @@ public abstract class AbstractBACnetApplication<C extends BACnetConfig> extends 
      */
     @NonNull
     protected abstract Class<C> bacnetConfigClass();
-
-    /**
-     * Register {@code BACnet API services} to {@code IoT gateway}
-     *
-     * @param sharedData Shared data proxy
-     * @param config     BACnet config
-     * @return maybe result or maybe empty
-     * @see BACnetApis
-     */
-    @NonNull
-    protected abstract Single<JsonObject> registerApis(@NonNull SharedDataLocalProxy sharedData, @NonNull C config);
 
     /**
      * Add one or more {@code BACnet listeners} after each {@code BACnet device} on each network starts
@@ -89,12 +67,31 @@ public abstract class AbstractBACnetApplication<C extends BACnetConfig> extends 
         return new DiscoverCompletionHandler();
     }
 
-    protected Single<JsonObject> initialize(@NonNull C config) {
+    /**
+     * Initialize BACnet application
+     *
+     * @param contextLookup context lookup
+     * @param config        BACnet config
+     * @return a initialization result
+     */
+    protected Single<JsonObject> initialize(@NonNull ContextLookup contextLookup, @NonNull C config) {
         return Single.just(new JsonObject().put("message", "No initialize service"));
     }
 
+    protected void readinessHandler(@NonNull C config, JsonObject d, Throwable e) {
+        final EventMessage msg = Objects.nonNull(e)
+                                 ? EventMessage.error(EventAction.NOTIFY_ERROR, e)
+                                 : EventMessage.initial(EventAction.NOTIFY, RequestData.builder().body(d).build());
+        getEventbus().publish(config.getReadinessAddress(), msg);
+    }
+
+    /**
+     * Shutdown BACnet application
+     *
+     * @return a shutdown result
+     */
     protected Single<JsonObject> shutdown() {
-        return Single.just(new JsonObject());
+        return Single.just(new JsonObject().put("message", "Shut down complete"));
     }
 
 }

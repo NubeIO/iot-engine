@@ -27,7 +27,8 @@ public class BACnetSchedulerApis extends SchedulerRegisterService {
         super(scheduler, sharedData, converterHelper);
     }
 
-    public static Single<Record> registerApis(ServiceDiscoveryInvoker invoker, SharedDataLocalProxy sharedData) {
+    public static Single<Record> registerApis(@NonNull ServiceDiscoveryInvoker invoker,
+                                              @NonNull SharedDataLocalProxy sharedData) {
         final List<EventAction> available = Arrays.asList(EventAction.GET_LIST, EventAction.GET_ONE, EventAction.CREATE,
                                                           EventAction.REMOVE);
         final ActionMethodMapping m = ActionMethodMapping.byCRUD(available);

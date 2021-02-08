@@ -20,8 +20,8 @@ import io.vertx.servicediscovery.Record;
 
 import com.nubeiot.edge.connector.bacnet.cache.BACnetCacheInitializer;
 import com.nubeiot.edge.connector.bacnet.internal.listener.WhoIsListener;
-import com.nubeiot.edge.connector.bacnet.service.BACnetApis;
 import com.nubeiot.edge.connector.bacnet.service.BACnetApisHelper;
+import com.nubeiot.edge.connector.bacnet.service.coordinator.CoordinatorHelper;
 import com.nubeiot.edge.connector.bacnet.service.scheduler.BACnetSchedulerApis;
 import com.nubeiot.edge.connector.bacnet.websocket.WebSocketCOVSubscriber;
 
@@ -31,8 +31,6 @@ import lombok.NonNull;
  * BACnet Application
  */
 public class BACnetApplication extends AbstractBACnetApplication<BACnetServiceConfig> {
-
-    private MicroContext microContext;
 
     @Override
     public String configFile() {
@@ -49,40 +47,39 @@ public class BACnetApplication extends AbstractBACnetApplication<BACnetServiceCo
     }
 
     @Override
-    public void onInstallCompleted(@NonNull ContextLookup lookup) {
-        this.microContext = lookup.query(MicroContext.class);
-        new BACnetCacheInitializer().init(this);
-        super.onInstallCompleted(lookup);
-    }
-
-    @Override
     protected @NonNull Class<BACnetServiceConfig> bacnetConfigClass() {
         return BACnetServiceConfig.class;
     }
 
     @Override
-    protected @NonNull Single<JsonObject> registerApis(@NonNull SharedDataLocalProxy sharedData,
-                                                       @NonNull BACnetServiceConfig config) {
-        final ServiceDiscoveryInvoker invoker = microContext.getLocalInvoker();
+    protected Single<JsonObject> initialize(@NonNull ContextLookup contextLookup, @NonNull BACnetServiceConfig config) {
+        final ServiceDiscoveryInvoker invoker = contextLookup.query(MicroContext.class).getLocalInvoker();
+        new BACnetCacheInitializer().init(this);
+        return this.registerBACnetApis(invoker, sharedData(), config)
+                   .doOnSuccess(total -> logger.debug("Registered " + total + " BACnet APIs"))
+                   .flatMap(json -> BACnetSchedulerApis.registerApis(invoker, sharedData())
+                                                       .map(Record::toJson)
+                                                       .doOnSuccess(o -> logger.debug("Registered 1 Scheduler APIs")))
+                   .flatMap(ignore -> new CoordinatorHelper().restartBACnetCovCoordinator(sharedData()));
+    }
+
+    @NonNull
+    protected Single<Long> registerBACnetApis(@NonNull ServiceDiscoveryInvoker invoker,
+                                              @NonNull SharedDataLocalProxy sharedData,
+                                              @NonNull BACnetServiceConfig config) {
         return Observable.fromIterable(BACnetApisHelper.createServices(sharedData))
                          .doOnEach(so -> Optional.ofNullable(so.getValue())
                                                  .ifPresent(s -> getEventbus().register(s.address(), s)))
                          .filter(s -> Objects.nonNull(s.definitions()))
-                         .flatMap(s -> registerEndpoint(invoker, s))
-                         .map(Record::toJson)
-                         .count()
-                         .flatMap(l -> BACnetSchedulerApis.registerApis(invoker, sharedData()).map(r -> l + 1))
-                         .map(total -> new JsonObject().put("message", "Registered " + total + " BACnet APIs"));
+                         .flatMap(s -> Observable.fromIterable(s.definitions())
+                                                 .flatMapSingle(
+                                                     d -> invoker.addEventMessageRecord(s.api(), s.address(), d)))
+                         .count();
     }
 
     @Override
     protected void addListenerOnEachDevice(@NonNull BACnetDevice device) {
         device.addListeners(new WhoIsListener());
-    }
-
-    private Observable<Record> registerEndpoint(ServiceDiscoveryInvoker discovery, BACnetApis s) {
-        return Observable.fromIterable(s.definitions())
-                         .flatMapSingle(e -> discovery.addEventMessageRecord(s.api(), s.address(), e));
     }
 
     private HttpServerRouter initRouter() {

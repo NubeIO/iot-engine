@@ -97,7 +97,7 @@ public final class BACnetCOVCoordinator extends AbstractBACnetService
     public Single<CoordinatorChannel> validateInQuery(@NonNull CoordinatorInput<DiscoveryArguments> input) {
         //TODO try to find scheduler or realtime if it has schedule but not in file
         final String key = input.getSubject().key();
-        return persistenceService().query(key)
+        return persistenceService().get(key)
                                    .switchIfEmpty(Single.error(new NotFoundException("Not found subject " + key)));
     }
 
